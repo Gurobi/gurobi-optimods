@@ -13,15 +13,3 @@ assigned_shifts = solve_workforce_scheduling(
     shift_requirements=shift_requirements,
     hourly_rates=hourly_rates,
 )
-
-print(assigned_shifts)
-
-# Create shift allocation table for prettiness.
-shifts_table = pd.pivot_table(
-    assigned_shifts.assign(value=1),
-    values="value",
-    index="Shift",
-    columns="Workers",
-    fill_value="-",
-).replace({1.0: "Y"})
-print(shifts_table)

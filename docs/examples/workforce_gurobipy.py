@@ -25,14 +25,3 @@ m.optimize()
 
 # Use solution to filter selected shifts.
 assigned_shifts = availability[pd.Series(index=availability.index, data=x.X > 0.9)]
-print(assigned_shifts)
-
-# Shift allocation table for prettiness.
-shifts_table = pd.pivot_table(
-    assigned_shifts.assign(value=1),
-    values="value",
-    index="Shift",
-    columns="Workers",
-    fill_value="-",
-).replace({1.0: "Y"})
-print(shifts_table)

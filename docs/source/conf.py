@@ -18,6 +18,8 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx_tabs.tabs',
+    'sphinx_toolbox.collapse',
+    'sphinx_toolbox.code',
 ]
 
 intersphinx_mapping = {
