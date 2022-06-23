@@ -13,7 +13,7 @@ General problem description. Tabs alternate between describing the input datafra
 
 .. tabs::
 
-    .. group-tab:: Description
+    .. tab:: Description
 
         * Each row in availability dataframe specifies that an employee is available to work a given shift
         * Pay dataframe specifies the cost of having employee x work a shift
@@ -21,7 +21,7 @@ General problem description. Tabs alternate between describing the input datafra
         * Employees will be assigned only to shifts they are available for, in such a way that all requirements are covered while total cost of covering all shifts is minimised
         * Each row in the returned assignment dataframe specifies that an employee has been assigned a given shift
 
-    .. group-tab:: Maths
+    .. tab:: Maths
 
         I should define some terms here...
 
@@ -39,13 +39,13 @@ Code
 Alternate between the code required to run the model from the store vs how to implement directly in gurobipy. If you use nupstup, all the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output. If you instead peek under the hood and use gurobipy, you have more options to extend the model with additional constraints and data.
 
 .. tabs::
-    .. group-tab:: Nupstup
+    .. tab:: Nupstup
 
         .. literalinclude:: ../../examples/workforce_nupstup.py
             :linenos:
             :caption: workforce_nupstup.py
 
-    .. group-tab:: Gurobipy
+    .. tab:: Gurobipy
 
         .. literalinclude:: ../../examples/workforce_gurobipy.py
             :linenos:
