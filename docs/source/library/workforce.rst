@@ -85,19 +85,21 @@ Data examples
 
         .. code::
 
-            Shift
-            2022-07-01    3
-            2022-07-02    2
-            2022-07-03    4
-            2022-07-04    2
-            2022-07-05    5
-            ..          ...
-            2022-07-10    3
-            2022-07-11    4
-            2022-07-12    5
-            2022-07-13    7
-            2022-07-14    5
-            Name: Required, dtype: int64
+                Required      Shift
+            0          3 2022-07-01
+            1          2 2022-07-02
+            2          4 2022-07-03
+            3          2 2022-07-04
+            4          5 2022-07-05
+            5          4 2022-07-06
+            6          4 2022-07-07
+            7          2 2022-07-08
+            8          2 2022-07-09
+            9          3 2022-07-10
+            10         4 2022-07-11
+            11         5 2022-07-12
+            12         7 2022-07-13
+            13         5 2022-07-14
 
         In the mathematical model, this models the values :math:`r_s`.
 
@@ -107,15 +109,14 @@ Data examples
 
         .. code::
 
-            Worker
-            Amy      10
-            Bob      12
-            Cathy    10
-            Dan       8
-            Ed        8
-            Fred      9
-            Gu       11
-            Name: PayRate, dtype: int64
+            Worker  PayRate
+            0    Amy       10
+            1    Bob       12
+            2  Cathy       10
+            3    Dan        8
+            4     Ed        8
+            5   Fred        9
+            6     Gu       11
 
         In the mathematical model, this models the values :math:`c_w`.
 

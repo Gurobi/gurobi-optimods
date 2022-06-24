@@ -3,19 +3,12 @@ import pandas as pd
 from nupstup.workforce import solve_workforce_scheduling
 
 
-availability = pd.read_csv("data/availability.csv").assign(
-    Shift=lambda df: pd.to_datetime(df["Shift"])
-)
-shift_requirements = (
-    pd.read_csv("data/shift_requirements.csv")
-    .assign(Shift=lambda df: pd.to_datetime(df["Shift"]))
-    .set_index("Shift")["Required"]
-)
-pay_rates = pd.read_csv("data/pay_rates.csv").set_index("Worker")["PayRate"]
+# Load example data.
+availability = pd.read_feather("data/availability.feather")
+shift_requirements = pd.read_feather("data/shift_requirements.feather")
+pay_rates = pd.read_feather("data/pay_rates.feather")
 
-# Get results directly from standard data input format.
-# TODO: should be a Model or Solver class to provide options
-# (e.g. LogFile, LogToConsole)?
+# Get winning results.
 assigned_shifts = solve_workforce_scheduling(
     availability=availability,
     shift_requirements=shift_requirements,

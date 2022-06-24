@@ -26,6 +26,13 @@ def solve_workforce_scheduling(
 ) -> pd.DataFrame:
     """Solve a workforce scheduling model"""
     m = gp.Model()
-    x = workforce_mconstr(m, availability, shift_requirements, pay_rates)
+    x = workforce_mconstr(
+        m,
+        availability,
+        shift_requirements.set_index("Shift")["Required"],
+        pay_rates.set_index("Worker")["PayRate"],
+    )
     m.optimize()
-    return availability[pd.Series(index=availability.index, data=x.X > 0.9)].reset_index(drop=True)
+    return availability[
+        pd.Series(index=availability.index, data=x.X > 0.9)
+    ].reset_index(drop=True)
