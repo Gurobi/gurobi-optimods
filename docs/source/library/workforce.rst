@@ -77,6 +77,8 @@ Data examples
 
             [72 rows x 2 columns]
 
+        In the mathematical model, this models the set :math:`\lbrace (w, s) \mid s \in S, w \in W_s \rbrace`.
+
     .. tab:: ``shift_requirements``
 
         Shift on Monday 1st requires 3 workers, etc, etc
@@ -97,6 +99,8 @@ Data examples
             Sun14    5
             Name: Req, dtype: int64
 
+        In the mathematical model, this models the values :math:`r_s`.
+
     .. tab:: ``pay_rates``
 
         Bob is the most expensive worker ...
@@ -112,6 +116,8 @@ Data examples
             Fred      9
             Gu       11
             Name: Pay, dtype: int64
+
+        In the mathematical model, this models the values :math:`c_w`.
 
 |
 
