@@ -6,3 +6,4 @@ build-backend = "flit_core.buildapi"
 name = "nupstup"
 authors = [{name = "Graziella", email = "graziella@nupstup"}]
 dynamic = ["version", "description"]
+dependencies = ["pandas", "numpy", "scipy", "gurobipy"]
