@@ -4,10 +4,14 @@ import gurobipy as gp
 
 
 availability = pd.read_feather("data/availability.feather")
-shift_requirements = pd.read_feather("data/shift_requirements.feather").set_index(
-    "Shift"
-)["Required"]
-pay_rates = pd.read_feather("data/pay_rates.feather").set_index("Worker")["PayRate"]
+shift_requirements = (
+    pd.read_feather("data/shift_requirements.feather")
+    .set_index("Shift")["Required"]
+)
+pay_rates = (
+    pd.read_feather("data/pay_rates.feather")
+    .set_index("Worker")["PayRate"]
+)
 
 m = gp.Model()
 

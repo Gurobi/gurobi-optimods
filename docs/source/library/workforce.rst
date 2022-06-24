@@ -128,12 +128,12 @@ Code
 Alternate between the code required to run the model from the store vs how to implement directly in gurobipy. If you use nupstup, all the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output. If you instead peek under the hood and use gurobipy, you have more options to extend the model with additional constraints and data.
 
 .. tabs::
-    .. tab:: Nupstup
+    .. tab:: nupstup function
 
         .. literalinclude:: ../../examples/workforce_nupstup.py
             :linenos:
 
-    .. tab:: Gurobipy
+    .. tab:: gurobipy model
 
         .. literalinclude:: ../../examples/workforce_gurobipy.py
             :linenos:
