@@ -52,6 +52,67 @@ Consider a service business, like a restaurant, that develops its workforce plan
         Read more about why assignment problems and network flows are the bees knees `here <www.gurobi.com>`_.
         Note that if the model is modified with additional constraints, this elegant property may no longer hold.
 
+Data examples
+
+.. tabs::
+
+    .. tab:: ``availability``
+
+        Amy is available for a shift on Tuesday 2nd, etc, etc
+
+        .. code::
+
+               Workers  Shift
+            0      Amy   Tue2
+            1      Amy   Wed3
+            2      Amy   Fri5
+            3      Amy   Sun7
+            4      Amy   Tue9
+            ..     ...    ...
+            67      Gu  Wed10
+            68      Gu  Thu11
+            69      Gu  Fri12
+            70      Gu  Sat13
+            71      Gu  Sun14
+
+            [72 rows x 2 columns]
+
+    .. tab:: ``shift_requirements``
+
+        Shift on Monday 1st requires 3 workers, etc, etc
+
+        .. code::
+
+            Shift
+            Mon1     3
+            Tue2     2
+            Wed3     4
+            Thu4     2
+            Fri5     5
+            ..      ...
+            Wed10    3
+            Thu11    4
+            Fri12    5
+            Sat13    7
+            Sun14    5
+            Name: Req, dtype: int64
+
+    .. tab:: ``pay_rates``
+
+        Bob is the most expensive worker ...
+
+        .. code::
+
+            Workers
+            Amy      10
+            Bob      12
+            Cathy    10
+            Dan       8
+            Ed        8
+            Fred      9
+            Gu       11
+            Name: Pay, dtype: int64
+
 |
 
 Code
