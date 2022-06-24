@@ -5,31 +5,52 @@ A little background on the proud history of mathprog in workforce scheduling.
 
 Also data science.
 
-
 Problem Specification
 ---------------------
 
-General problem description. Tabs alternate between describing the input dataframe structures and defining the math model.
+Consider a service business, like a restaurant, that develops its workforce plans for the next two weeks (considering a 7-day week). The service requires only one set of skills. There are a number of employed workers with the same set of skills and with identical productivity that are available to work on some of the days during the two-week planning horizon. There is only one shift per workday. Each shift may have different resource (worker) requirements on each workday. The service business wants to minimize the cost of covering all shifts with available workers, based on their rates of pay and availability.
 
 .. tabs::
 
-    .. tab:: Description
+    .. tab:: Data Specification
 
-        * Each row in availability dataframe specifies that an employee is available to work a given shift
-        * Pay dataframe specifies the cost of having employee x work a shift
-        * Requirements dataframe specifies the number of workers required on each shift
-        * Employees will be assigned only to shifts they are available for, in such a way that all requirements are covered while total cost of covering all shifts is minimised
-        * Each row in the returned assignment dataframe specifies that an employee has been assigned a given shift
+        The workforce scheduling model takes the following inputs:
 
-    .. tab:: Maths
+        * The ``availability`` dataframe has two columns: ``Workers`` and ``Shift``. Each row in dataframe specifies that the given worker is available to work the given shift.
+        * The ``shift_requirements`` series is indexed by shift and specifies the number of workers required for that shift. There should be one entry for every unique worker in ``availability["Workers"]``.
+        * The ``pay_rates`` series is indexed by worker and specifies the pay per shift worked for that worker. There should be one entry for every unique shift in ``availability["Shift"]``.
 
-        I should define some terms here...
+        When ``solve_workforce_scheduling`` is called, a model is formulated and solved immediately using Gurobi. Workers will be assigned only to shifts they are available for, in such a way that all requirements are covered while total cost of covering all shifts is minimised.
+
+        The returned assignment dataframe is a subset of the availability dataframe, with the same columns. Each row specifies that the given worker has been assigned the given shift.
+
+    .. tab:: Mathematical Model
+
+        Set of :math:`S` shifts to cover using set of workers :math:`W`. Workers :math:`w \in W_{s} \subseteq W` are available to work a given shift `s`, and are paid an amount :math:`c_{w}` for each assigned shift. Shift :math:`s` requires :math:`r_{s}` workers assigned. The model is defined on variables :math:`x_{ws}` such that
 
         .. math::
 
-            \min \sum_i pay_{shift} x_{shift}
+            x_{ws} = \begin{cases}
+                1 & \text{if worker w is given shift s} \\
+                0 & \text{otherwise.} \\
+            \end{cases}
 
-            \sum_i x_{shift} = req_{shift}
+        The mathematical model is then expressed as:
+
+        .. math::
+
+            \begin{alignat}{2}
+            \min \quad        & \sum_{s \in S} \sum_{w \in W_{s}} c_{w} x_{ws} \\
+            \mbox{s.t.} \quad & \sum_{w \in W_{s}} x_{ws} = r_{s} & \forall s \in S \\
+                              & 0 \le x_{ws} \le 1 & \forall s \in S, w \in W_{s} \\
+            \end{alignat}
+
+        The objective computes the total cost of all shift assignments based on worker pay rates.
+        The constraint ensures all shifts are assigned the required number of workers.
+
+        Technically, :math:`x_{ws}` should be binary, but we're in magical assignment land here.
+        Read more about why assignment problems and network flows are the bees knees `here <www.gurobi.com>`_.
+        Note that if the model is modified with additional constraints, this elegant property may no longer hold.
 
 |
 
@@ -43,13 +64,11 @@ Alternate between the code required to run the model from the store vs how to im
 
         .. literalinclude:: ../../examples/workforce_nupstup.py
             :linenos:
-            :caption: workforce_nupstup.py
 
     .. tab:: Gurobipy
 
         .. literalinclude:: ../../examples/workforce_gurobipy.py
             :linenos:
-            :caption: workforce_gurobipy.py
 
 
 Both codes construct the same model and give the same result. The model is solved as a linear program by Gurobi.

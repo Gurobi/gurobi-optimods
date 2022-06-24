@@ -8,6 +8,8 @@ shift_requirements = pd.read_csv("data/shiftReq.csv", index_col=[0])['Req']
 pay_rates = pd.read_csv("data/workerpay.csv", index_col=[0])['Pay']
 
 # Get results directly from standard data input format.
+# TODO: should be a Model or Solver class to provide options
+# (e.g. LogFile, LogToConsole)?
 assigned_shifts = solve_workforce_scheduling(
     availability=availability,
     shift_requirements=shift_requirements,
