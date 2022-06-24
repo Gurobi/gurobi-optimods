@@ -3,15 +3,11 @@ import pandas as pd
 import gurobipy as gp
 
 
-availability = pd.read_csv("data/availability.csv").assign(
-    Shift=lambda df: pd.to_datetime(df["Shift"])
-)
-shift_requirements = (
-    pd.read_csv("data/shift_requirements.csv")
-    .assign(Shift=lambda df: pd.to_datetime(df["Shift"]))
-    .set_index("Shift")["Required"]
-)
-pay_rates = pd.read_csv("data/pay_rates.csv").set_index("Worker")["PayRate"]
+availability = pd.read_feather("data/availability.feather")
+shift_requirements = pd.read_feather("data/shift_requirements.feather").set_index(
+    "Shift"
+)["Required"]
+pay_rates = pd.read_feather("data/pay_rates.feather").set_index("Worker")["PayRate"]
 
 m = gp.Model()
 
@@ -26,8 +22,6 @@ for shift, shift_workers in availability.groupby("Shift"):
     m.addConstr(x[shift_workers.index].sum() == shift_requirements.loc[shift])
 
 m.optimize()
-
-# TODO fix data so shift ordering is sensible; use dates?
 
 # Use solution to filter selected shifts.
 assigned_shifts = availability[pd.Series(index=availability.index, data=x.X > 0.9)]
