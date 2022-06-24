@@ -7,7 +7,7 @@ build:
 
 sphinx:
   fail_on_warning: false
-  configuration: docs/conf.py
+  configuration: docs/source/conf.py
 
 python:
   # Install our python package before building the docs
