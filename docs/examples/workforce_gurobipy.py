@@ -4,8 +4,8 @@ import gurobipy as gp
 
 
 availability = pd.read_csv("data/availability.csv")
-shift_req = pd.read_csv("data/shiftReq.csv", index_col=[0])
-pay = pd.read_csv("data/workerpay.csv", index_col=[0])
+shift_requirements = pd.read_csv("data/shiftReq.csv", index_col=[0])['Req']
+pay_rates = pd.read_csv("data/workerpay.csv", index_col=[0])['Pay']
 
 m = gp.Model()
 
@@ -13,11 +13,11 @@ x = m.addMVar(availability.shape[0], ub=1)
 
 # Objective:
 for worker, worker_shifts in availability.groupby("Workers"):
-    x[worker_shifts.index].Obj = pay.loc[worker, "Pay"]
+    x[worker_shifts.index].Obj = pay_rates.loc[worker]
 
 # Constraint: enough workers per shifts
 for shift, shift_workers in availability.groupby("Shift"):
-    m.addConstr(x[shift_workers.index].sum() == shift_req.loc[shift])
+    m.addConstr(x[shift_workers.index].sum() == shift_requirements.loc[shift])
 
 m.optimize()
 
