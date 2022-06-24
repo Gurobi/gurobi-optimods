@@ -17,8 +17,8 @@ Consider a service business, like a restaurant, that develops its workforce plan
         The workforce scheduling model takes the following inputs:
 
         * The ``availability`` dataframe has two columns: ``Worker`` and ``Shift``. Each row in dataframe specifies that the given worker is available to work the given shift.
-        * The ``shift_requirements`` series is indexed by shift and specifies the number of workers required for that shift. There should be one entry for every unique worker in ``availability["Workers"]``.
-        * The ``pay_rates`` series is indexed by worker and specifies the pay per shift worked for that worker. There should be one entry for every unique shift in ``availability["Shift"]``.
+        * The ``shift_requirements`` dataframe has two columns: ``Shift`` and ``Required``. Each row specifies the number of workers required for a given shift. There should be one row for every unique worker in ``availability["Workers"]``.
+        * The ``pay_rates`` dataframe has two columns: ``Worker`` and ``PayRate``. Each row specifies the pay per shift worked for that worker. There should be one row for every unique shift in ``availability["Shift"]``.
 
         When ``solve_workforce_scheduling`` is called, a model is formulated and solved immediately using Gurobi. Workers will be assigned only to shifts they are available for, in such a way that all requirements are covered while total cost of covering all shifts is minimised.
 
