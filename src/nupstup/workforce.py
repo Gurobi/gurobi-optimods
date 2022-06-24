@@ -24,6 +24,7 @@ def workforce_mconstr(m, availability, shift_req, pay):
 def solve_workforce_scheduling(
     availability: pd.DataFrame, shift_requirements: pd.Series, pay_rates: pd.Series
 ) -> pd.DataFrame:
+    """Solve a workforce scheduling model"""
     m = gp.Model()
     x = workforce_mconstr(m, availability, shift_requirements, pay_rates)
     m.optimize()

@@ -2,6 +2,7 @@ API
 ===
 
 .. autosummary::
-   :toctree: generated
 
-   lumache
+   nupstup.workforce.solve_workforce_scheduling
+
+.. autofunction:: nupstup.workforce.solve_workforce_scheduling
