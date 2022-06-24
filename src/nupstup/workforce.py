@@ -7,7 +7,7 @@ import scipy.sparse as sp
 def workforce_mconstr(m, availability, shift_req, pay):
 
     # Directly set the objective at construction time.
-    x = m.addMVar(availability.index.size, ub=1, obj=pay.loc[availability["Workers"]])
+    x = m.addMVar(availability.index.size, ub=1, obj=pay.loc[availability["Worker"]])
 
     # Use pandas to munge data into matrix form.
     categorical = availability["Shift"].astype("category")
@@ -28,4 +28,4 @@ def solve_workforce_scheduling(
     m = gp.Model()
     x = workforce_mconstr(m, availability, shift_requirements, pay_rates)
     m.optimize()
-    return availability[pd.Series(index=availability.index, data=x.X > 0.9)]
+    return availability[pd.Series(index=availability.index, data=x.X > 0.9)].reset_index(drop=True)

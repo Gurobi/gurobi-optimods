@@ -3,16 +3,22 @@ import pandas as pd
 import gurobipy as gp
 
 
-availability = pd.read_csv("data/availability.csv")
-shift_requirements = pd.read_csv("data/shiftReq.csv", index_col=[0])['Req']
-pay_rates = pd.read_csv("data/workerpay.csv", index_col=[0])['Pay']
+availability = pd.read_csv("data/availability.csv").assign(
+    Shift=lambda df: pd.to_datetime(df["Shift"])
+)
+shift_requirements = (
+    pd.read_csv("data/shift_requirements.csv")
+    .assign(Shift=lambda df: pd.to_datetime(df["Shift"]))
+    .set_index("Shift")["Required"]
+)
+pay_rates = pd.read_csv("data/pay_rates.csv").set_index("Worker")["PayRate"]
 
 m = gp.Model()
 
 x = m.addMVar(availability.shape[0], ub=1)
 
 # Objective:
-for worker, worker_shifts in availability.groupby("Workers"):
+for worker, worker_shifts in availability.groupby("Worker"):
     x[worker_shifts.index].Obj = pay_rates.loc[worker]
 
 # Constraint: enough workers per shifts

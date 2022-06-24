@@ -16,7 +16,7 @@ Consider a service business, like a restaurant, that develops its workforce plan
 
         The workforce scheduling model takes the following inputs:
 
-        * The ``availability`` dataframe has two columns: ``Workers`` and ``Shift``. Each row in dataframe specifies that the given worker is available to work the given shift.
+        * The ``availability`` dataframe has two columns: ``Worker`` and ``Shift``. Each row in dataframe specifies that the given worker is available to work the given shift.
         * The ``shift_requirements`` series is indexed by shift and specifies the number of workers required for that shift. There should be one entry for every unique worker in ``availability["Workers"]``.
         * The ``pay_rates`` series is indexed by worker and specifies the pay per shift worked for that worker. There should be one entry for every unique shift in ``availability["Shift"]``.
 
@@ -62,18 +62,18 @@ Data examples
 
         .. code::
 
-               Workers  Shift
-            0      Amy   Tue2
-            1      Amy   Wed3
-            2      Amy   Fri5
-            3      Amy   Sun7
-            4      Amy   Tue9
-            ..     ...    ...
-            67      Gu  Wed10
-            68      Gu  Thu11
-            69      Gu  Fri12
-            70      Gu  Sat13
-            71      Gu  Sun14
+               Worker      Shift
+            0     Amy 2022-07-02
+            1     Amy 2022-07-03
+            2     Amy 2022-07-05
+            3     Amy 2022-07-07
+            4     Amy 2022-07-09
+            ..    ...        ...
+            67     Gu 2022-07-10
+            68     Gu 2022-07-11
+            69     Gu 2022-07-12
+            70     Gu 2022-07-13
+            71     Gu 2022-07-14
 
             [72 rows x 2 columns]
 
@@ -86,18 +86,18 @@ Data examples
         .. code::
 
             Shift
-            Mon1     3
-            Tue2     2
-            Wed3     4
-            Thu4     2
-            Fri5     5
-            ..      ...
-            Wed10    3
-            Thu11    4
-            Fri12    5
-            Sat13    7
-            Sun14    5
-            Name: Req, dtype: int64
+            2022-07-01    3
+            2022-07-02    2
+            2022-07-03    4
+            2022-07-04    2
+            2022-07-05    5
+            ..          ...
+            2022-07-10    3
+            2022-07-11    4
+            2022-07-12    5
+            2022-07-13    7
+            2022-07-14    5
+            Name: Required, dtype: int64
 
         In the mathematical model, this models the values :math:`r_s`.
 
@@ -107,7 +107,7 @@ Data examples
 
         .. code::
 
-            Workers
+            Worker
             Amy      10
             Bob      12
             Cathy    10
@@ -115,7 +115,7 @@ Data examples
             Ed        8
             Fred      9
             Gu       11
-            Name: Pay, dtype: int64
+            Name: PayRate, dtype: int64
 
         In the mathematical model, this models the values :math:`c_w`.
 
@@ -160,14 +160,18 @@ Solution is a selection of shift assignments.
 .. output-cell::
     :execution-count: 1
 
-       Workers  Shift
-    1      Amy   Wed3
-    2      Amy   Fri5
-    3      Amy   Sun7
-    ...
-    64      Gu   Sun7
-    69      Gu  Fri12
-    70      Gu  Sat13
+       Worker      Shift
+    0     Amy 2022-07-03
+    1     Amy 2022-07-05
+    2     Amy 2022-07-07
+    3     Amy 2022-07-10
+    4     Amy 2022-07-11
+    ..    ...        ...
+    47     Gu 2022-07-05
+    48     Gu 2022-07-06
+    49     Gu 2022-07-07
+    50     Gu 2022-07-12
+    51     Gu 2022-07-13
 
 Use pandas functions to create a shift allocation table for added prettiness.
 
@@ -178,7 +182,7 @@ Use pandas functions to create a shift allocation table for added prettiness.
         assigned_shifts.assign(value=1),
         values="value",
         index="Shift",
-        columns="Workers",
+        columns="Worker",
         fill_value="-",
     ).replace({1.0: "Y"})
 
@@ -187,19 +191,19 @@ Use pandas functions to create a shift allocation table for added prettiness.
 .. output-cell::
     :execution-count: 2
 
-    Workers Amy Bob Cathy Dan Ed Fred Gu
-    Shift
-    Fri12     Y   -     Y   Y  -    Y  Y
-    Fri5      Y   -     Y   Y  Y    -  Y
-    Mon1      -   -     -   -  Y    Y  Y
-    Mon8      -   -     -   Y  Y    -  -
-    Sat13     Y   Y     Y   Y  Y    Y  Y
-    Sat6      -   Y     -   Y  -    Y  Y
-    Sun14     Y   -     Y   Y  Y    Y  -
-    Sun7      Y   -     Y   -  Y    -  Y
-    Thu11     Y   -     Y   Y  Y    -  -
-    Thu4      -   -     Y   -  Y    -  -
-    Tue2      -   -     -   Y  Y    -  -
-    Tue9      -   -     -   Y  Y    -  -
-    Wed10     Y   -     Y   Y  -    -  -
-    Wed3      Y   -     -   Y  Y    Y  -
+    Worker     Amy Bob Cathy Dan Ed Fred Gu
+    Shift                                  
+    2022-07-01   -   -     -   -  Y    Y  Y
+    2022-07-02   -   -     -   Y  Y    -  -
+    2022-07-03   Y   -     -   Y  Y    Y  -
+    2022-07-04   -   -     Y   -  Y    -  -
+    2022-07-05   Y   -     Y   Y  Y    -  Y
+    2022-07-06   -   Y     -   Y  -    Y  Y
+    2022-07-07   Y   -     Y   -  Y    -  Y
+    2022-07-08   -   -     -   Y  Y    -  -
+    2022-07-09   -   -     -   Y  Y    -  -
+    2022-07-10   Y   -     Y   Y  -    -  -
+    2022-07-11   Y   -     Y   Y  Y    -  -
+    2022-07-12   Y   -     Y   Y  -    Y  Y
+    2022-07-13   Y   Y     Y   Y  Y    Y  Y
+    2022-07-14   Y   -     Y   Y  Y    Y  -
