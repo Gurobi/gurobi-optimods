@@ -54,14 +54,44 @@ Consider a service business, like a restaurant, that develops its workforce plan
 
 Data examples
 
+.. a few re-use hacks for doctests
+
+.. testsetup:: workforce
+
+    # Already in examples/data dir, to shorten file paths
+    import os
+    pwd = os.getcwd()
+    os.chdir("examples")
+
+    # Make the example codes (with results) importable
+    import sys
+    sys.path.append(pwd + "/examples")
+
+    # Set pandas options
+    import pandas as pd
+    old_max_rows = pd.options.display.max_rows
+    pd.options.display.max_rows = 10
+
+.. testcleanup:: workforce
+
+    os.chdir(pwd)
+    sys.path.pop()
+    pd.options.display.max_rows = old_max_rows
+
+.. Maybe the example paths should be found in a datasets module
+.. similar to sklearn. We could included proccessing code to
+.. read from csv and avoid the feather dependency that way.
+
 .. tabs::
 
     .. tab:: ``availability``
 
         Amy is available for a shift on Tuesday 2nd, etc, etc
 
-        .. code::
+        .. doctest:: workforce
+            :options: +NORMALIZE_WHITESPACE
 
+            >>> pd.read_feather("data/availability.feather")
                Worker      Shift
             0     Amy 2022-07-02
             1     Amy 2022-07-03
@@ -74,7 +104,7 @@ Data examples
             69     Gu 2022-07-12
             70     Gu 2022-07-13
             71     Gu 2022-07-14
-
+            <BLANKLINE>
             [72 rows x 2 columns]
 
         In the mathematical model, this models the set :math:`\lbrace (w, s) \mid s \in S, w \in W_s \rbrace`.
@@ -83,23 +113,24 @@ Data examples
 
         Shift on Monday 1st requires 3 workers, etc, etc
 
-        .. code::
+        .. doctest:: workforce
+            :options: +NORMALIZE_WHITESPACE
 
+            >>> pd.read_feather("data/shift_requirements.feather")
                 Required      Shift
             0          3 2022-07-01
             1          2 2022-07-02
             2          4 2022-07-03
             3          2 2022-07-04
             4          5 2022-07-05
-            5          4 2022-07-06
-            6          4 2022-07-07
-            7          2 2022-07-08
-            8          2 2022-07-09
+            ..       ...        ...
             9          3 2022-07-10
             10         4 2022-07-11
             11         5 2022-07-12
             12         7 2022-07-13
             13         5 2022-07-14
+            <BLANKLINE>
+            [14 rows x 2 columns]
 
         In the mathematical model, this models the values :math:`r_s`.
 
@@ -107,8 +138,10 @@ Data examples
 
         Bob is the most expensive worker ...
 
-        .. code::
+        .. doctest:: workforce
+            :options: +NORMALIZE_WHITESPACE
 
+            >>> pd.read_feather("data/pay_rates.feather")
             Worker  PayRate
             0    Amy       10
             1    Bob       12
@@ -151,15 +184,43 @@ Both codes construct the same model and give the same result. The model is solve
 Solution
 --------
 
-Solution is a selection of shift assignments.
+Solution is a selection of shift assignments. The returned dataframe is just a
+subset of the availability dataframe, so we can transform the results using
+normal pandas code (no gurobipy interaction).
+
+.. this tests that workforce_nupstup.py is correct
+.. we should separately test that the results of the two
+.. alternative codes exactly match
+
+.. doctest ensures that we just see gurobi log output from
+.. the script, with correct objective value
+
+.. testcode:: workforce
+    :hide:
+
+    from workforce_nupstup import assigned_shifts
+
+.. testoutput:: workforce
+    :hide:
+
+    Gurobi Optimizer version ...
+    Optimal objective  4.800000000e+02
+
+
+.. can hack this a little so we avoid the print and get something
+.. ipython-like
 
 .. code-cell:: python
     :execution-count: 1
 
     assigned_shifts
 
-.. output-cell::
-    :execution-count: 1
+.. testcode:: workforce
+    :hide:
+
+    print(assigned_shifts)
+
+.. testoutput:: workforce
 
        Worker      Shift
     0     Amy 2022-07-03
@@ -174,10 +235,17 @@ Solution is a selection of shift assignments.
     50     Gu 2022-07-12
     51     Gu 2022-07-13
 
+    [52 rows x 2 columns]
+
+
 Use pandas functions to create a shift allocation table for added prettiness.
 
-.. code-cell:: python
-    :execution-count: 2
+.. might prefer doctest to testcode, but it doesn't seem to allow multiline
+.. and we want to display some more complex stuff
+
+.. can we make a custom directive here so it's styled as jupyter output?
+
+.. testcode:: workforce
 
     shifts_table = pd.pivot_table(
         assigned_shifts.assign(value=1),
@@ -189,22 +257,26 @@ Use pandas functions to create a shift allocation table for added prettiness.
 
     shifts_table
 
-.. output-cell::
-    :execution-count: 2
+.. testcode:: workforce
+    :hide:
+
+    print(shifts_table)
+
+.. testoutput:: workforce
+    :options: +NORMALIZE_WHITESPACE
 
     Worker     Amy Bob Cathy Dan Ed Fred Gu
-    Shift                                  
+    Shift
     2022-07-01   -   -     -   -  Y    Y  Y
     2022-07-02   -   -     -   Y  Y    -  -
     2022-07-03   Y   -     -   Y  Y    Y  -
     2022-07-04   -   -     Y   -  Y    -  -
     2022-07-05   Y   -     Y   Y  Y    -  Y
-    2022-07-06   -   Y     -   Y  -    Y  Y
-    2022-07-07   Y   -     Y   -  Y    -  Y
-    2022-07-08   -   -     -   Y  Y    -  -
-    2022-07-09   -   -     -   Y  Y    -  -
+    ...         ..  ..   ...  .. ..  ... ..
     2022-07-10   Y   -     Y   Y  -    -  -
     2022-07-11   Y   -     Y   Y  Y    -  -
     2022-07-12   Y   -     Y   Y  -    Y  Y
     2022-07-13   Y   Y     Y   Y  Y    Y  Y
     2022-07-14   Y   -     Y   Y  Y    Y  -
+
+    [14 rows x 7 columns]
