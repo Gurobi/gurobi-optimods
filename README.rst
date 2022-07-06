@@ -1,4 +1,4 @@
-The nupstup -- easy to use optimization API
+The nupstup -- optimization easy to use
 =======================================
 
 The idea in one sentence:  We will do scikit.learn for optimization
