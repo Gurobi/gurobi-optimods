@@ -1,9 +1,8 @@
-Template for the Read the Docs tutorial
+The nupstup -- easy to use optimization API
 =======================================
 
-This GitHub template includes fictional Python library
-with some basic Sphinx docs.
+The idea in one sentence:  We will do scikit.learn for optimization
 
-Read the tutorial here:
-
-https://docs.readthedocs.io/en/stable/tutorial/
+- A plethora of useful optimization models, in- and outside classical OR
+- Data driven APIs
+- Intuitive for Python users
