@@ -1,2 +1,2 @@
-sphinx-tabs
-sphinx-toolbox
+sphinx-tabs==3.4.0
+sphinx-toolbox==3.1.1
