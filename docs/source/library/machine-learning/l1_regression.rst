@@ -1,24 +1,38 @@
-L1 Norm Regression
-==================
+L1 Regression
+=============
 
-See sklearn LinearRegression (L2 norm, no regularization), Ridge (L2 norm, L2 regularization), Lasso (L2 norm, L1 regularization). This model uses Gurobi to implement *L1* norm (also with L1 regularization).
+- Minimum sum of absolute errors (L1) regression performs is more robust than ordinary least squares (OLS, L2) in that it is more resistant to outliers in the response variable.
+- Expressed as a linear program, so ideally suited to Gurobi.
+- Present this in contrast to :code:`sklearn.linear_model.LinearRegression` (find a good comparison dataset).
+- This implementation matches the sklearn APIs, can be used as a drop-in replacement.
 
 Problem Specification
 ---------------------
 
-Standard linear regression uses ordinary least squares ...
+See sklearn `Linear Models <https://scikit-learn.org/stable/modules/linear_model.html>`_ for general explanation.
 
 .. tabs::
 
-    .. tab:: Data Specification
+    .. tab:: Loss Function
 
-        We match the sklearn APIs: provide X_train and y_train as normal.
+        :code:`L1Regression` fits a linear model with coefficients :math:`w` to minimize the sum of absolute errors.
 
-        Give the regression objective function here, like sklearn does.
+        .. math::
+
+            \min_w \lvert Xw - y \rvert
 
     .. tab:: Mathematical Model
 
-        Show the full LP implementation needed to get around all the absolute values.
+        To model the L1 regression loss function using linear programming, we need to introduce a number of auxiliary variables. Here :math:`I` is the set of data points and :math:`J` the set of fields. Response values :math:`y_i` are predicted from predictor values :math:`x^j_i` by fitting coefficients :math:`w^j`. To handle the absolute value, non-negative variables :math:`u_i` and :math:`v_i` are introduced.
+
+        .. math::
+
+            \begin{alignat}{2}
+            \min \quad        & \sum_i u_i + v_i \\
+            \mbox{s.t.} \quad & \sum_j w^j x^j_i + u_i - v_i = y_i \quad & \forall i \in I \\
+                              & u_i, v_i \ge 0                     \quad & \forall i \in I \\
+                              & w^j \,\, \text{free}               \quad & \forall j \in J \\
+            \end{alignat}
 
 Code
 ----
@@ -45,31 +59,31 @@ Both codes construct the same model and give the same result. The model is solve
 
         Gurobi Optimizer version 9.5.1 build v9.5.1rc2 (mac64[x86])
         Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
-        Optimize a model with 351 rows, 683 columns and 4343 nonzeros
-        Model fingerprint: 0xaab99046
+        Optimize a model with 331 rows, 673 columns and 4303 nonzeros
+        Model fingerprint: 0x6983ca17
         Coefficient statistics:
-        Matrix range     [2e-04, 1e+00]
-        Objective range  [3e-03, 1e-02]
+        Matrix range     [6e-05, 1e+00]
+        Objective range  [3e-03, 3e-03]
         Bounds range     [0e+00, 0e+00]
         RHS range        [2e+01, 3e+02]
-        Presolve time: 0.01s
-        Presolved: 351 rows, 683 columns, 4343 nonzeros
+        Presolve time: 0.00s
+        Presolved: 331 rows, 673 columns, 4303 nonzeros
 
         Iteration    Objective       Primal Inf.    Dual Inf.      Time
             0      handle free variables                          0s
-            359    5.9234728e+01   0.000000e+00   0.000000e+00      0s
+            354    4.3725902e+01   0.000000e+00   0.000000e+00      0s
 
-        Solved in 359 iterations and 0.02 seconds (0.02 work units)
-        Optimal objective  5.923472777e+01
+        Solved in 354 iterations and 0.01 seconds (0.01 work units)
+        Optimal objective  4.372590220e+01
 
 |
 
 Solution
 --------
 
-Solution is a an output from the predictive model, just like in sklearn.
+Output from the predictive model, just like in sklearn.
 
-.. testcode:: workforce
+.. testcode:: l1_regression
     :hide:
 
     import sys
@@ -77,13 +91,13 @@ Solution is a an output from the predictive model, just like in sklearn.
     from l1_regression_nupstup import y_pred, y_test
     sys.path.pop()
 
-.. testoutput:: workforce
+.. testoutput:: l1_regression
     :hide:
 
     Gurobi Optimizer version ...
-    Optimal objective  5.920257736e+01
+    Optimal objective  4.372590220e+01
 
-.. testcode:: workforce
+.. testcode:: l1_regression
 
     # Assess error
     from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -91,8 +105,8 @@ Solution is a an output from the predictive model, just like in sklearn.
     print("Mean absolute error: %.2f" % mean_absolute_error(y_test, y_pred))
     print("Coefficient of determination: %.2f" % r2_score(y_test, y_pred))
 
-.. testoutput:: workforce
+.. testoutput:: l1_regression
 
-    Mean squared error: 2930.86
-    Mean absolute error: 43.76
-    Coefficient of determination: 0.47
+    Mean squared error: 2969.58
+    Mean absolute error: 41.92
+    Coefficient of determination: 0.46
