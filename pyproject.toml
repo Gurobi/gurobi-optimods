@@ -4,6 +4,9 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "nupstup"
-authors = [{name = "Graziella", email = "graziella@nupstup"}]
+authors = [
+    { name = "Simon Bowly", email = "bowly@gurobi.com" },
+    { name = "Robert Luce", email = "luce@gurobi.com" },
+]
 dynamic = ["version", "description"]
 dependencies = ["pandas", "numpy", "scipy", "gurobipy", "feather-format"]

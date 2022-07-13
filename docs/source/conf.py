@@ -3,8 +3,8 @@
 # -- Project information
 
 project = 'Nupstup'
-copyright = '2021, Graziella'
-author = 'Graziella'
+copyright = '2022, Gurobi Optimization'
+author = 'Gurobi Optimization'
 
 release = '0.1'
 version = '0.1.0'
