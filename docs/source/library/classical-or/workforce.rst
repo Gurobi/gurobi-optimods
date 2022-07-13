@@ -163,12 +163,12 @@ Alternate between the code required to run the model from the store vs how to im
 .. tabs::
     .. tab:: nupstup function
 
-        .. literalinclude:: ../../examples/workforce_nupstup.py
+        .. literalinclude:: ../../../examples/workforce_nupstup.py
             :linenos:
 
     .. tab:: gurobipy model
 
-        .. literalinclude:: ../../examples/workforce_gurobipy.py
+        .. literalinclude:: ../../../examples/workforce_gurobipy.py
             :linenos:
 
 

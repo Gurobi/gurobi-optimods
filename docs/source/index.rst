@@ -15,6 +15,6 @@ Contents
 
 .. toctree::
 
-   models
+   library/index
    usage
    api
