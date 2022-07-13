@@ -23,15 +23,15 @@ See sklearn `Linear Models <https://scikit-learn.org/stable/modules/linear_model
 
     .. tab:: Mathematical Model
 
-        To model the L1 regression loss function using linear programming, we need to introduce a number of auxiliary variables. Here :math:`I` is the set of data points and :math:`J` the set of fields. Response values :math:`y_i` are predicted from predictor values :math:`x^j_i` by fitting coefficients :math:`w^j`. To handle the absolute value, non-negative variables :math:`u_i` and :math:`v_i` are introduced.
+        To model the L1 regression loss function using linear programming, we need to introduce a number of auxiliary variables. Here :math:`I` is the set of data points and :math:`J` the set of fields. Response values :math:`y_i` are predicted from predictor values :math:`x_{ij}` by fitting coefficients :math:`w_j`. To handle the absolute value, non-negative variables :math:`u_i` and :math:`v_i` are introduced.
 
         .. math::
 
             \begin{alignat}{2}
             \min \quad        & \sum_i u_i + v_i \\
-            \mbox{s.t.} \quad & \sum_j w^j x^j_i + u_i - v_i = y_i \quad & \forall i \in I \\
+            \mbox{s.t.} \quad & \sum_j w_j x_{ij} + u_i - v_i = y_i \quad & \forall i \in I \\
                               & u_i, v_i \ge 0                     \quad & \forall i \in I \\
-                              & w^j \,\, \text{free}               \quad & \forall j \in J \\
+                              & w_j \,\, \text{free}               \quad & \forall j \in J \\
             \end{alignat}
 
 Code
