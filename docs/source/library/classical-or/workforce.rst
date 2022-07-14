@@ -207,7 +207,7 @@ normal pandas code (no gurobipy interaction).
 .. testoutput:: workforce
     :hide:
 
-    Gurobi Optimizer version ...
+    ...
     Optimal objective  4.800000000e+02
 
 .. doctest:: workforce

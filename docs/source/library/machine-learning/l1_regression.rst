@@ -89,7 +89,7 @@ Solution
 .. testoutput:: l1_regression
     :hide:
 
-    Gurobi Optimizer version ...
+    ...
     Optimal objective  4.372590220e+01
 
 Properties of the predictive model, just like in sklearn.
