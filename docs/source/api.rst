@@ -5,4 +5,4 @@ API
    :members: solve_workforce_scheduling
 
 .. automodule:: nupstup.regression
-   :members: GurobiL1Regression
+   :members: L1Regression
