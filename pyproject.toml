@@ -1,12 +1,32 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "nupstup"
+description = "The Nupstup -- optimization easy to use"
+readme = "README.rst"
+requires-python = ">=3.7"
+license = "MIT"
+keywords = ["optimization", "gurobipy", "pandas"]
 authors = [
     { name = "Simon Bowly", email = "bowly@gurobi.com" },
     { name = "Robert Luce", email = "luce@gurobi.com" },
 ]
-dynamic = ["version", "description"]
-dependencies = ["pandas", "numpy", "scipy", "gurobipy", "feather-format"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = [
+    "feather-format",
+    "gurobipy",
+    "numpy",
+    "pandas",
+    "scipy",
+]
+dynamic = ["version"]
+
+[tool.hatch.version]
+path = "src/nupstup/__init__.py"
