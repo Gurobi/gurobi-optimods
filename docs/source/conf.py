@@ -32,6 +32,17 @@ intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
 
+# -- Make examples importable for use in doctests
+
+doctest_global_setup = """
+import sys
+sys.path.append("")
+"""
+
+doctest_global_cleanup = """
+sys.path.pop()
+"""
+
 # -- Options for HTML output
 
 html_theme = 'sphinx_rtd_theme'

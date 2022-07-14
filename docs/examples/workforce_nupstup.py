@@ -4,9 +4,9 @@ from nupstup.workforce import solve_workforce_scheduling
 
 
 # Load example data.
-availability = pd.read_feather("data/availability.feather")
-shift_requirements = pd.read_feather("data/shift_requirements.feather")
-pay_rates = pd.read_feather("data/pay_rates.feather")
+availability = pd.read_feather("examples/data/availability.feather")
+shift_requirements = pd.read_feather("examples/data/shift_requirements.feather")
+pay_rates = pd.read_feather("examples/data/pay_rates.feather")
 
 # Get winning results.
 assigned_shifts = solve_workforce_scheduling(

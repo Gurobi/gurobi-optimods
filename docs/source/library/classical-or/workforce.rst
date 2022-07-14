@@ -58,25 +58,9 @@ Data examples
 
 .. testsetup:: workforce
 
-    # Already in examples/data dir, to shorten file paths
-    import os
-    pwd = os.getcwd()
-    os.chdir("examples")
-
-    # Make the example codes (with results) importable
-    import sys
-    sys.path.append(pwd + "/examples")
-
     # Set pandas options
     import pandas as pd
-    old_max_rows = pd.options.display.max_rows
     pd.options.display.max_rows = 10
-
-.. testcleanup:: workforce
-
-    os.chdir(pwd)
-    sys.path.pop()
-    pd.options.display.max_rows = old_max_rows
 
 .. Maybe the example paths should be found in a datasets module
 .. similar to sklearn. We could included proccessing code to
@@ -91,7 +75,7 @@ Data examples
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE
 
-            >>> pd.read_feather("data/availability.feather")
+            >>> pd.read_feather("examples/data/availability.feather")
                Worker      Shift
             0     Amy 2022-07-02
             1     Amy 2022-07-03
@@ -116,7 +100,7 @@ Data examples
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE
 
-            >>> pd.read_feather("data/shift_requirements.feather")
+            >>> pd.read_feather("examples/data/shift_requirements.feather")
                 Required      Shift
             0          3 2022-07-01
             1          2 2022-07-02
@@ -141,7 +125,7 @@ Data examples
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE
 
-            >>> pd.read_feather("data/pay_rates.feather")
+            >>> pd.read_feather("examples/data/pay_rates.feather")
             Worker  PayRate
             0    Amy       10
             1    Bob       12
@@ -217,7 +201,8 @@ normal pandas code (no gurobipy interaction).
 .. testcode:: workforce
     :hide:
 
-    from workforce_nupstup import assigned_shifts
+    from examples.workforce_nupstup import assigned_shifts
+    pd.options.display.max_rows = 15
 
 .. testoutput:: workforce
     :hide:
@@ -225,23 +210,11 @@ normal pandas code (no gurobipy interaction).
     Gurobi Optimizer version ...
     Optimal objective  4.800000000e+02
 
+.. doctest:: workforce
+    :options: +NORMALIZE_WHITESPACE
 
-.. can hack this a little so we avoid the print and get something
-.. ipython-like
-
-.. code-cell:: python
-    :execution-count: 1
-
-    assigned_shifts
-
-.. testcode:: workforce
-    :hide:
-
-    print(assigned_shifts)
-
-.. testoutput:: workforce
-
-       Worker      Shift
+    >>> assigned_shifts
+    Worker      Shift
     0     Amy 2022-07-03
     1     Amy 2022-07-05
     2     Amy 2022-07-07
@@ -253,49 +226,35 @@ normal pandas code (no gurobipy interaction).
     49     Gu 2022-07-07
     50     Gu 2022-07-12
     51     Gu 2022-07-13
-
+    <BLANKLINE>
     [52 rows x 2 columns]
 
+Further transform
 
-Use pandas functions to create a shift allocation table for added prettiness.
-
-.. might prefer doctest to testcode, but it doesn't seem to allow multiline
-.. and we want to display some more complex stuff
-
-.. can we make a custom directive here so it's styled as jupyter output?
-
-.. testcode:: workforce
-
-    shifts_table = pd.pivot_table(
-        assigned_shifts.assign(value=1),
-        values="value",
-        index="Shift",
-        columns="Worker",
-        fill_value="-",
-    ).replace({1.0: "Y"})
-
-    shifts_table
-
-.. testcode:: workforce
-    :hide:
-
-    print(shifts_table)
-
-.. testoutput:: workforce
+.. doctest:: workforce
     :options: +NORMALIZE_WHITESPACE
 
+    >>> shifts_table = pd.pivot_table(
+    ...     assigned_shifts.assign(value=1),
+    ...     values="value",
+    ...     index="Shift",
+    ...     columns="Worker",
+    ...     fill_value="-",
+    ... ).replace({1.0: "Y"})
+    >>> shifts_table
     Worker     Amy Bob Cathy Dan Ed Fred Gu
-    Shift
+    Shift                                  
     2022-07-01   -   -     -   -  Y    Y  Y
     2022-07-02   -   -     -   Y  Y    -  -
     2022-07-03   Y   -     -   Y  Y    Y  -
     2022-07-04   -   -     Y   -  Y    -  -
     2022-07-05   Y   -     Y   Y  Y    -  Y
-    ...         ..  ..   ...  .. ..  ... ..
+    2022-07-06   -   Y     -   Y  -    Y  Y
+    2022-07-07   Y   -     Y   -  Y    -  Y
+    2022-07-08   -   -     -   Y  Y    -  -
+    2022-07-09   -   -     -   Y  Y    -  -
     2022-07-10   Y   -     Y   Y  -    -  -
     2022-07-11   Y   -     Y   Y  Y    -  -
     2022-07-12   Y   -     Y   Y  -    Y  Y
     2022-07-13   Y   Y     Y   Y  Y    Y  Y
     2022-07-14   Y   -     Y   Y  Y    Y  -
-
-    [14 rows x 7 columns]

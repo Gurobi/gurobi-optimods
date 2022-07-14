@@ -81,15 +81,10 @@ Both codes construct the same model and give the same result. The model is solve
 Solution
 --------
 
-Output from the predictive model, just like in sklearn.
-
 .. testcode:: l1_regression
     :hide:
 
-    import sys
-    sys.path.append("examples")
-    from l1_regression_nupstup import y_pred, y_test
-    sys.path.pop()
+    from examples.l1_regression_nupstup import reg, y_pred, y_test
 
 .. testoutput:: l1_regression
     :hide:
@@ -97,16 +92,25 @@ Output from the predictive model, just like in sklearn.
     Gurobi Optimizer version ...
     Optimal objective  4.372590220e+01
 
-.. testcode:: l1_regression
+Properties of the predictive model, just like in sklearn.
 
-    # Assess error
-    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-    print("Mean squared error: %.2f" % mean_squared_error(y_test, y_pred))
-    print("Mean absolute error: %.2f" % mean_absolute_error(y_test, y_pred))
-    print("Coefficient of determination: %.2f" % r2_score(y_test, y_pred))
+.. doctest:: l1_regression
 
-.. testoutput:: l1_regression
+    >>> reg.coef_
+    array([  16.7152629 , -306.19230544,  454.36833914,  508.02507763,
+           -990.07434864,  414.38167986,  260.18885417,  483.00952994,
+            678.56792495,   14.56067715])
+    >>> reg.intercept_
+    151.61357348161457
 
-    Mean squared error: 2969.58
-    Mean absolute error: 41.92
-    Coefficient of determination: 0.46
+Output from the predictive model, just like in sklearn.
+
+.. doctest:: l1_regression
+
+    >>> from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+    >>> mean_squared_error(y_test, y_pred)
+    2969.577566715166
+    >>> mean_absolute_error(y_test, y_pred)
+    41.9166462209382
+    >>> r2_score(y_test, y_pred)
+    0.4629757409105141
