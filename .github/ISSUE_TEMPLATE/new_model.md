@@ -15,6 +15,7 @@ Justify why this model is a useful addition. Is it self-contained and reusable? 
 - [ ] Machine Learning
 - [ ] Classical OR
 - [ ] Graphs
+- [ ] Other (please specify)
 
 **What will the API be?**
 Add a code snippet for the proposed API. Does this link cleanly to:
@@ -22,6 +23,7 @@ Add a code snippet for the proposed API. Does this link cleanly to:
 - [ ] numpy
 - [ ] scipy
 - [ ] pandas
+- [ ] Other (please specify)
 
 to provide input data to the model?
 
