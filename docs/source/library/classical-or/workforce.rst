@@ -147,12 +147,12 @@ Alternate between the code required to run the model from the store vs how to im
 .. tabs::
     .. tab:: nupstup function
 
-        .. literalinclude:: ../../../examples/workforce_nupstup.py
+        .. literalinclude:: ../../../examples/workforce/nupstup.py
             :linenos:
 
     .. tab:: gurobipy model
 
-        .. literalinclude:: ../../../examples/workforce_gurobipy.py
+        .. literalinclude:: ../../../examples/workforce/gurobipy.py
             :linenos:
 
 
@@ -201,7 +201,7 @@ normal pandas code (no gurobipy interaction).
 .. testcode:: workforce
     :hide:
 
-    from examples.workforce_nupstup import assigned_shifts
+    from examples.workforce.nupstup import assigned_shifts
     pd.options.display.max_rows = 15
 
 .. testoutput:: workforce

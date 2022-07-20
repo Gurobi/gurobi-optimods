@@ -42,12 +42,12 @@ Alternate between the code required to run the model from the store vs how to im
 .. tabs::
     .. tab:: nupstup function
 
-        .. literalinclude:: ../../../examples/l1_regression_nupstup.py
+        .. literalinclude:: ../../../examples/l1_regression/nupstup.py
             :linenos:
 
     .. tab:: gurobipy model
 
-        .. literalinclude:: ../../../examples/l1_regression_gurobipy.py
+        .. literalinclude:: ../../../examples/l1_regression/gurobipy.py
             :linenos:
 
 
@@ -84,7 +84,7 @@ Solution
 .. testcode:: l1_regression
     :hide:
 
-    from examples.l1_regression_nupstup import reg, y_pred, y_test
+    from examples.l1_regression.nupstup import reg, y_pred, y_test
 
 .. testoutput:: l1_regression
     :hide:

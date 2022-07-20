@@ -2,3 +2,5 @@
 # results to nupstup.py. It can be a simplified implementation that doesn't
 # show the nups full capabilities, but if so, nupstup.py should demonstrate
 # the same simple case.
+
+some_result = 'result'

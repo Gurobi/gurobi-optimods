@@ -46,7 +46,7 @@ Code
 .. tabs::
     .. tab:: nupstup function
 
-        .. literalinclude:: ../../../examples/card_regression_nupstup.py
+        .. literalinclude:: ../../../examples/card_regression/nupstup.py
             :linenos:
 
     .. tab:: gurobipy model

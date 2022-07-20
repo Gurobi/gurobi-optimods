@@ -12,5 +12,6 @@ develop:
 	python -m pip install pytest
 
 test: Makefile
-	cd docs && python -m unittest -b examples.test_examples
+	python -m unittest discover
+	cd docs && python -m unittest discover -b
 	cd docs && make doctest
