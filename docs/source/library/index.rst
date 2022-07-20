@@ -1,5 +1,5 @@
-Model Library
-=============
+The Nup Stup
+============
 
 .. toctree::
 

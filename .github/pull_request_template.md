@@ -3,7 +3,7 @@
 ### Description
 <!-- Describe your changes in detail -->
 
-For a new Nup contribution, please include the issue number for the model proposal and check through the list below.
+For a new Nup contribution, please include the issue number for the Nup proposal and check through the list below.
 
 ### Checklist
 <!-- go over following points. check them with an `x` if they are completed, (they turn into clickable checkboxes once the PR is submitted, so no need to do everything at once) -->
