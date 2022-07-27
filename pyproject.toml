@@ -7,7 +7,7 @@ name = "nupstup"
 description = "The Nupstup -- optimization easy to use"
 readme = "README.rst"
 requires-python = ">=3.7"
-license = "MIT"
+license = { text = "MIT" }
 keywords = ["optimization", "gurobipy", "pandas"]
 authors = [
     { name = "Simon Bowly", email = "bowly@gurobi.com" },
