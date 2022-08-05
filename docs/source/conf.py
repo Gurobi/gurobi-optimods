@@ -43,9 +43,5 @@ doctest_global_cleanup = """
 sys.path.pop()
 """
 
-# -- Options for HTML output
-
-html_theme = 'sphinx_rtd_theme'
-
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
