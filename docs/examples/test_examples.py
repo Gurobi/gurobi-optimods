@@ -1,6 +1,6 @@
 import unittest
 
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_array_equal
 from pandas.testing import assert_frame_equal
 
 
@@ -24,3 +24,13 @@ class TestWorkforce(unittest.TestCase):
         assert_frame_equal(
             gp_impl.assigned_shifts.reset_index(drop=True), ns_impl.assigned_shifts
         )
+
+
+class TestMatching(unittest.TestCase):
+
+    def test_compare_examples(self):
+
+        import examples.matching.gurobipy as gp_impl
+        import examples.matching.nupstup as ns_impl
+
+        assert_array_equal(gp_impl.matching.todense(), ns_impl.matching.todense())
