@@ -43,12 +43,10 @@ Alternate between the code required to run the model from the store vs how to im
     .. tab:: nupstup function
 
         .. literalinclude:: ../../../examples/l1_regression/nupstup.py
-            :linenos:
 
     .. tab:: gurobipy model
 
         .. literalinclude:: ../../../examples/l1_regression/gurobipy.py
-            :linenos:
 
 
 Both codes construct the same model and give the same result. The model is solved as a linear program by Gurobi.

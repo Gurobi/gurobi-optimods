@@ -20,6 +20,7 @@ extensions = [
     'sphinx_tabs.tabs',
     'sphinx_toolbox.collapse',
     'sphinx_toolbox.code',
+    'sphinx_copybutton',
 ]
 
 pygments_style = "vs"

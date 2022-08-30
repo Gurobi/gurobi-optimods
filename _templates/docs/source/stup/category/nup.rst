@@ -70,12 +70,10 @@ Tab between the code required to run the model from the store vs how to implemen
     .. tab:: nupstup function
 
         .. literalinclude:: ../../../examples/nup/nupstup.py
-            :linenos:
 
     .. tab:: gurobipy model
 
         .. literalinclude:: ../../../examples/nup/gurobipy.py
-            :linenos:
 
 
 Both codes construct the same model and give the same result. The model is solved as a LP/MIP/QP/etc by Gurobi.
