@@ -19,6 +19,25 @@ Create an issue, and use the 'New Nup Proposal' template to gather the required 
 7. Follow the PR checklist.
 8. When complete, take the PR out of draft and assign a reviewer.
 
+### Development environment
+
+To set up your development environment:
+
+1. Create a python 3.9 virtual environment
+2. Run `make develop` from the top directory of this repository
+
+To build and view the docs (note that when building locally, there is no theme applied, so it won't look like the readthedocs page):
+
+1. Activate your virtual environment
+2. Change to `docs` directory
+3. Run `make livehtml`. This will build the docs and (after a little while) open up a browser window at the index page
+4. Any change to the documentation source files will automatically rebuild and update your browser
+
+To run the tests
+
+1. Activate your virtual environment
+2. Run `make test`. This will run the tests of the nup implementations and examples in the docs
+
 ### Scaffolding
 
 To get started implementing a new nup, create the following files (replacing `<nup>` and `<category>` as needed). Each of the files below has an equivalent under the `_templates` directory which provides further details.
