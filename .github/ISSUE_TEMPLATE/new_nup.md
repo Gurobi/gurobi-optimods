@@ -21,18 +21,18 @@ Justify why this Nup is a useful addition. Criteria:
 
 **Does it fall under an existing category?**
 
-- [ ] Machine Learning
-- [ ] Classical OR
-- [ ] Graphs
-- [ ] Other (please specify)
+- Machine Learning
+- Classical OR
+- Graphs
+- Other (please specify)
 
 **What will the API be?**
 Add a code snippet for the proposed API. Does this link cleanly to:
 
-- [ ] numpy
-- [ ] scipy
-- [ ] pandas
-- [ ] Other (please specify)
+- numpy
+- scipy
+- pandas
+- Other (please specify)
 
 to provide input data to the Nup?
 
