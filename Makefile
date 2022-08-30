@@ -12,6 +12,6 @@ develop:
 	python -m pip install sphinx-autobuild
 
 test: Makefile
-	python -m unittest discover
+	python -m unittest discover -b
 	cd docs && python -m unittest discover -b
 	cd docs && make doctest
