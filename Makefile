@@ -10,6 +10,7 @@ develop:
 	python -m pip install -e .
 	python -m pip install -r docs/requirements.txt
 	python -m pip install pytest
+	python -m pip install sphinx-autobuild
 
 test: Makefile
 	python -m unittest discover
