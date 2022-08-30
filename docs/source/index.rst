@@ -16,6 +16,6 @@ Contents
 .. toctree::
    :maxdepth: 3
 
-   library/index
+   stup/index
    usage
    api
