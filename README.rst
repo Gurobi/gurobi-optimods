@@ -10,4 +10,4 @@ The idea in one sentence:  We will do scikit.learn for optimization
 Contributing
 ------------
 
-See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for instructions on how to propose and implement new nups.
+See `CONTRIBUTING.md <.github/CONTRIBUTING.md>`_ for instructions on how to propose and implement new nups.
