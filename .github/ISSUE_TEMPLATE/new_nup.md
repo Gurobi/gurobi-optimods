@@ -22,7 +22,7 @@ Justify why this Nup is a useful addition. Criteria:
 **Does it fall under an existing category?**
 
 - Machine Learning
-- Classical OR
+- Workforce Management?
 - Graphs
 - Other (please specify)
 
