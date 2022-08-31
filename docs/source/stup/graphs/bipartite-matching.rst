@@ -61,25 +61,20 @@ Both codes construct the same model and give the same result. The model is solve
         Gurobi Optimizer version 9.5.2 build v9.5.2rc0 (mac64[x86])
         Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
         Optimize a model with 7 rows, 6 columns and 12 nonzeros
-        Model fingerprint: 0x01097865
-        Variable types: 0 continuous, 6 integer (6 binary)
+        Model fingerprint: 0x66da6fea
         Coefficient statistics:
         Matrix range     [1e+00, 1e+00]
         Objective range  [1e+00, 1e+00]
-        Bounds range     [1e+00, 1e+00]
+        Bounds range     [0e+00, 0e+00]
         RHS range        [1e+00, 1e+00]
-        Found heuristic solution: objective 3.0000000
         Presolve removed 7 rows and 6 columns
-        Presolve time: 0.00s
+        Presolve time: 0.01s
         Presolve: All rows and columns removed
+        Iteration    Objective       Primal Inf.    Dual Inf.      Time
+            0    3.0000000e+00   0.000000e+00   0.000000e+00      0s
 
-        Explored 0 nodes (0 simplex iterations) in 0.01 seconds (0.00 work units)
-        Thread count was 1 (of 8 available processors)
-
-        Solution count 1: 3 
-
-        Optimal solution found (tolerance 1.00e-04)
-        Best objective 3.000000000000e+00, best bound 3.000000000000e+00, gap 0.0000%
+        Solved in 0 iterations and 0.01 seconds (0.00 work units)
+        Optimal objective  3.000000000e+00
 
 |
 
