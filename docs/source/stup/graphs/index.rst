@@ -5,3 +5,4 @@ Graph Optimization Problems
     :maxdepth: 1
 
     bipartite-matching
+    weighted-matching

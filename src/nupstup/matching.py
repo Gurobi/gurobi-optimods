@@ -64,13 +64,6 @@ def maximum_weighted_matching(G):
     if any(abs(v.X - round(v.X)) > 1e-4 for v in x.values()):
         raise ValueError("Input graph not bipartite")
 
-    row = []
-    col = []
-    data = []
-    for (i, j), v in x.items():
-        if v.X > 0.5:
-            row.append(i)
-            col.append(j)
-            data.append(v.Obj)
+    row, col, data = zip(*[(i, j, v.Obj) for (i, j), v in x.items() if v.X > 0.5])
 
     return sp.coo_matrix((data, (row, col)), shape=G.shape)

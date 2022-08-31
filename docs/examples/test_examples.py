@@ -26,11 +26,24 @@ class TestWorkforce(unittest.TestCase):
         )
 
 
-class TestMatching(unittest.TestCase):
+class TestBipartiteMatching(unittest.TestCase):
 
     def test_compare_examples(self):
 
         import examples.bipartite_matching.gurobipy as gp_impl
         import examples.bipartite_matching.nupstup as ns_impl
+
+        assert_array_equal(gp_impl.matching.todense(), ns_impl.matching.todense())
+
+
+class TestWeightedMatching(unittest.TestCase):
+
+    def test_compare_examples(self):
+
+        import examples.weighted_matching.gurobipy as gp_impl
+        import examples.weighted_matching.nupstup as ns_impl
+
+        print(gp_impl.matching.toarray())
+        print(ns_impl.matching.toarray())
 
         assert_array_equal(gp_impl.matching.todense(), ns_impl.matching.todense())
