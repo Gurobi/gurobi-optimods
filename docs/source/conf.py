@@ -33,6 +33,10 @@ intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
 
+# -- Include only prompts
+
+copybutton_prompt_text = ">>> "
+
 # -- Make examples importable for use in doctests
 
 doctest_global_setup = """
