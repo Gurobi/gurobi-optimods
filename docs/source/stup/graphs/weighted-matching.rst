@@ -93,7 +93,7 @@ Show the solution. Use doctests if possible (i.e. the solution must be stable en
 .. testcode:: nup
     :hide:
 
-    from examples.weighted_matching.nupstup import matching
+    from examples.weighted_matching.nupstup import matching, G
 
 .. testoutput:: nup
     :hide:
@@ -107,3 +107,15 @@ Show the solution. Use doctests if possible (i.e. the solution must be stable en
     >>> matching
     <6x6 sparse matrix of type '<class 'numpy.float64'>'
         with 2 stored elements in COOrdinate format>
+
+.. doctest:: nup
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> import networkx as nx
+    >>> import matplotlib.pyplot as plt
+    >>> g = nx.from_scipy_sparse_array(G)
+    >>> layout = nx.random_layout(g, seed=0)
+    >>> fig, (ax1, ax2) = plt.subplots(1, 2)
+    >>> nx.draw(g, layout, ax=ax1)
+    >>> g = nx.from_scipy_sparse_array(matching)
+    >>> nx.draw(g, layout, ax=ax2)

@@ -88,7 +88,7 @@ Show the solution. Use doctests if possible (i.e. the solution must be stable en
 .. testcode:: nup
     :hide:
 
-    from examples.bipartite_matching.nupstup import matching
+    from examples.bipartite_matching.nupstup import matching, G
 
 .. testoutput:: nup
     :hide:
@@ -102,3 +102,15 @@ Show the solution. Use doctests if possible (i.e. the solution must be stable en
     >>> matching
     <8x8 sparse matrix of type '<class 'numpy.float64'>'
         with 3 stored elements in COOrdinate format>
+
+.. doctest:: nup
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> import networkx as nx
+    >>> import matplotlib.pyplot as plt
+    >>> g = nx.from_scipy_sparse_array(G)
+    >>> layout = nx.bipartite_layout(g, [0, 1, 2, 3, 4])
+    >>> fig, (ax1, ax2) = plt.subplots(1, 2)
+    >>> nx.draw(g, layout, ax=ax1)
+    >>> g = nx.from_scipy_sparse_array(matching)
+    >>> nx.draw(g, layout, ax=ax2)
