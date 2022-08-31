@@ -25,6 +25,9 @@ dependencies = [
     "numpy",
     "pandas",
     "scipy",
+    "matplotlib",
+    "networkx",
+    "sklearn",
 ]
 dynamic = ["version"]
 
