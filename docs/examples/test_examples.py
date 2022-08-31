@@ -30,7 +30,7 @@ class TestMatching(unittest.TestCase):
 
     def test_compare_examples(self):
 
-        import examples.matching.gurobipy as gp_impl
-        import examples.matching.nupstup as ns_impl
+        import examples.bipartite_matching.gurobipy as gp_impl
+        import examples.bipartite_matching.nupstup as ns_impl
 
         assert_array_equal(gp_impl.matching.todense(), ns_impl.matching.todense())

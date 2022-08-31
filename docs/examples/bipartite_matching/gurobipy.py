@@ -14,7 +14,8 @@ G = sp.coo_matrix((data, (row, col)))
 m = gp.Model()
 
 edges = list(zip(G.row, G.col))
-x = m.addVars(edges, name="x", vtype=gp.GRB.BINARY)
+# Assume G is bipartite, then this model is an LP
+x = m.addVars(edges, name="x")
 
 clashes = collections.defaultdict(set)
 for edge in edges:

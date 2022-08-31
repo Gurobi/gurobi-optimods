@@ -1,5 +1,5 @@
-Maximum Bipartite Matching
-==========================
+Maximum Cardinality Bipartite Matching
+======================================
 
 Something about specific graph algorithms vs mathprog formulations?
 
@@ -45,11 +45,11 @@ Tab between the code required to run the model from the store vs how to implemen
 .. tabs::
     .. tab:: nupstup function
 
-        .. literalinclude:: ../../../examples/matching/nupstup.py
+        .. literalinclude:: ../../../examples/bipartite_matching/nupstup.py
 
     .. tab:: gurobipy model
 
-        .. literalinclude:: ../../../examples/matching/gurobipy.py
+        .. literalinclude:: ../../../examples/bipartite_matching/gurobipy.py
 
 
 Both codes construct the same model and give the same result. The model is solved as a LP/MIP/QP/etc by Gurobi.
@@ -91,7 +91,7 @@ Show the solution. Use doctests if possible (i.e. the solution must be stable en
 .. testcode:: nup
     :hide:
 
-    from examples.matching.nupstup import matching
+    from examples.bipartite_matching.nupstup import matching
 
 .. testoutput:: nup
     :hide:
