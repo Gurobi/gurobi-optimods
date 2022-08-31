@@ -32,8 +32,10 @@ You are given a bipartite graph G containing n vertices and m edges. Find the ma
             \begin{alignat}{2}
             \max \quad        & \sum_{(i, j) \in E} x_{ij} \\
             \mbox{s.t.} \quad & \sum_{j \in N(i)} x_{ij} \le 1 & \forall i \in V \\
-                              & x_{ij} \in \lbrace 0, 1 \rbrace & \forall (i, j) \in E \\
+                              & 0 \le x_{ij} \le 1 & \forall (i, j) \in E \\
             \end{alignat}
+
+        Note that for the bipartite case, simplex is sufficient, we do not need to use binary variables, just bounded ones.
 
 |
 
