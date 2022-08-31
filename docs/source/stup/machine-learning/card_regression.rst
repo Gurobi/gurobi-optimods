@@ -1,6 +1,8 @@
 Cardinality Constrained Regression
 ==================================
 
+``NOT IMPLEMENTED YET``
+
 - Present this in contrast to :code:`sklearn.linear_model.Lasso`.
 - Cardinality constrained regression provides a stricter approach to model regularization.
 - Instead of including a weighted objective term which tries to avoid unnecessary large coefficients in a model, cardinality constrained regression enforced a limit on the number of non-zero coefficients.
