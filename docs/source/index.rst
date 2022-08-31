@@ -1,7 +1,7 @@
 Welcome to Nupstup's documentation!
 ===================================
 
-**Nupstup**: nice APIs for common optimization models.
+**Nupstup**: nice APIs for common optimization tasks.
 
 Check out the :doc:`usage` section for further information, including
 how to :ref:`installation` the project.
