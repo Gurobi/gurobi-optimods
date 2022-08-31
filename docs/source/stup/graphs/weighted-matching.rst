@@ -119,3 +119,7 @@ Show the solution. Use doctests if possible (i.e. the solution must be stable en
     >>> nx.draw(g, layout, ax=ax1)
     >>> g = nx.from_scipy_sparse_array(matching)
     >>> nx.draw(g, layout, ax=ax2)
+
+.. image:: weighted-result.png
+  :width: 600
+  :alt: Weighted matching result
