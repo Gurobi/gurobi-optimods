@@ -2,7 +2,7 @@
 name: New Nup Proposal
 about: Suggest a new Nup to add to the Stup
 title: ''
-labels: ''
+labels: 'nup contribution'
 assignees: ''
 
 ---
