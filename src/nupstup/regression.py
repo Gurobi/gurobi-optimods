@@ -4,11 +4,10 @@ from gurobipy import GRB
 
 
 class L1Regression:
-    """ L1-norm regressor with Lasso regularization """
+    """L1-norm regressor with Lasso regularization"""
 
     def fit(self, X_train, y_train):
-        """Fit the model to training data.
-        """
+        """Fit the model to training data."""
 
         # Metadata about the input data
         records, self.n_features_in_ = X_train.shape
@@ -43,6 +42,5 @@ class L1Regression:
         self.coef_ = np.array([coeff.X for coeff in coeffs])
 
     def predict(self, X_test):
-        """Predict target value from test data
-        """
+        """Predict target value from test data"""
         return (X_test * self.coef_).sum(axis=1) + self.intercept_

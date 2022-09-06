@@ -5,7 +5,6 @@ from pandas.testing import assert_frame_equal
 
 
 class TestL1Regression(unittest.TestCase):
-
     def test_compare_examples(self):
 
         import examples.l1_regression.gurobipy as gp_impl
@@ -15,7 +14,6 @@ class TestL1Regression(unittest.TestCase):
 
 
 class TestWorkforce(unittest.TestCase):
-
     def test_compare_examples(self):
 
         import examples.workforce.gurobipy as gp_impl
@@ -27,7 +25,6 @@ class TestWorkforce(unittest.TestCase):
 
 
 class TestBipartiteMatching(unittest.TestCase):
-
     def test_compare_examples(self):
 
         import examples.bipartite_matching.gurobipy as gp_impl
@@ -37,7 +34,6 @@ class TestBipartiteMatching(unittest.TestCase):
 
 
 class TestWeightedMatching(unittest.TestCase):
-
     def test_compare_examples(self):
 
         import examples.weighted_matching.gurobipy as gp_impl
