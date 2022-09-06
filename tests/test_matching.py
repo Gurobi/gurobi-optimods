@@ -34,7 +34,7 @@ class TestBipartiteMatching(unittest.TestCase):
         data = [1, 1, 1]
         row = [0, 0, 1]
         col = [1, 2, 2]
-        G = sp.coo_matrix((data, (row, col)), shape=(3,3))
+        G = sp.coo_matrix((data, (row, col)), shape=(3, 3))
         with self.assertRaises(ValueError):
             maximum_bipartite_matching(G)
 
@@ -56,12 +56,14 @@ class TestWeightedMatching(unittest.TestCase):
         data = [1, 2, 3]
         row = [0, 0, 1]
         col = [1, 2, 2]
-        G = sp.coo_matrix((data, (row, col)), shape=(3,3))
+        G = sp.coo_matrix((data, (row, col)), shape=(3, 3))
         matching = maximum_weighted_matching(G)
         self.assertEqual(len(matching.data), 1)
-        expected = np.array([
-            [0, 0, 0],
-            [0, 0, 3],
-            [0, 0, 0],
-        ])
+        expected = np.array(
+            [
+                [0, 0, 0],
+                [0, 0, 3],
+                [0, 0, 0],
+            ]
+        )
         assert_array_equal(matching.toarray(), expected)

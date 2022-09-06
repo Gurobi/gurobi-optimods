@@ -3,4 +3,4 @@
 # show the nups full capabilities, but if so, nupstup.py should demonstrate
 # the same simple case.
 
-some_result = 'result'
+some_result = "result"
