@@ -1,6 +1,6 @@
 import unittest
 
-from nupstup.workforce import solve_workforce_scheduling
+from gurobi_optimods.workforce import solve_workforce_scheduling
 
 
 class TestWorkforceScheduling(unittest.TestCase):

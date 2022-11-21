@@ -3,10 +3,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "nupstup"
-description = "The Nupstup -- optimization easy to use"
+name = "gurobi-optimods"
+description = "Gurobi OptiMods -- optimization easy to use"
 readme = "README.rst"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = { text = "MIT" }
 keywords = ["optimization", "gurobipy", "pandas"]
 authors = [
@@ -16,6 +16,10 @@ authors = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
@@ -32,4 +36,4 @@ dependencies = [
 dynamic = ["version"]
 
 [tool.hatch.version]
-path = "src/nupstup/__init__.py"
+path = "src/gurobi_optimods/__init__.py"
