@@ -1,4 +1,4 @@
-Gurobi-OptiMods -- optimization easy to use
+gurobi-optimods -- optimization easy to use
 ===========================================
 
 The idea in one sentence: we will create open-source Python repository of implemented optimization use cases, each with clear, informative, and pretty documentation that explains how to use it, the mathematical model behind it, and the implementation in code.
