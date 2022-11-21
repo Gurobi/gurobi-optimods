@@ -1,4 +1,4 @@
-My New Nup
+My New Mod
 ==========
 
 A little background on the proud history of mathprog in this field.
@@ -22,7 +22,7 @@ Give a brief overview of the problem being solved.
 
 Give examples of the various input data structures, if appropriate. These outputs should be fixed, so use doctests where possible.
 
-.. testsetup:: nup
+.. testsetup:: mod
 
     # Set pandas options for displaying dataframes, if needed
     import pandas as pd
@@ -34,7 +34,7 @@ Give examples of the various input data structures, if appropriate. These output
 
         Give interpretation of input data.
 
-        .. doctest:: nup
+        .. doctest:: mod
             :options: +NORMALIZE_WHITESPACE
 
             >>> pd.read_feather("examples/data/availability.feather")
@@ -62,21 +62,13 @@ Give examples of the various input data structures, if appropriate. These output
 Code
 ----
 
-Tab between the code required to run the model from the store vs how to implement directly in gurobipy. If you use nupstup, all the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output. If you instead peek under the hood and use gurobipy, you have more options to extend the model with additional constraints and data.
+Show required to run the model.
 
 .. These paths need to be changed to point to your example scripts
 
-.. tabs::
-    .. tab:: nupstup function
+.. literalinclude:: ../../../examples/mod.py
 
-        .. literalinclude:: ../../../examples/nup/nupstup.py
-
-    .. tab:: gurobipy model
-
-        .. literalinclude:: ../../../examples/nup/gurobipy.py
-
-
-Both codes construct the same model and give the same result. The model is solved as a LP/MIP/QP/etc by Gurobi.
+The model is solved as a LP/MIP/QP/etc by Gurobi.
 
 .. collapse:: View Gurobi logs
 
@@ -94,18 +86,18 @@ Show the solution. Use doctests if possible (i.e. the solution must be stable en
 
 .. This import line needs to be changed to import any results you need
 
-.. testcode:: nup
+.. testcode:: mod
     :hide:
 
-    from examples.<nup>.nupstup import some_result
+    from examples.<mod>.modstup import some_result
 
-.. testoutput:: nup
+.. testoutput:: mod
     :hide:
 
     Gurobi Optimizer version 9.5.1 build v9.5.1rc2
     ...
 
-.. doctest:: nup
+.. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
     >>> assigned_shifts
