@@ -1,5 +1,5 @@
-The Nup Stup
-============
+The Opti Mods
+=============
 
 .. toctree::
    :maxdepth: 2
