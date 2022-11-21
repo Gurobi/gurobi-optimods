@@ -42,17 +42,9 @@ You are given a weighted graph G containing n vertices and m edges. Find the max
 Code
 ----
 
-Tab between the code required to run the model from the store vs how to implement directly in gurobipy. If you use nupstup, all the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output. If you instead peek under the hood and use gurobipy, you have more options to extend the model with additional constraints and data.
+Show the code required to run the model from the store vs how to implement directly in gurobipy. All the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output.
 
-.. tabs::
-    .. tab:: nupstup function
-
-        .. literalinclude:: ../../../examples/weighted_matching/nupstup.py
-
-    .. tab:: gurobipy model
-
-        .. literalinclude:: ../../../examples/weighted_matching/gurobipy.py
-
+.. literalinclude:: ../../../examples/weighted_matching.py
 
 Both codes construct the same model and give the same result. The model is solved as a LP/MIP/QP/etc by Gurobi.
 
@@ -90,25 +82,25 @@ Solution
 
 Show the solution. Use doctests if possible (i.e. the solution must be stable enough). Otherwise, just display it somehow.
 
-.. testcode:: nup
+.. testcode:: weighted_matching
     :hide:
 
-    from examples.weighted_matching.nupstup import matching, G
+    from examples.weighted_matching import matching, G
 
-.. testoutput:: nup
+.. testoutput:: weighted_matching
     :hide:
 
     Gurobi Optimizer version ...
     ...
 
-.. doctest:: nup
+.. doctest:: weighted_matching
     :options: +NORMALIZE_WHITESPACE
 
     >>> matching
     <6x6 sparse matrix of type '<class 'numpy.float64'>'
         with 2 stored elements in COOrdinate format>
 
-.. doctest:: nup
+.. doctest:: weighted_matching
     :options: +NORMALIZE_WHITESPACE
 
     >>> import networkx as nx

@@ -42,17 +42,9 @@ You are given a bipartite graph G containing n vertices and m edges. Find the ma
 Code
 ----
 
-Tab between the code required to run the model from the store vs how to implement directly in gurobipy. If you use nupstup, all the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output. If you instead peek under the hood and use gurobipy, you have more options to extend the model with additional constraints and data.
+Show the code required to run the model from the store vs how to implement directly in gurobipy. All the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output.
 
-.. tabs::
-    .. tab:: nupstup function
-
-        .. literalinclude:: ../../../examples/bipartite_matching/nupstup.py
-
-    .. tab:: gurobipy model
-
-        .. literalinclude:: ../../../examples/bipartite_matching/gurobipy.py
-
+.. literalinclude:: ../../../examples/bipartite_matching.py
 
 Both codes construct the same model and give the same result. The model is solved as a LP/MIP/QP/etc by Gurobi.
 
@@ -85,25 +77,25 @@ Solution
 
 Show the solution. Use doctests if possible (i.e. the solution must be stable enough). Otherwise, just display it somehow.
 
-.. testcode:: nup
+.. testcode:: bipartite_matching
     :hide:
 
-    from examples.bipartite_matching.nupstup import matching, G
+    from examples.bipartite_matching import matching, G
 
-.. testoutput:: nup
+.. testoutput:: bipartite_matching
     :hide:
 
     Gurobi Optimizer version ...
     ...
 
-.. doctest:: nup
+.. doctest:: bipartite_matching
     :options: +NORMALIZE_WHITESPACE
 
     >>> matching
     <8x8 sparse matrix of type '<class 'numpy.float64'>'
         with 3 stored elements in COOrdinate format>
 
-.. doctest:: nup
+.. doctest:: bipartite_matching
     :options: +NORMALIZE_WHITESPACE
 
     >>> import networkx as nx

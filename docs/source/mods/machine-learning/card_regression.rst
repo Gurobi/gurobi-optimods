@@ -45,9 +45,4 @@ See sklearn `Lasso <https://scikit-learn.org/stable/modules/linear_model.html#la
 Code
 ----
 
-.. tabs::
-    .. tab:: nupstup function
-
-        .. literalinclude:: ../../../examples/card_regression/nupstup.py
-
-    .. tab:: gurobipy model
+.. literalinclude:: ../../../examples/card_regression.py

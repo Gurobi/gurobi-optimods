@@ -37,19 +37,11 @@ See sklearn `Linear Models <https://scikit-learn.org/stable/modules/linear_model
 Code
 ----
 
-Alternate between the code required to run the model from the store vs how to implement directly in gurobipy. If you use nupstup, all the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output. If you instead peek under the hood and use gurobipy, you have more options to extend the model with additional constraints and data.
+Show the code required to run the model from the store. All the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output.
 
-.. tabs::
-    .. tab:: nupstup function
+.. literalinclude:: ../../../examples/l1_regression.py
 
-        .. literalinclude:: ../../../examples/l1_regression/nupstup.py
-
-    .. tab:: gurobipy model
-
-        .. literalinclude:: ../../../examples/l1_regression/gurobipy.py
-
-
-Both codes construct the same model and give the same result. The model is solved as a linear program by Gurobi.
+The model is solved as a linear program by Gurobi.
 
 .. collapse:: View Gurobi logs
 
@@ -82,7 +74,7 @@ Solution
 .. testcode:: l1_regression
     :hide:
 
-    from examples.l1_regression.nupstup import reg, y_pred, y_test
+    from examples.l1_regression import reg, y_pred, y_test
 
 .. testoutput:: l1_regression
     :hide:

@@ -142,19 +142,11 @@ Data examples
 Code
 ----
 
-Alternate between the code required to run the model from the store vs how to implement directly in gurobipy. If you use nupstup, all the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output. If you instead peek under the hood and use gurobipy, you have more options to extend the model with additional constraints and data.
+Show the code required to run the mod. Users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output.
 
-.. tabs::
-    .. tab:: nupstup function
+.. literalinclude:: ../../../examples/workforce.py
 
-        .. literalinclude:: ../../../examples/workforce/nupstup.py
-
-    .. tab:: gurobipy model
-
-        .. literalinclude:: ../../../examples/workforce/gurobipy.py
-
-
-Both codes construct the same model and give the same result. The model is solved as a linear program by Gurobi.
+The model is solved as a linear program by Gurobi.
 
 .. collapse:: View Gurobi logs
 
@@ -189,17 +181,10 @@ Solution is a selection of shift assignments. The returned dataframe is just a
 subset of the availability dataframe, so we can transform the results using
 normal pandas code (no gurobipy interaction).
 
-.. this tests that workforce_nupstup.py is correct
-.. we should separately test that the results of the two
-.. alternative codes exactly match
-
-.. doctest ensures that we just see gurobi log output from
-.. the script, with correct objective value
-
 .. testcode:: workforce
     :hide:
 
-    from examples.workforce.nupstup import assigned_shifts
+    from examples.workforce import assigned_shifts
     pd.options.display.max_rows = 15
 
 .. testoutput:: workforce
