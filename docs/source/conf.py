@@ -1,13 +1,15 @@
 # Configuration file for the Sphinx documentation builder.
 
+import gurobi_optimods
+
 # -- Project information
 
-project = "Nupstup"
+project = "Gurobi OptiMods"
 copyright = "2022, Gurobi Optimization"
 author = "Gurobi Optimization"
 
-release = "0.1"
-version = "0.1.0"
+version = gurobi_optimods.__version__
+release = version
 
 # -- General configuration
 

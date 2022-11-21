@@ -1,14 +1,14 @@
-Welcome to Nupstup's documentation!
-===================================
+Welcome to Gurobi OptiMods's documentation!
+===========================================
 
-**Nupstup**: nice APIs for common optimization tasks.
+**Gurobi OptiMods**: nice APIs for common optimization tasks.
 
 Check out the :doc:`usage` section for further information, including
 how to :ref:`installation` the project.
 
 .. note::
 
-   This project is under active development, Nupstup has its documentation hosted on Read the Docs.
+   This project is under active development, Gurobi-OptiMods has its documentation hosted on Read the Docs.
 
 Contents
 --------
@@ -16,6 +16,6 @@ Contents
 .. toctree::
    :maxdepth: 3
 
-   stup/index
+   mods/index
    usage
    api
