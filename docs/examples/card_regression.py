@@ -1,7 +1,7 @@
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 
-from nupstup.regression import CardConstrainedRegression
+from gurobi_optimods.regression import CardConstrainedRegression
 
 # Load the diabetes dataset
 diabetes_X, diabetes_y = datasets.load_diabetes(return_X_y=True)

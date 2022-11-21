@@ -1,6 +1,6 @@
 import scipy.sparse as sp
 
-from nupstup.matching import maximum_bipartite_matching
+from gurobi_optimods.matching import maximum_bipartite_matching
 
 # Bipartite graph as a sparse matrix.
 row = [0, 3, 4, 0, 1, 3]

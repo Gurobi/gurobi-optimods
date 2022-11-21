@@ -1,6 +1,6 @@
 import scipy.sparse as sp
 
-from nupstup.matching import maximum_weighted_matching
+from gurobi_optimods.matching import maximum_weighted_matching
 
 # Weighted graph as a sparse matrix.
 row = [0, 1, 1, 2, 2, 3]

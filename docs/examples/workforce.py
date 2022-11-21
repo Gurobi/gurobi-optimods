@@ -1,6 +1,6 @@
 import pandas as pd
 
-from nupstup.workforce import solve_workforce_scheduling
+from gurobi_optimods.workforce import solve_workforce_scheduling
 
 
 # Load example data.
