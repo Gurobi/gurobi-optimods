@@ -6,7 +6,10 @@ import numpy as np
 import scipy.sparse as sp
 from numpy.testing import assert_array_equal
 
-from gurobi_optimods.matching import maximum_bipartite_matching, maximum_weighted_matching
+from gurobi_optimods.matching import (
+    maximum_bipartite_matching,
+    maximum_weighted_matching,
+)
 
 
 def random_bipartite(n1, n2, m, seed):
