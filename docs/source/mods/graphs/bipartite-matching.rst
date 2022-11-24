@@ -84,9 +84,9 @@ Show the solution. Use doctests if possible (i.e. the solution must be stable en
 
 .. testoutput:: bipartite_matching
     :hide:
+
     ...
-    Gurobi Optimizer version ...
-    ...
+    Optimal objective  3.000000000e+00
 
 .. doctest:: bipartite_matching
     :options: +NORMALIZE_WHITESPACE

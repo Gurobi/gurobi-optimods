@@ -89,9 +89,9 @@ Show the solution. Use doctests if possible (i.e. the solution must be stable en
 
 .. testoutput:: weighted_matching
     :hide:
+
     ...
-    Gurobi Optimizer version ...
-    ...
+    Best objective 2.400000000000e+00, best bound 2.400000000000e+00, gap 0.0000%
 
 .. doctest:: weighted_matching
     :options: +NORMALIZE_WHITESPACE
