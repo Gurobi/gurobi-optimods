@@ -226,7 +226,7 @@ Further transform
     ... ).replace({1.0: "Y"})
     >>> shifts_table
     Worker     Amy Bob Cathy Dan Ed Fred Gu
-    Shift                                  
+    Shift
     2022-07-01   -   -     -   -  Y    Y  Y
     2022-07-02   -   -     -   Y  Y    -  -
     2022-07-03   Y   -     -   Y  Y    Y  -

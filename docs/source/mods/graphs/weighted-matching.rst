@@ -70,7 +70,7 @@ Both codes construct the same model and give the same result. The model is solve
         Explored 0 nodes (0 simplex iterations) in 0.01 seconds (0.00 work units)
         Thread count was 1 (of 8 available processors)
 
-        Solution count 2: 2.4 2.2 
+        Solution count 2: 2.4 2.2
 
         Optimal solution found (tolerance 1.00e-04)
         Best objective 2.400000000000e+00, best bound 2.400000000000e+00, gap 0.0000%
