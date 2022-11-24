@@ -1,0 +1,33 @@
+# Run syntax checks against min python version (3.8).
+# Check that commit authors ran pre-commit hooks.
+
+name: Basic code quality checks
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  code-quality:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+      - name: Install tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install flake8 pre-commit
+      - name: Lint with flake8
+        run: |
+          # check for Python syntax errors or undefined names
+          python -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Verify pre-commit checks passed
+        run: |
+          pre-commit run --all-files
