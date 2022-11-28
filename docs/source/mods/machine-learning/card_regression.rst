@@ -27,7 +27,7 @@ See sklearn `Lasso <https://scikit-learn.org/stable/modules/linear_model.html#la
             \mbox{s.t.} \quad   & {\lvert x \rvert}_0 \le k \\
             \end{alignat}
 
-    .. tab:: Mathematical Model
+    .. tab:: Optimization Model
 
         To model the L1 regression loss function using linear programming, we need to introduce a number of auxiliary variables. Here :math:`I` is the set of data points and :math:`J` the set of fields. Response values :math:`y_i` are predicted from predictor values :math:`x_{ij}` by fitting coefficients :math:`w_j`. To handle the absolute value, non-negative variables :math:`u_i` and :math:`v_i` are introduced. Additionally, binary variables :math:`b_i` track the number of non-zero coefficients.
 
