@@ -16,7 +16,6 @@ if __name__ == '__main__':
     if len(sys.argv) > 3 or len(sys.argv) < 2:
         print ('Usage: grbopf.py file.config [logfile]\n')
         exit(0)
-    t0 = time.time()
 
     mylogfile = "grbopf.log"
 
