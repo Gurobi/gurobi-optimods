@@ -14,22 +14,26 @@ class danoLogger:
         self.joint("Running on: " + gethostname() + "\n")
         self.printversion()
 
+    # Print date and close logfile
     def closelog(self):
         localtime = time.asctime(time.localtime(time.time()))
-        self.logfile.write("\nClosing log: %s\n" % localtime)
+        self.joint("Closing log: %s\n" % localtime)
         self.logfile.close()
 
-    def joint(self, mystring, *args):
+    # Print output to screen and/or logfile
+    def joint(self, message, *args):
         write = 1
         for arg in args:
             write = arg
 
-        if self.log and write==1:
-            self.logfile.write(mystring)
+        # Write to logfile
+        if self.log and write == 1:
+            self.logfile.write(message)
             self.logfile.flush()
 
-        if self.screen and write==1:
-            print(mystring, end=''),
+        # Print to screen
+        if self.screen and write == 1:
+            print(message, end = ''),
             sys.stdout.flush() 
 
     def both_on(self):
@@ -50,6 +54,7 @@ class danoLogger:
     def log_off(self):
         self.log = 0
 
+    # Show error message and raise exception
     def raiseexception(self, message):
         self.log    = 1
         self.screen = 0

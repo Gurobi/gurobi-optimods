@@ -6,6 +6,8 @@ from myutils import *
 from log import *
 
 class Bus:
+    """Bus class""" # FIXME add more details
+
     def __init__(self, count, nodeID, nodetype, Pd, Qd, Gs, Bs, Vbase, Vmax,
                  Vmin, busline0):
         self.genidsbycount = []
@@ -35,7 +37,7 @@ class Bus:
 
     def addgenerator(self, log, generatorcount, generator):
         self.genidsbycount.append(generatorcount)
-        #loud = 0
+        #loud = 0 #FIXME remove comment if not needed
         #if loud:
         #  log.joint(" added generator # " + str(generatorcount) + " to bus ID " + str(self.nodeID))
         #  log.joint(" Pmax " + str(generator.Pmax) + " Pmin " + str(generator.Pmin) + "\n")
@@ -53,6 +55,8 @@ class Bus:
         self.degree += 1
 
 class Branch:
+    """Branch class"""#FIXME add more details
+
     def __init__(self, log, count, f, id_f, t, id_t, r, x, bc, rateAmva,
                  rateBmva, rateCmva, ratio, angle, maxangle, minangle,
                  status, defaultlimit, branchline0):
@@ -121,13 +125,13 @@ class Branch:
 
         self.inputcs   = False
         self.inputc    = 2
-        self.inputs    = 2  #bogus #FIXME
+        self.inputs    = 2  #bogus #FIXME remove? why is it bogus?
         self.cftvarind = -1
         self.sftvarind = -1
         self.Pftvarind = -1
         self.Qftvarind = -1
 
-#       loud = False
+#       loud = False #FIXME remove comment if not needed
 #       if self.angle_rad != 0:
 #         loud = 1
 #       if loud:
@@ -149,6 +153,8 @@ class Branch:
         log.joint("\n")
 
 class Gen:
+    """Gen class"""#FIXME add more details
+
     def __init__(self, count, nodeID, Pg, Qg, status, Pmax, Pmin, Qmax,
                  Qmin, line0):
         self.count       = count
@@ -174,6 +180,8 @@ class Gen:
         return self.line0
 
 def readcase(alldata):
+    """Read case file and fill data dictionary"""
+
     log          = alldata['log']
     casefilename = alldata['casefilename']
     log.joint("Reading case file %s\n"%casefilename)
@@ -187,6 +195,7 @@ def readcase(alldata):
     except:
         log.raiseexception("Error: Cannot open file %s\n"%casefilename)
 
+    # Read all lines of the casefile
     readcase_thrulines(log, alldata, lines)
     alldata['casefilelines'] = lines
 
@@ -195,22 +204,25 @@ def readcase(alldata):
     log.joint("Reading time: %f s\n"%(endtime - starttime))
 
 def readcase_thrulines(log, alldata, lines):
+    """Read thru all lines of case file and fill data dictionary"""
+
+    numlines          = len(lines)
     lookingforbus     = 1
     linenum           = 2
-    numlines          = len(lines)
     numisolated       = 0
+    baseMVA           = 0.0
     alldata['refbus'] = -1
 
     while linenum <= numlines:
         line     = lines[linenum-1]
         thisline = line.split()
 
-        # skip empty line
+        # Skip empty line
         if len(thisline) <= 0:
             linenum += 1
             continue
 
-        # skip unnecessary lines
+        # Skip unnecessary lines
         theword = thisline[0]
         if len(theword) < 4 or theword[0:4] != 'mpc.':
             linenum += 1
@@ -219,12 +231,14 @@ def readcase_thrulines(log, alldata, lines):
         log.joint("  Found %s on line %d\n"%(theword, linenum))
         if theword == "mpc.baseMVA":
             tmp = thisline[2]
-            # trim ; if present
+            # Trim ; if present
             if tmp[len(tmp)-1] == ";":
                 tmp = tmp[:len(tmp)-1]
+
             alldata['baseMVA'] = float(tmp)
-            baseMVA = alldata['baseMVA']
-            log.joint("    baseMVA: %s\n"%str(baseMVA))
+            baseMVA            = alldata['baseMVA']
+            log.joint("    baseMVA: %f\n"%baseMVA)
+
         elif theword == 'mpc.bus':
             buses              = {}
             IDtoCountmap       = {}
@@ -235,11 +249,13 @@ def readcase_thrulines(log, alldata, lines):
             sumload            = 0
             sumPd = sumQd = 0
             linenum += 1
+
             while lookingforendofbus and linenum <= numlines:
                 line     = lines[linenum-1]
                 thisline = line.split()
                 length   = len(thisline)
 
+                # Look for end of section
                 if thisline[0] == "];":
                     log.joint("    Found end of bus section on line %d\n"%linenum)
                     lookingforendofbus = 0
@@ -251,16 +267,16 @@ def readcase_thrulines(log, alldata, lines):
                     log.joint("    Slack bus: %d\n"%slackbus)
 
                 if thisline[0] != '%':
-                    nodeID, nodetype = int(thisline[0]), int(thisline[1])
+                    nodeID   = int(thisline[0])
+                    nodetype = int(thisline[1])
 
                     if nodetype != 1 and nodetype != 2 and nodetype != 3 and nodetype != 4:
                         log.raiseexception("Error: Bad bus %s has type %s\n"%(thisline[0], thisline[1]))
 
                     if nodetype == 4:
-                        #log.joint("bus " + thisline[0] + " is isolated\n")
                         numisolated += 1
 
-                    # trim ; if present
+                    # Trim ; if present
                     Vmin = thisline[12]
                     if Vmin[len(Vmin)-1] == ';':
                         Vmin = Vmin[:len(Vmin)-1]
@@ -273,14 +289,16 @@ def readcase_thrulines(log, alldata, lines):
                     Vbase = float(thisline[9])
                     Vmax  = float(thisline[11])
 
+                    if baseMVA == 0.0:
+                        log.raiseexception("Error: baseMVA not available before bus section\n")
+
                     buses[numbuses] = Bus(numbuses, nodeID, nodetype, Pd/baseMVA,
-                                        Qd/baseMVA, Gs/baseMVA, Bs/baseMVA,
-                                        Vbase, Vmax, Vmin, linenum-1)
+                                          Qd/baseMVA, Gs/baseMVA, Bs/baseMVA,
+                                          Vbase, Vmax, Vmin, linenum-1)
 
                     if nodetype == 3:
                         log.joint('    Bus %d ID %d is the reference bus\n'%(numbuses, nodeID))
                         alldata['refbus'] = numbuses
-                        #breakexit('ref')
 
                     if nodetype == 1 or nodetype == 2 or nodetype == 3:
                         sumPd += Pd
@@ -315,13 +333,14 @@ def readcase_thrulines(log, alldata, lines):
             gens               = {}
             lookingforendofgen = 1
             gencount           = 0
+            summaxgenP = summaxgenQ = 0
             linenum += 1
 
-            summaxgenP = summaxgenQ = 0
             while lookingforendofgen and linenum <= numlines:
                 line     = lines[linenum-1]
                 thisline = line.split()
 
+                # Look for end of section
                 if thisline[0] == "];":
                     alldata['endofgen'] = linenum
                     log.joint("    Found end of gen section on line %d\n"%linenum)
@@ -344,20 +363,22 @@ def readcase_thrulines(log, alldata, lines):
                 else:
                     status = 1
 
-                #log.joint("generator in bus ID " + str(nodeID) )
+                if baseMVA == 0.0:
+                    log.raiseexception("Error: baseMVA not available before gen section\n")
+
                 if nodeID in IDtoCountmap.keys():
                     idgencount = IDtoCountmap[nodeID]
                     gens[gencount] = Gen(gencount, nodeID, Pg, Qg, status,
-                                        Pmax/baseMVA, Pmin/baseMVA, Qmax/baseMVA,
-                                        Qmin/baseMVA, linenum-1)
+                                         Pmax/baseMVA, Pmin/baseMVA, Qmax/baseMVA,
+                                         Qmin/baseMVA, linenum-1)
                     buses[idgencount].addgenerator(log, gencount, gens[gencount])
 
-                    if buses[idgencount].nodetype == 2 or buses[idgencount].nodetype == 3:  #but not 4
+                    if buses[idgencount].nodetype == 2 or buses[idgencount].nodetype == 3:  # But not 4
                         summaxgenP += Pmax
                         summaxgenQ += Qmax
 
                 else:
-                    log.raiseexception("Error: Generator # %d in noncexistent bus ID %d\n"%(gencount, nodeID))
+                    log.raiseexception("Error: Generator # %d in nonexistent bus ID %d\n"%(gencount, nodeID))
 
                 linenum += 1
 
@@ -367,14 +388,16 @@ def readcase_thrulines(log, alldata, lines):
             alldata['gens']    = gens
             alldata['numgens'] = len(gens)
             busgencount        = 0
+
             for bus in buses.values():
                 busgencount += len(bus.genidsbycount) > 0
 
             alldata['busgencount'] = busgencount
+            alldata['summaxgenP']  = summaxgenP
+            alldata['summaxgenQ']  = summaxgenQ
+
             log.joint("    number of generators: %d\n"%alldata['numgens'])
-            log.joint("    number of buses with gens: %d\n"%alldata['busgencount'])
-            alldata['summaxgenP'] = summaxgenP
-            alldata['summaxgenQ'] = summaxgenQ
+            log.joint("    number of buses with gens: %d\n"%busgencount)
             log.joint("    summaxPg %f summaxQg %f\n"%(summaxgenP, summaxgenQ))
 
         elif theword == 'mpc.branch':
@@ -390,6 +413,7 @@ def readcase_thrulines(log, alldata, lines):
                 line     = lines[linenum-1]
                 thisline = line.split()
 
+                # Look for end of branch section
                 if thisline[0] == "];":
                     log.joint("    Found end of branch section on line %d\n"%linenum)
                     lookingforendofbranch = 0
@@ -409,7 +433,7 @@ def readcase_thrulines(log, alldata, lines):
                 status   = int(thisline[10])
                 minangle = float(thisline[11])
                 maxangle = thisline[12]
-                # trim ; at the end of line
+                # Trim ; at the end of line
                 if maxangle[len(maxangle)-1] == ';':
                     maxangle = maxangle[:len(maxangle)-1]
 
@@ -421,13 +445,16 @@ def readcase_thrulines(log, alldata, lines):
                 id_f = IDtoCountmap[f]
                 id_t = IDtoCountmap[t]
 
+                if baseMVA == 0.0:
+                    log.raiseexception("Error: baseMVA not available before branch section\n")
+
                 if status:
                     branches[numbranches] = Branch(log,numbranches, f, id_f, t,
-                                                id_t, r, x, bc, rateA/baseMVA,
-                                                rateB/baseMVA, rateC/baseMVA,
-                                                ratio, angle, maxangle, minangle,
-                                                status, defaultlimit, linenum-1)
-                    zerolimit += (branches[numbranches].constrainedflow == 0)
+                                                   id_t, r, x, bc, rateA/baseMVA,
+                                                   rateB/baseMVA, rateC/baseMVA,
+                                                   ratio, angle, maxangle, minangle,
+                                                   status, defaultlimit, linenum-1)
+                    zerolimit      += (branches[numbranches].constrainedflow == 0)
                     activebranches += 1
                     buses[id_f].addfrombranch(log, numbranches)
                     buses[id_t].addtobranch(log, numbranches)
@@ -451,6 +478,7 @@ def readcase_thrulines(log, alldata, lines):
                 line     = lines[linenum-1]
                 thisline = line.split()
 
+                # Look for end of gen section
                 if thisline[0] == "];":
                     log.joint("    Found end of gencost section on line %d\n"%linenum)
                     alldata['endofgencost'] = linenum
@@ -476,8 +504,6 @@ def readcase_thrulines(log, alldata, lines):
 
                         costvector[j] = float(tmp)
                         costvector[j] *= (baseMVA)**(degree - j)
-                        # print "gen", gencostcount, j, costvector[j]
-                    #print costvector
 
                     gens[gencostcount].addcost(log, costvector, linenum)
 
@@ -495,6 +521,8 @@ def readcase_thrulines(log, alldata, lines):
         linenum += 1
 
 def readvoltsfile(log, alldata):
+    """Read volts file and fill data dictionary"""
+
     voltsfilename = alldata['voltsfilename']
     IDtoCountmap  = alldata['IDtoCountmap']
     buses         = alldata['buses']
@@ -513,22 +541,27 @@ def readvoltsfile(log, alldata):
     for linenum in range(len(lines)):
         thisline = lines[linenum].split()
 
-        if len(thisline) > 0:
-            if thisline[0] == 'bus':
-                angle_rad         = float(thisline[5])*math.pi/180
-                busid             = int(thisline[1])
-                inputvolts[busid] = (float(thisline[3]), angle_rad)
-                numread += 1
+        if len(thisline) <= 0:
+            continue
 
-            elif thisline[0] == 'END':
-                break
-            else:
-                log.raiseexception("Error: Illegal input %s\n"%thisline[0])
+        if thisline[0] == 'bus':
+            angle_rad         = float(thisline[5])*math.pi/180
+            busid             = int(thisline[1])
+            inputvolts[busid] = (float(thisline[3]), angle_rad)
+            numread += 1
+
+        elif thisline[0] == 'END':
+            break
+
+        else:
+            log.raiseexception("Error: Illegal input %s on line %s in volts file\n"%(thisline[0], lines[linenum]))
 
     log.joint("Read %d input voltages\n"%numread)
     alldata['inputvolts'] = inputvolts
 
 def readflowsfile(log, alldata):
+    """Read flows file and fill data dictionary"""
+
     flowsfilename = alldata['flowsfilename']
     IDtoCountmap  = alldata['IDtoCountmap']
     buses         = alldata['buses']
@@ -550,19 +583,23 @@ def readflowsfile(log, alldata):
 
     for linenum in range(len(lines)):
         thisline = lines[linenum].split()
-        if len(thisline) > 0:
-            if thisline[0] == 'branch':
-                branchid          = int(thisline[1])
-                inputPf[branchid] = float(thisline[7])/baseMVA
-                inputPt[branchid] = float(thisline[9])/baseMVA
-                inputQf[branchid] = float(thisline[11])/baseMVA
-                inputQt[branchid] = float(thisline[13])/baseMVA
 
-                numread += 1
-            elif thisline[0] == 'END':
-                break
-            else:
-                log.raiseexception("Error: Illegal input %s on line %s\n"%(thisline[0], thisline))
+        if len(thisline) <= 0:
+            continue
+
+        if thisline[0] == 'branch':
+            branchid          = int(thisline[1])
+            inputPf[branchid] = float(thisline[7])/baseMVA
+            inputPt[branchid] = float(thisline[9])/baseMVA
+            inputQf[branchid] = float(thisline[11])/baseMVA
+            inputQt[branchid] = float(thisline[13])/baseMVA
+
+            numread += 1
+        elif thisline[0] == 'END':
+            break
+
+        else:
+            log.raiseexception("Error: Illegal input %s on line %s in flows file\n"%(thisline[0], lines[linenum]))
 
     log.joint("Read %d input flows\n"%numread)
 
@@ -572,6 +609,8 @@ def readflowsfile(log, alldata):
     alldata['inputQt'] = inputQt
 
 def writegv(log, alldata, gvfilename):
+    """Write gv file needed for graphical image"""
+
     try:
         f = open(gvfilename, "w")
         log.joint("Writing to gv file %s\n"%gvfilename)
@@ -590,6 +629,8 @@ def writegv(log, alldata, gvfilename):
     f.close()
 
 def generateinputcs(log, alldata):
+    """Description"""#FIXME add more details
+
     log.joint("  generating input c,s values\n")
 
     inputcc      = {}
@@ -602,7 +643,6 @@ def generateinputcs(log, alldata):
     for busid in inputvolts:
         M              = inputvolts[busid][0]
         inputcc[busid] = M*M
-        #log.joint(str(busid) +" is in input volts with M " +  str(M) + "\n")
 
     for branch in branches.values():
         f          = branch.f
@@ -623,6 +663,8 @@ def generateinputcs(log, alldata):
     alldata['inputcs'] = inputcs 
 
 def generateinputeandf(log, alldata):
+    """Description"""#FIXME add more details
+
     log.joint("  generating input e,f values\n")
 
     inputve      = {}
@@ -636,12 +678,13 @@ def generateinputeandf(log, alldata):
         A              = inputvolts[busid][1]
         inputve[busid] = M*math.cos(A)
         inputvf[busid] = M*math.sin(A)
-        #log.joint(str(busid) +" is in input volts with M " +  str(M) + "\n")
 
     alldata['inputve'] = inputve
     alldata['inputvf'] = inputvf
 
 def readdigits(log, alldata):
+    """Description"""#FIXME add more details
+
     Lfilename = alldata['Lfilename']
     log.joint("reading L file %s\n"%Lfilename)
 
@@ -661,19 +704,23 @@ def readdigits(log, alldata):
         L[bus] = 0
 
     for linenum in range(len(lines)):
-        line = lines[linenum].split()
+        thisline = lines[linenum].split()
 
-        if line[0] == 'default':
-            lvalue = int(line[1])
+        if len(thisline) <= 0:
+            continue
+
+        if thisline[0] == 'default':
+            lvalue = int(thisline[1])
             log.joint(" default L: %d\n"%lvalue)
 
             for bus in buses.values():
                 L[bus] = lvalue
 
-        elif line[0] == 'END':
+        elif thisline[0] == 'END':
             break
+
         else:
-            ind = int(line[0])
-            L[buses[IDtoCountmap[ind] ]] = int(line[1])
+            ind = int(thisline[0])
+            L[buses[IDtoCountmap[ind] ]] = int(thisline[1])
 
     alldata['L'] = L
