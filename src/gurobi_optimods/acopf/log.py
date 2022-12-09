@@ -12,7 +12,8 @@ class danoLogger:
     self.log     = 1
     localtime    = time.asctime(time.localtime(time.time()))
     self.joint("Starting log: %s\n" % localtime)
-    self.joint("Running on: " + gethostname() + "\n\n")
+    self.joint("Running on: " + gethostname() + "\n")
+    self.joint("Version 0.0.1\n\n")
 
   def closelog(self):
     localtime = time.asctime(time.localtime(time.time()))

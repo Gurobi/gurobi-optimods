@@ -11,7 +11,7 @@ def lpformulator_ac(alldata):
     """Formulate ACOPF model and solve it"""
 
     log = alldata['log']
-    log.joint("AC formulation\n")
+    log.joint("\nAC formulation\n")
 
     starttime = time.time()
 
@@ -89,11 +89,11 @@ def lpformulator_setup(alldata):
 
     if alldata['dopolar']:
         log = alldata['log']
-        log.joint('polar formulation, so shutting down incompatible options:\n')
+        log.joint("  Polar formulation, so shutting down incompatible options:\n")
         alldata['use_ef']               = False
         alldata['useconvexformulation'] = False
         alldata['skipjabr']             = True
-        log.joint('   use_ef useconvexformulation jabr\n')
+        log.joint("    use_ef useconvexformulation jabr\n")
 
 def lpformulator_ac_body(alldata, model):
     """Helper function for adding variables and constraints to the model"""
@@ -376,7 +376,7 @@ def lpformulator_ac_polar_vars(alldata, model, varcount):
 
   log = alldata['log']
 
-  log.joint('Creating variables for polar formulation.\n')
+  log.joint("  Creating variables for polar formulation\n")
 
   vvar         = {}
   thetavar     = {}
@@ -404,7 +404,7 @@ def lpformulator_ac_polar_vars(alldata, model, varcount):
   alldata['LP']['vvar']     = vvar
   alldata['LP']['thetavar'] = thetavar
 
-  log.joint('\nAssumption. Phase angle diffs between -pi and pi.\n\n')
+  log.joint("    Assumption. Phase angle diffs between -pi and pi\n")
 
   for j in range(1,1+numbranches):
     branch     = branches[j]
@@ -436,7 +436,7 @@ def lpformulator_ac_polar_vars(alldata, model, varcount):
   alldata['LP']['thetaftvar'] = thetaftvar
   alldata['LP']['vfvtvar']    = vfvtvar
 
-  log.joint('Added {} new variables to handle polar formulation.\n'.format(newvarcount))
+  log.joint("    Added %d new variables to handle polar formulation.\n"%newvarcount)
   breakexit('polarvars')
 
   return newvarcount
@@ -445,7 +445,7 @@ def lpformulator_ac_add_efvars(alldata, model, varcount):
   efvarcount = 0
   log        = alldata['log']
 
-  log.joint('Creating e,f variables\n')
+  log.joint("  Creating e,f variables\n")
 
   fixtolerance = 1e-05
   if alldata['fixtolerance'] > 0:
@@ -484,6 +484,8 @@ def lpformulator_ac_add_efvars(alldata, model, varcount):
 
   alldata['LP']['evar'] = evar
   alldata['LP']['fvar'] = fvar  
+
+  log.joint("  Added %d e, f variables\n"%efvarcount)
 
   return efvarcount
 
@@ -530,7 +532,7 @@ def computebalbounds(log, alldata, bus):
 
 def lpformulator_ac_constraints(alldata, model):
   log = alldata['log']
-  log.joint('Constructing constraints\n')
+  log.joint("Creating constraints\n")
 
   numbuses     = alldata['numbuses']
   buses        = alldata['buses']
@@ -546,13 +548,11 @@ def lpformulator_ac_constraints(alldata, model):
   Qvar_t       = alldata['LP']['Qvar_t']
   Pinjvar      = alldata['LP']['Pinjvar']
   Qinjvar      = alldata['LP']['Qinjvar']
+  GenPvar      = alldata['LP']['GenPvar']
+  GenQvar      = alldata['LP']['GenQvar']
+  lincostvar   = alldata['LP']['lincostvar']
 
-  log.joint("Adding cost def constraints\n")
-
-  GenPvar    = alldata['LP']['GenPvar']
-  GenQvar    = alldata['LP']['GenQvar']
-  lincostvar = alldata['LP']['lincostvar']
-
+  log.joint("  Adding cost definition constraint\n")
   coeff     = [gen.costvector[gen.costdegree - 1] for gen in gens.values()]
   variables = [GenPvar[gen] for gen in gens.values()]
   expr      = gp.LinExpr(coeff, variables)
@@ -567,12 +567,12 @@ def lpformulator_ac_constraints(alldata, model):
     if gen.costdegree >= 2 and gen.costvector[0] > 0 and gen.status:
       numquadgens += 1
 
-  log.joint("Number of generators with quadratic cost coefficient: %d\n"%numquadgens)
+  log.joint("    Number of generators with quadratic cost coefficient: %d\n"%numquadgens)
 
   if numquadgens > 0:
     if alldata['usequadcostvar']:
       quadcostvar = alldata['LP']['quadcostvar']
-      log.joint('Adding quadcost def constraint\n')
+      log.joint("    Adding quadcost definition constraint\n")
       qcost = gp.QuadExpr()
       for gen in gens.values():
         if gen.costdegree == 2 and gen.costvector[0] != 0:
@@ -580,7 +580,7 @@ def lpformulator_ac_constraints(alldata, model):
 
       model.addConstr(qcost <= quadcostvar, name = "qcostdef")
     else:
-      log.joint('Adding quad cost to objective\n')
+      log.joint("    Adding quad cost to objective\n")
       model.update() # necessary to flush changes in the objective function
       oldobj = model.getObjective() #FIXME is it even set before?
       newobj = gp.QuadExpr(oldobj)
@@ -591,7 +591,8 @@ def lpformulator_ac_constraints(alldata, model):
       model.setObjective(newobj, GRB.MINIMIZE)
 
   #define flow variables
-  log.joint('Active power flow defs\n')
+  log.joint("  Adding active power flow definitions\n")
+  count = 0
   for j in range(1,1+numbranches):
     branch     = branches[j]
     f          = branch.f
@@ -611,10 +612,14 @@ def lpformulator_ac_constraints(alldata, model):
       expr = gp.LinExpr([branch.Gtt, branch.Gtf, -branch.Btf], # minus because svarft = -svartf
                         [cvar[bust], cvar[branch], svar[branch]])
       model.addConstr(expr == Pvar_t[branch], name = "Pdef_%d_%d_%d"%(j, t, f))
+      count += 2
     else:
       breakexit("se")
 
-  log.joint('Reactive power flow defs\n')
+  log.joint("    %d active power flow definitions added\n"%count)
+
+  log.joint("  Adding reactive power flow definitions\n")
+  count = 0
   for j in range(1,1+numbranches):
     branch     = branches[j]
     f          = branch.f
@@ -633,12 +638,15 @@ def lpformulator_ac_constraints(alldata, model):
       #  -Btt ctt - Btf cft + Gtf stf = -Btt ctt - Btf cft - Gtf sft 
       expr = gp.LinExpr([-branch.Btt, -branch.Btf, -branch.Gtf], # again, same minus
                         [cvar[bust], cvar[branch], svar[branch]])
-      model.addConstr(expr == Qvar_t[branch], name = "Qdef_%d_%d_%d"%(j, t, f))  
+      model.addConstr(expr == Qvar_t[branch], name = "Qdef_%d_%d_%d"%(j, t, f))
+      count += 2
     else:
       breakexit('se')
 
-  log.joint('Balance constraints\n')
+  log.joint("    %d reactive power flow definitions added\n"%count)
 
+  log.joint("  Adding balance constraints\n")
+  count = 0
   for j in range(1,1+numbuses):
     bus  = buses[j]
     expr = gp.LinExpr()
@@ -652,6 +660,7 @@ def lpformulator_ac_constraints(alldata, model):
       expr.add(bus.Gs*cvar[bus])
 
     model.addConstr(expr == Pinjvar[bus], name = "PBaldef%d_%d"%(j, bus.nodeID))
+    count += 1
 
   for j in range(1,1+numbuses):
     bus  = buses[j]
@@ -667,9 +676,12 @@ def lpformulator_ac_constraints(alldata, model):
       expr.add(-bus.Bs * cvar[bus])
 
     model.addConstr(expr == Qinjvar[bus], name = "QBaldef%d_%d"%(j, bus.nodeID))
+    count += 1
 
-  log.joint('Injection definition constraints\n')
-  
+  log.joint("    %d balance constraints added\n"%count)
+
+  log.joint("  Adding injection definition constraints\n")
+  count = 0
   for j in range(1,1+numbuses):
     bus  = buses[j]
     expr = gp.LinExpr()
@@ -689,8 +701,12 @@ def lpformulator_ac_constraints(alldata, model):
         expr.add(GenQvar[gen])
 
     model.addConstr(Qinjvar[bus] == expr - bus.Qd, name = "Bus_QInj_%d"%j)
+    count += 2
 
-  log.joint('Branch limits\n')
+  log.joint("    %d injection definition constraints added\n"%count)
+
+  log.joint("  Adding branch limits\n")
+  count = 0
   for j in range(1,1+numbranches):
     branch = branches[j]
 
@@ -703,13 +719,16 @@ def lpformulator_ac_constraints(alldata, model):
       bust       = buses[count_of_t]
       model.addConstr(Pvar_f[branch]*Pvar_f[branch] + Qvar_f[branch]*Qvar_f[branch] <= branch.limit**2,
                       name = "limit_f_%d_%d_%d"%(j, f, t))
-
       #themodel.cbLazy(Pvar_t[branch]*Pvar_t[branch] + Qvar_t[branch]*Qvar_t[branch] <= branch.limit**2)
       model.addConstr(Pvar_t[branch]*Pvar_t[branch] + Qvar_t[branch]*Qvar_t[branch] <= branch.limit**2,
                       name = "limit_t_%d_%d_%d"%(j, t, f))
+      count += 2
+
+  log.joint("    %d branch limits added\n"%count)
 
   if alldata['skipjabr'] == False:
-    log.joint('Jabr constraints\n')
+    log.joint("  Adding Jabr constraints\n")
+    count = 0
     for j in range(1,1+numbranches):
       branch = branches[j]
       if branch.status:
@@ -721,11 +740,15 @@ def lpformulator_ac_constraints(alldata, model):
         bust       = buses[count_of_t]
         model.addConstr(cvar[branch]*cvar[branch] + svar[branch]*svar[branch] <= cvar[busf]*cvar[bust],
                         name = 'jabr_%d_%d_%d'%(j, f, t))
-      else:
-        log.joint('Skipping Jabr inequalities\n')  
+        count += 1
+
+    log.joint("    %d Jabr constraints added\n"%count)
+  else:
+      log.joint("  Skipping Jabr inequalities\n")
 
   if alldata['dopolar']:
       lpformulator_ac_add_polarconstraints(alldata, model)
+
   if alldata['use_ef'] and alldata['useconvexformulation'] == False:
       lpformulator_ac_add_nonconvexconstraints(alldata, model)
 
@@ -737,51 +760,52 @@ def lpformulator_ac_constraints(alldata, model):
   breakexit('wrote lp')
 
 def lpformulator_ac_add_polarconstraints(alldata,model):
-  log = alldata['log']
-  log.joint('Adding polar constraints.\n')
-
-  buses = alldata['buses']
-  numbuses = alldata['numbuses']
-  branches = alldata['branches']
-  numbranches = alldata['numbranches']
-  vvar = alldata['LP']['vvar']
-  thetavar = alldata['LP']['thetavar']
-  thetaftvar = alldata['LP']['thetaftvar']
-  vfvtvar = alldata['LP']['vfvtvar']
-  cosvar = alldata['LP']['cosvar']
-  sinvar = alldata['LP']['sinvar']
+  log          = alldata['log']
+  buses        = alldata['buses']
+  numbuses     = alldata['numbuses']
+  branches     = alldata['branches']
+  numbranches  = alldata['numbranches']
+  vvar         = alldata['LP']['vvar']
+  thetavar     = alldata['LP']['thetavar']
+  thetaftvar   = alldata['LP']['thetaftvar']
+  vfvtvar      = alldata['LP']['vfvtvar']
+  cosvar       = alldata['LP']['cosvar']
+  sinvar       = alldata['LP']['sinvar']
   IDtoCountmap = alldata['IDtoCountmap']
-  cvar = alldata['LP']['cvar']
-  svar = alldata['LP']['svar']
-
+  cvar         = alldata['LP']['cvar']
+  svar         = alldata['LP']['svar']
+  count        = 0
+  log.joint("  Adding polar constraints\n")
 
   for j in range(1,1+numbuses):
     bus = buses[j]
     model.addConstr(cvar[bus] == vvar[bus]**2, name = 'cffdef_'+str(j))
+    count += 1
 
   for j in range(1,1+numbranches):
-    branch = branches[j]
-    f = branch.f
-    t = branch.t
+    branch     = branches[j]
+    f          = branch.f
+    t          = branch.t
     count_of_f = IDtoCountmap[f]
     count_of_t = IDtoCountmap[t]
-    busf = buses[count_of_f]
-    bust = buses[count_of_t]
+    busf       = buses[count_of_f]
+    bust       = buses[count_of_t]
     model.addConstr(thetaftvar[branch] == thetavar[busf] - thetavar[bust],name='thetaftdef_'+str(j))
 
     gc = model.addGenConstrCos(thetaftvar[branch], cosvar[branch],name='cosdef_'+str(j)+'_'+str(f)+'_'+str(t))
     gs = model.addGenConstrSin(thetaftvar[branch], sinvar[branch],name='sindef_'+str(j)+'_'+str(f)+'_'+str(t))
     model.addConstr(vfvtvar[branch] == vvar[busf]*vvar[bust], name = 'vfvtdef_'+str(j)+'_'+str(f)+'_'+str(t))
-    
+
     model.addConstr(cvar[branch] == vfvtvar[branch]*cosvar[branch], name = 'cftdef_'+str(j))
     model.addConstr(svar[branch] == vfvtvar[branch]*sinvar[branch], name = 'sftdef_'+str(j))
-    
+    count += 4 # don't count general constraints
+
+  log.joint("    %d polar constraints added\n"%count)
+
   breakexit('polarconstrs')
 
 def lpformulator_ac_add_nonconvexconstraints(alldata,model):
-  log = alldata['log']
-  log.joint('Adding nonconvex constraints\n')
-
+  log          = alldata['log']
   buses        = alldata['buses']
   numbuses     = alldata['numbuses']
   branches     = alldata['branches']
@@ -791,12 +815,14 @@ def lpformulator_ac_add_nonconvexconstraints(alldata,model):
   cvar         = alldata['LP']['cvar']
   svar         = alldata['LP']['svar']
   IDtoCountmap = alldata['IDtoCountmap']
+  count        = 0
+  log.joint("  Adding nonconvex e, f, constraints\n")
 
-  log.joint('e, f nonconvex constraints\n')
   for j in range(1,1+numbuses):
     bus = buses[j]
     model.addConstr(-cvar[bus] + evar[bus]*evar[bus] + fvar[bus]*fvar[bus] == 0,
                     name = 'cbusdef_%d_%d'%(j, bus.nodeID))
+    count += 1
 
   for j in range(1,1+numbranches):
     branch = branches[j]
@@ -813,3 +839,6 @@ def lpformulator_ac_add_nonconvexconstraints(alldata,model):
                       name = 'cdef_%d_%d_%d'%(j, f, t))
       model.addConstr(-svar[branch] - evar[busf]*fvar[bust] + fvar[busf]*evar[bust] == 0,
                       name = 'sdef_%d_%d_%d'%(j, f, t))
+      count += 2
+
+  log.joint("    %d nonconvex e, f constraints added\n"%count)

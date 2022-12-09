@@ -195,8 +195,6 @@ def readcase(alldata):
     log.joint("Reading time: %f s\n"%(endtime - starttime))
 
 def readcase_thrulines(log, alldata, lines):
-    log.joint("Reading case file thru lines\n")
-
     lookingforbus     = 1
     linenum           = 2
     numlines          = len(lines)
@@ -210,14 +208,14 @@ def readcase_thrulines(log, alldata, lines):
         if len(thisline) > 0:
           theword = thisline[0]
           if theword[0:4] == 'mpc.':
-            log.joint("Found %s on line %d\n"%(theword, linenum))
+            log.joint("  Found %s on line %d\n"%(theword, linenum))
             if theword == "mpc.baseMVA":
               boo = thisline[2]
               if boo[len(boo)-1] == ";":
                 boo = boo[:len(boo)-1]
               alldata['baseMVA'] = float(boo)
               baseMVA = alldata['baseMVA']
-              log.joint(" baseMVA: %s\n"%str(baseMVA))
+              log.joint("    baseMVA: %s\n"%str(baseMVA))
             elif theword == 'mpc.bus':
               buses              = {}
               IDtoCountmap       = {}
@@ -235,14 +233,14 @@ def readcase_thrulines(log, alldata, lines):
                 length   = len(thisline)
 
                 if thisline[0] == "];":
-                  log.joint(" Found end of bus section on line %d\n"%linenum)
+                  log.joint("    Found end of bus section on line %d\n"%linenum)
                   lookingforendofbus = 0
                   break
 
                 numbuses += 1
                 if thisline[1] == "3":
                   slackbus = int(thisline[0])
-                  log.joint(" Slack bus: %d"%slackbus)
+                  log.joint("    Slack bus: %d"%slackbus)
 
                 if thisline[0] != '%':
                   nodeID, nodetype = int(thisline[0]), int(thisline[1])
@@ -272,7 +270,7 @@ def readcase_thrulines(log, alldata, lines):
                                         Vbase, Vmax, Vmin, linenum-1)
 
                   if nodetype == 3:
-                    log.joint('Bus %d ID %d is the reference bus\n'%(numbuses, nodeID))
+                    log.joint('    Bus %d ID %d is the reference bus\n'%(numbuses, nodeID))
                     alldata['refbus'] = numbuses
                     #breakexit('ref')
 
@@ -292,18 +290,18 @@ def readcase_thrulines(log, alldata, lines):
               alldata['IDtoCountmap'] = IDtoCountmap
               alldata['slackbus']     = slackbus
 
-              log.joint(" sumloadPd %f numPload %f\n"%(sumPd, numPload))
-              log.joint(" sumloadQd %f\n"%sumQd)
+              log.joint("    sumloadPd %f numPload %f\n"%(sumPd, numPload))
+              log.joint("    sumloadQd %f\n"%sumQd)
 
               if lookingforendofbus:
                 log.stateandquit("Error: Could not find bus data section\n")
 
               if slackbus < 0:
-                log.joint(" Could not find slack bus\n")
+                log.joint("    Could not find slack bus\n")
 
-              log.joint(" %d buses\n"%numbuses)
+              log.joint("    %d buses\n"%numbuses)
               if numisolated > 0:
-                log.joint(" isolated buses: %d\n"%numisolated)
+                log.joint("    isolated buses: %d\n"%numisolated)
 
             elif theword == 'mpc.gen':
               gens               = {}
@@ -318,7 +316,7 @@ def readcase_thrulines(log, alldata, lines):
 
                 if thisline[0] == "];":
                   alldata['endofgen'] = linenum
-                  log.joint(" Found end of gen section on line %d\n"%linenum)
+                  log.joint("    Found end of gen section on line %d\n"%linenum)
                   lookingforendofgen = 0
                   break
 
@@ -365,11 +363,11 @@ def readcase_thrulines(log, alldata, lines):
                 busgencount += len(bus.genidsbycount) > 0
 
               alldata['busgencount'] = busgencount
-              log.joint(" number of generators: %d\n"%alldata['numgens'])
-              log.joint(" number of buses with gens: %d\n"%alldata['busgencount'])
+              log.joint("    number of generators: %d\n"%alldata['numgens'])
+              log.joint("    number of buses with gens: %d\n"%alldata['busgencount'])
               alldata['summaxgenP'] = summaxgenP
-              alldata['summaxgenQ'] = summaxgenQ              
-              log.joint(" summaxPg: %f summaxQg: %f\n"%(summaxgenP, summaxgenQ))
+              alldata['summaxgenQ'] = summaxgenQ
+              log.joint("    summaxPg %f summaxQg %f\n"%(summaxgenP, summaxgenQ))
 
             elif theword == 'mpc.branch':
               branches              = {}
@@ -385,7 +383,7 @@ def readcase_thrulines(log, alldata, lines):
                 thisline = line.split()
 
                 if thisline[0] == "];":
-                  log.joint(" Found end of branch section on line %d\n"%linenum)
+                  log.joint("    Found end of branch section on line %d\n"%linenum)
                   lookingforendofbranch = 0
                   break
 
@@ -433,8 +431,8 @@ def readcase_thrulines(log, alldata, lines):
 
               alldata['branches']    = branches
               alldata['numbranches'] = numbranches
-              log.joint(" numbranches: %d active %d\n"%(numbranches, activebranches))
-              log.joint(" %d unconstrained\n"%zerolimit)
+              log.joint("    numbranches: %d active: %d\n"%(numbranches, activebranches))
+              log.joint("    %d unconstrained\n"%zerolimit)
 
             elif theword == 'mpc.gencost':
               lookingforendofgencost = 1
@@ -446,7 +444,7 @@ def readcase_thrulines(log, alldata, lines):
                 thisline = line.split()
 
                 if thisline[0] == "];":
-                  log.joint(" Found end of gencost section on line %d\n"%linenum)
+                  log.joint("    Found end of gencost section on line %d\n"%linenum)
                   alldata['endofgencost'] = linenum
                   lookingforendofgencost  = 0
                   break
@@ -496,7 +494,7 @@ def readvoltsfile(log, alldata):
     try:
         f     = open(voltsfilename, "r")
         lines = f.readlines()
-        log.joint("reading volts file %s\n"%voltsfilename)
+        log.joint("Reading volts file %s\n"%voltsfilename)
         f.close()
     except:
         log.stateandquit("Error: Cannot open file %s\n"%voltsfilename)

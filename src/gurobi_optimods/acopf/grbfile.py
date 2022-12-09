@@ -115,6 +115,7 @@ def read_configfile(alldata, filename):
 
         linenum += 1
 
+    log.joint("Settings:\n")
     for x in [('casefilename', casefilename), ('lpfilename', lpfilename),
               ('strictcheckvoltagesolution', strictcheckvoltagesolution),
               ('voltsfilename', voltsfilename), ('usevoltsolution', usevoltsolution),
@@ -125,7 +126,7 @@ def read_configfile(alldata, filename):
               ('usemaxdispersion', usemaxdispersion), ('maxdispersion_deg', maxdispersion_deg),
               ('dographics',dographics)]:
         alldata[x[0]] = x[1]
-        log.joint('Setting {} {}\n'.format(x[0], x[1]))
+        log.joint("  {} {}\n".format(x[0], x[1]))
 
     if alldata['casefilename'] == 'NONE':
        log.stateandquit('Error: No casefile provided\n')
