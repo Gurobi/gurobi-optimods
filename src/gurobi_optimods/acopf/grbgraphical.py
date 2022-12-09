@@ -1,30 +1,35 @@
 import sys
 import math
+import time
+import numpy as np
+from graph4 import *
 #from log import Logger
 from gurobipy import *
-import numpy as np
 from myutils import breakexit
-import time
-from graph4 import *
-
-epsilon4 = 1e-4
 
 def grbgraphical(alldata):
   log = alldata['log']
-  log.joint("graphical layout, 2\n")
+  log.joint("Graphical layout, 2\n")
 
-  numbuses = alldata['numbuses']
+  numbuses    = alldata['numbuses']
   numbranches = alldata['numbranches']
 
-  gvfilename = 'grbgraphical.gv'
+  gvfilename  = 'grbgraphical.gv'
   txtfilename = 'newgraph.txt'
 
   try:
     f = open(gvfilename, "w")
-    log.joint("writing to gv file " + gvfilename + "\n")
-    g = open(txtfilename, "w")
+    log.joint("Writing to gv file " + gvfilename + "\n")
   except:
-    log.stateandquit("cannot open file " + gvfilename)
+    log.stateandquit("Error: Cannot open file " + gvfilename)
+
+  try:
+    g = open(txtfilename, "w")
+    log.joint("Writing to txt file " + txtfilename + "\n")
+  except:
+    log.stateandquit("Error: Cannot open file " + txtfilename)
+
+
   f.write("graph {\n")
   f.write('node [color=black, height=0, label=\"\\N\", shape=point, width=0];\n')
   g.write('N '+str(numbuses) + ' M ' + str(numbranches) + '\n')
@@ -40,7 +45,7 @@ def grbgraphical(alldata):
   g.write('END\n')
   g.close()
 
-  scale = 10
+  scale       = 10
   firstgvfile = 'first.gv'
   sfdpcommand = 'sfdp -Goverlap_scaling='+str(scale)+' -o '+firstgvfile + ' ' + gvfilename
   log.joint('sfdp command: ' + sfdpcommand + '\n')
