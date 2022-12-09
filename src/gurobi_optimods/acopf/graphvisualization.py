@@ -13,8 +13,9 @@ Vertex = Any
 Edge = Tuple[Vertex, Vertex]
 Num = Union[int, float]
 
-
 class GraphVisualization:
+    """Description"""#FIXME add more details
+
     def __init__(
         self,
         G: nx.Graph,

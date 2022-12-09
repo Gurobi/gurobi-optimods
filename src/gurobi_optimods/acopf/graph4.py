@@ -2,7 +2,7 @@
 
 import plotly.graph_objects as go
 import plotutils as pu
-import psutil 
+import psutil
 import numpy as np
 import networkx as nx
 import math
@@ -11,6 +11,7 @@ from scangvplus import *
 from myutils import breakexit
 
 def graphplot(graphfilename, gvfilename):
+    """Description"""#FIXME add more details
 
     print('graphfilename', graphfilename, 'gvfilename', gvfilename)
     #graphfilename = 'grbgraph.txt'
@@ -33,7 +34,6 @@ def graphplot(graphfilename, gvfilename):
 
     #should check that the next line is 'END'
     breakexit('lmn')
-    
 
     #trueN, nodex, nodey = scangv('first.gv')
     trueN, N, nodex, nodey = scangv(gvfilename)
@@ -51,7 +51,7 @@ def graphplot(graphfilename, gvfilename):
     print(len(adj),m)
 
     breakexit('lmn2')
-    
+
     for j in range(truelinect):
         G.add_edge(adj[j][0],adj[j][1])
     print('creating visualization object\n')
