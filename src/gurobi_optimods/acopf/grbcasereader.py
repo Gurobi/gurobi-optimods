@@ -205,120 +205,128 @@ def readcase_thrulines(log, alldata, lines):
         line     = lines[linenum-1]
         thisline = line.split()
 
-        if len(thisline) > 0:
-          theword = thisline[0]
-          if theword[0:4] == 'mpc.':
-            log.joint("  Found %s on line %d\n"%(theword, linenum))
-            if theword == "mpc.baseMVA":
-              boo = thisline[2]
-              if boo[len(boo)-1] == ";":
-                boo = boo[:len(boo)-1]
-              alldata['baseMVA'] = float(boo)
-              baseMVA = alldata['baseMVA']
-              log.joint("    baseMVA: %s\n"%str(baseMVA))
-            elif theword == 'mpc.bus':
-              buses              = {}
-              IDtoCountmap       = {}
-              lookingforendofbus = 1
-              numbuses           = 0
-              slackbus           = -1
-              linenum += 1
+        # skip empty line
+        if len(thisline) <= 0:
+            linenum += 1
+            continue
 
-              numPload = 0
-              sumload  = 0
-              sumPd = sumQd = 0
-              while lookingforendofbus and linenum <= numlines:
+        # skip unnecessary lines
+        theword = thisline[0]
+        if len(theword) < 4 or theword[0:4] != 'mpc.':
+            linenum += 1
+            continue
+
+        log.joint("  Found %s on line %d\n"%(theword, linenum))
+        if theword == "mpc.baseMVA":
+            tmp = thisline[2]
+            # trim ; if present
+            if tmp[len(tmp)-1] == ";":
+                tmp = tmp[:len(tmp)-1]
+            alldata['baseMVA'] = float(tmp)
+            baseMVA = alldata['baseMVA']
+            log.joint("    baseMVA: %s\n"%str(baseMVA))
+        elif theword == 'mpc.bus':
+            buses              = {}
+            IDtoCountmap       = {}
+            lookingforendofbus = 1
+            slackbus           = -1
+            numbuses           = 0
+            numPload           = 0
+            sumload            = 0
+            sumPd = sumQd = 0
+            linenum += 1
+            while lookingforendofbus and linenum <= numlines:
                 line     = lines[linenum-1]
                 thisline = line.split()
                 length   = len(thisline)
 
                 if thisline[0] == "];":
-                  log.joint("    Found end of bus section on line %d\n"%linenum)
-                  lookingforendofbus = 0
-                  break
+                    log.joint("    Found end of bus section on line %d\n"%linenum)
+                    lookingforendofbus = 0
+                    break
 
                 numbuses += 1
                 if thisline[1] == "3":
-                  slackbus = int(thisline[0])
-                  log.joint("    Slack bus: %d"%slackbus)
+                    slackbus = int(thisline[0])
+                    log.joint("    Slack bus: %d\n"%slackbus)
 
                 if thisline[0] != '%':
-                  nodeID, nodetype = int(thisline[0]), int(thisline[1])
+                    nodeID, nodetype = int(thisline[0]), int(thisline[1])
 
-                  if nodetype != 1 and nodetype != 2 and nodetype != 3 and nodetype != 4:
-                    log.stateandquit("Error: Bad bus %s has type %s\n"%(thisline[0], thisline[1]))
+                    if nodetype != 1 and nodetype != 2 and nodetype != 3 and nodetype != 4:
+                        log.stateandquit("Error: Bad bus %s has type %s\n"%(thisline[0], thisline[1]))
 
-                  if nodetype == 4:
-                    #log.joint("bus " + thisline[0] + " is isolated\n")
-                    numisolated += 1
+                    if nodetype == 4:
+                        #log.joint("bus " + thisline[0] + " is isolated\n")
+                        numisolated += 1
 
-                  # trim ; if present
-                  Vmin = thisline[12]
-                  if Vmin[len(Vmin)-1] == ';':
-                    Vmin = Vmin[:len(Vmin)-1]
+                    # trim ; if present
+                    Vmin = thisline[12]
+                    if Vmin[len(Vmin)-1] == ';':
+                        Vmin = Vmin[:len(Vmin)-1]
 
-                  Vmin  = float(Vmin)
-                  Pd    = float(thisline[2])
-                  Qd    = float(thisline[3])
-                  Gs    = float(thisline[4])
-                  Bs    = float(thisline[5])
-                  Vbase = float(thisline[9])
-                  Vmax  = float(thisline[11])
+                    Vmin  = float(Vmin)
+                    Pd    = float(thisline[2])
+                    Qd    = float(thisline[3])
+                    Gs    = float(thisline[4])
+                    Bs    = float(thisline[5])
+                    Vbase = float(thisline[9])
+                    Vmax  = float(thisline[11])
 
-                  buses[numbuses] = Bus(numbuses, nodeID, nodetype, Pd/baseMVA,
+                    buses[numbuses] = Bus(numbuses, nodeID, nodetype, Pd/baseMVA,
                                         Qd/baseMVA, Gs/baseMVA, Bs/baseMVA,
                                         Vbase, Vmax, Vmin, linenum-1)
 
-                  if nodetype == 3:
-                    log.joint('    Bus %d ID %d is the reference bus\n'%(numbuses, nodeID))
-                    alldata['refbus'] = numbuses
-                    #breakexit('ref')
+                    if nodetype == 3:
+                        log.joint('    Bus %d ID %d is the reference bus\n'%(numbuses, nodeID))
+                        alldata['refbus'] = numbuses
+                        #breakexit('ref')
 
-                  if nodetype == 1 or nodetype == 2 or nodetype == 3:
-                    sumPd += Pd
-                    sumQd += Qd
+                    if nodetype == 1 or nodetype == 2 or nodetype == 3:
+                        sumPd += Pd
+                        sumQd += Qd
 
-                  IDtoCountmap[nodeID] = numbuses
-                  numPload += (Pd > 0)
+                    IDtoCountmap[nodeID] = numbuses
+                    numPload += (Pd > 0)
 
                 linenum += 1
 
-              alldata['buses']        = buses
-              alldata['numbuses']     = numbuses
-              alldata['sumPd']        = sumPd
-              alldata['sumQd']        = sumQd
-              alldata['IDtoCountmap'] = IDtoCountmap
-              alldata['slackbus']     = slackbus
+            alldata['buses']        = buses
+            alldata['numbuses']     = numbuses
+            alldata['sumPd']        = sumPd
+            alldata['sumQd']        = sumQd
+            alldata['IDtoCountmap'] = IDtoCountmap
+            alldata['slackbus']     = slackbus
 
-              log.joint("    sumloadPd %f numPload %f\n"%(sumPd, numPload))
-              log.joint("    sumloadQd %f\n"%sumQd)
+            log.joint("    sumloadPd %f numPload %f\n"%(sumPd, numPload))
+            log.joint("    sumloadQd %f\n"%sumQd)
 
-              if lookingforendofbus:
+            if lookingforendofbus:
                 log.stateandquit("Error: Could not find bus data section\n")
 
-              if slackbus < 0:
+            if slackbus < 0:
                 log.joint("    Could not find slack bus\n")
 
-              log.joint("    %d buses\n"%numbuses)
-              if numisolated > 0:
+            log.joint("    %d buses\n"%numbuses)
+            if numisolated > 0:
                 log.joint("    isolated buses: %d\n"%numisolated)
 
-            elif theword == 'mpc.gen':
-              gens               = {}
-              lookingforendofgen = 1
-              gencount           = 0
-              linenum += 1
+        elif theword == 'mpc.gen':
+            gens               = {}
+            lookingforendofgen = 1
+            gencount           = 0
+            linenum += 1
 
-              summaxgenP = summaxgenQ = 0
-              while lookingforendofgen and linenum <= numlines:
+            summaxgenP = summaxgenQ = 0
+            while lookingforendofgen and linenum <= numlines:
                 line     = lines[linenum-1]
                 thisline = line.split()
 
                 if thisline[0] == "];":
-                  alldata['endofgen'] = linenum
-                  log.joint("    Found end of gen section on line %d\n"%linenum)
-                  lookingforendofgen = 0
-                  break
+                    alldata['endofgen'] = linenum
+                    log.joint("    Found end of gen section on line %d\n"%linenum)
+                    lookingforendofgen = 0
+                    break
 
                 gencount += 1
 
@@ -332,60 +340,60 @@ def readcase_thrulines(log, alldata, lines):
                 Qmin   = float(thisline[4])
 
                 if status <= 0:
-                  status = 0
+                    status = 0
                 else:
-                  status = 1
+                    status = 1
 
                 #log.joint("generator in bus ID " + str(nodeID) )
                 if nodeID in IDtoCountmap.keys():
-                  idgencount = IDtoCountmap[nodeID]
-                  gens[gencount] = Gen(gencount, nodeID, Pg, Qg, status,
-                                       Pmax/baseMVA, Pmin/baseMVA, Qmax/baseMVA,
-                                       Qmin/baseMVA, linenum-1)
-                  buses[idgencount].addgenerator(log, gencount, gens[gencount])
+                    idgencount = IDtoCountmap[nodeID]
+                    gens[gencount] = Gen(gencount, nodeID, Pg, Qg, status,
+                                        Pmax/baseMVA, Pmin/baseMVA, Qmax/baseMVA,
+                                        Qmin/baseMVA, linenum-1)
+                    buses[idgencount].addgenerator(log, gencount, gens[gencount])
 
-                  if buses[idgencount].nodetype == 2 or buses[idgencount].nodetype == 3:  #but not 4
-                    summaxgenP += Pmax
-                    summaxgenQ += Qmax
+                    if buses[idgencount].nodetype == 2 or buses[idgencount].nodetype == 3:  #but not 4
+                        summaxgenP += Pmax
+                        summaxgenQ += Qmax
 
                 else:
-                  log.stateandquit("Error: Generator # %d in noncexistent bus ID %d\n"%(gencount, nodeID))
+                    log.stateandquit("Error: Generator # %d in noncexistent bus ID %d\n"%(gencount, nodeID))
 
                 linenum += 1
 
-              if lookingforendofgen:
+            if lookingforendofgen:
                 log.stateandquit("Error: Could not find end of generator section\n")
 
-              alldata['gens']    = gens
-              alldata['numgens'] = len(gens)
-              busgencount        = 0
-              for bus in buses.values():
+            alldata['gens']    = gens
+            alldata['numgens'] = len(gens)
+            busgencount        = 0
+            for bus in buses.values():
                 busgencount += len(bus.genidsbycount) > 0
 
-              alldata['busgencount'] = busgencount
-              log.joint("    number of generators: %d\n"%alldata['numgens'])
-              log.joint("    number of buses with gens: %d\n"%alldata['busgencount'])
-              alldata['summaxgenP'] = summaxgenP
-              alldata['summaxgenQ'] = summaxgenQ
-              log.joint("    summaxPg %f summaxQg %f\n"%(summaxgenP, summaxgenQ))
+            alldata['busgencount'] = busgencount
+            log.joint("    number of generators: %d\n"%alldata['numgens'])
+            log.joint("    number of buses with gens: %d\n"%alldata['busgencount'])
+            alldata['summaxgenP'] = summaxgenP
+            alldata['summaxgenQ'] = summaxgenQ
+            log.joint("    summaxPg %f summaxQg %f\n"%(summaxgenP, summaxgenQ))
 
-            elif theword == 'mpc.branch':
-              branches              = {}
-              defaultlimit          = 1e20
-              lookingforendofbranch = 1
-              numbranches           = 0
-              activebranches        = 0
-              zerolimit             = 0
-              linenum += 1
+        elif theword == 'mpc.branch':
+            branches              = {}
+            defaultlimit          = 1e20
+            lookingforendofbranch = 1
+            numbranches           = 0
+            activebranches        = 0
+            zerolimit             = 0
+            linenum += 1
 
-              while lookingforendofbranch and linenum <= numlines:
+            while lookingforendofbranch and linenum <= numlines:
                 line     = lines[linenum-1]
                 thisline = line.split()
 
                 if thisline[0] == "];":
-                  log.joint("    Found end of branch section on line %d\n"%linenum)
-                  lookingforendofbranch = 0
-                  break
+                    log.joint("    Found end of branch section on line %d\n"%linenum)
+                    lookingforendofbranch = 0
+                    break
 
                 numbranches += 1
                 f        = int(thisline[0])
@@ -403,86 +411,86 @@ def readcase_thrulines(log, alldata, lines):
                 maxangle = thisline[12]
                 # trim ; at the end of line
                 if maxangle[len(maxangle)-1] == ';':
-                  maxangle = maxangle[:len(maxangle)-1]
+                    maxangle = maxangle[:len(maxangle)-1]
 
                 maxangle = float(maxangle)
 
                 if maxangle < minangle:
-                  log.stateandquit("Error: Branch # %d has illegal angle constraints\n"%numbranches)
+                    log.stateandquit("Error: Branch # %d has illegal angle constraints\n"%numbranches)
 
                 id_f = IDtoCountmap[f]
                 id_t = IDtoCountmap[t]
 
                 if status:
-                  branches[numbranches] = Branch(log,numbranches, f, id_f, t,
-                                                 id_t, r, x, bc, rateA/baseMVA,
-                                                 rateB/baseMVA, rateC/baseMVA,
-                                                 ratio, angle, maxangle, minangle,
-                                                 status, defaultlimit, linenum-1)
-                  zerolimit += (branches[numbranches].constrainedflow == 0)
-                  activebranches += 1
-                  buses[id_f].addfrombranch(log, numbranches)
-                  buses[id_t].addtobranch(log, numbranches)
+                    branches[numbranches] = Branch(log,numbranches, f, id_f, t,
+                                                id_t, r, x, bc, rateA/baseMVA,
+                                                rateB/baseMVA, rateC/baseMVA,
+                                                ratio, angle, maxangle, minangle,
+                                                status, defaultlimit, linenum-1)
+                    zerolimit += (branches[numbranches].constrainedflow == 0)
+                    activebranches += 1
+                    buses[id_f].addfrombranch(log, numbranches)
+                    buses[id_t].addtobranch(log, numbranches)
 
                 linenum += 1
 
-              if lookingforendofbranch:
+            if lookingforendofbranch:
                 log.stateandquit("Error: Could not find end of branch section\n")
 
-              alldata['branches']    = branches
-              alldata['numbranches'] = numbranches
-              log.joint("    numbranches: %d active: %d\n"%(numbranches, activebranches))
-              log.joint("    %d unconstrained\n"%zerolimit)
+            alldata['branches']    = branches
+            alldata['numbranches'] = numbranches
+            log.joint("    numbranches: %d active: %d\n"%(numbranches, activebranches))
+            log.joint("    %d unconstrained\n"%zerolimit)
 
-            elif theword == 'mpc.gencost':
-              lookingforendofgencost = 1
-              gencostcount           = 1
-              linenum += 1
+        elif theword == 'mpc.gencost':
+            lookingforendofgencost = 1
+            gencostcount           = 1
+            linenum += 1
 
-              while lookingforendofgencost and linenum <= numlines:
+            while lookingforendofgencost and linenum <= numlines:
                 line     = lines[linenum-1]
                 thisline = line.split()
 
                 if thisline[0] == "];":
-                  log.joint("    Found end of gencost section on line %d\n"%linenum)
-                  alldata['endofgencost'] = linenum
-                  lookingforendofgencost  = 0
-                  break
+                    log.joint("    Found end of gencost section on line %d\n"%linenum)
+                    alldata['endofgencost'] = linenum
+                    lookingforendofgencost  = 0
+                    break
 
                 if gencostcount <= gencount:
-                  costtype = int(thisline[0])
-                  if costtype != 2:
-                    log.stateandquit("Error: Cost of generator %d is not polynomial\n"%gencostcount)
+                    costtype = int(thisline[0])
+                    if costtype != 2:
+                        log.stateandquit("Error: Cost of generator %d is not polynomial\n"%gencostcount)
 
-                  degree = int(thisline[3]) - 1
+                    degree = int(thisline[3]) - 1
 
-                  if degree > 2 or degree < 0:
-                    log.stateandquit("Error: Degree of cost function for generator %d is illegal\n"%gencostcount)
+                    if degree > 2 or degree < 0:
+                        log.stateandquit("Error: Degree of cost function for generator %d is illegal\n"%gencostcount)
 
-                  costvector = [0 for j in range(degree+1)]
+                    costvector = [0 for j in range(degree+1)]
 
-                  for j in range(degree+1):
-                    tmp = thisline[4+j]
-                    if tmp[len(tmp)-1] == ";":
-                      tmp = tmp[:len(tmp)-1]
+                    for j in range(degree+1):
+                        tmp = thisline[4+j]
+                        if tmp[len(tmp)-1] == ";":
+                            tmp = tmp[:len(tmp)-1]
 
-                    costvector[j] = float(tmp)
-                    costvector[j] *= (baseMVA)**(degree - j)
-                    # print "gen", gencostcount, j, costvector[j]
-                  #print costvector
+                        costvector[j] = float(tmp)
+                        costvector[j] *= (baseMVA)**(degree - j)
+                        # print "gen", gencostcount, j, costvector[j]
+                    #print costvector
 
-                  gens[gencostcount].addcost(log, costvector, linenum)
+                    gens[gencostcount].addcost(log, costvector, linenum)
 
                 else:
-                  log.stateandquit("Error: Read %d gen costs but only %d generators\n"%(gencostcount, gencount))
+                    log.stateandquit("Error: Read %d gen costs but only %d generators\n"%(gencostcount, gencount))
 
                 gencostcount += 1
                 linenum += 1
 
-              if lookingforendofgencost:
+            if lookingforendofgencost:
                 log.stateandquit("Error: Could not find end of gencost section\n")
 
-              linenum += 1
+            linenum += 1
 
         linenum += 1
 
@@ -506,16 +514,16 @@ def readvoltsfile(log, alldata):
         thisline = lines[linenum].split()
 
         if len(thisline) > 0:
-          if thisline[0] == 'bus':
-            angle_rad         = float(thisline[5])*math.pi/180
-            busid             = int(thisline[1])
-            inputvolts[busid] = (float(thisline[3]), angle_rad)
-            numread += 1
+            if thisline[0] == 'bus':
+                angle_rad         = float(thisline[5])*math.pi/180
+                busid             = int(thisline[1])
+                inputvolts[busid] = (float(thisline[3]), angle_rad)
+                numread += 1
 
-          elif thisline[0] == 'END':
-            break
-          else:
-            log.stateandquit("Error: Illegal input %s\n"%thisline[0])
+            elif thisline[0] == 'END':
+                break
+            else:
+                log.stateandquit("Error: Illegal input %s\n"%thisline[0])
 
     log.joint("Read %d input voltages\n"%numread)
     alldata['inputvolts'] = inputvolts
@@ -543,19 +551,18 @@ def readflowsfile(log, alldata):
     for linenum in range(len(lines)):
         thisline = lines[linenum].split()
         if len(thisline) > 0:
+            if thisline[0] == 'branch':
+                branchid          = int(thisline[1])
+                inputPf[branchid] = float(thisline[7])/baseMVA
+                inputPt[branchid] = float(thisline[9])/baseMVA
+                inputQf[branchid] = float(thisline[11])/baseMVA
+                inputQt[branchid] = float(thisline[13])/baseMVA
 
-          if thisline[0] == 'branch':
-            branchid          = int(thisline[1])
-            inputPf[branchid] = float(thisline[7])/baseMVA
-            inputPt[branchid] = float(thisline[9])/baseMVA
-            inputQf[branchid] = float(thisline[11])/baseMVA
-            inputQt[branchid] = float(thisline[13])/baseMVA
-
-            numread += 1
-          elif thisline[0] == 'END':
-            break
-          else:
-            log.stateandquit("Error: Illegal input %s on line %s\n"%(thisline[0], thisline))
+                numread += 1
+            elif thisline[0] == 'END':
+                break
+            else:
+                log.stateandquit("Error: Illegal input %s on line %s\n"%(thisline[0], thisline))
 
     log.joint("Read %d input flows\n"%numread)
 
@@ -565,108 +572,108 @@ def readflowsfile(log, alldata):
     alldata['inputQt'] = inputQt
 
 def writegv(log, alldata, gvfilename):
-  try:
-    f = open(gvfilename, "w")
-    log.joint("Writing to gv file %s\n"%gvfilename)
-  except:
-    log.stateandquit("Cannot open file %s"%gvfilename)
+    try:
+        f = open(gvfilename, "w")
+        log.joint("Writing to gv file %s\n"%gvfilename)
+    except:
+        log.stateandquit("Cannot open file %s"%gvfilename)
 
-  f.write("graph {\n")
+    f.write("graph {\n")
 
-  for bus in alldata['buses'].values():
-    f.write("     " + str(bus.nodeID)+";\n")
+    for bus in alldata['buses'].values():
+        f.write("     " + str(bus.nodeID)+";\n")
 
-  for branch in alldata['branches'].values():
-    f.write("     " + str(branch.f)+" -- " + str(branch.t)+";\n")
+    for branch in alldata['branches'].values():
+        f.write("     " + str(branch.f)+" -- " + str(branch.t)+";\n")
 
-  f.write("}\n")
-  f.close()
+    f.write("}\n")
+    f.close()
 
 def generateinputcs(log, alldata):
-  log.joint("  generating input c,s values\n")
+    log.joint("  generating input c,s values\n")
 
-  inputcc      = {}
-  inputcs      = {}
-  inputvolts   = alldata['inputvolts']
-  buses        = alldata['buses']
-  branches     = alldata['branches']
-  IDtoCountmap = alldata['IDtoCountmap']
+    inputcc      = {}
+    inputcs      = {}
+    inputvolts   = alldata['inputvolts']
+    buses        = alldata['buses']
+    branches     = alldata['branches']
+    IDtoCountmap = alldata['IDtoCountmap']
 
-  for busid in inputvolts:
-    M              = inputvolts[busid][0]
-    inputcc[busid] = M*M
-    #log.joint(str(busid) +" is in input volts with M " +  str(M) + "\n")
+    for busid in inputvolts:
+        M              = inputvolts[busid][0]
+        inputcc[busid] = M*M
+        #log.joint(str(busid) +" is in input volts with M " +  str(M) + "\n")
 
-  for branch in branches.values():
-    f          = branch.f
-    t          = branch.t
-    count_of_f = IDtoCountmap[f]
-    count_of_t = IDtoCountmap[t]
+    for branch in branches.values():
+        f          = branch.f
+        t          = branch.t
+        count_of_f = IDtoCountmap[f]
+        count_of_t = IDtoCountmap[t]
 
-    if f in inputvolts and t in inputvolts:
-      Mf           = inputvolts[f][0]
-      Mt           = inputvolts[t][0]
-      af           = inputvolts[f][1]
-      at           = inputvolts[t][1]
-      angle        = af - at
-      inputcs[f,t] = (Mf*Mt*math.cos(angle), Mf*Mt*math.sin(angle))
-      inputcs[t,f] = (Mf*Mt*math.cos(angle), -Mf*Mt*math.sin(angle))
+        if f in inputvolts and t in inputvolts:
+            Mf           = inputvolts[f][0]
+            Mt           = inputvolts[t][0]
+            af           = inputvolts[f][1]
+            at           = inputvolts[t][1]
+            angle        = af - at
+            inputcs[f,t] = (Mf*Mt*math.cos(angle), Mf*Mt*math.sin(angle))
+            inputcs[t,f] = (Mf*Mt*math.cos(angle), -Mf*Mt*math.sin(angle))
 
-  alldata['inputcc'] = inputcc 
-  alldata['inputcs'] = inputcs 
+    alldata['inputcc'] = inputcc 
+    alldata['inputcs'] = inputcs 
 
 def generateinputeandf(log, alldata):
-  log.joint("  generating input e,f values\n")
+    log.joint("  generating input e,f values\n")
 
-  inputve    = {}
-  inputvf    = {}
-  inputvolts = alldata['inputvolts']
-  buses        = alldata['buses']
-  IDtoCountmap = alldata['IDtoCountmap']
+    inputve      = {}
+    inputvf      = {}
+    inputvolts   = alldata['inputvolts']
+    buses        = alldata['buses']
+    IDtoCountmap = alldata['IDtoCountmap']
 
-  for busid in inputvolts:
-    M              = inputvolts[busid][0]
-    A              = inputvolts[busid][1]
-    inputve[busid] = M*math.cos(A)
-    inputvf[busid] = M*math.sin(A)
-    #log.joint(str(busid) +" is in input volts with M " +  str(M) + "\n")
+    for busid in inputvolts:
+        M              = inputvolts[busid][0]
+        A              = inputvolts[busid][1]
+        inputve[busid] = M*math.cos(A)
+        inputvf[busid] = M*math.sin(A)
+        #log.joint(str(busid) +" is in input volts with M " +  str(M) + "\n")
 
-  alldata['inputve'] = inputve
-  alldata['inputvf'] = inputvf
+    alldata['inputve'] = inputve
+    alldata['inputvf'] = inputvf
 
 def readdigits(log, alldata):
-  Lfilename = alldata['Lfilename']
-  log.joint("reading L file %s\n"%Lfilename)
+    Lfilename = alldata['Lfilename']
+    log.joint("reading L file %s\n"%Lfilename)
 
-  buses = alldata['buses']
+    buses = alldata['buses']
 
-  try:
-    f     = open(Lfilename, "r")
-    lines = f.readlines()
-    f.close()
-  except:
-    log.stateandquit("Error: Cannot open file %s\n")
+    try:
+        f     = open(Lfilename, "r")
+        lines = f.readlines()
+        f.close()
+    except:
+        log.stateandquit("Error: Cannot open file %s\n")
 
-  L            = {}
-  IDtoCountmap = alldata['IDtoCountmap'] 
+    L            = {}
+    IDtoCountmap = alldata['IDtoCountmap'] 
 
-  for bus in buses.values():
-    L[bus] = 0
+    for bus in buses.values():
+        L[bus] = 0
 
-  for linenum in range(len(lines)):
-    line = lines[linenum].split()
+    for linenum in range(len(lines)):
+        line = lines[linenum].split()
 
-    if line[0] == 'default':
-      lvalue = int(line[1])
-      log.joint(" default L: %d\n"%lvalue)
+        if line[0] == 'default':
+            lvalue = int(line[1])
+            log.joint(" default L: %d\n"%lvalue)
 
-      for bus in buses.values():
-        L[bus] = lvalue
+            for bus in buses.values():
+                L[bus] = lvalue
 
-    elif line[0] == 'END':
-      break
-    else:
-      ind = int(line[0])
-      L[buses[IDtoCountmap[ind] ]] = int(line[1])
+        elif line[0] == 'END':
+            break
+        else:
+            ind = int(line[0])
+            L[buses[IDtoCountmap[ind] ]] = int(line[1])
 
-  alldata['L'] = L
+    alldata['L'] = L
