@@ -50,12 +50,13 @@ class danoLogger:
     def log_off(self):
         self.log = 0
 
-    def stateandquit(self, additionalstr):
-        self.log = self.screen = 1
-        if additionalstr:
-            self.joint(" " + additionalstr + "\n")
+    def raiseexception(self, message):
+        self.log    = 1
+        self.screen = 0
+        if message:
+            self.joint("\n" + message)
         self.closelog()
-        sys.exit("\nQuitting\n")
+        raise Exception("\n" + message + "Encountered an error. Quitting")
 
     def printversion(self):
         self.joint("Version 0.0.1\n\n")

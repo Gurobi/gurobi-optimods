@@ -19,46 +19,58 @@ if __name__ == '__main__':
 
     if len(sys.argv) == 3:
         mylogfile = sys.argv[2]
+    try:
+        log = danoLogger(mylogfile)
 
-    log = danoLogger(mylogfile)
+        alldata        = {}
+        alldata['LP']  = {}
+        alldata['log'] = log
 
-    alldata        = {}
-    alldata['LP']  = {}
-    alldata['log'] = log
+        read_configfile(alldata, sys.argv[1])
 
-    read_configfile(alldata, sys.argv[1])
+        readcase(alldata)
 
-    readcase(alldata)
+        if alldata['dographics']:
+            grbgraphical(alldata)
 
-    if alldata['dographics']:
-        grbgraphical(alldata)
+        lpformulator_ac(alldata)
+        breakexit("formulated and solved")
+        log.closelog()
 
-    lpformulator_ac(alldata)
-    breakexit('formulated and solved')
+    except gp.GurobiError as e:
+        print("Error in Gurobi: Error code %s: %s"%(e.errno, e))
 
-    log.closelog()
+    except Exception as e:
+        print(e)
+
 
 def solve_acopf_model(configfile, logfile=""):
     """Construct an ACOPF model from given data and solve it with Gurobi"""
+    try:
+        if not logfile:
+            logfile = "gurobiACOPF.log"
 
-    if not logfile:
-        logfile = "gurobiACOPF.log"
+        log = danologger(logfile)
 
-    log = danologger(logfile)
+        if not isinstance(configfile, str):
+            log.stateandquit("Error: Configuration file argument not of type String\n")
 
-    if not isinstance(configfile, str):
-        log.stateandquit("Error: Configuration file argument not of type String\n")
+        alldata        = {}
+        alldata['LP']  = {}
+        alldata['log'] = log
 
-    alldata        = {}
-    alldata['LP']  = {}
-    alldata['log'] = log
+        read_configfile(alldata, configfile)
+        readcase(alldata)
 
-    read_configfile(alldata, configfile)
-    readcase(alldata)
+        #if alldata['dographics']:
+        #    grbgraphical(alldata)
 
-    #if alldata['dographics']:
-    #    grbgraphical(alldata)
+        lpformulator_ac(alldata)
 
-    lpformulator_ac(alldata)
+        log.closelog()
 
-    log.closelog()
+    except gp.GurobiError as e:
+        print("Error in Gurobi: Error code %s: %s"%(e.errno, e))
+
+    except:
+        print("")  

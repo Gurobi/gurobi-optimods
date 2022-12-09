@@ -185,7 +185,7 @@ def readcase(alldata):
         lines = f.readlines()
         f.close()
     except:
-        log.stateandquit("Error: Cannot open file %s\n"%casefilename)
+        log.raiseexception("Error: Cannot open file %s\n"%casefilename)
 
     readcase_thrulines(log, alldata, lines)
     alldata['casefilelines'] = lines
@@ -254,7 +254,7 @@ def readcase_thrulines(log, alldata, lines):
                     nodeID, nodetype = int(thisline[0]), int(thisline[1])
 
                     if nodetype != 1 and nodetype != 2 and nodetype != 3 and nodetype != 4:
-                        log.stateandquit("Error: Bad bus %s has type %s\n"%(thisline[0], thisline[1]))
+                        log.raiseexception("Error: Bad bus %s has type %s\n"%(thisline[0], thisline[1]))
 
                     if nodetype == 4:
                         #log.joint("bus " + thisline[0] + " is isolated\n")
@@ -302,7 +302,7 @@ def readcase_thrulines(log, alldata, lines):
             log.joint("    sumloadQd %f\n"%sumQd)
 
             if lookingforendofbus:
-                log.stateandquit("Error: Could not find bus data section\n")
+                log.raiseexception("Error: Could not find bus data section\n")
 
             if slackbus < 0:
                 log.joint("    Could not find slack bus\n")
@@ -357,12 +357,12 @@ def readcase_thrulines(log, alldata, lines):
                         summaxgenQ += Qmax
 
                 else:
-                    log.stateandquit("Error: Generator # %d in noncexistent bus ID %d\n"%(gencount, nodeID))
+                    log.raiseexception("Error: Generator # %d in noncexistent bus ID %d\n"%(gencount, nodeID))
 
                 linenum += 1
 
             if lookingforendofgen:
-                log.stateandquit("Error: Could not find end of generator section\n")
+                log.raiseexception("Error: Could not find end of generator section\n")
 
             alldata['gens']    = gens
             alldata['numgens'] = len(gens)
@@ -416,7 +416,7 @@ def readcase_thrulines(log, alldata, lines):
                 maxangle = float(maxangle)
 
                 if maxangle < minangle:
-                    log.stateandquit("Error: Branch # %d has illegal angle constraints\n"%numbranches)
+                    log.raiseexception("Error: Branch # %d has illegal angle constraints\n"%numbranches)
 
                 id_f = IDtoCountmap[f]
                 id_t = IDtoCountmap[t]
@@ -435,7 +435,7 @@ def readcase_thrulines(log, alldata, lines):
                 linenum += 1
 
             if lookingforendofbranch:
-                log.stateandquit("Error: Could not find end of branch section\n")
+                log.raiseexception("Error: Could not find end of branch section\n")
 
             alldata['branches']    = branches
             alldata['numbranches'] = numbranches
@@ -460,12 +460,12 @@ def readcase_thrulines(log, alldata, lines):
                 if gencostcount <= gencount:
                     costtype = int(thisline[0])
                     if costtype != 2:
-                        log.stateandquit("Error: Cost of generator %d is not polynomial\n"%gencostcount)
+                        log.raiseexception("Error: Cost of generator %d is not polynomial\n"%gencostcount)
 
                     degree = int(thisline[3]) - 1
 
                     if degree > 2 or degree < 0:
-                        log.stateandquit("Error: Degree of cost function for generator %d is illegal\n"%gencostcount)
+                        log.raiseexception("Error: Degree of cost function for generator %d is illegal\n"%gencostcount)
 
                     costvector = [0 for j in range(degree+1)]
 
@@ -482,13 +482,13 @@ def readcase_thrulines(log, alldata, lines):
                     gens[gencostcount].addcost(log, costvector, linenum)
 
                 else:
-                    log.stateandquit("Error: Read %d gen costs but only %d generators\n"%(gencostcount, gencount))
+                    log.raiseexception("Error: Read %d gen costs but only %d generators\n"%(gencostcount, gencount))
 
                 gencostcount += 1
                 linenum += 1
 
             if lookingforendofgencost:
-                log.stateandquit("Error: Could not find end of gencost section\n")
+                log.raiseexception("Error: Could not find end of gencost section\n")
 
             linenum += 1
 
@@ -502,10 +502,10 @@ def readvoltsfile(log, alldata):
     try:
         f     = open(voltsfilename, "r")
         lines = f.readlines()
-        log.joint("Reading volts file %s\n"%voltsfilename)
+        log.joint("  Reading volts file %s\n"%voltsfilename)
         f.close()
     except:
-        log.stateandquit("Error: Cannot open file %s\n"%voltsfilename)
+        log.raiseexception("Error: Cannot open file %s\n"%voltsfilename)
 
     inputvolts = {}
     numread = 0
@@ -523,7 +523,7 @@ def readvoltsfile(log, alldata):
             elif thisline[0] == 'END':
                 break
             else:
-                log.stateandquit("Error: Illegal input %s\n"%thisline[0])
+                log.raiseexception("Error: Illegal input %s\n"%thisline[0])
 
     log.joint("Read %d input voltages\n"%numread)
     alldata['inputvolts'] = inputvolts
@@ -535,10 +535,10 @@ def readflowsfile(log, alldata):
     try:
         f     = open(flowsfilename, "r")
         lines = f.readlines()
-        log.joint(" Reading flows file %s\n"%flowsfilename)
+        log.joint("  Reading flows file %s\n"%flowsfilename)
         f.close()
     except:
-        log.stateandquit("Cannot open flows file %s"%flowsfilename)
+        log.raiseexception("Error: Cannot open flows file %s"%flowsfilename)
 
     inputPf = {}
     inputQf = {}
@@ -562,7 +562,7 @@ def readflowsfile(log, alldata):
             elif thisline[0] == 'END':
                 break
             else:
-                log.stateandquit("Error: Illegal input %s on line %s\n"%(thisline[0], thisline))
+                log.raiseexception("Error: Illegal input %s on line %s\n"%(thisline[0], thisline))
 
     log.joint("Read %d input flows\n"%numread)
 
@@ -576,7 +576,7 @@ def writegv(log, alldata, gvfilename):
         f = open(gvfilename, "w")
         log.joint("Writing to gv file %s\n"%gvfilename)
     except:
-        log.stateandquit("Cannot open file %s"%gvfilename)
+        log.raiseexception("Error: Cannot open file %s"%gvfilename)
 
     f.write("graph {\n")
 
@@ -652,7 +652,7 @@ def readdigits(log, alldata):
         lines = f.readlines()
         f.close()
     except:
-        log.stateandquit("Error: Cannot open file %s\n")
+        log.raiseexception("Error: Cannot open file %s\n")
 
     L            = {}
     IDtoCountmap = alldata['IDtoCountmap'] 
