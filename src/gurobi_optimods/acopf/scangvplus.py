@@ -7,7 +7,7 @@ def scangv(filename):
     print(filename)
 
     try:
-        f = open(filename, "r")
+        f     = open(filename, "r")
         lines = f.readlines()
         f.close()
     except:
@@ -18,30 +18,28 @@ def scangv(filename):
 
     criterion = np.array([ len(lines[linenum].split()) for linenum in range(N) ])
     selection = np.where(criterion == 2)
-    N = len(selection[0])
-    node = np.full(N,-1)
-    nodex = np.zeros(N)
-    nodey = np.zeros(N)
-
-
-    trueN = 0
+    N         = len(selection[0])
+    node      = np.full(N,-1)
+    nodex     = np.zeros(N)
+    nodey     = np.zeros(N)
+    trueN     = 0
 
     for k in range(N):
-        i = selection[0][k]
+        i   = selection[0][k]
         foo = lines[i].split()
         #print(k, 'i',i, 'split', foo[0], foo[1])
         if len(foo[1]) > 3 and foo[1][:4]== '[pos':
             #print(k, 'i',i, 'split', foo[0], foo[1])
             #print(foo)
-            comma = foo[1].rfind(',')
+            comma   = foo[1].rfind(',')
             rightbr = foo[1].rfind(']')
             #print(comma, rightbr)
-            node = int(foo[0])-1 #base 0
+            node        = int(foo[0])-1 #base 0
             nodex[node] = float(foo[1][6:comma])
             nodey[node] = float(foo[1][comma+1:rightbr-1])
             #print(node, float(foo[1][6:comma]), float(foo[1][comma+1:rightbr-1]))
             trueN += 1
-    
+
         #print(i, nodex[i], nodey[i])
-    
+
     return trueN, N, nodex, nodey

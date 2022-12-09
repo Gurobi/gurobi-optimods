@@ -15,13 +15,17 @@ def graphplot(graphfilename, gvfilename):
 
     print('graphfilename', graphfilename, 'gvfilename', gvfilename)
     #graphfilename = 'grbgraph.txt'
-    f = open(graphfilename, "r")
-    lines = f.readlines()
-    f.close()
+    try:
+        f     = open(graphfilename, "r")
+        lines = f.readlines()
+        f.close()
+    except:
+        sys.exit("failure")
+
     n = int(lines[0].split()[1])
     m = int(lines[0].split()[3])
 
-    adj = {}
+    adj        = {}
     truelinect = 0
     for line in range(1, m+1):
         if lines[line].split()[0] == 'END':
@@ -58,11 +62,10 @@ def graphplot(graphfilename, gvfilename):
     vis = GraphVisualization(G, pos, node_size=1, node_border_width=1, edge_width=1.5)
     print('rendering figure\n')
 
-    xgap = np.max(nodex) - np.min(nodex)
-    ygap = np.max(nodey) - np.min(nodey)
-
+    xgap     = np.max(nodex) - np.min(nodex)
+    ygap     = np.max(nodey) - np.min(nodey)
     myheight = 800
-    mywidth = int(math.ceil(xgap/ygap*myheight))
+    mywidth  = int(math.ceil(xgap/ygap*myheight))
     print('xgap',xgap,'ygap',ygap,'height',myheight,'width',mywidth)
 
     fig = vis.create_figure(height=myheight, width=mywidth, showlabel=False)

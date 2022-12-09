@@ -10,8 +10,8 @@ import plotly.graph_objects as go
 from typing import Any, List, Dict, Tuple, Union, Callable
 
 Vertex = Any
-Edge = Tuple[Vertex, Vertex]
-Num = Union[int, float]
+Edge   = Tuple[Vertex, Vertex]
+Num    = Union[int, float]
 
 class GraphVisualization:
     """Description"""#FIXME add more details
