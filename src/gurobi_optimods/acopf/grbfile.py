@@ -31,6 +31,7 @@ def read_config(alldata, filename):
     use_ef = False
     substitute_nonconv = False
     dographics = False
+    dopolar = False
 
     linenum = 0
     
@@ -50,6 +51,9 @@ def read_config(alldata, filename):
 
             elif thisline[0] == 'substitute_nonconv':
                 substitute_nonconv = True
+
+            elif thisline[0] == 'dopolar':
+                dopolar = True
 
             elif thisline[0] == 'usemaxdispersion':
                 usemaxdispersion = True
@@ -114,7 +118,7 @@ def read_config(alldata, filename):
         linenum += 1
 
 
-    for x in [('casefilename', casefilename), ('lpfilename', lpfilename), ('strictcheckvoltagesolution', strictcheckvoltagesolution), ('voltsfilename', voltsfilename), ('usevoltsolution', usevoltsolution), ('FIXCS', fixcs), ('useconvexformulation', useconvexformulation), ('skipjabr', skipjabr), ('cutplane', cutplane), ('dodc',dodc), ('doac', doac), ('fixtolerance', fixtolerance), ('use_ef', use_ef), ('substitute_nonconv', substitute_nonconv), ('usemaxdispersion', usemaxdispersion), ('maxdispersion_deg', maxdispersion_deg), ('dographics',dographics)]:
+    for x in [('casefilename', casefilename), ('lpfilename', lpfilename), ('strictcheckvoltagesolution', strictcheckvoltagesolution), ('voltsfilename', voltsfilename), ('usevoltsolution', usevoltsolution), ('FIXCS', fixcs), ('useconvexformulation', useconvexformulation), ('skipjabr', skipjabr), ('cutplane', cutplane), ('dodc',dodc), ('doac', doac), ('fixtolerance', fixtolerance), ('use_ef', use_ef), ('substitute_nonconv', substitute_nonconv), ('dopolar', dopolar), ('usemaxdispersion', usemaxdispersion), ('maxdispersion_deg', maxdispersion_deg), ('dographics',dographics)]:
         alldata[x[0]] = x[1]
         log.joint('{} {}\n'.format(x[0], x[1]))
 

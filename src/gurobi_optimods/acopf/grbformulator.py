@@ -68,8 +68,17 @@ def lpformulator_ac(alldata):
 
 def lpformulator_setup(alldata):
   retcode = 0
-
+  log = alldata['log']
   alldata['maxdispersion_rad'] =   (math.pi/180.)*alldata['maxdispersion_deg']
+
+  if alldata['dopolar']:
+    log.joint('polar formulation, so shutting down incompatible options:\n')
+    alldata['use_ef'] = False
+    alldata['useconvexformulation'] = False
+    alldata['skipjabr'] = True
+    log.joint('   use_ef useconvexformulation jabr\n')
+
+
   return retcode
 
 def lpformulator_ac_body(alldata):
@@ -287,6 +296,13 @@ def lpformulator_ac_vars(alldata, model):
       sys.exit("failure to add e, f, variables")
     varcount += efvarcount
 
+  if alldata['dopolar']:
+    retcode, newvarcount = lpformulator_ac_polar_vars(alldata, model, varcount)
+    if retcode:
+      sys.exit("Failure to add polar variables.")
+    varcount += newvarcount
+    
+
   alldata['LP']['Pinjvar'] = Pinjvar
   alldata['LP']['Qinjvar'] = Qinjvar  
 
@@ -359,6 +375,74 @@ def lpformulator_ac_vars(alldata, model):
   log.joint('lpformulator_ac_vars returns {}\n'.format(retcode))
 
   return retcode, varcount
+
+def lpformulator_ac_polar_vars(alldata, model, varcount):
+  retcode = newvarcount = 0
+  
+  log = alldata['log']
+
+  log.joint('Creating variables for polar formulation.\n')
+
+  numbuses = alldata['numbuses']
+  buses = alldata['buses']
+  IDtoCountmap = alldata['IDtoCountmap']
+  numbranches = alldata['numbranches']
+  branches = alldata['branches']
+
+  vvar = {}
+  thetavar = {}
+  
+  for j in range(1,numbuses+1):
+    bus = buses[j]
+    ubound = bus.Vmax
+    lbound = bus.Vmin
+    vvar[bus] = model.addVar(obj = 0.0, lb = lbound, ub = ubound, name = "v_"+str(bus.nodeID))
+    ubound = 2*math.pi
+    thetavar[bus]  = model.addVar(obj = 0.0, lb = -ubound, ub = ubound, name = "theta_"+str(bus.nodeID))
+    newvarcount += 2
+
+  alldata['LP']['vvar'] = vvar
+  alldata['LP']['thetavar'] = thetavar
+
+  cosvar = {}
+  sinvar = {}
+  thetaftvar = {}
+  vfvtvar = {}
+
+  log.joint('\nAssumption. Phase angle diffs between -pi and pi.\n\n')
+
+  for j in range(1,1+numbranches):
+    branch = branches[j]
+    f = branch.f
+    t = branch.t
+    count_of_f = IDtoCountmap[f]
+    count_of_t = IDtoCountmap[t]
+    busf = buses[count_of_f]
+    bust = buses[count_of_t]
+
+    cosvar[branch] = model.addVar(obj = 0.0, lb = -1.0, ub = 1.0, name = "cos_"+str(j)+"_"+str(busf.nodeID) + "_" + str(bust.nodeID))
+    sinvar[branch] = model.addVar(obj = 0.0, lb = -1.0, ub = 1.0, name = "sin_"+str(j)+"_"+str(busf.nodeID) + "_" + str(bust.nodeID))
+
+    # Major assumption! Heuristic: angle diffs between -pi and pi.
+    thetaftvar[branch] = model.addVar(obj = 0.0, lb = -math.pi, ub = math.pi, name = "thetaft_"+str(j)+"_"+str(busf.nodeID) + "_" + str(bust.nodeID))
+
+    ubound = busf.Vmax*bust.Vmax
+    lbound = busf.Vmin*bust.Vmin
+
+    vfvtvar[branch] = model.addVar(obj = 0.0, lb = lbound, ub = ubound, name = "vfvt_"+str(j)+"_"+str(busf.nodeID) + "_" + str(bust.nodeID))        
+
+    newvarcount += 4
+    
+  alldata['LP']['cosvar'] = cosvar
+  alldata['LP']['sinvar'] = sinvar
+  alldata['LP']['thetaftvar'] = thetaftvar
+  alldata['LP']['vfvtvar'] = vfvtvar    
+
+  log.joint('Added {} new variables to handle polar formulation.\n'.format(newvarcount))
+  breakexit('polarvars')
+
+  return retcode, newvarcount
+
 
 def lpformulator_ac_add_efvars(alldata, model, varcount):
   retcode = efvarcount = 0
@@ -677,21 +761,67 @@ def lpformulator_ac_constraints(alldata, model, varcount):
       else:
         log.joint('skipping Jabr inequalities\n')  
 
+  if alldata['dopolar']:
+    lpformulator_ac_add_polarconstraints(alldata, model)    
   if alldata['use_ef'] and alldata['useconvexformulation']==False:
     lpformulator_ac_add_nonconvexconstraints(alldata, model)
     
   model.update()
   
 
-  model.write('foo.lp')  
+  model.write('foo.lp')
+
+  breakexit('wrote lp')
 
   log.joint('lpformulator_ac_constraints returns {}\n'.format(retcode))
 
   return retcode
 
+def lpformulator_ac_add_polarconstraints(alldata,model):
+  log = alldata['log']
+  log.joint('Adding polar constraints.\n')
+
+  buses = alldata['buses']
+  numbuses = alldata['numbuses']
+  branches = alldata['branches']
+  numbranches = alldata['numbranches']
+  vvar = alldata['LP']['vvar']
+  thetavar = alldata['LP']['thetavar']
+  thetaftvar = alldata['LP']['thetaftvar']
+  vfvtvar = alldata['LP']['vfvtvar']
+  cosvar = alldata['LP']['cosvar']
+  sinvar = alldata['LP']['sinvar']
+  IDtoCountmap = alldata['IDtoCountmap']
+  cvar = alldata['LP']['cvar']
+  svar = alldata['LP']['svar']
+
+
+  for j in range(1,1+numbuses):
+    bus = buses[j]
+    model.addConstr(cvar[bus] == vvar[bus]**2, name = 'cffdef_'+str(j))
+
+  for j in range(1,1+numbranches):
+    branch = branches[j]
+    f = branch.f
+    t = branch.t
+    count_of_f = IDtoCountmap[f]
+    count_of_t = IDtoCountmap[t]
+    busf = buses[count_of_f]
+    bust = buses[count_of_t]
+    model.addConstr(thetaftvar[branch] == thetavar[busf] - thetavar[bust],name='thetaftdef_'+str(j))
+
+    gc = model.addGenConstrCos(thetaftvar[branch], cosvar[branch],name='cosdef_'+str(j)+'_'+str(f)+'_'+str(t))
+    gs = model.addGenConstrSin(thetaftvar[branch], sinvar[branch],name='sindef_'+str(j)+'_'+str(f)+'_'+str(t))
+    model.addConstr(vfvtvar[branch] == vvar[busf]*vvar[bust], name = 'vfvtdef_'+str(j)+'_'+str(f)+'_'+str(t))
+    
+    model.addConstr(cvar[branch] == vfvtvar[branch]*cosvar[branch], name = 'cftdef_'+str(j))
+    model.addConstr(svar[branch] == vfvtvar[branch]*sinvar[branch], name = 'sftdef_'+str(j))
+    
+  breakexit('polarconstrs')
+
 def lpformulator_ac_add_nonconvexconstraints(alldata,model):
   log = alldata['log']
-  log.joint('adding nonconvex constraints\n')
+  log.joint('Adding nonconvex constraints.\n')
 
   buses = alldata['buses']
   numbuses = alldata['numbuses']
