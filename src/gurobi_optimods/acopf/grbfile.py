@@ -14,7 +14,7 @@ def read_configfile(alldata, filename):
         lines = f.readlines()
         f.close()
     except:
-        log.stateandquit("Error: Cannot open file %s\n"%filename)
+        log.raise_exception("Error: Cannot open file %s\n"%filename)
 
     # Currently Hard-coded
     alldata['usequadcostvar'] = False
@@ -69,12 +69,12 @@ def read_configfile(alldata, filename):
             voltsfilename = thisline[1]
             if usevoltsolution:
                 log.joint("Cannot use both voltsfilename and voltsolution\n")
-                log.stateandquit("Error: Illegal option combination\n")
+                log.raise_exception("Error: Illegal option combination\n")
 
         elif thisline[0] == 'usevoltsoution':
             if voltsfilename != 'NONE':
                 log.joint("Cannot use both voltsfilename and voltsolution\n")
-                log.stateandquit("Error: Illegal option combination\n")
+                log.raise_exception("Error: Illegal option combination\n")
 
             usevoltsolution = True  # forcing solution in casefile
 
@@ -115,7 +115,7 @@ def read_configfile(alldata, filename):
             break
 
         else:
-            log.stateandquit("Error: Illegal input %s\n"%thisline[0])
+            log.raise_exception("Error: Illegal input %s\n"%thisline[0])
 
         linenum += 1
 
@@ -133,4 +133,4 @@ def read_configfile(alldata, filename):
         log.joint("  {} {}\n".format(x[0], x[1]))
 
     if alldata['casefilename'] == 'NONE':
-       log.stateandquit('Error: No casefile provided\n')
+       log.raise_exception('Error: No casefile provided\n')

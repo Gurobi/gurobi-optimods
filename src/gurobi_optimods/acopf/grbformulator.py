@@ -1,9 +1,9 @@
 import math
 import time
-#from log import Logger
+
 import gurobipy as gp
 from gurobipy import GRB
-from myutils import breakexit
+from myutils import break_exit
 
 def lpformulator_ac(alldata):
     """Formulate ACOPF model and solve it"""
@@ -34,7 +34,7 @@ def lpformulator_ac(alldata):
         feastol = model.Params.FeasibilityTol
         opttol  = model.Params.OptimalityTol
         mipgap  = model.Params.MIPGap
-        log.joint("\nGurobi settings: FeasibilityTol %g OptimalityTol %g MIPGap %g\n"%(feastol,opttol,mipgap))
+        log.joint("\nGurobi specific settings: FeasibilityTol %g OptimalityTol %g MIPGap %g\n"%(feastol,opttol,mipgap))
 
         log.joint("Constructed ACOPF model with %d variables"%model.NumVars)
         log.joint(" and % dconstraints\n"%model.NumConstrs)
@@ -101,11 +101,11 @@ def lpformulator_ac_body(alldata, model):
     """Helper function for adding variables and constraints to the model"""
 
     # Create model variables
-    lpformulator_ac_vars(alldata, model)
+    lpformulator_create_ac_vars(alldata, model)
     # Create model constraints
-    lpformulator_ac_constraints(alldata, model)
+    lpformulator_create_ac_constraints(alldata, model)
 
-def lpformulator_ac_vars(alldata, model):
+def lpformulator_create_ac_vars(alldata, model):
     """Create model variables for ACOPF"""
 
     log = alldata['log']
@@ -354,10 +354,10 @@ def lpformulator_ac_vars(alldata, model):
 
     # Powerflow variables
     if alldata['use_ef'] and alldata['useconvexformulation'] == False:
-        lpformulator_ac_add_efvars(alldata, model, varcount)
+        lpformulator_create_ac_efvars(alldata, model, varcount)
 
     if alldata['dopolar']:
-        lpformulator_ac_polar_vars(alldata, model, varcount)
+        lpformulator_create_ac_polar_vars(alldata, model, varcount)
 
     # Save variable data
     alldata['LP']['cvar']   = cvar
@@ -371,7 +371,7 @@ def lpformulator_ac_vars(alldata, model):
     alldata['LP']['Pinjvar'] = Pinjvar
     alldata['LP']['Qinjvar'] = Qinjvar
 
-def lpformulator_ac_polar_vars(alldata, model, varcount):
+def lpformulator_create_ac_polar_vars(alldata, model, varcount):
     """Create polar variables for ACOPF"""
 
     vvar         = {}
@@ -438,11 +438,11 @@ def lpformulator_ac_polar_vars(alldata, model, varcount):
     alldata['LP']['vfvtvar']    = vfvtvar
 
     log.joint("    Added %d new variables to handle polar formulation.\n"%newvarcount)
-    breakexit('polarvars')
+    break_exit('polarvars')
 
     varcount += newvarcount
 
-def lpformulator_ac_add_efvars(alldata, model, varcount):
+def lpformulator_create_ac_efvars(alldata, model, varcount):
     """Create nonconvex e, f variables for ACOPF"""
 
     evar         = {}
@@ -529,11 +529,11 @@ def computebalbounds(log, alldata, bus):
         log.joint(" Qubound for %d final %f\n"%(bus.nodeID, Qubound))
         log.joint(" (Qd was %g)\n"%bus.Qd)
         log.joint(" Qlbound for %d final %f\n"%(bus.nodeID, Qlbound))
-        breakexit(" ")
+        break_exit(" ")
 
     return Pubound, Plbound, Qubound, Qlbound
 
-def lpformulator_ac_constraints(alldata, model):
+def lpformulator_create_ac_constraints(alldata, model):
     """"Create constraint for ACOPF"""
 
     numbuses     = alldata['numbuses']
@@ -618,7 +618,7 @@ def lpformulator_ac_constraints(alldata, model):
             model.addConstr(expr == Pvar_t[branch], name = "Pdef_%d_%d_%d"%(j, t, f))
             count += 2
         else:
-            breakexit("se")
+            break_exit("se")
 
     log.joint("    %d active power flow definitions added\n"%count)
 
@@ -645,7 +645,7 @@ def lpformulator_ac_constraints(alldata, model):
             model.addConstr(expr == Qvar_t[branch], name = "Qdef_%d_%d_%d"%(j, t, f))
             count += 2
         else:
-            breakexit('se') # FIXME remove else case
+            break_exit('se') # FIXME remove else case
 
     log.joint("    %d reactive power flow definitions added\n"%count)
 
@@ -764,7 +764,7 @@ def lpformulator_ac_constraints(alldata, model):
 
     #model.write('foo.lp') # FIXME remove
 
-    breakexit('wrote lp') # FIXME remove
+    break_exit('wrote lp') # FIXME remove
 
 def lpformulator_ac_add_polarconstraints(alldata,model):
     """Create polar representation constraints for ACOPF"""
@@ -818,7 +818,7 @@ def lpformulator_ac_add_polarconstraints(alldata,model):
 
     log.joint("    %d polar constraints added\n"%count)
 
-    breakexit('polarconstrs')
+    break_exit('polarconstrs')
 
 def lpformulator_ac_add_nonconvexconstraints(alldata,model):
     """Create nonconvex e, f constraints"""

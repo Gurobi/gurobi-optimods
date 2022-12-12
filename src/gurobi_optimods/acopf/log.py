@@ -2,7 +2,7 @@ import sys
 import time
 from socket import gethostname
 
-class danoLogger:
+class Logger:
     """Class to handle logging of the OPF solve beyond Gurobi output"""
 
     def __init__(self, logfilename):
@@ -15,7 +15,7 @@ class danoLogger:
         self.printversion()
 
     # Print date and close logfile
-    def closelog(self):
+    def close_log(self):
         localtime = time.asctime(time.localtime(time.time()))
         self.joint("Closing log: %s\n" % localtime)
         self.logfile.close()
@@ -55,12 +55,12 @@ class danoLogger:
         self.log = 0
 
     # Show error message and raise exception
-    def raiseexception(self, message):
+    def raise_exception(self, message):
         self.log    = 1
         self.screen = 0
         if message:
             self.joint("\n" + message)
-        self.closelog()
+        self.close_log()
         raise Exception("\n" + message + "Encountered an error. Quitting")
 
     def printversion(self):

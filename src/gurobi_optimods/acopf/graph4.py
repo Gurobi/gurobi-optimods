@@ -8,7 +8,7 @@ import networkx as nx
 import math
 from graphvisualization import *
 from scangvplus import *
-from myutils import breakexit
+from myutils import break_exit
 
 def graphplot(graphfilename, gvfilename):
     """Description"""#FIXME add more details
@@ -37,14 +37,14 @@ def graphplot(graphfilename, gvfilename):
     print('lines',len(lines),'m',m, 'n',n)
 
     #should check that the next line is 'END'
-    breakexit('lmn')
+    break_exit('lmn')
 
     #trueN, nodex, nodey = scangv('first.gv')
     trueN, N, nodex, nodey = scangv(gvfilename)
 
     print(len(nodex), len(nodey), trueN, N)
 
-    breakexit('scanned')
+    break_exit('scanned')
 
     pos = {}
     for j in range(n):
@@ -54,7 +54,7 @@ def graphplot(graphfilename, gvfilename):
 
     print(len(adj),m)
 
-    breakexit('lmn2')
+    break_exit('lmn2')
 
     for j in range(truelinect):
         G.add_edge(adj[j][0],adj[j][1])

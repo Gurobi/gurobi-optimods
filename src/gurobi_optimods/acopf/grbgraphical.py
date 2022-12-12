@@ -4,7 +4,7 @@ import time
 from graph4 import *
 #from log import Logger
 from gurobipy import *
-from myutils import breakexit
+from myutils import break_exit
 
 def grbgraphical(alldata):
     log         = alldata['log']
@@ -16,15 +16,15 @@ def grbgraphical(alldata):
 
     try:
         f = open(gvfilename, "w")
-        log.joint("Writing to gv file " + gvfilename + "\n")
+        log.joint("Writing to gv file %s\n"%gvfilename)
     except:
-        log.stateandquit("Error: Cannot open file " + gvfilename)
+        log.raise_exception("Error: Cannot open file %s\n"%gvfilename)
 
     try:
         g = open(txtfilename, "w")
-        log.joint("Writing to txt file " + txtfilename + "\n")
+        log.joint("Writing to txt file %s\n"%txtfilename)
     except:
-        log.stateandquit("Error: Cannot open file " + txtfilename)
+        log.raise_exception("Error: Cannot open file %s\n"%txtfilename)
 
     f.write("graph {\n")
     f.write('node [color=black, height=0, label=\"\\N\", shape=point, width=0];\n')
@@ -54,8 +54,8 @@ def grbgraphical(alldata):
     system(neatocommand)
     '''
 
-    breakexit('graph,1')
+    break_exit('graph,1')
 
     graphplot(txtfilename, firstgvfile)
 
-    breakexit('graph,2')
+    break_exit('graph,2')

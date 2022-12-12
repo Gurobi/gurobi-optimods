@@ -1,8 +1,8 @@
 import sys
 
-from log import danoLogger
-from grbcasereader import readcase
-from myutils import breakexit
+from log import Logger
+from grbcasereader import read_case
+from myutils import break_exit
 from grbfile import read_configfile
 from grbgraphical import grbgraphical
 from grbformulator import lpformulator_ac
@@ -18,7 +18,7 @@ if __name__ == '__main__':
         mylogfile = sys.argv[2]
 
     try:
-        log = danoLogger(mylogfile)
+        log = Logger(mylogfile)
 
         alldata        = {}
         alldata['LP']  = {}
@@ -26,14 +26,14 @@ if __name__ == '__main__':
 
         read_configfile(alldata, sys.argv[1])
 
-        readcase(alldata)
+        read_case(alldata)
 
         if alldata['dographics']:
             grbgraphical(alldata)
 
         lpformulator_ac(alldata)
-        breakexit("formulated and solved")
-        log.closelog()
+        break_exit("formulated and solved")
+        log.close_log()
 
     except gp.GurobiError as e:
         print("Error in Gurobi: Error code %s: %s"%(e.errno, e))
@@ -41,18 +41,18 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
 
-
 def solve_acopf_model(configfile, logfile = ""):
     """Construct an ACOPF model from given data and solve it with Gurobi"""
+
     try:
         if not logfile:
             logfile = "gurobiACOPF.log"
 
         # Create log object
-        log = danologger(logfile)
+        log = Logger(logfile)
 
         if not isinstance(configfile, str):
-            log.stateandquit("Error: Configuration file argument not of type String\n")
+            log.raise_exception("Error: Configuration file argument not of type String\n")
 
         # Initialize data
         alldata        = {}
@@ -63,7 +63,7 @@ def solve_acopf_model(configfile, logfile = ""):
         read_configfile(alldata, configfile)
 
         # Read case file holding OPF network data
-        readcase(alldata)
+        read_case(alldata)
 
         if alldata['dographics']:
             grbgraphical(alldata)
@@ -71,10 +71,10 @@ def solve_acopf_model(configfile, logfile = ""):
         # Construct model from collected data and optimize it
         lpformulator_ac(alldata)
 
-        log.closelog()
+        log.close_log()
 
     except gp.GurobiError as e:
         print("Error in Gurobi: Error code %s: %s"%(e.errno, e))
 
-    except:
-        print("")  
+    except Exception as e:
+        print(e)  
