@@ -2,9 +2,6 @@ import unittest
 
 
 class TestExamples(unittest.TestCase):
-    def test_l1_regression(self):
-        import examples.l1_regression
-
     @unittest.expectedFailure  # not implemented yet
     def test_card_regression(self):
         import examples.card_regression

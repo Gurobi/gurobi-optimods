@@ -1,15 +1,14 @@
 L1 Regression
 =============
 
-- Minimum sum of absolute errors (L1) regression performs is more robust than ordinary least squares (OLS, L2) in that it is more resistant to outliers in the response variable.
-- Expressed as a linear program, so ideally suited to Gurobi.
-- Present this in contrast to :code:`sklearn.linear_model.LinearRegression` (find a good comparison dataset).
-- This implementation matches the sklearn APIs, can be used as a drop-in replacement.
+Minimum sum of absolute errors (L1) regression performs is generally more robust than ordinary least squares (OLS, L2) in that it is more resistant to outliers in the response variable. The loss function can be expressed using linear program, so fitting model coefficients is ideally suited to Gurobi.
+
+The interface of this mod matches that of :code:`sklearn.linear_model.LinearRegression`. This example compares the coefficients found using L1 and L2 regression on the diabetes dataset.
 
 Problem Specification
 ---------------------
 
-See sklearn `Linear Models <https://scikit-learn.org/stable/modules/linear_model.html>`_ for general explanation.
+Scikit-learn's documentation gives a general explanation of `Linear Models <https://scikit-learn.org/stable/modules/linear_model.html>`_. The distinction between this mod and the Ordinary Least Squares model from scikit-learn is the loss function.
 
 .. tabs::
 
@@ -30,18 +29,42 @@ See sklearn `Linear Models <https://scikit-learn.org/stable/modules/linear_model
             \begin{alignat}{2}
             \min \quad        & \sum_i u_i + v_i \\
             \mbox{s.t.} \quad & \sum_j w_j x_{ij} + u_i - v_i = y_i \quad & \forall i \in I \\
-                              & u_i, v_i \ge 0                     \quad & \forall i \in I \\
-                              & w_j \,\, \text{free}               \quad & \forall j \in J \\
+                              & u_i, v_i \ge 0                      \quad & \forall i \in I \\
+                              & w_j \,\, \text{free}                \quad & \forall j \in J \\
             \end{alignat}
 
 Code
 ----
 
-Show the code required to run the model from the store. All the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output.
+This mod implements the fit-predict interface of scikit-learn. The example below reads in the diabetes dataset from scikit-learn, performs a train-test split, fits the L1 regression model to the training data, and creates predictions for the testing data.
 
-.. literalinclude:: ../../../examples/l1_regression.py
+.. testcode:: l1_regression
 
-The model is solved as a linear program by Gurobi.
+    from sklearn import datasets
+    from sklearn.model_selection import train_test_split
+
+    from gurobi_optimods.regression import L1Regression
+
+    # Load the diabetes dataset
+    diabetes_X, diabetes_y = datasets.load_diabetes(return_X_y=True)
+
+    # Split data for fit assessment
+    X_train, X_test, y_train, y_test = train_test_split(
+        diabetes_X, diabetes_y, random_state=42
+    )
+
+    # Create and fit parameterised model
+    reg = L1Regression()
+    reg.fit(X_train, y_train)
+    y_pred = reg.predict(X_test)
+
+.. testoutput:: l1_regression
+    :hide:
+
+    ...
+    Optimal objective  4.372590220e+01
+
+The model is solved as a linear program by Gurobi. Logs provided for interested parties:
 
 .. collapse:: View Gurobi logs
 
@@ -71,36 +94,30 @@ The model is solved as a linear program by Gurobi.
 Solution
 --------
 
+Here we extract the coefficients of the fitted model and compare them with the coefficients found using OLS. Not a super informative plot at this stage...
+
 .. testcode:: l1_regression
-    :hide:
 
-    from examples.l1_regression import reg, y_pred, y_test
+    import pandas as pd
+    from sklearn.linear_model import LinearRegression
+    ols = LinearRegression()
+    ols.fit(X_train, y_train)
+    pd.DataFrame(data={"OLS": ols.coef_, "L1": reg.coef_}).plot.bar()
 
-.. testoutput:: l1_regression
-    :hide:
+.. image:: reg_coeffs.png
+  :width: 500
+  :alt: Weighted matching result
 
-    ...
-    Optimal objective  4.372590220e+01
-
-Properties of the predictive model, just like in sklearn.
-
-.. doctest:: l1_regression
-
-    >>> reg.coef_
-    array([  16.7152629 , -306.19230544,  454.36833914,  508.02507763,
-           -990.07434864,  414.38167986,  260.18885417,  483.00952994,
-            678.56792495,   14.56067715])
-    >>> reg.intercept_
-    151.61357348161457
-
-Output from the predictive model, just like in sklearn.
+To gasps of shock and awe, the L1 regression produces a *smaller mean absolute error* on the training set than the OLS model, while the OLS model does better in terms of mean squared error.
 
 .. doctest:: l1_regression
 
-    >>> from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-    >>> mean_squared_error(y_test, y_pred)
-    2969.577566715166
-    >>> mean_absolute_error(y_test, y_pred)
-    41.9166462209382
-    >>> r2_score(y_test, y_pred)
-    0.4629757409105141
+    >>> from sklearn.metrics import mean_absolute_error, mean_squared_error
+    >>> mean_absolute_error(y_train, reg.predict(X_train))
+    43.72590219712541
+    >>> mean_absolute_error(y_train, ols.predict(X_train))
+    44.054803735772055
+    >>> mean_squared_error(y_train, reg.predict(X_train))
+    2960.7450234433813
+    >>> mean_squared_error(y_train, ols.predict(X_train))
+    2907.257764010109
