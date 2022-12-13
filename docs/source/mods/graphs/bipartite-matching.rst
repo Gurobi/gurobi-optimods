@@ -44,7 +44,26 @@ Code
 
 Show the code required to run the model from the store vs how to implement directly in gurobipy. All the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output.
 
-.. literalinclude:: ../../../examples/bipartite_matching.py
+.. testcode:: bipartite_matching
+
+    import scipy.sparse as sp
+
+    from gurobi_optimods.matching import maximum_bipartite_matching
+
+    # Bipartite graph as a sparse matrix.
+    row = [0, 3, 4, 0, 1, 3]
+    col = [7, 5, 5, 6, 6, 7]
+    data = [1, 1, 1, 1, 1, 1]
+    G = sp.coo_matrix((data, (row, col)), shape=(8, 8))
+
+    # Compute max matching.
+    matching = maximum_bipartite_matching(G)
+
+.. testoutput:: bipartite_matching
+    :hide:
+
+    ...
+    Optimal objective  3.000000000e+00
 
 Both codes construct the same model and give the same result. The model is solved as a LP/MIP/QP/etc by Gurobi.
 
@@ -76,17 +95,6 @@ Solution
 --------
 
 Show the solution. Use doctests if possible (i.e. the solution must be stable enough). Otherwise, just display it somehow.
-
-.. testcode:: bipartite_matching
-    :hide:
-
-    from examples.bipartite_matching import matching, G
-
-.. testoutput:: bipartite_matching
-    :hide:
-
-    ...
-    Optimal objective  3.000000000e+00
 
 .. doctest:: bipartite_matching
     :options: +NORMALIZE_WHITESPACE

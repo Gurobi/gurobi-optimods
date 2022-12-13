@@ -44,7 +44,26 @@ Code
 
 Show the code required to run the model from the store vs how to implement directly in gurobipy. All the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output.
 
-.. literalinclude:: ../../../examples/weighted_matching.py
+.. testcode:: weighted_matching
+
+    import scipy.sparse as sp
+
+    from gurobi_optimods.matching import maximum_weighted_matching
+
+    # Weighted graph as a sparse matrix.
+    row = [0, 1, 1, 2, 2, 3]
+    col = [3, 2, 3, 3, 4, 5]
+    data = [1, 1.2, 1.3, 1.4, 1, 1.2]
+    G = sp.coo_matrix((data, (row, col)), shape=(6, 6))
+
+    # Compute max matching.
+    matching = maximum_weighted_matching(G)
+
+.. testoutput:: weighted_matching
+    :hide:
+
+    ...
+    Best objective 2.400000000000e+00, best bound 2.400000000000e+00, gap 0.0000%
 
 Both codes construct the same model and give the same result. The model is solved as a LP/MIP/QP/etc by Gurobi.
 
@@ -81,17 +100,6 @@ Solution
 --------
 
 Show the solution. Use doctests if possible (i.e. the solution must be stable enough). Otherwise, just display it somehow.
-
-.. testcode:: weighted_matching
-    :hide:
-
-    from examples.weighted_matching import matching, G
-
-.. testoutput:: weighted_matching
-    :hide:
-
-    ...
-    Best objective 2.400000000000e+00, best bound 2.400000000000e+00, gap 0.0000%
 
 .. doctest:: weighted_matching
     :options: +NORMALIZE_WHITESPACE
