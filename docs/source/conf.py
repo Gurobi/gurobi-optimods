@@ -35,6 +35,8 @@ intersphinx_disabled_domains = ["std"]
 
 templates_path = ["_templates"]
 
+html_theme = "sphinx_rtd_theme"
+
 # -- Include only prompts
 
 copybutton_prompt_text = ">>> "
