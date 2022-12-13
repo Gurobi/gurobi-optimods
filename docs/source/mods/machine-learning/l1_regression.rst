@@ -33,6 +33,8 @@ Scikit-learn's documentation gives a general explanation of `Linear Models <http
                               & w_j \,\, \text{free}                \quad & \forall j \in J \\
             \end{alignat}
 
+*TODO: add data examples here (ndarrays)*
+
 Code
 ----
 
