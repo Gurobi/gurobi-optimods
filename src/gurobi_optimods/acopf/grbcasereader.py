@@ -184,11 +184,9 @@ def read_case(alldata):
 
     log          = alldata['log']
     casefilename = alldata['casefilename']
-    log.joint("Reading case file %s\n"%casefilename)
-
-    starttime = time.time()
-
+    starttime    = time.time()
     try:
+        log.joint("Reading case file %s\n"%casefilename)
         f     = open(casefilename, "r")
         lines = f.readlines()
         f.close()
@@ -213,6 +211,7 @@ def read_case_thrulines(log, alldata, lines):
     baseMVA           = 0.0
     alldata['refbus'] = -1
 
+    # Read file line by line
     while linenum <= numlines:
         line     = lines[linenum-1]
         thisline = line.split()
@@ -249,7 +248,7 @@ def read_case_thrulines(log, alldata, lines):
             sumload            = 0
             sumPd = sumQd = 0
             linenum += 1
-
+            # Read bus section
             while lookingforendofbus and linenum <= numlines:
                 line     = lines[linenum-1]
                 thisline = line.split()
@@ -308,7 +307,7 @@ def read_case_thrulines(log, alldata, lines):
                     numPload += (Pd > 0)
 
                 linenum += 1
-
+            # Finished reading bus section
             alldata['buses']        = buses
             alldata['numbuses']     = numbuses
             alldata['sumPd']        = sumPd
@@ -336,6 +335,7 @@ def read_case_thrulines(log, alldata, lines):
             summaxgenP = summaxgenQ = 0
             linenum += 1
 
+            # Read gen section
             while lookingforendofgen and linenum <= numlines:
                 line     = lines[linenum-1]
                 thisline = line.split()
@@ -381,7 +381,7 @@ def read_case_thrulines(log, alldata, lines):
                     log.raise_exception("Error: Generator # %d in nonexistent bus ID %d\n"%(gencount, nodeID))
 
                 linenum += 1
-
+            # Finished reading gen section
             if lookingforendofgen:
                 log.raise_exception("Error: Could not find end of generator section\n")
 
@@ -409,6 +409,7 @@ def read_case_thrulines(log, alldata, lines):
             zerolimit             = 0
             linenum += 1
 
+            # Read branch section
             while lookingforendofbranch and linenum <= numlines:
                 line     = lines[linenum-1]
                 thisline = line.split()
@@ -460,7 +461,7 @@ def read_case_thrulines(log, alldata, lines):
                     buses[id_t].addtobranch(log, numbranches)
 
                 linenum += 1
-
+            # Finished reading branch section
             if lookingforendofbranch:
                 log.raise_exception("Error: Could not find end of branch section\n")
 
@@ -474,6 +475,7 @@ def read_case_thrulines(log, alldata, lines):
             gencostcount           = 1
             linenum += 1
 
+            # Read gen cost section
             while lookingforendofgencost and linenum <= numlines:
                 line     = lines[linenum-1]
                 thisline = line.split()
@@ -512,31 +514,29 @@ def read_case_thrulines(log, alldata, lines):
 
                 gencostcount += 1
                 linenum += 1
-
+            # Finished reading gen cost section
             if lookingforendofgencost:
                 log.raise_exception("Error: Could not find end of gencost section\n")
 
             linenum += 1
 
         linenum += 1
+    # Finished reading file line by line
 
 def readvoltsfile(log, alldata):
     """Read volts file and fill data dictionary"""
 
     voltsfilename = alldata['voltsfilename']
-    IDtoCountmap  = alldata['IDtoCountmap']
-    buses         = alldata['buses']
-
     try:
+        log.joint("  Reading volts file %s\n"%voltsfilename)
         f     = open(voltsfilename, "r")
         lines = f.readlines()
-        log.joint("  Reading volts file %s\n"%voltsfilename)
         f.close()
     except:
         log.raise_exception("Error: Cannot open file %s\n"%voltsfilename)
 
-    inputvolts = {}
-    numread = 0
+    inputvolts   = {}
+    numread      = 0
 
     for linenum in range(len(lines)):
         thisline = lines[linenum].split()
@@ -563,23 +563,20 @@ def readflowsfile(log, alldata):
     """Read flows file and fill data dictionary"""
 
     flowsfilename = alldata['flowsfilename']
-    IDtoCountmap  = alldata['IDtoCountmap']
-    buses         = alldata['buses']
     try:
+        log.joint("  Reading flows file %s\n"%flowsfilename)
         f     = open(flowsfilename, "r")
         lines = f.readlines()
-        log.joint("  Reading flows file %s\n"%flowsfilename)
         f.close()
     except:
         log.raise_exception("Error: Cannot open flows file %s"%flowsfilename)
 
+    baseMVA = alldata['baseMVA']
     inputPf = {}
     inputQf = {}
     inputPt = {}
     inputQt = {}
     numread = 0
-
-    baseMVA = alldata['baseMVA']
 
     for linenum in range(len(lines)):
         thisline = lines[linenum].split()
@@ -631,12 +628,11 @@ def writegv(log, alldata, gvfilename):
 def generateinputcs(log, alldata):
     """Description"""#FIXME add more details
 
-    log.joint("  generating input c,s values\n")
+    log.joint("  Generating input c,s values\n")
 
     inputcc      = {}
     inputcs      = {}
     inputvolts   = alldata['inputvolts']
-    buses        = alldata['buses']
     branches     = alldata['branches']
     IDtoCountmap = alldata['IDtoCountmap']
 
@@ -670,8 +666,6 @@ def generateinputeandf(log, alldata):
     inputve      = {}
     inputvf      = {}
     inputvolts   = alldata['inputvolts']
-    buses        = alldata['buses']
-    IDtoCountmap = alldata['IDtoCountmap']
 
     for busid in inputvolts:
         M              = inputvolts[busid][0]
@@ -686,19 +680,17 @@ def readdigits(log, alldata):
     """Description"""#FIXME add more details
 
     Lfilename = alldata['Lfilename']
-    log.joint("reading L file %s\n"%Lfilename)
-
-    buses = alldata['buses']
-
     try:
+        log.joint("  Reading L file %s\n"%Lfilename)
         f     = open(Lfilename, "r")
         lines = f.readlines()
         f.close()
     except:
         log.raise_exception("Error: Cannot open file %s\n")
 
-    L            = {}
+    buses        = alldata['buses']
     IDtoCountmap = alldata['IDtoCountmap'] 
+    L            = {}
 
     for bus in buses.values():
         L[bus] = 0

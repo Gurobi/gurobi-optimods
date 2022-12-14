@@ -21,9 +21,16 @@ def lpformulator_ac(alldata):
         # Add model variables and constraints
         lpformulator_ac_body(alldata, model)
 
+        model.update() # Update to get correct model stats
+        log.joint("Constructed ACOPF model with %d variables"%model.NumVars)
+        log.joint(" and %d constraints\n\n"%model.NumConstrs)
+
+        model.write('foo.lp')  # FIXME remove
+        break_exit('wrote lp') # FIXME remove
+
         # Specific settings for better convergence
         model.params.NonConvex      = 2
-        model.params.DualReductions = 0 # FIXME
+        #model.params.DualReductions = 0
 
         #model.setParam(GRB.Param.MIPGap, 1.0e-10)
         #model.setParam(GRB.Param.FeasibilityTol, 1.0e-8)
@@ -34,10 +41,6 @@ def lpformulator_ac(alldata):
         feastol = model.Params.FeasibilityTol
         opttol  = model.Params.OptimalityTol
         mipgap  = model.Params.MIPGap
-        log.joint("\nGurobi specific settings: FeasibilityTol %g OptimalityTol %g MIPGap %g\n"%(feastol,opttol,mipgap))
-
-        log.joint("Constructed ACOPF model with %d variables"%model.NumVars)
-        log.joint(" and % dconstraints\n"%model.NumConstrs)
 
         # Optimize
         model.optimize()
@@ -221,6 +224,7 @@ def lpformulator_create_ac_vars(alldata, model):
                 lbound = -maxprod
             else:
                 lbound = -maxprod
+
         elif maxanglerad <= math.pi:
             if minanglerad >= -0.5*math.pi:
                 lbound = maxprod*math.cos(maxanglerad)
@@ -229,11 +233,14 @@ def lpformulator_create_ac_vars(alldata, model):
             elif minanglerad >= -1.5*math.pi:
                 lbound = -maxprod
             else:
-                lbound = -maxprod 
+                lbound = -maxprod
+
         elif maxanglerad <= 1.5*math.pi:
             lbound = -maxprod
+
         elif maxanglerad <= 2*math.pi:
             lbound = -maxprod
+
         else:
             ubound = maxprod
             lbound = -maxprod
@@ -260,7 +267,8 @@ def lpformulator_create_ac_vars(alldata, model):
                 lbound = -maxprod
             else:
                 ubound = maxprod
-                lbound = -maxprod 
+                lbound = -maxprod
+
         elif maxanglerad <= math.pi:
             ubound = maxprod
 
@@ -271,7 +279,7 @@ def lpformulator_create_ac_vars(alldata, model):
             elif minanglerad >= -1.5*math.pi:
                 lbound = -maxprod
             else:
-                lbound = -maxprod 
+                lbound = -maxprod
 
         elif maxanglerad <= 1.5*math.pi:
             ubound = maxprod
@@ -283,7 +291,7 @@ def lpformulator_create_ac_vars(alldata, model):
             elif minanglerad >= -1.5*math.pi:
                 lbound = -maxprod
             else:
-                lbound = -maxprod 
+                lbound = -maxprod
         else:
             ubound = maxprod
             lbound = -maxprod
@@ -293,10 +301,10 @@ def lpformulator_create_ac_vars(alldata, model):
         branch.sftvarind = varcount
         varcount += 1
 
-    Pvar_f                   = {}
-    Qvar_f                   = {}
-    Pvar_t                   = {}
-    Qvar_t                   = {}
+    Pvar_f = {}
+    Qvar_f = {}
+    Pvar_t = {}
+    Qvar_t = {}
 
     for j in range(1,1+numbranches):
         branch     = branches[j]
@@ -397,10 +405,10 @@ def lpformulator_create_ac_polar_vars(alldata, model, varcount):
                                      name = "theta_%d"%bus.nodeID)
         newvarcount += 2
 
-    cosvar                    = {}
-    sinvar                    = {}
-    thetaftvar                = {}
-    vfvtvar                   = {}
+    cosvar     = {}
+    sinvar     = {}
+    thetaftvar = {}
+    vfvtvar    = {}
 
     log.joint("    Assumption. Phase angle diffs between -pi and pi\n")
 
@@ -655,6 +663,7 @@ def lpformulator_create_ac_constraints(alldata, model):
     for j in range(1,1+numbuses):
         bus  = buses[j]
         expr = gp.LinExpr()
+
         for branchid in bus.frombranchids.values():
             expr.add(Pvar_f[branches[branchid]])
 
@@ -761,10 +770,6 @@ def lpformulator_create_ac_constraints(alldata, model):
     # nonconvex e, f representation
     if alldata['use_ef'] and alldata['useconvexformulation'] == False:
         lpformulator_ac_add_nonconvexconstraints(alldata, model)
-
-    #model.write('foo.lp') # FIXME remove
-
-    break_exit('wrote lp') # FIXME remove
 
 def lpformulator_ac_add_polarconstraints(alldata,model):
     """Create polar representation constraints for ACOPF"""

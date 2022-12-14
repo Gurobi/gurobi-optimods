@@ -7,9 +7,9 @@ def read_configfile(alldata, filename):
     """Function to read configurations for OPF solve from config file"""
 
     log = alldata['log']
-    log.joint("Reading configuration file %s\n"%filename)
 
     try:
+        log.joint("  Reading configuration file %s\n"%filename)
         f     = open(filename, "r")
         lines = f.readlines()
         f.close()

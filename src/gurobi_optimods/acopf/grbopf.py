@@ -1,5 +1,6 @@
 import sys
 
+import gurobipy as gp
 from log import Logger
 from grbcasereader import read_case
 from myutils import break_exit
@@ -77,4 +78,4 @@ def solve_acopf_model(configfile, logfile = ""):
         print("Error in Gurobi: Error code %s: %s"%(e.errno, e))
 
     except Exception as e:
-        print(e)  
+        print(e)
