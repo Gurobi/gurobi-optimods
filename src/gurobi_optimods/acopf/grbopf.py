@@ -4,6 +4,7 @@ import gurobipy as gp
 from log import Logger
 from grbcasereader import read_case
 from myutils import break_exit
+#this is where versioner was before
 from grbfile import read_configfile
 from grbgraphical import grbgraphical
 from grbformulator import lpformulator_ac
