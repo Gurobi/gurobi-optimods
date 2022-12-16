@@ -11,8 +11,12 @@ from scangvplus import *
 from myutils import break_exit
 
 def graphplot(graphfilename, gvfilename):
-    """Description"""#FIXME add more details
-
+    """Description"""
+    #
+    # Reads a network in the format created by the graphviz library
+    # Then uses the GraphVisualization library to create a plotly figure
+    # The figure is then rendered in a browser window
+    #
     print('graphfilename', graphfilename, 'gvfilename', gvfilename)
     #graphfilename = 'grbgraph.txt'
     try:

@@ -33,8 +33,8 @@ def grbgraphical(alldata):
         #f.write("     " + str(bus.nodeID)+";\n")
         f.write("     " + str(bus.count)+";\n")
     for branch in alldata['branches'].values():
-        f.write("     " + str(branch.id_f)+" -- " + str(branch.id_t)+";\n")
-        g.write(' ' + str(branch.id_f)+ ' ' + str(branch.id_t)+ '\n')
+        f.write("     " + str(branch.count_f)+" -- " + str(branch.count_t)+";\n")
+        g.write(' ' + str(branch.count_f)+ ' ' + str(branch.count_t)+ '\n')
 
     f.write("}\n")
     f.close()

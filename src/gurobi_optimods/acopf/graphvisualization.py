@@ -14,8 +14,14 @@ Edge   = Tuple[Vertex, Vertex]
 Num    = Union[int, float]
 
 class GraphVisualization:
-    """Description"""#FIXME add more details
-
+    """Description"""
+    #
+    # See PDF linked above for full description
+    #
+    # Creates a plotly graph to be rendered
+    #
+    # Input is a graph given by coordinates
+    #
     def __init__(
         self,
         G: nx.Graph,

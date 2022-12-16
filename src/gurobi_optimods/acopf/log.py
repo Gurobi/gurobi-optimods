@@ -64,4 +64,4 @@ class Logger:
         raise Exception("\n" + message + "Encountered an error. Quitting")
 
     def printversion(self):
-        self.joint("Version 0.0.1\n\n")
+        self.joint("Version 0.0.2\n\n")

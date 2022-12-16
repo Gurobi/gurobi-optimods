@@ -6,30 +6,35 @@ from myutils import *
 from log import *
 
 class Bus:
-    """Bus class""" # FIXME add more details
+    """Bus class"""
+
+    # This is a class that describes a bus in a power system, including loads,
+    # voltage limits, type of bus (generator, reference, etc.), ID and count.
+    # The data structure also keeps track of branches incident with the bus
+    # See comments below
 
     def __init__(self, count, nodeID, nodetype, Pd, Qd, Gs, Bs, Vbase, Vmax,
                  Vmin, busline0):
-        self.genidsbycount = []
-        self.frombranchids = {}
-        self.tobranchids   = {}
-        self.count         = count
-        self.nodeID        = nodeID
-        self.nodetype      = nodetype
-        self.Pd            = Pd
-        self.Qd            = Qd
-        self.Gs            = Gs
-        self.Bs            = Bs
-        self.Vbase         = Vbase
+        self.genidsbycount = []  #array of generator IDs at this bus
+        self.frombranchids = {}  #branches where this bus is the 'from' bus
+        self.tobranchids   = {}  #branches where this bus is the 'to' bus
+        self.count         = count  #bus count
+        self.nodeID        = nodeID #ID of bus
+        self.nodetype      = nodetype 
+        self.Pd            = Pd  #active load
+        self.Qd            = Qd  #reactive load
+        self.Gs            = Gs #shunt admittance parameter
+        self.Bs            = Bs #shunt admittance parameter
+        self.Vbase         = Vbase #voltage base
         self.Vmax          = Vmax
         self.Vmin          = Vmin
-        self.busline0      = busline0
+        self.busline0      = busline0  #line location of bus within input file
         self.inputvoltage  = False
-        self.cffvarind     = -1
+        self.cffvarind     = -1  #the following four fields are variable indices
         self.Pinjvarind    = -1
         self.Qinjvarind    = -1
         self.Pbalance      = 0
-        self.inputV        = 0
+        self.inputV        = 0  #input voltage
         self.outdegree = self.indegree = self.degree = 0
 
     def getbusline0(self):
@@ -37,10 +42,10 @@ class Bus:
 
     def addgenerator(self, log, generatorcount, generator):
         self.genidsbycount.append(generatorcount)
-        #loud = 0 #FIXME remove comment if not needed
-        #if loud:
-        #  log.joint(" added generator # " + str(generatorcount) + " to bus ID " + str(self.nodeID))
-        #  log.joint(" Pmax " + str(generator.Pmax) + " Pmin " + str(generator.Pmin) + "\n")
+        loud = False
+        if loud:
+          log.joint(" added generator # " + str(generatorcount) + " to bus ID " + str(self.nodeID))
+          log.joint(" Pmax " + str(generator.Pmax) + " Pmin " + str(generator.Pmin) + "\n")
 
     def addfrombranch(self, log, id):
         quant = len(self.frombranchids)
@@ -55,23 +60,25 @@ class Bus:
         self.degree += 1
 
 class Branch:
-    """Branch class"""#FIXME add more details
+    """Branch class"""
 
-    def __init__(self, log, count, f, id_f, t, id_t, r, x, bc, rateAmva,
+    # Branch class
+
+    def __init__(self, log, count, f, count_f, t, count_t, r, x, bc, rateAmva,
                  rateBmva, rateCmva, ratio, angle, maxangle, minangle,
                  status, defaultlimit, branchline0):
-        self.count           = count
-        self.f               = f
-        self.t               = t
-        self.id_f            = id_f
-        self.id_t            = id_t
-        self.r               = r
-        self.x               = x
-        self.bc              = bc
+        self.count           = count  
+        self.f               = f #bus ID for from bus
+        self.t               = t #bus ID for to bus
+        self.count_f         = count_f #count for from bus
+        self.count_t         = count_t #count for to bus
+        self.r               = r  #resistance
+        self.x               = x  #reactance
+        self.bc              = bc #branch charging admittance 
         self.count           = count
         self.branchline0     = branchline0
-        self.rateAmva        = rateAmva
-        self.rateBmva        = rateBmva
+        self.rateAmva        = rateAmva  #the following three parameters
+        self.rateBmva        = rateBmva  #describe branch limits
         self.limit           = rateAmva
         self.unboundedlimit  = False
         self.constrainedflow = 1
@@ -125,22 +132,20 @@ class Branch:
 
         self.inputcs   = False
         self.inputc    = 2
-        self.inputs    = 2  #bogus #FIXME remove? why is it bogus?
+        self.inputs    = 2  
         self.cftvarind = -1
         self.sftvarind = -1
         self.Pftvarind = -1
         self.Qftvarind = -1
 
-#       loud = False #FIXME remove comment if not needed
-#       if self.angle_rad != 0:
-#         loud = 1
-#       if loud:
-#        log.joint("\nbr " + str(count) + " f " + str(f) + " t " + str(t) +"\n")
-#        log.joint("   idf " +  str(id_f) + " idt " + str(id_t) +"\n")
-#        log.joint("   r " + str(r) + " x " + str(x) + " bb " + str(bc) +"\n")
-#        log.joint("   ratio " + str(self.ratio) + " angle " + str(angle) + " angle_rad: " + str(self.angle_rad) + "\n")
-#        log.joint("   y " + str(y) + "\n")
-#        log.joint("       Yff " + str(Yff) + " , Yft " + str(Yft) + " , Ytf " + str(Ytf) +  " , Ytt " + str(Ytt) + "\n")
+        loud = False 
+        if loud:
+            log.joint("\nbr " + str(count) + " f " + str(f) + " t " + str(t) +"\n")
+            log.joint("   idf " +  str(count_f) + " idt " + str(count_t) +"\n")
+            log.joint("   r " + str(r) + " x " + str(x) + " bb " + str(bc) +"\n")
+            log.joint("   ratio " + str(self.ratio) + " angle " + str(angle) + " angle_rad: " + str(self.angle_rad) + "\n")
+            log.joint("   y " + str(y) + "\n")
+            log.joint("       Yff " + str(Yff) + " , Yft " + str(Yft) + " , Ytf " + str(Ytf) +  " , Ytt " + str(Ytt) + "\n")
 
     def getbranchline0(self):
         return self.branchline0
@@ -153,16 +158,19 @@ class Branch:
         log.joint("\n")
 
 class Gen:
-    """Gen class"""#FIXME add more details
+    """Gen class"""
+
+    #Generator class
+    #See Matpower manual for more details
 
     def __init__(self, count, nodeID, Pg, Qg, status, Pmax, Pmin, Qmax,
                  Qmin, line0):
         self.count       = count
-        self.nodeID      = nodeID
-        self.Pg          = Pg
-        self.Qg          = Qg
-        self.status      = status
-        self.Pmax        = Pmax
+        self.nodeID      = nodeID #ID of bus holding gen
+        self.Pg          = Pg #active power generation in existing solution
+        self.Qg          = Qg #reactive power generation in existing solution
+        self.status      = status #on or off
+        self.Pmax        = Pmax #max, min active and reactive power limits
         self.Pmin        = Pmin
         self.Qmax        = Qmax
         self.Qmin        = Qmin
@@ -443,22 +451,22 @@ def read_case_thrulines(log, alldata, lines):
                 if maxangle < minangle:
                     log.raise_exception("Error: Branch # %d has illegal angle constraints\n"%numbranches)
 
-                id_f = IDtoCountmap[f]
-                id_t = IDtoCountmap[t]
+                count_f = IDtoCountmap[f]
+                count_t = IDtoCountmap[t]
 
                 if baseMVA == 0.0:
                     log.raise_exception("Error: baseMVA not available before branch section\n")
 
                 if status:
-                    branches[numbranches] = Branch(log,numbranches, f, id_f, t,
-                                                   id_t, r, x, bc, rateA/baseMVA,
+                    branches[numbranches] = Branch(log,numbranches, f, count_f, t,
+                                                   count_t, r, x, bc, rateA/baseMVA,
                                                    rateB/baseMVA, rateC/baseMVA,
                                                    ratio, angle, maxangle, minangle,
                                                    status, defaultlimit, linenum-1)
                     zerolimit      += (branches[numbranches].constrainedflow == 0)
                     activebranches += 1
-                    buses[id_f].addfrombranch(log, numbranches)
-                    buses[id_t].addtobranch(log, numbranches)
+                    buses[count_f].addfrombranch(log, numbranches)
+                    buses[count_t].addtobranch(log, numbranches)
 
                 linenum += 1
             # Finished reading branch section
@@ -626,7 +634,8 @@ def writegv(log, alldata, gvfilename):
     f.close()
 
 def generateinputcs(log, alldata):
-    """Description"""#FIXME add more details
+    """Description"""
+    #Generates values for the Jabr c and s variables from input voltages
 
     log.joint("  Generating input c,s values\n")
 
@@ -659,7 +668,8 @@ def generateinputcs(log, alldata):
     alldata['inputcs'] = inputcs 
 
 def generateinputeandf(log, alldata):
-    """Description"""#FIXME add more details
+    """Description"""
+    #Generates rectangular coordinates for voltages from input solution (given in polar coordinates)
 
     log.joint("  generating input e,f values\n")
 
@@ -676,43 +686,3 @@ def generateinputeandf(log, alldata):
     alldata['inputve'] = inputve
     alldata['inputvf'] = inputvf
 
-def readdigits(log, alldata):
-    """Description"""#FIXME add more details
-
-    Lfilename = alldata['Lfilename']
-    try:
-        log.joint("  Reading L file %s\n"%Lfilename)
-        f     = open(Lfilename, "r")
-        lines = f.readlines()
-        f.close()
-    except:
-        log.raise_exception("Error: Cannot open file %s\n")
-
-    buses        = alldata['buses']
-    IDtoCountmap = alldata['IDtoCountmap'] 
-    L            = {}
-
-    for bus in buses.values():
-        L[bus] = 0
-
-    for linenum in range(len(lines)):
-        thisline = lines[linenum].split()
-
-        if len(thisline) <= 0:
-            continue
-
-        if thisline[0] == 'default':
-            lvalue = int(thisline[1])
-            log.joint(" default L: %d\n"%lvalue)
-
-            for bus in buses.values():
-                L[bus] = lvalue
-
-        elif thisline[0] == 'END':
-            break
-
-        else:
-            ind = int(thisline[0])
-            L[buses[IDtoCountmap[ind] ]] = int(thisline[1])
-
-    alldata['L'] = L

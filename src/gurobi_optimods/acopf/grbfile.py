@@ -2,6 +2,8 @@ import sys
 import os
 import numpy as np
 import time
+from myutils import break_exit
+import math
 
 def read_configfile(alldata, filename):
     """Function to read configurations for OPF solve from config file"""
@@ -31,7 +33,7 @@ def read_configfile(alldata, filename):
     dopolar              = False
     doac                 = True
     maxdispersion_deg    = 0
-    fixtolerance         = 0
+    fixtolerance         = None
     linenum              = 0
 
     # Read lines of configuration file and save options
@@ -66,7 +68,10 @@ def read_configfile(alldata, filename):
             strictvoltsfilename        = thisline[1]
 
         elif thisline[0] == 'voltsfilename':
+            if len(thisline) < 3:
+                log.raise_exception('Error: voltsfilename option requires filename and tolerance\n')
             voltsfilename = thisline[1]
+            fixtolerance = float(thisline[2])
             if usevoltsolution:
                 log.joint("Cannot use both voltsfilename and voltsolution\n")
                 log.raise_exception("Error: Illegal option combination\n")
@@ -77,6 +82,7 @@ def read_configfile(alldata, filename):
                 log.raise_exception("Error: Illegal option combination\n")
 
             usevoltsolution = True  # forcing solution in casefile
+
 
         elif thisline[0] == 'FIXCS':
             fixcs = True
@@ -134,3 +140,51 @@ def read_configfile(alldata, filename):
 
     if alldata['casefilename'] == 'NONE':
        log.raise_exception('Error: No casefile provided\n')
+
+
+def grbreadvoltsfile(alldata):
+    log = alldata['log']
+
+    numbuses = alldata['numbuses']
+    buses = alldata['buses']
+    IDtoCountmap = alldata['IDtoCountmap']
+
+    filename = alldata['voltsfilename']
+    log.joint("reading volts file " + filename + "\n")
+
+    try:
+        f = open(filename, "r")
+        lines = f.readlines()
+        f.close()
+    except:
+        log.raise_exception("cannot open file "+filename)
+
+
+    linenum = 0
+    
+    while linenum < len(lines):
+        thisline = lines[linenum].split()
+        if len(thisline) > 0:
+
+            if thisline[0] == 'END':
+                break
+            elif thisline[0] == 'bus':
+                busid = int(thisline[1])
+                buscount = IDtoCountmap[busid]
+
+                vm = float(thisline[3])
+                vadeg = float(thisline[5])
+                varad = vadeg*math.pi/180.
+                #print(busid, buscount, vm, vadeg, varad)
+
+                buses[buscount].inputvoltage = 1
+                buses[buscount].inputV = vm
+                buses[buscount].inputA_rad = varad
+            else:
+                break_exit('illegal line ' + str(linenum+1))
+        linenum += 1
+        
+    log.joint('read volts file\n')
+
+    
+       

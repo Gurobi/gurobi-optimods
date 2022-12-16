@@ -4,6 +4,8 @@ import time
 import gurobipy as gp
 from gurobipy import GRB
 from myutils import break_exit
+from grbfile import grbreadvoltsfile
+
 
 def lpformulator_ac(alldata):
     """Formulate ACOPF model and solve it"""
@@ -25,8 +27,9 @@ def lpformulator_ac(alldata):
         log.joint("Constructed ACOPF model with %d variables"%model.NumVars)
         log.joint(" and %d constraints\n\n"%model.NumConstrs)
 
-        model.write('foo.lp')  # FIXME remove
-        break_exit('wrote lp') # FIXME remove
+        model.write(alldata['lpfilename'])  # FIXME remove.  Jarek: I am using this for debugging, for now
+        log.joint('wrote LP to ' + alldata['lpfilename'] + '\n')
+        break_exit('wrote lp') # 
 
         # Specific settings for better convergence
         model.params.NonConvex      = 2
@@ -73,9 +76,10 @@ def lpformulator_ac(alldata):
         if model.SolCount > 0:
             log.joint("Objective value = %g"%model.objVal)
             model.printQuality()
-            # FIXME
+            # FIXME yes, to be done
             # Here we should gather optimal solution values and gather them
             # in a standardized format which ultimately will be returned to the user
+            # 
 
     endtime = time.time()
     log.joint("Overall time taken (model construction + optimization): %f s\n"%(endtime-starttime))
@@ -99,6 +103,9 @@ def lpformulator_setup(alldata):
         alldata['useconvexformulation'] = False
         alldata['skipjabr']             = True
         log.joint("    use_ef, useconvexformulation, jabr\n")
+
+    if alldata['voltsfilename'] != 'NONE':
+        grbreadvoltsfile(alldata)
 
 def lpformulator_ac_body(alldata, model):
     """Helper function for adding variables and constraints to the model"""
@@ -205,8 +212,8 @@ def lpformulator_create_ac_vars(alldata, model):
 
         # Assumption 1.  zero angle difference is always allowed! More precisely minangle_rad <= 0 and maxaxangle_rad >= 0
         if branch.maxangle_rad < 0 or branch.minangle_rad > 0:
-            # FIXME maybe should be an error
             log.joint(' --- Broken assumption 1: branch j %d f %d t %d minanglerad %f maxanglerad %f\n'%(j, f, t, branch.minangle_rad, branch.maxangle_rad))
+            log.raise_exception("phase angle assumption 1\n")
 
         ubound = ubasic = maxprod
         lbound = lbasic = -maxprod
@@ -391,6 +398,7 @@ def lpformulator_create_ac_polar_vars(alldata, model, varcount):
     branches     = alldata['branches']
     log          = alldata['log']
     newvarcount  = 0
+    fixtolerance = alldata['fixtolerance']
 
     log.joint("  Creating variables for polar formulation\n")
 
@@ -398,12 +406,28 @@ def lpformulator_create_ac_polar_vars(alldata, model, varcount):
         bus       = buses[j]
         ubound    = bus.Vmax
         lbound    = bus.Vmin
-        vvar[bus] = model.addVar(obj = 0.0, lb = lbound, ub = ubound,
-                                 name = "v_%d"%bus.nodeID)
-        ubound        = 2*math.pi
-        thetavar[bus] = model.addVar(obj = 0.0, lb = -ubound, ub = ubound,
-                                     name = "theta_%d"%bus.nodeID)
+
+        if bus.inputvoltage:
+            candidatelbound = bus.inputV - fixtolerance
+            candidateubound = bus.inputV + fixtolerance
+
+            lbound = max(lbound, candidatelbound)
+            ubound = min(ubound, candidateubound)
+            #print('------>',j, bus.nodeID, bus.inputV, 'lbound',lbound, 'ubound',ubound)
+        vvar[bus] = model.addVar(obj = 0.0, lb = lbound, ub = ubound, name = "v_"+str(bus.nodeID))
+        ubound = 2*math.pi
+        lbound = -ubound
+
+        if bus.inputvoltage:
+            candidatelbound = bus.inputA_rad - fixtolerance
+            candidateubound = bus.inputA_rad + fixtolerance
+            lbound = max(lbound, candidatelbound)
+            ubound = min(ubound, candidateubound)
+
+    
+        thetavar[bus]  = model.addVar(obj = 0.0, lb = lbound, ub = ubound, name = "theta_"+str(bus.nodeID))
         newvarcount += 2
+
 
     cosvar     = {}
     sinvar     = {}
@@ -500,9 +524,11 @@ def lpformulator_create_ac_efvars(alldata, model, varcount):
     varcount += efvarcount
 
 def computebalbounds(log, alldata, bus):
-    """Compute bal bounds"""# #FIXME What are bal bounds?
+    """Compute bal bounds"""
+    # Computes active and reactive max and min bus flow balance values
+    
     # First let's get max/min generations
-    loud = 0 # FIXME probably just remove it
+    loud = 0 # See below
 
     baseMVA = alldata['baseMVA']
     gens    = alldata['gens']
@@ -516,7 +542,7 @@ def computebalbounds(log, alldata, bus):
             Qubound += gens[gencounter].Qmax
             Qlbound += gens[gencounter].Qmin
 
-        if loud: # FIXME remove if not needed
+        if loud: # it is worth keeping because a user may want to debug the generator limits that they imposed, which could make a problem infeasible
             #log.joint(" Pubound for %d %f genc %d\n"%(bus.nodeID, Pubound, gencounter))
             #log.joint(" Plbound for %d %f genc %d\n"%(bus.nodeID, Plbound, gencounter))
             log.joint(" Qubound for %d %f genc %d\n"%(bus.nodeID, Qubound, gencounter))
@@ -530,7 +556,7 @@ def computebalbounds(log, alldata, bus):
     if bus.nodetype == 4:
         Pubound = Plbound = Qubound = Qlbound = 0
 
-    if loud: # FIXME remove if not needed
+    if loud: # same as above
         #log.joint(" Pubound for %d final %f\n"%(bus.nodeID, Pubound))
         #log.joint(" (Pd was %g)\n"%bus.Pd)
         #log.joint(" Plbound for %d final %f\n"%(bus.nodeID, Plbound))
@@ -573,10 +599,6 @@ def lpformulator_create_ac_constraints(alldata, model):
 
     numquadgens = 0
     for gen in gens.values():
-        ''' # FIXME remove comment?
-        print(gen.count, gen.nodeID)
-        print(gen.costdegree, gen.costvector)
-        '''
         if gen.costdegree >= 2 and gen.costvector[0] > 0 and gen.status:
             numquadgens += 1
 
@@ -652,8 +674,6 @@ def lpformulator_create_ac_constraints(alldata, model):
                               [cvar[bust], cvar[branch], svar[branch]])
             model.addConstr(expr == Qvar_t[branch], name = "Qdef_%d_%d_%d"%(j, t, f))
             count += 2
-        else:
-            break_exit('se') # FIXME remove else case
 
     log.joint("    %d reactive power flow definitions added\n"%count)
 
