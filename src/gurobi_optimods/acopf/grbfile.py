@@ -22,8 +22,9 @@ def read_configfile(alldata, filename):
     alldata['usequadcostvar'] = False
 
     # Default values for options
-    casefilename = lpfilename = strictvoltsfilename = 'NONE'
+    casefilename = strictvoltsfilename = 'NONE'
     voltsfilename = gvfilename = 'NONE'
+    lpfilename = 'grbopf.lp'
     strictcheckvoltagesolution = usevoltsolution = fixcs = skipjabr = cutplane = dodc = False
     useconvexformulation = False
     usemaxdispersion     = False
@@ -32,8 +33,10 @@ def read_configfile(alldata, filename):
     dographics           = False
     dopolar              = False
     doac                 = True
+    branchswitching_mip  = False
+    branchswitching_comp = False    
     maxdispersion_deg    = 0
-    fixtolerance         = None
+    fixtolerance         = 0
     linenum              = 0
 
     # Read lines of configuration file and save options
@@ -58,6 +61,12 @@ def read_configfile(alldata, filename):
 
         elif thisline[0] == 'dopolar':
             dopolar = True
+
+        elif thisline[0] == 'branchswitching_mip':
+            branchswitching_mip = True
+
+        elif thisline[0] == 'branchswitching_comp':
+            branchswitching_comp = True
 
         elif thisline[0] == 'usemaxdispersion':
             usemaxdispersion  = True
@@ -134,7 +143,7 @@ def read_configfile(alldata, filename):
               ('doac', doac), ('fixtolerance', fixtolerance), ('use_ef', use_ef),
               ('substitute_nonconv', substitute_nonconv), ('dopolar', dopolar),
               ('usemaxdispersion', usemaxdispersion), ('maxdispersion_deg', maxdispersion_deg),
-              ('dographics',dographics)]:
+              ('dographics',dographics), ('branchswitching_mip',branchswitching_mip), ('branchswitching_comp',branchswitching_comp)]:
         alldata[x[0]] = x[1]
         log.joint("  {} {}\n".format(x[0], x[1]))
 

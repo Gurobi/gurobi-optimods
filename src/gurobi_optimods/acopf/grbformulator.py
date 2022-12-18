@@ -122,6 +122,7 @@ def lpformulator_create_ac_vars(alldata, model):
     log.joint('Creating variables\n')
 
     fixtolerance = 1e-05
+
     if alldata['fixtolerance'] > 0:
         fixtolerance = alldata['fixtolerance']
 
@@ -138,6 +139,8 @@ def lpformulator_create_ac_vars(alldata, model):
     GenQvar  = {}
     gens     = alldata['gens']
     varcount = 0
+
+
 
     for j in range(1,numbuses+1):
         bus = buses[j]
@@ -195,6 +198,7 @@ def lpformulator_create_ac_vars(alldata, model):
                                         name = "GQ_%d_%d"%(gen.count,gen.nodeID))
             gen.Qvarind = varcount
             varcount += 1
+
 
     # Branch related variables
     branches    = alldata['branches']
@@ -343,6 +347,24 @@ def lpformulator_create_ac_vars(alldata, model):
                                       name = "Q_%d_%d_%d"%(j, bust.nodeID, busf.nodeID))
         branch.Qtfvarind = varcount
         varcount += 1
+
+
+    zvar = {}
+
+
+    if alldata['branchswitching_mip'] or alldata['branchswitching_comp']:
+        log.joint('Adding branch switching variables.\n')
+        for j in range(1,1+numbranches):
+            branch     = branches[j]
+            f          = branch.f
+            t          = branch.t
+            lbound = 0
+            ubound = 1
+            zvar[branch] = model.addVar(lb = lbound, ub = ubound, obj = 0.0, vtype = GRB.INTEGER,
+                                      name = "z_%d_%d_%d"%(j, f, t))
+            branch.switchvarind = varcount
+            varcount += 1
+    alldata['LP']['zvar'] = zvar
 
     lincostvar = model.addVar(obj = 1.0, lb = -GRB.INFINITY, ub = GRB.INFINITY,
                               name = "lincost")
@@ -587,6 +609,7 @@ def lpformulator_create_ac_constraints(alldata, model):
     GenPvar      = alldata['LP']['GenPvar']
     GenQvar      = alldata['LP']['GenQvar']
     lincostvar   = alldata['LP']['lincostvar']
+    zvar         = alldata['LP']['zvar']
     log          = alldata['log']
 
     log.joint("Creating constraints\n")
@@ -636,21 +659,22 @@ def lpformulator_create_ac_constraints(alldata, model):
         count_of_t = IDtoCountmap[t]
         busf       = buses[count_of_f]
         bust       = buses[count_of_t]
-
-        if alldata['substitute_nonconv'] == False or alldata['use_ef'] == False:
-            # Gff cff + Gft cft + Bft sft
-            expr = gp.LinExpr([branch.Gff, branch.Gft, branch.Bft],
+        if branch.status:
+            if alldata['substitute_nonconv'] == False or alldata['use_ef'] == False:
+                # Gff cff + Gft cft + Bft sft
+                expr = gp.LinExpr([branch.Gff, branch.Gft, branch.Bft],
                               [cvar[busf], cvar[branch], svar[branch]])
-            model.addConstr(expr == Pvar_f[branch], name = "Pdef_%d_%d_%d"%(j, f, t))
-            # Gtt ctt + Gtf cft + Btf stf = Gtt ctt + Gtf cft - Btf sft
-            expr = gp.LinExpr([branch.Gtt, branch.Gtf, -branch.Btf], # minus because svarft = -svartf
-                              [cvar[bust], cvar[branch], svar[branch]])
-            model.addConstr(expr == Pvar_t[branch], name = "Pdef_%d_%d_%d"%(j, t, f))
-            count += 2
+                model.addConstr(expr == Pvar_f[branch], name = "Pdef_%d_%d_%d"%(j, f, t))
+                # Gtt ctt + Gtf cft + Btf stf = Gtt ctt + Gtf cft - Btf sft
+                expr = gp.LinExpr([branch.Gtt, branch.Gtf, -branch.Btf], # minus because svarft = -svartf
+                                  [cvar[bust], cvar[branch], svar[branch]])
+                model.addConstr(expr == Pvar_t[branch], name = "Pdef_%d_%d_%d"%(j, t, f))
+                count += 2
         else:
-            break_exit("se")
+            model.addConstr(Pvar_f[branch] == 0, name = "Pdef_%d_%d_%d"%(j, f, t))
+            model.addConstr(Pvar_t[branch] == 0, name = "Pdef_%d_%d_%d"%(j, t, f))            
 
-    log.joint("    %d active power flow definitions added\n"%count)
+    log.joint("    %d active power flow definitions added.\n"%count)
 
     # Reactive PF defs
     log.joint("  Adding reactive power flow definitions\n")
@@ -664,16 +688,20 @@ def lpformulator_create_ac_constraints(alldata, model):
         busf       = buses[count_of_f]
         bust       = buses[count_of_t]
 
-        if alldata['substitute_nonconv'] == False or alldata['use_ef'] == False:
-            # -Bff cff - Bft cft + Gft sft
-            expr = gp.LinExpr([-branch.Bff, -branch.Bft, branch.Gft],
+        if branch.status:
+            if alldata['substitute_nonconv'] == False or alldata['use_ef'] == False:
+                # -Bff cff - Bft cft + Gft sft
+                expr = gp.LinExpr([-branch.Bff, -branch.Bft, branch.Gft],
                               [cvar[busf], cvar[branch], svar[branch]])
-            model.addConstr(expr == Qvar_f[branch], name = "Qdef_%d_%d_%d"%(j, f, t))
-            # -Btt ctt - Btf cft + Gtf stf = -Btt ctt - Btf cft - Gtf sft 
-            expr = gp.LinExpr([-branch.Btt, -branch.Btf, -branch.Gtf], # again, same minus
+                model.addConstr(expr == Qvar_f[branch], name = "Qdef_%d_%d_%d"%(j, f, t))
+                # -Btt ctt - Btf cft + Gtf stf = -Btt ctt - Btf cft - Gtf sft 
+                expr = gp.LinExpr([-branch.Btt, -branch.Btf, -branch.Gtf], # again, same minus
                               [cvar[bust], cvar[branch], svar[branch]])
-            model.addConstr(expr == Qvar_t[branch], name = "Qdef_%d_%d_%d"%(j, t, f))
-            count += 2
+                model.addConstr(expr == Qvar_t[branch], name = "Qdef_%d_%d_%d"%(j, t, f))
+                count += 2
+        else:
+            model.addConstr(Qvar_f[branch] == 0, name = "Qdef_%d_%d_%d"%(j, f, t))
+            model.addConstr(Qvar_t[branch] == 0, name = "Qdef_%d_%d_%d"%(j, t, f))            
 
     log.joint("    %d reactive power flow definitions added\n"%count)
 
@@ -683,33 +711,50 @@ def lpformulator_create_ac_constraints(alldata, model):
     for j in range(1,1+numbuses):
         bus  = buses[j]
         expr = gp.LinExpr()
-
-        for branchid in bus.frombranchids.values():
-            expr.add(Pvar_f[branches[branchid]])
-
-        for branchid in bus.tobranchids.values():
-            expr.add(Pvar_t[branches[branchid]])
-
+        qexpr = gp.QuadExpr()
         if bus.Gs != 0:
             expr.add(bus.Gs*cvar[bus])
 
-        model.addConstr(expr == Pinjvar[bus], name = "PBaldef%d_%d"%(j, bus.nodeID))
+        if alldata['branchswitching_comp'] == False:
+            for branchid in bus.frombranchids.values():
+                expr.add(Pvar_f[branches[branchid]])
+
+            for branchid in bus.tobranchids.values():
+                expr.add(Pvar_t[branches[branchid]])
+        else:
+            #product of binary and powerflow
+            for branchid in bus.frombranchids.values():
+                qexpr.add(zvar[branches[branchid]]*Pvar_f[branches[branchid]])
+
+            for branchid in bus.tobranchids.values():
+                qexpr.add(zvar[branches[branchid]]*Pvar_t[branches[branchid]])
+            
+        model.addConstr(expr + qexpr == Pinjvar[bus], name = "PBaldef%d_%d"%(j, bus.nodeID))
+        
         count += 1
 
     for j in range(1,1+numbuses):
         bus  = buses[j]
         expr = gp.LinExpr()
-
-        for branchid in bus.frombranchids.values():
-            expr.add(Qvar_f[branches[branchid]])
-
-        for branchid in bus.tobranchids.values():
-            expr.add(Qvar_t[branches[branchid]])
-
+        qexpr = gp.QuadExpr()
+        
         if bus.Bs != 0:
             expr.add(-bus.Bs * cvar[bus])
+        if alldata['branchswitching_comp'] == False:
+            for branchid in bus.frombranchids.values():
+                expr.add(Qvar_f[branches[branchid]])
 
-        model.addConstr(expr == Qinjvar[bus], name = "QBaldef%d_%d"%(j, bus.nodeID))
+            for branchid in bus.tobranchids.values():
+                expr.add(Qvar_t[branches[branchid]])
+        else:
+            #product of binary and powerflow
+            for branchid in bus.frombranchids.values():
+                qexpr.add(zvar[branches[branchid]]*Qvar_f[branches[branchid]])
+
+            for branchid in bus.tobranchids.values():
+                qexpr.add(zvar[branches[branchid]]*Qvar_t[branches[branchid]])
+
+        model.addConstr(expr + qexpr == Qinjvar[bus], name = "QBaldef%d_%d"%(j, bus.nodeID))
         count += 1
 
     log.joint("    %d balance constraints added\n"%count)
