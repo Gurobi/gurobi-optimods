@@ -1,5 +1,5 @@
 class OPFException(Exception):
-    "Gurobi exception class"
+    "OPF OptiMod exception class"
 
     def _get_message(self):
         return self._message
