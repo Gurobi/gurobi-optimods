@@ -4,14 +4,14 @@ import time
 import gurobipy as gp
 from gurobipy import GRB
 from myutils import break_exit
-from grbfile import grbreadvoltsfile
+from grbfile import grbreadvoltsfile, grbreadvoltsfile_andgenerate_xtra_sol_values
 
 
 def lpformulator_ac(alldata):
     """Formulate ACOPF model and solve it"""
 
     log = alldata['log']
-    log.joint("\nAC formulation\n")
+    log.joint("\nAC formulation.\n")
 
     starttime = time.time()
 
@@ -23,66 +23,17 @@ def lpformulator_ac(alldata):
         # Add model variables and constraints
         lpformulator_ac_body(alldata, model)
 
-        model.update() # Update to get correct model stats
-        log.joint("Constructed ACOPF model with %d variables"%model.NumVars)
-        log.joint(" and %d constraints\n\n"%model.NumConstrs)
+        break_exit('here')
 
-        model.write(alldata['lpfilename'])  # FIXME remove.  Jarek: I am using this for debugging, for now
-        log.joint('wrote LP to ' + alldata['lpfilename'] + '\n')
-        break_exit('wrote lp') # 
+        if alldata['strictcheckvoltagesolution']:
+            #check input solution against formulation
+            spitoutvector = True
+            feascode = lpformulator_ac_strictchecker(alldata, model, spitoutvector)
 
-        # Specific settings for better convergence
-        model.params.NonConvex      = 2
-        #model.params.DualReductions = 0
-
-        #model.setParam(GRB.Param.MIPGap, 1.0e-10)
-        #model.setParam(GRB.Param.FeasibilityTol, 1.0e-8)
-        model.Params.MIPGap         = 1.0e-3
-        model.Params.OptimalityTol  = 1.0e-3
-        model.Params.FeasibilityTol = 1.0e-6 # 1.0e-8
-
-        feastol = model.Params.FeasibilityTol
-        opttol  = model.Params.OptimalityTol
-        mipgap  = model.Params.MIPGap
-
-        # Optimize
-        model.optimize()
-
-        # Check model status and re-optimize or try computing an IIS if necessary
-        if model.status == GRB.INF_OR_UNBD:
-            log.joint("\nModel Status: infeasible or unbounded\n")
-            log.joint("Re-optimizing with DualReductions turned off\n\n")
-            model.Params.DualReductions = 0
-            model.optimize()
-
-        if model.status == GRB.INFEASIBLE:
-            log.joint("\nModel Status: infeasible")
-            log.joint("Computing IIS...\n\n")
-            model.computeIIS()
-            log.joint("\nIIS computed, writing IIS to file acopfmodel.ilp\n\n")
-            model.write("acopfmodel.ilp")
-
-        elif model.status == GRB.UNBOUNDED:
-            log.joint("\nModel Status: unbounded\n\n")
-
-        elif model.status == GRB.INTERRUPTED:
-            log.joint("\nModel Status: interrupted\n\n")
-
-        elif model.status == GRB.OPTIMAL:
-            log.joint("\nModel Status: optimal\n\n")
-
-        # Only print objective value and solution quality if at least
-        # one feasible point is available
-        if model.SolCount > 0:
-            log.joint("Objective value = %g"%model.objVal)
-            model.printQuality()
-            # FIXME yes, to be done
-            # Here we should gather optimal solution values and gather them
-            # in a standardized format which ultimately will be returned to the user
-            # 
+        lpformulator_ac_opt(alldata, model)
 
     endtime = time.time()
-    log.joint("Overall time taken (model construction + optimization): %f s\n"%(endtime-starttime))
+    log.joint("Overall time taken (model construction + optimization): %f s.\n"%(endtime-starttime))
 
     '''
     buses        = alldata['buses']
@@ -91,8 +42,66 @@ def lpformulator_ac(alldata):
     IDtoCountmap = alldata['IDtoCountmap']
     '''
 
+def lpformulator_ac_opt(alldata, model):
+
+    log = alldata['log']
+    
+    # Specific settings for better convergence
+    model.params.NonConvex      = 2
+    #model.params.DualReductions = 0
+    
+    #model.setParam(GRB.Param.MIPGap, 1.0e-10)
+    #model.setParam(GRB.Param.FeasibilityTol, 1.0e-8)
+    model.Params.MIPGap         = 1.0e-3
+    model.Params.OptimalityTol  = 1.0e-3
+    model.Params.FeasibilityTol = 1.0e-6 # 1.0e-8
+    
+    feastol = model.Params.FeasibilityTol
+    opttol  = model.Params.OptimalityTol
+    mipgap  = model.Params.MIPGap
+    
+    # Optimize
+    model.optimize()
+    
+    # Check model status and re-optimize or try computing an IIS if necessary
+    if model.status == GRB.INF_OR_UNBD:
+        log.joint("\nModel Status: infeasible or unbounded.\n")
+        log.joint("Re-optimizing with DualReductions turned off.\n\n")
+        model.Params.DualReductions = 0
+        model.optimize()
+        
+    if model.status == GRB.INFEASIBLE:
+        log.joint("\nModel Status: infeasible.")
+        log.joint("Computing IIS...\n\n")
+        model.computeIIS()
+        log.joint("\nIIS computed, writing IIS to file acopfmodel.ilp\n\n")
+        model.write("acopfmodel.ilp")
+        
+    elif model.status == GRB.UNBOUNDED:
+        log.joint("\nModel Status: unbounded.\n\n")
+
+    elif model.status == GRB.INTERRUPTED:
+        log.joint("\nModel Status: interrupted.\n\n")
+
+    elif model.status == GRB.OPTIMAL:
+        log.joint("\nModel Status: optimal.\n\n")
+        
+    # Only print objective value and solution quality if at least
+    # one feasible point is available
+    if model.SolCount > 0:
+            log.joint("Objective value = %g"%model.objVal)
+            model.printQuality()
+            # FIXME yes, to be done
+            # Here we should gather optimal solution values and gather them
+            # in a standardized format which ultimately will be returned to the user
+            # 
+
+
 def lpformulator_setup(alldata):
     """Helper function to handle specific settings"""
+
+    log = alldata['log']
+    log.joint('Auxiliary setup.\n')
 
     alldata['maxdispersion_rad'] = (math.pi/180.)*alldata['maxdispersion_deg']
 
@@ -102,24 +111,38 @@ def lpformulator_setup(alldata):
         alldata['use_ef']               = False
         alldata['useconvexformulation'] = False
         alldata['skipjabr']             = True
-        log.joint("    use_ef, useconvexformulation, jabr\n")
+        log.joint("    use_ef, useconvexformulation, jabr.\n")
 
     if alldata['voltsfilename'] != 'NONE':
         grbreadvoltsfile(alldata)
 
+    if alldata['strictcheckvoltagesolution']:
+        grbreadvoltsfile_andgenerate_xtra_sol_values(alldata)
+        
 def lpformulator_ac_body(alldata, model):
     """Helper function for adding variables and constraints to the model"""
+
+    log = alldata['log']
 
     # Create model variables
     lpformulator_create_ac_vars(alldata, model)
     # Create model constraints
     lpformulator_create_ac_constraints(alldata, model)
 
+
+    model.update() # Update to get correct model stats
+    log.joint("Constructed ACOPF model with %d variables and %d constraints.\n\n"%(model.NumVars, model.NumConstrs))
+
+    model.write(alldata['lpfilename'])  # FIXME remove.  Jarek: I am using this for debugging, for now
+    log.joint('Wrote LP to ' + alldata['lpfilename'] + '\n')
+    #break_exit('wrote lp') # 
+
+
 def lpformulator_create_ac_vars(alldata, model):
     """Create model variables for ACOPF"""
 
     log = alldata['log']
-    log.joint('Creating variables\n')
+    log.joint('Creating variables.\n')
 
     fixtolerance = 1e-05
 
@@ -422,7 +445,7 @@ def lpformulator_create_ac_polar_vars(alldata, model, varcount):
     newvarcount  = 0
     fixtolerance = alldata['fixtolerance']
 
-    log.joint("  Creating variables for polar formulation\n")
+    log.joint("  Creating variables for polar formulation.\n")
 
     for j in range(1,numbuses+1):
         bus       = buses[j]
@@ -456,7 +479,7 @@ def lpformulator_create_ac_polar_vars(alldata, model, varcount):
     thetaftvar = {}
     vfvtvar    = {}
 
-    log.joint("    Assumption. Phase angle diffs between -pi and pi\n")
+    log.joint("    Assumption. Phase angle diffs between -pi and pi.\n")
 
     for j in range(1,1+numbranches):
         branch     = branches[j]
@@ -510,7 +533,7 @@ def lpformulator_create_ac_efvars(alldata, model, varcount):
     if alldata['fixtolerance'] > 0:
         fixtolerance = alldata['fixtolerance']
 
-    log.joint("  Creating e,f variables\n")
+    log.joint("  Creating e,f variables.\n")
 
     for j in range(1,numbuses+1):
         bus    = buses[j]
@@ -541,7 +564,7 @@ def lpformulator_create_ac_efvars(alldata, model, varcount):
     alldata['LP']['evar'] = evar
     alldata['LP']['fvar'] = fvar
 
-    log.joint("  Added %d e, f variables\n"%efvarcount)
+    log.joint("  Added %d e, f variables.\n"%efvarcount)
 
     varcount += efvarcount
 
@@ -612,8 +635,8 @@ def lpformulator_create_ac_constraints(alldata, model):
     zvar         = alldata['LP']['zvar']
     log          = alldata['log']
 
-    log.joint("Creating constraints\n")
-    log.joint("  Adding cost definition constraint\n")
+    log.joint("Creating constraints.\n")
+    log.joint("  Adding cost definition constraint.\n")
 
     coeff     = [gen.costvector[gen.costdegree - 1] for gen in gens.values()]
     variables = [GenPvar[gen] for gen in gens.values()]
@@ -638,7 +661,7 @@ def lpformulator_create_ac_constraints(alldata, model):
 
             model.addConstr(qcost <= quadcostvar, name = "qcostdef")
         else:
-            log.joint("    Adding quad cost to objective\n")
+            log.joint("    Adding quad cost to objective.\n")
             model.update() # Necessary to flush changes in the objective function
             oldobj = model.getObjective()
             newobj = gp.QuadExpr(oldobj)
@@ -649,7 +672,7 @@ def lpformulator_create_ac_constraints(alldata, model):
             model.setObjective(newobj, GRB.MINIMIZE)
 
     # Active PF defs
-    log.joint("  Adding active power flow definitions\n")
+    log.joint("  Adding active power flow definitions.\n")
     count = 0
     for j in range(1,1+numbranches):
         branch     = branches[j]
@@ -677,7 +700,7 @@ def lpformulator_create_ac_constraints(alldata, model):
     log.joint("    %d active power flow definitions added.\n"%count)
 
     # Reactive PF defs
-    log.joint("  Adding reactive power flow definitions\n")
+    log.joint("  Adding reactive power flow definitions.\n")
     count = 0
     for j in range(1,1+numbranches):
         branch     = branches[j]
@@ -703,10 +726,10 @@ def lpformulator_create_ac_constraints(alldata, model):
             model.addConstr(Qvar_f[branch] == 0, name = "Qdef_%d_%d_%d"%(j, f, t))
             model.addConstr(Qvar_t[branch] == 0, name = "Qdef_%d_%d_%d"%(j, t, f))            
 
-    log.joint("    %d reactive power flow definitions added\n"%count)
+    log.joint("    %d reactive power flow definitions added.\n"%count)
 
     # Balance constraints
-    log.joint("  Adding balance constraints\n")
+    log.joint("  Adding balance constraints.\n")
     count = 0
     for j in range(1,1+numbuses):
         bus  = buses[j]
@@ -757,10 +780,10 @@ def lpformulator_create_ac_constraints(alldata, model):
         model.addConstr(expr + qexpr == Qinjvar[bus], name = "QBaldef%d_%d"%(j, bus.nodeID))
         count += 1
 
-    log.joint("    %d balance constraints added\n"%count)
+    log.joint("    %d balance constraints added.\n"%count)
 
     # Injection defs
-    log.joint("  Adding injection definition constraints\n")
+    log.joint("  Adding injection definition constraints.\n")
     count = 0
     for j in range(1,1+numbuses):
         bus  = buses[j]
@@ -783,10 +806,10 @@ def lpformulator_create_ac_constraints(alldata, model):
         model.addConstr(Qinjvar[bus] == expr - bus.Qd, name = "Bus_QInj_%d"%j)
         count += 2
 
-    log.joint("    %d injection definition constraints added\n"%count)
+    log.joint("    %d injection definition constraints added.n"%count)
 
     # Branch limits
-    log.joint("  Adding branch limits\n")
+    log.joint("  Adding branch limits.\n")
     count = 0
     for j in range(1,1+numbranches):
         branch = branches[j]
@@ -805,11 +828,11 @@ def lpformulator_create_ac_constraints(alldata, model):
                             name = "limit_t_%d_%d_%d"%(j, t, f))
             count += 2
 
-    log.joint("    %d branch limits added\n"%count)
+    log.joint("    %d branch limits added.n"%count)
 
     # JABR
     if alldata['skipjabr'] == False:
-        log.joint("  Adding Jabr constraints\n")
+        log.joint("  Adding Jabr constraints.\n")
         count = 0
         for j in range(1,1+numbranches):
             branch = branches[j]
@@ -824,7 +847,7 @@ def lpformulator_create_ac_constraints(alldata, model):
                                 name = "jabr_%d_%d_%d"%(j, f, t))
                 count += 1
 
-        log.joint("    %d Jabr constraints added\n"%count)
+        log.joint("    %d Jabr constraints added.n"%count)
     else:
         log.joint("  Skipping Jabr inequalities\n")
 
@@ -886,7 +909,7 @@ def lpformulator_ac_add_polarconstraints(alldata,model):
                         name = "sftdef_%d"%j)
         count += 6 # Count general constraints as well
 
-    log.joint("    %d polar constraints added\n"%count)
+    log.joint("    %d polar constraints added.\n"%count)
 
     break_exit('polarconstrs')
 
@@ -904,7 +927,7 @@ def lpformulator_ac_add_nonconvexconstraints(alldata,model):
     IDtoCountmap = alldata['IDtoCountmap']
     log          = alldata['log']
     count        = 0
-    log.joint("  Adding nonconvex e, f, constraints\n")
+    log.joint("  Adding nonconvex e, f, constraints.\n")
 
     for j in range(1,1+numbuses):
         bus = buses[j]
@@ -929,4 +952,11 @@ def lpformulator_ac_add_nonconvexconstraints(alldata,model):
                             name = "sdef_%d_%d_%d"%(j, f, t))
             count += 2
 
-    log.joint("    %d nonconvex e, f constraints added\n"%count)
+    log.joint("    %d nonconvex e, f constraints added.\n"%count)
+
+def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
+    log = alldata['log']
+
+    log.joint('Strict feasibility check for input voltage solution.\n')
+
+    break_exit('strict')

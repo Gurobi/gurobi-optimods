@@ -137,6 +137,7 @@ def read_configfile(alldata, filename):
     log.joint("Settings:\n")
     for x in [('casefilename', casefilename), ('lpfilename', lpfilename),
               ('strictcheckvoltagesolution', strictcheckvoltagesolution),
+              ('strictvoltsfilename', strictvoltsfilename),
               ('voltsfilename', voltsfilename), ('usevoltsolution', usevoltsolution),
               ('FIXCS', fixcs), ('useconvexformulation', useconvexformulation),
               ('skipjabr', skipjabr), ('cutplane', cutplane), ('dodc',dodc),
@@ -197,3 +198,16 @@ def grbreadvoltsfile(alldata):
 
     
        
+def grbreadvoltsfile_andgenerate_xtra_sol_values(alldata):
+    # reads voltage solution and creates derived solution vectors
+    log = alldata['log']
+
+    numbuses = alldata['numbuses']
+    buses = alldata['buses']
+    IDtoCountmap = alldata['IDtoCountmap']
+
+    filename = alldata['strictvoltsfilename']
+
+    log.joint("Reading voltage solution at file " + filename + " and creating derived solution values.\n")
+
+    break_exit('derive')

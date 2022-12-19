@@ -323,7 +323,7 @@ def read_case_thrulines(log, alldata, lines):
             alldata['IDtoCountmap'] = IDtoCountmap
             alldata['slackbus']     = slackbus
 
-            log.joint("    sumloadPd %f numPload %f\n"%(sumPd, numPload))
+            log.joint("    sumloadPd %f numPload %d\n"%(sumPd, numPload))
             log.joint("    sumloadQd %f\n"%sumQd)
 
             if lookingforendofbus:
