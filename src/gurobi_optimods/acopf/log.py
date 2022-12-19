@@ -1,6 +1,7 @@
 import sys
 import time
 from socket import gethostname
+from opfexception import OPFException
 
 class Logger:
     """Class to handle logging of the OPF solve beyond Gurobi output"""
@@ -61,7 +62,7 @@ class Logger:
         if message:
             self.joint("\n" + message)
         self.close_log()
-        raise Exception("\n" + message + "Encountered an error. Quitting")
+        raise OPFException("\n OPFException: " + message + "Encountered an error. Quitting")
 
     def printversion(self):
         self.joint("Version 0.0.2\n\n")

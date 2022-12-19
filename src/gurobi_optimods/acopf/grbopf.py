@@ -2,6 +2,7 @@ import sys
 
 import gurobipy as gp
 from log import Logger
+from opfexception import OPFException
 from grbcasereader import read_case
 from myutils import break_exit
 
@@ -40,8 +41,8 @@ if __name__ == '__main__':
     except gp.GurobiError as e:
         print("Error in Gurobi: Error code %s: %s"%(e.errno, e))
 
-    except Exception as e:
-        print(e)
+    except OPFException as e:
+        print(str(e))
 
 def solve_acopf_model(configfile, logfile = ""):
     """Construct an ACOPF model from given data and solve it with Gurobi"""
@@ -78,5 +79,5 @@ def solve_acopf_model(configfile, logfile = ""):
     except gp.GurobiError as e:
         print("Error in Gurobi: Error code %s: %s"%(e.errno, e))
 
-    except Exception as e:
-        print(e)
+    except OPFException as e:
+        print(str(e))
