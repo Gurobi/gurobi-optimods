@@ -23,14 +23,14 @@ def lpformulator_ac(alldata):
         # Add model variables and constraints
         lpformulator_ac_body(alldata, model)
 
-        break_exit('here')
+        #break_exit('here')
 
         if alldata['strictcheckvoltagesolution']:
             #check input solution against formulation
             spitoutvector = True
             feascode = lpformulator_ac_strictchecker(alldata, model, spitoutvector)
 
-        break_exit('there')
+        #break_exit('there')
 
         lpformulator_ac_opt(alldata, model)
 
@@ -136,6 +136,7 @@ def lpformulator_ac_body(alldata, model):
     log.joint('Wrote LP to ' + alldata['lpfilename'] + '\n')
     #break_exit('wrote lp') # 
 
+    alldata['model'] = model
 
 def lpformulator_create_ac_vars(alldata, model):
     """Create model variables for ACOPF"""
@@ -512,7 +513,7 @@ def lpformulator_create_ac_polar_vars(alldata, model, varcount):
     alldata['LP']['vfvtvar']    = vfvtvar
 
     log.joint("    Added %d new variables to handle polar formulation.\n"%newvarcount)
-    break_exit('polarvars')
+    #break_exit('polarvars')
 
     varcount += newvarcount
 
@@ -679,20 +680,22 @@ def lpformulator_create_ac_constraints(alldata, model):
         count_of_t = IDtoCountmap[t]
         busf       = buses[count_of_f]
         bust       = buses[count_of_t]
+        branch.Pfcname = "Pdef_%d_%d_%d"%(j, f, t)
+        branch.Ptcname = "Pdef_%d_%d_%d"%(j, t, f)
         if branch.status:
             if alldata['substitute_nonconv'] == False or alldata['use_ef'] == False:
                 # Gff cff + Gft cft + Bft sft
                 expr = gp.LinExpr([branch.Gff, branch.Gft, branch.Bft],
                               [cvar[busf], cvar[branch], svar[branch]])
-                model.addConstr(expr == Pvar_f[branch], name = "Pdef_%d_%d_%d"%(j, f, t))
+                branch.Pdeffconstr = model.addConstr(expr == Pvar_f[branch], name = branch.Pfcname)
                 # Gtt ctt + Gtf cft + Btf stf = Gtt ctt + Gtf cft - Btf sft
                 expr = gp.LinExpr([branch.Gtt, branch.Gtf, -branch.Btf], # minus because svarft = -svartf
                                   [cvar[bust], cvar[branch], svar[branch]])
-                model.addConstr(expr == Pvar_t[branch], name = "Pdef_%d_%d_%d"%(j, t, f))
+                branch.Pdeftconstr = model.addConstr(expr == Pvar_t[branch], name = branch.Ptcname)
                 count += 2
         else:
-            model.addConstr(Pvar_f[branch] == 0, name = "Pdef_%d_%d_%d"%(j, f, t))
-            model.addConstr(Pvar_t[branch] == 0, name = "Pdef_%d_%d_%d"%(j, t, f))            
+            branch.Pdeffconstr = model.addConstr(Pvar_f[branch] == 0, name = branch.Pfcname)
+            branch.Pdeftconstr = model.addConstr(Pvar_t[branch] == 0, name = branch.Ptcname)
 
     log.joint("    %d active power flow definitions added.\n"%count)
 
@@ -707,21 +710,23 @@ def lpformulator_create_ac_constraints(alldata, model):
         count_of_t = IDtoCountmap[t]
         busf       = buses[count_of_f]
         bust       = buses[count_of_t]
+        branch.Qfcname = "Qdef_%d_%d_%d"%(j, f, t)
+        branch.Qtcname = "Qdef_%d_%d_%d"%(j, t, f)
 
         if branch.status:
             if alldata['substitute_nonconv'] == False or alldata['use_ef'] == False:
                 # -Bff cff - Bft cft + Gft sft
                 expr = gp.LinExpr([-branch.Bff, -branch.Bft, branch.Gft],
                               [cvar[busf], cvar[branch], svar[branch]])
-                model.addConstr(expr == Qvar_f[branch], name = "Qdef_%d_%d_%d"%(j, f, t))
+                branch.Qdeffconstr = model.addConstr(expr == Qvar_f[branch], name = branch.Qfcname)
                 # -Btt ctt - Btf cft + Gtf stf = -Btt ctt - Btf cft - Gtf sft 
                 expr = gp.LinExpr([-branch.Btt, -branch.Btf, -branch.Gtf], # again, same minus
                               [cvar[bust], cvar[branch], svar[branch]])
-                model.addConstr(expr == Qvar_t[branch], name = "Qdef_%d_%d_%d"%(j, t, f))
+                branch.Qdeftconstr = model.addConstr(expr == Qvar_t[branch], name = branch.Qtcname)
                 count += 2
         else:
-            model.addConstr(Qvar_f[branch] == 0, name = "Qdef_%d_%d_%d"%(j, f, t))
-            model.addConstr(Qvar_t[branch] == 0, name = "Qdef_%d_%d_%d"%(j, t, f))            
+            branch.Qdeffconstr = model.addConstr(Qvar_f[branch] == 0, name = branch.Qfcname)
+            branch.Qdeftconstr = model.addConstr(Qvar_t[branch] == 0, name = branch.Qtcname)
 
     log.joint("    %d reactive power flow definitions added.\n"%count)
 
@@ -908,7 +913,7 @@ def lpformulator_ac_add_polarconstraints(alldata,model):
 
     log.joint("    %d polar constraints added.\n"%count)
 
-    break_exit('polarconstrs')
+    #break_exit('polarconstrs')
 
 def lpformulator_ac_add_nonconvexconstraints(alldata,model):
     """Create nonconvex e, f constraints"""
@@ -952,37 +957,54 @@ def lpformulator_ac_add_nonconvexconstraints(alldata,model):
     log.joint("    %d nonconvex e, f constraints added.\n"%count)
 
 
-def grbgenerate_xtra_sol_values_fromvoltages(alldata):
+def grbderive_xtra_sol_values_fromvoltages(alldata):
     # Generates complete solution vectors from input voltages.
     log = alldata['log']
 
+    model = alldata['model']
 
+    model.update()
+
+    numvars = model.NumVars
+    xbuffer = alldata['LP']['xbuffer'] = {}  #dictionary to store solution values
+    
     numbuses = alldata['numbuses']
     buses = alldata['buses']
     IDtoCountmap = alldata['IDtoCountmap']
 
     branches    = alldata['branches']
     numbranches = alldata['numbranches']
-    
+
+    cvar         = alldata['LP']['cvar']
+    svar         = alldata['LP']['svar']
 
     log.joint("Creating derived solution values from input voltage solution.\n")
-
-    alldata['derived'] = {}  # Dictionary for storing derived variable values for variables not already stored.
 
     for j in range(1,numbuses+1):
         bus = buses[j]
         bus.inpute = bus.inputV*math.cos(bus.inputA_rad)
         bus.inputf = bus.inputV*math.sin(bus.inputA_rad)
+    
+    if alldata['use_ef']:
+        for j in range(1,numbuses+1):
+            bus = buses[j]
+            xbuffer[evar[bus]] = bus.inpute
+            xbuffer[fvar[bus]] = bus.inputf
 
-    alldata['derived']['cval'] = {}
-    alldata['derived']['sval'] = {}
+    if alldata['dopolar']:
+        vvar       = alldata['LP']['vvar']
+        thetavar   = alldata['LP']['vvar']
+        for j in range(1,numbuses+1):
+            bus = buses[j]
+            xbuffer[vvar[bus]] = bus.inputV
+            xbuffer[thetavar[bus]] = bus.inputA_rad  #here is the bug; the first 'bus.' should not be there
 
     
     if alldata['dopolar'] == False:
 
         for j in range(1,numbuses+1):
             bus = buses[j]
-            alldata['derived']['cval'][bus] = bus.inpute*bus.inpute + bus.inputf*bus.inputf
+            xbuffer[ cvar[bus] ] = bus.inpute*bus.inpute + bus.inputf*bus.inputf
 
         for j in range(1,1+numbranches):
             branch     = branches[j]
@@ -994,17 +1016,19 @@ def grbgenerate_xtra_sol_values_fromvoltages(alldata):
                 busf       = buses[count_of_f]
                 bust       = buses[count_of_t]
                 
-                alldata['derived']['cval'][branch] = busf.inpute*bust.inpute + busf.inputf*bust.inputf
-                alldata['derived']['sval'][branch] = -busf.inpute*bust.inputf + busf.inputf*bust.inpute                
+                xbuffer[cvar[branch]] = busf.inpute*bust.inpute + busf.inputf*bust.inputf
+                xbuffer[svar[branch]] = -busf.inpute*bust.inputf + busf.inputf*bust.inpute                
 
     else:
         # Note: we may not need all of thse
-        alldata['derived']['vfvtval'] = {}
-        alldata['derived']['thetaftval'] = {}        
+        vfvtvar = alldata['LP']['vfvtvar']
+        thetaftvar = alldata['LP']['thetaftvar']
+        cosvar = alldata['LP']['cosvar']
+        sinvar = alldata['LP']['sinvar']        
         
         for j in range(1,numbuses+1):
             bus = buses[j]
-            alldata['derived']['cval'][bus] = bus.inputV*bus.inputV
+            xbuffer[cvar[bus]] = bus.inputV*bus.inputV
 
         for j in range(1,1+numbranches):
             branch     = branches[j]
@@ -1015,12 +1039,61 @@ def grbgenerate_xtra_sol_values_fromvoltages(alldata):
                 count_of_t = IDtoCountmap[t]
                 busf       = buses[count_of_f]
                 bust       = buses[count_of_t]
-                alldata['derived']['vfvtval'][branch] = busf.inputV*bust.inputV
-                alldata['derived']['thetaftval'][branch] = busf.inputA_rad - bust.inputA_rad
+                vfvt = xbuffer[vfvtvar[branch]] = busf.inputV*bust.inputV
+                thetaft = xbuffer[thetaftvar[branch]] = busf.inputA_rad - bust.inputA_rad
+                c = xbuffer[cosvar[branch]] = math.cos(thetaft)
+                s = xbuffer[sinvar[branch]] = math.sin(thetaft)
+                xbuffer[cvar[branch]] = vfvt*c
+                xbuffer[svar[branch]] = vfvt*s
+
                 
     log.joint('Derived e, f, c, s values.\n')
 
+    Pvar_f = alldata['LP']['Pvar_f']
+    Pvar_t = alldata['LP']['Pvar_t']    
 
+    for j in range(1,1+numbranches):
+        branch     = branches[j]
+        row = model.getRow(branch.Pdeffconstr)
+        print(j, branch.Pdeffconstr, row, branch.Pdeffconstr.Sense, branch.Pdeffconstr.RHS)
+        print(row.size())
+        sum = -branch.Pdeffconstr.RHS
+        leadcoeff = 0
+        for i in range(row.size()):
+            var   = row.getVar(i)
+            coeff = row.getCoeff(i)
+            if var.Varname != Pvar_f[branch].Varname:
+                print('   ',i,coeff,var.Varname, 'at', xbuffer[var])
+                sum += coeff*xbuffer[var]
+            else:
+                print('   >',i,coeff,var.Varname)
+                leadcoeff = coeff
+        print(sum,leadcoeff)
+        xbuffer[Pvar_f[branch]] = sum/leadcoeff;  #leadcoeff should be +1 or -1        
+
+        row = model.getRow(branch.Pdeftconstr)
+        print(j, branch.Pdeftconstr, row, branch.Pdeftconstr.Sense, branch.Pdeftconstr.RHS)
+        print(row.size())
+        sum = -branch.Pdeftconstr.RHS
+        leadcoeff = 0
+        for i in range(row.size()):
+            var   = row.getVar(i)
+            coeff = row.getCoeff(i)
+            if var.Varname != Pvar_t[branch].Varname:
+                print('   ',i,coeff,var.Varname, 'at', xbuffer[var])
+                sum += coeff*xbuffer[var]
+            else:
+                print('   >',i,coeff,var.Varname)
+                leadcoeff = coeff
+        print(sum,leadcoeff)
+
+        
+        xbuffer[Pvar_t[branch]] = sum/leadcoeff;  #leadcoeff should be +1 or -1
+        log.joint('%s derived at %f\n'%(Pvar_t[branch].Varname, xbuffer[Pvar_t[branch]]))
+
+        #break_exit('branchP')
+
+    #next, branch power flows
     
     break_exit('derive')
     
@@ -1028,20 +1101,23 @@ def grbgenerate_xtra_sol_values_fromvoltages(alldata):
 def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     #checks feasibility of input solution -- reports infeasibilities
     log = alldata['log']
-
     log.joint('Strict feasibility check for input voltage solution.\n\n')
 
     if alldata['strictcheckvoltagesolution']:
-        grbgenerate_xtra_sol_values_fromvoltages(alldata)
+        grbderive_xtra_sol_values_fromvoltages(alldata)
         
 
     buses      = alldata['buses']
     numbuses   = alldata['numbuses']
+    branches    = alldata['branches']
+    numbranches = alldata['numbranches']
+    
     if alldata['use_ef']:
         evar       = alldata['LP']['evar']
         fvar       = alldata['LP']['fvar']
     
-
+    xbuffer = alldata['LP']['xbuffer']
+    
     maxlbviol = maxubviol = 0
     badlbvar = None
     badubvar = None
@@ -1056,13 +1132,16 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
 
     log.joint('Checked input Vmag values.\n')
         
-
     if alldata['use_ef']:
         for j in range(1,numbuses+1):
             bus = buses[j]
             maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, evar[bus], bus.inpute, maxlbviol, maxubviol, badlbvar, badubvar, True)
 
             maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, fvar[bus], bus.inputf, maxlbviol, maxubviol, badlbvar, badubvar,True)
+
+            alldata['LP']['xbuffer'][evar[bus]] = bus.inpute
+            alldata['LP']['xbuffer'][fvar[bus]] = bus.inputf
+            
 
         log.joint('e, f values.\n')
 
@@ -1073,12 +1152,19 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         for j in range(1,numbuses+1):
             bus = buses[j]
             maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, vvar[bus], bus.inputV, maxlbviol, maxubviol, badlbvar, badubvar, True)
-
             
 
         log.joint('Vmag values.\n')
     
+    Pvar_f = alldata['LP']['Pvar_f']
+    Pvar_t = alldata['LP']['Pvar_t']    
 
+    for j in range(1,1+numbranches):
+        branch     = branches[j]
+        maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, Pvar_f[branch], xbuffer[Pvar_f[branch]], maxlbviol, maxubviol, badlbvar, badubvar, True)
+        maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, Pvar_t[branch], xbuffer[Pvar_t[branch]], maxlbviol, maxubviol, badlbvar, badubvar, True)
+
+    print(maxlbviol, maxubviol)
     break_exit('strict')
 
 
