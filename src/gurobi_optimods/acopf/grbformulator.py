@@ -4,7 +4,7 @@ import time
 import gurobipy as gp
 from gurobipy import GRB
 from myutils import break_exit
-from grbfile import grbreadvoltsfile, grbreadvoltsfile_andgenerate_xtra_sol_values
+from grbfile import grbreadvoltsfile
 
 
 def lpformulator_ac(alldata):
@@ -29,6 +29,8 @@ def lpformulator_ac(alldata):
             #check input solution against formulation
             spitoutvector = True
             feascode = lpformulator_ac_strictchecker(alldata, model, spitoutvector)
+
+        break_exit('there')
 
         lpformulator_ac_opt(alldata, model)
 
@@ -116,9 +118,6 @@ def lpformulator_setup(alldata):
     if alldata['voltsfilename'] != 'NONE':
         grbreadvoltsfile(alldata)
 
-    if alldata['strictcheckvoltagesolution']:
-        grbreadvoltsfile_andgenerate_xtra_sol_values(alldata)
-        
 def lpformulator_ac_body(alldata, model):
     """Helper function for adding variables and constraints to the model"""
 
@@ -164,10 +163,8 @@ def lpformulator_create_ac_vars(alldata, model):
     varcount = 0
 
 
-
     for j in range(1,numbuses+1):
         bus = buses[j]
-
         # First, injection variables
         maxprod = bus.Vmax*bus.Vmax
         minprod = bus.Vmin*bus.Vmin
@@ -954,9 +951,159 @@ def lpformulator_ac_add_nonconvexconstraints(alldata,model):
 
     log.joint("    %d nonconvex e, f constraints added.\n"%count)
 
-def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
+
+def grbgenerate_xtra_sol_values_fromvoltages(alldata):
+    # Generates complete solution vectors from input voltages.
     log = alldata['log']
 
-    log.joint('Strict feasibility check for input voltage solution.\n')
+
+    numbuses = alldata['numbuses']
+    buses = alldata['buses']
+    IDtoCountmap = alldata['IDtoCountmap']
+
+    branches    = alldata['branches']
+    numbranches = alldata['numbranches']
+    
+
+    log.joint("Creating derived solution values from input voltage solution.\n")
+
+    alldata['derived'] = {}  # Dictionary for storing derived variable values for variables not already stored.
+
+    for j in range(1,numbuses+1):
+        bus = buses[j]
+        bus.inpute = bus.inputV*math.cos(bus.inputA_rad)
+        bus.inputf = bus.inputV*math.sin(bus.inputA_rad)
+
+    alldata['derived']['cval'] = {}
+    alldata['derived']['sval'] = {}
+
+    
+    if alldata['dopolar'] == False:
+
+        for j in range(1,numbuses+1):
+            bus = buses[j]
+            alldata['derived']['cval'][bus] = bus.inpute*bus.inpute + bus.inputf*bus.inputf
+
+        for j in range(1,1+numbranches):
+            branch     = branches[j]
+            if branch.status:
+                f          = branch.f
+                t          = branch.t
+                count_of_f = IDtoCountmap[f]
+                count_of_t = IDtoCountmap[t]
+                busf       = buses[count_of_f]
+                bust       = buses[count_of_t]
+                
+                alldata['derived']['cval'][branch] = busf.inpute*bust.inpute + busf.inputf*bust.inputf
+                alldata['derived']['sval'][branch] = -busf.inpute*bust.inputf + busf.inputf*bust.inpute                
+
+    else:
+        # Note: we may not need all of thse
+        alldata['derived']['vfvtval'] = {}
+        alldata['derived']['thetaftval'] = {}        
+        
+        for j in range(1,numbuses+1):
+            bus = buses[j]
+            alldata['derived']['cval'][bus] = bus.inputV*bus.inputV
+
+        for j in range(1,1+numbranches):
+            branch     = branches[j]
+            if branch.status:
+                f          = branch.f
+                t          = branch.t
+                count_of_f = IDtoCountmap[f]
+                count_of_t = IDtoCountmap[t]
+                busf       = buses[count_of_f]
+                bust       = buses[count_of_t]
+                alldata['derived']['vfvtval'][branch] = busf.inputV*bust.inputV
+                alldata['derived']['thetaftval'][branch] = busf.inputA_rad - bust.inputA_rad
+                
+    log.joint('Derived e, f, c, s values.\n')
+
+
+    
+    break_exit('derive')
+    
+
+def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
+    #checks feasibility of input solution -- reports infeasibilities
+    log = alldata['log']
+
+    log.joint('Strict feasibility check for input voltage solution.\n\n')
+
+    if alldata['strictcheckvoltagesolution']:
+        grbgenerate_xtra_sol_values_fromvoltages(alldata)
+        
+
+    buses      = alldata['buses']
+    numbuses   = alldata['numbuses']
+    if alldata['use_ef']:
+        evar       = alldata['LP']['evar']
+        fvar       = alldata['LP']['fvar']
+    
+
+    maxlbviol = maxubviol = 0
+    badlbvar = None
+    badubvar = None
+
+    for j in range(1,numbuses+1):
+        bus = buses[j]
+        if bus.inputV > bus.Vmax:
+            log.joint('>>> error: bus # %d has input voltage %f which is larger than Vmax %f\n'%(j, bus.inputV, bus.Vmax))
+        
+        if bus.inputV < bus.Vmin:
+            log.joint('>>> error: bus # %d has input voltage %f which is smaller than Vmin %f\n'%(j, bus.inputV, bus.Vmin))
+
+    log.joint('Checked input Vmag values.\n')
+        
+
+    if alldata['use_ef']:
+        for j in range(1,numbuses+1):
+            bus = buses[j]
+            maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, evar[bus], bus.inpute, maxlbviol, maxubviol, badlbvar, badubvar, True)
+
+            maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, fvar[bus], bus.inputf, maxlbviol, maxubviol, badlbvar, badubvar,True)
+
+        log.joint('e, f values.\n')
+
+    if alldata['dopolar']:
+        log.joint('Checking polar quantities.\n')
+        vvar       = alldata['LP']['vvar']
+        thetavar   = alldata['LP']['vvar']
+        for j in range(1,numbuses+1):
+            bus = buses[j]
+            maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, vvar[bus], bus.inputV, maxlbviol, maxubviol, badlbvar, badubvar, True)
+
+            
+
+        log.joint('Vmag values.\n')
+    
 
     break_exit('strict')
+
+
+    
+def lpformulator_checkviol_simple(alldata, model, grbvariable, value, maxlbviol, maxubviol, badlbvar, badubvar, loud):
+    # returns bounds infeasibility if setting grbvariable to value value
+    # maxlbviol, maxubviol, badlb,ubvar are updated if the infeasibility is larger
+
+    log = alldata['log']
+
+    ub = grbvariable.ub
+    lb = grbvariable.lb
+
+    if loud:
+        log.joint("%s =  %.16e  [ LB %.4e  UB %.4e ]\n"%(grbvariable.varname, value, lb, ub))
+
+    if lb - value > maxlbviol:
+        log.joint("LBVIOL %s  LB %.6e  x %.16e  UB %.6e\n"%(grbvariable.varname, lb, value, ub))
+        maxlbviol = lb - value
+        badlbvar = grbvariable
+  
+    if value - ub > maxubviol:
+        log.joint("UBVIOL %s  LB %.6e  x %.16e  UB %.6e\n"%(grbvariable.varname, lb, value, ub))
+        maxubviol = value - ub
+        badubvar = grbvariable
+
+
+    return maxlbviol, maxubviol, badlbvar, badubvar

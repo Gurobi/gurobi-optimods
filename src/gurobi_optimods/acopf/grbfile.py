@@ -22,7 +22,7 @@ def read_configfile(alldata, filename):
     alldata['usequadcostvar'] = False
 
     # Default values for options
-    casefilename = strictvoltsfilename = 'NONE'
+    casefilename = 'NONE'
     voltsfilename = gvfilename = 'NONE'
     lpfilename = 'grbopf.lp'
     strictcheckvoltagesolution = usevoltsolution = fixcs = skipjabr = cutplane = dodc = False
@@ -74,7 +74,7 @@ def read_configfile(alldata, filename):
 
         elif thisline[0] == 'strictcheckvoltagesolution':
             strictcheckvoltagesolution = True
-            strictvoltsfilename        = thisline[1]
+            voltsfilename        = thisline[1]
 
         elif thisline[0] == 'voltsfilename':
             if len(thisline) < 3:
@@ -137,7 +137,6 @@ def read_configfile(alldata, filename):
     log.joint("Settings:\n")
     for x in [('casefilename', casefilename), ('lpfilename', lpfilename),
               ('strictcheckvoltagesolution', strictcheckvoltagesolution),
-              ('strictvoltsfilename', strictvoltsfilename),
               ('voltsfilename', voltsfilename), ('usevoltsolution', usevoltsolution),
               ('FIXCS', fixcs), ('useconvexformulation', useconvexformulation),
               ('skipjabr', skipjabr), ('cutplane', cutplane), ('dodc',dodc),
@@ -194,20 +193,7 @@ def grbreadvoltsfile(alldata):
                 break_exit('illegal line ' + str(linenum+1))
         linenum += 1
         
-    log.joint('read volts file\n')
+    log.joint('Read volts file.\n')
 
     
        
-def grbreadvoltsfile_andgenerate_xtra_sol_values(alldata):
-    # reads voltage solution and creates derived solution vectors
-    log = alldata['log']
-
-    numbuses = alldata['numbuses']
-    buses = alldata['buses']
-    IDtoCountmap = alldata['IDtoCountmap']
-
-    filename = alldata['strictvoltsfilename']
-
-    log.joint("Reading voltage solution at file " + filename + " and creating derived solution values.\n")
-
-    break_exit('derive')

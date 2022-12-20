@@ -35,6 +35,8 @@ class Bus:
         self.Qinjvarind    = -1
         self.Pbalance      = 0
         self.inputV        = 0  #input voltage
+        self.inpute        = 0  #e-value (input or derived from input voltage solution)
+        self.inputf        = 0  #e-value (input or derived from input voltage solution)        
         self.outdegree = self.indegree = self.degree = 0
 
     def getbusline0(self):
