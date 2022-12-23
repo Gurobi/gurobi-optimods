@@ -749,10 +749,10 @@ def lpformulator_create_ac_constraints(alldata, model):
         else:
             #product of binary and powerflow
             for branchid in bus.frombranchids.values():
-                qexpr.add(zvar[branches[branchid]]*Pvar_f[branches[branchid]])
+                qexpr.add((1-zvar[branches[branchid]])*Pvar_f[branches[branchid]])
 
             for branchid in bus.tobranchids.values():
-                qexpr.add(zvar[branches[branchid]]*Pvar_t[branches[branchid]])
+                qexpr.add((1-zvar[branches[branchid]])*Pvar_t[branches[branchid]])
             
         model.addConstr(expr + qexpr == Pinjvar[bus], name = "PBaldef%d_%d"%(j, bus.nodeID))
         
@@ -774,10 +774,10 @@ def lpformulator_create_ac_constraints(alldata, model):
         else:
             #product of binary and powerflow
             for branchid in bus.frombranchids.values():
-                qexpr.add(zvar[branches[branchid]]*Qvar_f[branches[branchid]])
+                qexpr.add((1-zvar[branches[branchid]])*Qvar_f[branches[branchid]])
 
             for branchid in bus.tobranchids.values():
-                qexpr.add(zvar[branches[branchid]]*Qvar_t[branches[branchid]])
+                qexpr.add((1-zvar[branches[branchid]])*Qvar_t[branches[branchid]])
 
         model.addConstr(expr + qexpr == Qinjvar[bus], name = "QBaldef%d_%d"%(j, bus.nodeID))
         count += 1
