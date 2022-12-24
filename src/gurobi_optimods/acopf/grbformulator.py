@@ -117,6 +117,49 @@ def lpformulator_setup(alldata):
 
     if alldata['voltsfilename'] != 'NONE':
         grbreadvoltsfile(alldata)
+def computebalbounds(log, alldata, bus):
+    """Compute bal bounds"""
+    # Computes active and reactive max and min bus flow balance values
+    
+    # First let's get max/min generations
+    loud = 0 # See below
+
+    baseMVA = alldata['baseMVA']
+    gens    = alldata['gens']
+    Pubound = Plbound = 0
+    Qubound = Qlbound = 0
+
+    for gencounter in bus.genidsbycount:
+        if gens[gencounter].status:
+            Pubound += gens[gencounter].Pmax
+            Plbound += gens[gencounter].Pmin
+            Qubound += gens[gencounter].Qmax
+            Qlbound += gens[gencounter].Qmin
+
+        if loud: # it is worth keeping because a user may want to debug the generator limits that they imposed, which could make a problem infeasible
+            #log.joint(" Pubound for %d %f genc %d\n"%(bus.nodeID, Pubound, gencounter))
+            #log.joint(" Plbound for %d %f genc %d\n"%(bus.nodeID, Plbound, gencounter))
+            log.joint(" Qubound for %d %f genc %d\n"%(bus.nodeID, Qubound, gencounter))
+            log.joint(" Qlbound for %d %f genc %d\n"%(bus.nodeID, Qlbound, gencounter))
+
+    Pubound -= bus.Pd
+    Plbound -= bus.Pd
+    Qubound -= bus.Qd
+    Qlbound -= bus.Qd
+
+    if bus.nodetype == 4:
+        Pubound = Plbound = Qubound = Qlbound = 0
+
+    if loud: # same as above
+        #log.joint(" Pubound for %d final %f\n"%(bus.nodeID, Pubound))
+        #log.joint(" (Pd was %g)\n"%bus.Pd)
+        #log.joint(" Plbound for %d final %f\n"%(bus.nodeID, Plbound))
+        log.joint(" Qubound for %d final %f\n"%(bus.nodeID, Qubound))
+        log.joint(" (Qd was %g)\n"%bus.Qd)
+        log.joint(" Qlbound for %d final %f\n"%(bus.nodeID, Qlbound))
+        break_exit(" ")
+
+    return Pubound, Plbound, Qubound, Qlbound
 
 def lpformulator_ac_body(alldata, model):
     """Helper function for adding variables and constraints to the model"""
@@ -190,11 +233,13 @@ def lpformulator_create_ac_vars(alldata, model):
         Pinjvar[bus] = model.addVar(obj = 0.0, lb = Plbound, ub = Pubound,
                                     name = "IP_%d"%bus.nodeID)
         bus.Pinjvarind = varcount
+        #comment: Pinjvar is the variable modeling total active power injected by bus j into the branches incident with j
         varcount += 1
+        
         Qinjvar[bus] = model.addVar(obj = 0.0, lb = Qlbound, ub = Qubound,
                                     name = "IQ_%d"%bus.nodeID)
         bus.Qinjvarind = varcount
-        varcount += 1
+        #comment: Qinjvar is the variable modeling total reactive power injected by bus j into the branches incident with j           varcount += 1
 
         # Next, generator variables
         for genid in bus.genidsbycount:
@@ -566,49 +611,6 @@ def lpformulator_create_ac_efvars(alldata, model, varcount):
 
     varcount += efvarcount
 
-def computebalbounds(log, alldata, bus):
-    """Compute bal bounds"""
-    # Computes active and reactive max and min bus flow balance values
-    
-    # First let's get max/min generations
-    loud = 0 # See below
-
-    baseMVA = alldata['baseMVA']
-    gens    = alldata['gens']
-    Pubound = Plbound = 0
-    Qubound = Qlbound = 0
-
-    for gencounter in bus.genidsbycount:
-        if gens[gencounter].status:
-            Pubound += gens[gencounter].Pmax
-            Plbound += gens[gencounter].Pmin
-            Qubound += gens[gencounter].Qmax
-            Qlbound += gens[gencounter].Qmin
-
-        if loud: # it is worth keeping because a user may want to debug the generator limits that they imposed, which could make a problem infeasible
-            #log.joint(" Pubound for %d %f genc %d\n"%(bus.nodeID, Pubound, gencounter))
-            #log.joint(" Plbound for %d %f genc %d\n"%(bus.nodeID, Plbound, gencounter))
-            log.joint(" Qubound for %d %f genc %d\n"%(bus.nodeID, Qubound, gencounter))
-            log.joint(" Qlbound for %d %f genc %d\n"%(bus.nodeID, Qlbound, gencounter))
-
-    Pubound -= bus.Pd
-    Plbound -= bus.Pd
-    Qubound -= bus.Qd
-    Qlbound -= bus.Qd
-
-    if bus.nodetype == 4:
-        Pubound = Plbound = Qubound = Qlbound = 0
-
-    if loud: # same as above
-        #log.joint(" Pubound for %d final %f\n"%(bus.nodeID, Pubound))
-        #log.joint(" (Pd was %g)\n"%bus.Pd)
-        #log.joint(" Plbound for %d final %f\n"%(bus.nodeID, Plbound))
-        log.joint(" Qubound for %d final %f\n"%(bus.nodeID, Qubound))
-        log.joint(" (Qd was %g)\n"%bus.Qd)
-        log.joint(" Qlbound for %d final %f\n"%(bus.nodeID, Qlbound))
-        break_exit(" ")
-
-    return Pubound, Plbound, Qubound, Qlbound
 
 def lpformulator_create_ac_constraints(alldata, model):
     """"Create constraint for ACOPF"""
@@ -731,12 +733,13 @@ def lpformulator_create_ac_constraints(alldata, model):
     log.joint("    %d reactive power flow definitions added.\n"%count)
 
     # Balance constraints
-    log.joint("  Adding balance constraints.\n")
+    log.joint("  Adding power injection definition constraints.\n")
     count = 0
     for j in range(1,1+numbuses):
         bus  = buses[j]
         expr = gp.LinExpr()
         qexpr = gp.QuadExpr()
+        doquad = False
         if bus.Gs != 0:
             expr.add(bus.Gs*cvar[bus])
 
@@ -747,14 +750,18 @@ def lpformulator_create_ac_constraints(alldata, model):
             for branchid in bus.tobranchids.values():
                 expr.add(Pvar_t[branches[branchid]])
         else:
+            doquad = True
             #product of binary and powerflow
             for branchid in bus.frombranchids.values():
                 qexpr.add((1-zvar[branches[branchid]])*Pvar_f[branches[branchid]])
 
             for branchid in bus.tobranchids.values():
                 qexpr.add((1-zvar[branches[branchid]])*Pvar_t[branches[branchid]])
-            
-        model.addConstr(expr + qexpr == Pinjvar[bus], name = "PBaldef%d_%d"%(j, bus.nodeID))
+
+        if doquad:
+            model.addConstr(expr + qexpr == Pinjvar[bus], name = "PBaldef%d_%d"%(j, bus.nodeID))
+        else:
+            model.addConstr(expr == Pinjvar[bus], name = "PBaldef%d_%d"%(j, bus.nodeID))            
         
         count += 1
 
@@ -1051,6 +1058,8 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
 
     Pvar_f = alldata['LP']['Pvar_f']
     Pvar_t = alldata['LP']['Pvar_t']    
+    Qvar_f = alldata['LP']['Qvar_f']
+    Qvar_t = alldata['LP']['Qvar_t']    
 
     for j in range(1,1+numbranches):
         branch     = branches[j]
@@ -1068,8 +1077,8 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
             else:
                 print('   >',i,coeff,var.Varname)
                 leadcoeff = coeff
-        print(sum,leadcoeff)
-        xbuffer[Pvar_f[branch]] = sum/leadcoeff;  #leadcoeff should be +1 or -1        
+        print('sum =', sum,leadcoeff)
+        xbuffer[Pvar_f[branch]] = -sum/leadcoeff;  #leadcoeff should be +1 or -1        
 
         row = model.getRow(branch.Pdeftconstr)
         print(j, branch.Pdeftconstr, row, branch.Pdeftconstr.Sense, branch.Pdeftconstr.RHS)
@@ -1085,17 +1094,69 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
             else:
                 print('   >',i,coeff,var.Varname)
                 leadcoeff = coeff
-        print(sum,leadcoeff)
-
-        
-        xbuffer[Pvar_t[branch]] = sum/leadcoeff;  #leadcoeff should be +1 or -1
+        print('sum =',sum,leadcoeff)
+        xbuffer[Pvar_t[branch]] = -sum/leadcoeff;  #leadcoeff should be +1 or -1
         log.joint('%s derived at %f\n'%(Pvar_t[branch].Varname, xbuffer[Pvar_t[branch]]))
 
-        #break_exit('branchP')
+        ##################### Now, reactive power flows
 
-    #next, branch power flows
+        row = model.getRow(branch.Qdeffconstr)
+        print(j, branch.Qdeffconstr, row, branch.Qdeftconstr.Sense, branch.Qdeftconstr.RHS)
+        print('size',row.size())
+        sum = -branch.Qdeffconstr.RHS
+        leadcoeff = 0
+
+        for i in range(row.size()):
+            var   = row.getVar(i)
+            coeff = row.getCoeff(i)
+            if var.Varname != Qvar_f[branch].Varname:
+                print('   ',i,coeff,var.Varname, 'at', xbuffer[var])
+                sum += coeff*xbuffer[var]
+            else:
+                print('   >',i,coeff,var.Varname)
+                leadcoeff = coeff
+        print('sum =', sum,leadcoeff)
+        xbuffer[Qvar_f[branch]] = -sum/leadcoeff;  #leadcoeff should be +1 or -1
+
+        row = model.getRow(branch.Qdeftconstr)
+        print(j, branch.Qdeftconstr, row, branch.Qdeftconstr.Sense, branch.Qdeftconstr.RHS)
+        print(row.size())
+        sum = -branch.Qdeftconstr.RHS
+        leadcoeff = 0
+        for i in range(row.size()):
+            var   = row.getVar(i)
+            coeff = row.getCoeff(i)
+            if var.Varname != Qvar_t[branch].Varname:
+                print('   ',i,coeff,var.Varname, 'at', xbuffer[var])
+                sum += coeff*xbuffer[var]
+            else:
+                print('   >',i,coeff,var.Varname)
+                leadcoeff = coeff
+        print('sum =',sum,leadcoeff)
+        xbuffer[Qvar_t[branch]] = -sum/leadcoeff;  #leadcoeff should be +1 or -1
+        log.joint('%s derived at %f\n'%(Qvar_t[branch].Varname, xbuffer[Qvar_t[branch]]))
+        
+
+        #break_exit('branchPQ')
+
+    #next, power flow injections
+    Pinjvar      = alldata['LP']['Pinjvar']    
+    for j in range(1,1+numbuses):
+        bus  = buses[j]
+        
+        injection = 0
+        for branchid in bus.frombranchids.values():
+            branch = branches[branchid]
+            injection += xbuffer[Pvar_f[branch]]
+
+        for branchid in bus.tobranchids.values():
+            branch = branches[branchid]            
+            injection += xbuffer[Pvar_t[branch]]
+
+        xbuffer[Pinjvar[bus]] = injection
     
-    break_exit('derive')
+    
+    #break_exit('derive')
     
 
 def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
@@ -1107,10 +1168,11 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         grbderive_xtra_sol_values_fromvoltages(alldata)
         
 
-    buses      = alldata['buses']
-    numbuses   = alldata['numbuses']
+    buses       = alldata['buses']
+    numbuses    = alldata['numbuses']
     branches    = alldata['branches']
     numbranches = alldata['numbranches']
+    gens        = alldata['gens']
     
     if alldata['use_ef']:
         evar       = alldata['LP']['evar']
@@ -1122,6 +1184,8 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     badlbvar = None
     badubvar = None
 
+    log.joint('Direct bus magnitude bounds check. Error issued if infeasibility.\n')
+
     for j in range(1,numbuses+1):
         bus = buses[j]
         if bus.inputV > bus.Vmax:
@@ -1130,7 +1194,23 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         if bus.inputV < bus.Vmin:
             log.joint('>>> error: bus # %d has input voltage %f which is smaller than Vmin %f\n'%(j, bus.inputV, bus.Vmin))
 
-    log.joint('Checked input Vmag values.\n')
+    log.joint('Checked input Vmag values.\n')  #should report max infeasibility so far
+
+    log.joint('Direct branch limit check. Error issued if infeasible.\n')
+
+    Pvar_f = alldata['LP']['Pvar_f']
+    Pvar_t = alldata['LP']['Pvar_t']    
+    Qvar_f = alldata['LP']['Qvar_f']
+    Qvar_t = alldata['LP']['Qvar_t']    
+
+    for j in range(1,1+numbranches):
+        branch     = branches[j]
+        fromvalue = math.sqrt(xbuffer[Pvar_f[branch]]*xbuffer[Pvar_f[branch]] + xbuffer[Qvar_f[branch]]*xbuffer[Qvar_f[branch]])
+        if fromvalue > branch.limit:
+            log.joint('>>> error: branch # %d has \'from\' flow magnitude %f which is larger than limit %f\n'%(j, fromvalue, branch.limit))
+        tovalue = math.sqrt(xbuffer[Pvar_t[branch]]*xbuffer[Pvar_t[branch]] + xbuffer[Qvar_t[branch]]*xbuffer[Qvar_t[branch]])
+        if tovalue > branch.limit:
+            log.joint('>>> error: branch # %d has \'to\' flow magnitude %f which is larger than limit %f\n'%(j, tovalue, branch.limit))
         
     if alldata['use_ef']:
         for j in range(1,numbuses+1):
@@ -1146,7 +1226,7 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         log.joint('e, f values.\n')
 
     if alldata['dopolar']:
-        log.joint('Checking polar quantities.\n')
+        log.joint('Checking polar quantities.\n') #which will repeat the Vmag value check, so ...
         vvar       = alldata['LP']['vvar']
         thetavar   = alldata['LP']['vvar']
         for j in range(1,numbuses+1):
@@ -1154,17 +1234,60 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
             maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, vvar[bus], bus.inputV, maxlbviol, maxubviol, badlbvar, badubvar, True)
             
 
-        log.joint('Vmag values.\n')
+        log.joint('Vmag values checked.\n')
+
+    log.joint('Checking power flow values.\n')
     
-    Pvar_f = alldata['LP']['Pvar_f']
-    Pvar_t = alldata['LP']['Pvar_t']    
 
     for j in range(1,1+numbranches):
         branch     = branches[j]
         maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, Pvar_f[branch], xbuffer[Pvar_f[branch]], maxlbviol, maxubviol, badlbvar, badubvar, True)
         maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, Pvar_t[branch], xbuffer[Pvar_t[branch]], maxlbviol, maxubviol, badlbvar, badubvar, True)
 
-    print(maxlbviol, maxubviol)
+    
+
+    log.joint('Checking flow balance constraints.\n')
+    Pinjvar      = alldata['LP']['Pinjvar']
+
+    for j in range(1,1+numbuses):
+        bus  = buses[j]
+
+        maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, Pinjvar[bus], xbuffer[Pinjvar[bus]], maxlbviol, maxubviol, badlbvar, badubvar, True)            
+        
+        
+        injection = 0
+        for branchid in bus.frombranchids.values():
+            branch = branches[branchid]
+            injection += xbuffer[Pvar_f[branch]]
+
+        for branchid in bus.tobranchids.values():
+            branch = branches[branchid]            
+            injection += xbuffer[Pvar_t[branch]]
+
+        #Pinjvar variable bounds should accommodate computed injection
+        #get bounds for P and Q injection variables
+        Pubound, Plbound, Qubound, Qlbound = computebalbounds(log, alldata, bus)
+        #print(Plbound, Pubound)
+       
+
+        
+        #but also, construct min/max injection at the bus by looking at available generators and load
+        myPubound = myPlbound = 0
+        for gencounter in bus.genidsbycount:
+            if gens[gencounter].status:
+                myPubound += gens[gencounter].Pmax
+                myPlbound += gens[gencounter].Pmin
+
+        minnetgen = myPlbound - bus.Pd
+        maxnetgen = myPubound - bus.Pd
+        
+        log.joint('Bus ID %s #%d injection %g mingen %g maxgen %g load %g\n'%(bus.nodeID, j, injection, myPlbound, myPubound, bus.Pd))
+        log.joint('   min net generation %g; max %g\n'%(minnetgen, maxnetgen))
+        
+    worstboundviol_report(log,badlbvar,maxlbviol,'LB')
+    worstboundviol_report(log,badubvar,maxubviol,'UB')
+        
+    log.joint('Max LB viol %g, Max UB viol %g\n'%(maxlbviol, maxubviol))
     break_exit('strict')
 
 
@@ -1193,3 +1316,9 @@ def lpformulator_checkviol_simple(alldata, model, grbvariable, value, maxlbviol,
 
 
     return maxlbviol, maxubviol, badlbvar, badubvar
+
+def worstboundviol_report(log, badvar, maxviol,boundtype):
+    if badvar != None:
+        log.joint('Worst %s bound violation by %s viol %g\n'%(boundtype,badvar.Varname, maxviol))
+    else:
+        log.joint('No %s bound violations.\n'%boundtype)
