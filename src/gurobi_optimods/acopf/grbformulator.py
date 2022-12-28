@@ -1154,7 +1154,23 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
             injection += xbuffer[Pvar_t[branch]]
 
         xbuffer[Pinjvar[bus]] = injection
-    
+
+    #next, power flow injections
+    Qinjvar      = alldata['LP']['Qinjvar']    
+    for j in range(1,1+numbuses):
+        bus  = buses[j]
+        
+        injection = 0
+        for branchid in bus.frombranchids.values():
+            branch = branches[branchid]
+            injection += xbuffer[Qvar_f[branch]]
+
+        for branchid in bus.tobranchids.values():
+            branch = branches[branchid]            
+            injection += xbuffer[Qvar_t[branch]]
+
+        xbuffer[Qinjvar[bus]] = injection
+        
     
     #break_exit('derive')
     
@@ -1168,6 +1184,9 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         grbderive_xtra_sol_values_fromvoltages(alldata)
         
 
+    max_violation_string = None
+    max_violation_value = 0
+    
     buses       = alldata['buses']
     numbuses    = alldata['numbuses']
     branches    = alldata['branches']
@@ -1190,11 +1209,18 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         bus = buses[j]
         if bus.inputV > bus.Vmax:
             log.joint('>>> error: bus # %d has input voltage %f which is larger than Vmax %f\n'%(j, bus.inputV, bus.Vmax))
-        
+            thisviol = bus.inputV - bus.Vmax
+            if thisviol > max_violation_value:
+                max_violation_string = 'bus_'+str(bus.nodeID)+'_Vmax'
+                max_violation_value = thisviol
         if bus.inputV < bus.Vmin:
             log.joint('>>> error: bus # %d has input voltage %f which is smaller than Vmin %f\n'%(j, bus.inputV, bus.Vmin))
+            thisviol = bus.Vmin - bus.inputV
+            if thisviol > max_violation_value:
+                max_violation_string = 'bus_'+str(bus.nodeID)+'_Vmin'
+                max_violation_value = thisviol
 
-    log.joint('Checked input Vmag values.\n')  #should report max infeasibility so far
+    log.joint('Checked input Vmag values.\n')  
 
     log.joint('Direct branch limit check. Error issued if infeasible.\n')
 
@@ -1208,16 +1234,25 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         fromvalue = math.sqrt(xbuffer[Pvar_f[branch]]*xbuffer[Pvar_f[branch]] + xbuffer[Qvar_f[branch]]*xbuffer[Qvar_f[branch]])
         if fromvalue > branch.limit:
             log.joint('>>> error: branch # %d has \'from\' flow magnitude %f which is larger than limit %f\n'%(j, fromvalue, branch.limit))
+            thisviol = fromvalue - branch.limit
+            if thisviol > max_violation_value:
+                max_violation_string = 'branch_'+str(j)+'_from'
+                max_violation_value = thisviol
+            
         tovalue = math.sqrt(xbuffer[Pvar_t[branch]]*xbuffer[Pvar_t[branch]] + xbuffer[Qvar_t[branch]]*xbuffer[Qvar_t[branch]])
         if tovalue > branch.limit:
             log.joint('>>> error: branch # %d has \'to\' flow magnitude %f which is larger than limit %f\n'%(j, tovalue, branch.limit))
+            thisviol = tovalue - branch.limit
+            if thisviol > max_violation_value:
+                max_violation_string = 'branch_'+str(j)+'_to'
+                max_violation_value = thisviol
         
     if alldata['use_ef']:
         for j in range(1,numbuses+1):
             bus = buses[j]
-            maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, evar[bus], bus.inpute, maxlbviol, maxubviol, badlbvar, badubvar, True)
+            maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, evar[bus], bus.inpute, maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)
 
-            maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, fvar[bus], bus.inputf, maxlbviol, maxubviol, badlbvar, badubvar,True)
+            maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, fvar[bus], bus.inputf, maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)
 
             alldata['LP']['xbuffer'][evar[bus]] = bus.inpute
             alldata['LP']['xbuffer'][fvar[bus]] = bus.inputf
@@ -1231,8 +1266,7 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         thetavar   = alldata['LP']['vvar']
         for j in range(1,numbuses+1):
             bus = buses[j]
-            maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, vvar[bus], bus.inputV, maxlbviol, maxubviol, badlbvar, badubvar, True)
-            
+            maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, vvar[bus], bus.inputV, maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)
 
         log.joint('Vmag values checked.\n')
 
@@ -1241,18 +1275,22 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
 
     for j in range(1,1+numbranches):
         branch     = branches[j]
-        maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, Pvar_f[branch], xbuffer[Pvar_f[branch]], maxlbviol, maxubviol, badlbvar, badubvar, True)
-        maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, Pvar_t[branch], xbuffer[Pvar_t[branch]], maxlbviol, maxubviol, badlbvar, badubvar, True)
+        maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, Pvar_f[branch], xbuffer[Pvar_f[branch]], maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)
+        maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, Pvar_t[branch], xbuffer[Pvar_t[branch]], maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)
 
-    
+    for j in range(1,1+numbranches):
+        branch     = branches[j]
+        maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, Qvar_f[branch], xbuffer[Qvar_f[branch]], maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)
+        maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, Qvar_t[branch], xbuffer[Qvar_t[branch]], maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)
 
     log.joint('Checking flow balance constraints.\n')
     Pinjvar      = alldata['LP']['Pinjvar']
+    Qinjvar      = alldata['LP']['Qinjvar']    
 
     for j in range(1,1+numbuses):
         bus  = buses[j]
 
-        maxlbviol, maxubviol, badlbvar, badubvar = lpformulator_checkviol_simple(alldata, model, Pinjvar[bus], xbuffer[Pinjvar[bus]], maxlbviol, maxubviol, badlbvar, badubvar, True)            
+        maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, Pinjvar[bus], xbuffer[Pinjvar[bus]], maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)            
         
         
         injection = 0
@@ -1283,16 +1321,52 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         
         log.joint('Bus ID %s #%d injection %g mingen %g maxgen %g load %g\n'%(bus.nodeID, j, injection, myPlbound, myPubound, bus.Pd))
         log.joint('   min net generation %g; max %g\n'%(minnetgen, maxnetgen))
+
+    for j in range(1,1+numbuses):
+        bus  = buses[j]
+
+        maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, Qinjvar[bus], xbuffer[Qinjvar[bus]], maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)            
+        
+        
+        injection = 0
+        for branchid in bus.frombranchids.values():
+            branch = branches[branchid]
+            injection += xbuffer[Qvar_f[branch]]
+
+        for branchid in bus.tobranchids.values():
+            branch = branches[branchid]            
+            injection += xbuffer[Qvar_t[branch]]
+
+        #Qinjvar variable bounds should accommodate computed injection
+        #get bounds for P and Q injection variables
+        Pubound, Plbound, Qubound, Qlbound = computebalbounds(log, alldata, bus)
+        #print(Plbound, Pubound)
+       
+
+        
+        #but also, construct min/max injection at the bus by looking at available generators and load
+        myQubound = myQlbound = 0
+        for gencounter in bus.genidsbycount:
+            if gens[gencounter].status:
+                myQubound += gens[gencounter].Qmax
+                myQlbound += gens[gencounter].Qmin
+
+        minnetgen = myQlbound - bus.Qd
+        maxnetgen = myQubound - bus.Qd
+        
+        log.joint('Bus ID %s #%d injection %g mingen %g maxgen %g load %g\n'%(bus.nodeID, j, injection, myQlbound, myQubound, bus.Qd))
+        log.joint('   min net generation %g; max %g\n'%(minnetgen, maxnetgen))
         
     worstboundviol_report(log,badlbvar,maxlbviol,'LB')
     worstboundviol_report(log,badubvar,maxubviol,'UB')
         
-    log.joint('Max LB viol %g, Max UB viol %g\n'%(maxlbviol, maxubviol))
+    log.joint('\nSummary: Max LB viol %g, Max UB viol %g\n'%(maxlbviol, maxubviol))
+    log.joint('\nSummary: Max violation %g, key: %s\n'%(max_violation_value, max_violation_string))
     break_exit('strict')
 
 
     
-def lpformulator_checkviol_simple(alldata, model, grbvariable, value, maxlbviol, maxubviol, badlbvar, badubvar, loud):
+def lpformulator_checkviol_simple(alldata, model, grbvariable, value, maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, loud):
     # returns bounds infeasibility if setting grbvariable to value value
     # maxlbviol, maxubviol, badlb,ubvar are updated if the infeasibility is larger
 
@@ -1314,8 +1388,16 @@ def lpformulator_checkviol_simple(alldata, model, grbvariable, value, maxlbviol,
         maxubviol = value - ub
         badubvar = grbvariable
 
+    if maxubviol > max_violation_value:
+        max_violation_string = grbvariable.Varname+'_ub'
+        max_violation_value = maxubviol
+    if maxlbviol > max_violation_value:
+        max_violation_string = grbvariable.Varname+'_lb'
+        max_violation_value = maxlbviol
 
-    return maxlbviol, maxubviol, badlbvar, badubvar
+
+
+    return maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string
 
 def worstboundviol_report(log, badvar, maxviol,boundtype):
     if badvar != None:
