@@ -31,8 +31,8 @@ if __name__ == '__main__':
 
         read_case(alldata)
 
-        if alldata['dographics']:
-            grbgraphical(alldata)
+        #if alldata['dographics']:  #will bring it back later
+        #    grbgraphical(alldata)
 
         lpformulator_ac(alldata)
         break_exit("formulated and solved")

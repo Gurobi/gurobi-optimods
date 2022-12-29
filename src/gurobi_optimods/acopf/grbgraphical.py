@@ -8,6 +8,7 @@ from myutils import break_exit
 
 def grbgraphical(alldata):
     log         = alldata['log']
+    buses       = alldata['buses']
     numbuses    = alldata['numbuses']
     numbranches = alldata['numbranches']
     gvfilename  = 'grbgraphical.gv'
@@ -56,6 +57,14 @@ def grbgraphical(alldata):
 
     break_exit('graph,1')
 
-    graphplot(txtfilename, firstgvfile)
+    Vmagviol = alldata['violation']['Vmagviol']
+
+    node_text = {}
+    for j in range(1,numbuses+1):
+        bus = buses[j]
+        node_text[j] = 'Bus ' + str(j) + ' Vmagviol: '+ str(Vmagviol[bus])
+        
+
+    graphplot(txtfilename, firstgvfile, node_text)
 
     break_exit('graph,2')

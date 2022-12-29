@@ -10,7 +10,7 @@ from graphvisualization import *
 from scangvplus import *
 from myutils import break_exit
 
-def graphplot(graphfilename, gvfilename):
+def graphplot(graphfilename, gvfilename, node_text):
     """Description"""
     #
     # Reads a network in the format created by the graphviz library
@@ -41,16 +41,17 @@ def graphplot(graphfilename, gvfilename):
     print('lines',len(lines),'m',m, 'n',n)
 
     #should check that the next line is 'END'
-    break_exit('lmn')
+    #break_exit('lmn')
 
     #trueN, nodex, nodey = scangv('first.gv')
     trueN, N, nodex, nodey = scangv(gvfilename)
 
     print(len(nodex), len(nodey), trueN, N)
 
-    break_exit('scanned')
+    #break_exit('scanned')
 
     pos = {}
+
     for j in range(n):
         pos[j] = ( [nodex[j], nodey[j]] )
 
@@ -58,12 +59,12 @@ def graphplot(graphfilename, gvfilename):
 
     print(len(adj),m)
 
-    break_exit('lmn2')
+    #break_exit('lmn2')
 
     for j in range(truelinect):
         G.add_edge(adj[j][0],adj[j][1])
     print('creating visualization object\n')
-    vis = GraphVisualization(G, pos, node_size=1, node_border_width=1, edge_width=1.5)
+    vis = GraphVisualization(G, pos, node_text, node_size=1, node_border_width=1, edge_width=1.5)
     print('rendering figure\n')
 
     xgap     = np.max(nodex) - np.min(nodex)

@@ -5,6 +5,7 @@ import gurobipy as gp
 from gurobipy import GRB
 from myutils import break_exit
 from grbfile import grbreadvoltsfile
+from grbgraphical import grbgraphical
 
 
 def lpformulator_ac(alldata):
@@ -501,6 +502,9 @@ def lpformulator_create_ac_polar_vars(alldata, model, varcount):
 
             lbound = max(lbound, candidatelbound)
             ubound = min(ubound, candidateubound)
+
+            
+            
             #print('------>',j, bus.nodeID, bus.inputV, 'lbound',lbound, 'ubound',ubound)
         vvar[bus] = model.addVar(obj = 0.0, lb = lbound, ub = ubound, name = "v_"+str(bus.nodeID))
         ubound = 2*math.pi
@@ -1182,16 +1186,23 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
 
     if alldata['strictcheckvoltagesolution']:
         grbderive_xtra_sol_values_fromvoltages(alldata)
-        
 
-    max_violation_string = None
-    max_violation_value = 0
-    
     buses       = alldata['buses']
     numbuses    = alldata['numbuses']
     branches    = alldata['branches']
     numbranches = alldata['numbranches']
     gens        = alldata['gens']
+        
+
+    max_violation_string = None
+    max_violation_value = 0
+
+
+    alldata['violation'] = {} #dictionary to keep track of violations
+    Vmagviol = alldata['violation']['Vmagviol'] = {}
+    for j in range(1,numbuses+1):
+        bus = buses[j]
+        alldata['violation'][bus] = {}
     
     if alldata['use_ef']:
         evar       = alldata['LP']['evar']
@@ -1220,7 +1231,16 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
                 max_violation_string = 'bus_'+str(bus.nodeID)+'_Vmin'
                 max_violation_value = thisviol
 
-    log.joint('Checked input Vmag values.\n')  
+        alldata['violation'][bus]['Vmax'] = max(bus.inputV - bus.Vmax, 0)
+        alldata['violation'][bus]['Vmin'] = max(bus.Vmin - bus.inputV, 0)
+
+        candmaxviol = alldata['violation'][bus]['Vmax']
+        if candmaxviol < alldata['violation'][bus]['Vmin']:
+            candmaxviol = -alldata['violation'][bus]['Vmin']
+
+        Vmagviol[bus] = candmaxviol
+
+    log.joint('Checked input Vmag values.\n')
 
     log.joint('Direct branch limit check. Error issued if infeasible.\n')
 
@@ -1261,7 +1281,7 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         log.joint('e, f values.\n')
 
     if alldata['dopolar']:
-        log.joint('Checking polar quantities.\n') #which will repeat the Vmag value check, so ...
+        log.joint('Checking polar quantities. Note: bounds shifted by input solution.\n') #which will repeat the Vmag value check, so ...
         vvar       = alldata['LP']['vvar']
         thetavar   = alldata['LP']['vvar']
         for j in range(1,numbuses+1):
@@ -1270,6 +1290,7 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
 
         log.joint('Vmag values checked.\n')
 
+    break_exit('checked')
     log.joint('Checking power flow values.\n')
     
 
@@ -1291,7 +1312,9 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         bus  = buses[j]
 
         maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, Pinjvar[bus], xbuffer[Pinjvar[bus]], maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)            
-        
+
+        alldata['violation'][bus]['Pinjmax'] = max(xbuffer[Pinjvar[bus]] - Pinjvar[bus].ub, 0)
+        alldata['violation'][bus]['Pinjmin'] = max(Pinjvar[bus].lb - xbuffer[Pinjvar[bus]], 0)  
         
         injection = 0
         for branchid in bus.frombranchids.values():
@@ -1307,8 +1330,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         Pubound, Plbound, Qubound, Qlbound = computebalbounds(log, alldata, bus)
         #print(Plbound, Pubound)
        
-
-        
         #but also, construct min/max injection at the bus by looking at available generators and load
         myPubound = myPlbound = 0
         for gencounter in bus.genidsbycount:
@@ -1325,7 +1346,10 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     for j in range(1,1+numbuses):
         bus  = buses[j]
 
-        maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, Qinjvar[bus], xbuffer[Qinjvar[bus]], maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)            
+        maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string = lpformulator_checkviol_simple(alldata, model, Qinjvar[bus], xbuffer[Qinjvar[bus]], maxlbviol, maxubviol, badlbvar, badubvar, max_violation_value, max_violation_string, True)
+
+        alldata['violation'][bus]['Qinjmax'] = max(xbuffer[Qinjvar[bus]] - Qinjvar[bus].ub, 0)
+        alldata['violation'][bus]['Qinjmin'] = max(Qinjvar[bus].lb - xbuffer[Qinjvar[bus]], 0)
         
         
         injection = 0
@@ -1342,8 +1366,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         Pubound, Plbound, Qubound, Qlbound = computebalbounds(log, alldata, bus)
         #print(Plbound, Pubound)
        
-
-        
         #but also, construct min/max injection at the bus by looking at available generators and load
         myQubound = myQlbound = 0
         for gencounter in bus.genidsbycount:
@@ -1363,6 +1385,11 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     log.joint('\nSummary: Max LB viol %g, Max UB viol %g\n'%(maxlbviol, maxubviol))
     log.joint('\nSummary: Max violation %g, key: %s\n'%(max_violation_value, max_violation_string))
     break_exit('strict')
+                                    
+    if alldata['dographics']:
+        grbgraphical(alldata)
+
+    break_exit('strictgraphical')    
 
 
     
