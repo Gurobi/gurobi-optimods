@@ -140,7 +140,7 @@ class Branch:
         self.Pftvarind = -1
         self.Qftvarind = -1
 
-        loud = False 
+        loud = False
         if loud:
             log.joint("\nbr " + str(count) + " f " + str(f) + " t " + str(t) +"\n")
             log.joint("   idf " +  str(count_f) + " idt " + str(count_t) +"\n")

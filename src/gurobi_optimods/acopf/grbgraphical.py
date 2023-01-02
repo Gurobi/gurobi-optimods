@@ -55,16 +55,20 @@ def grbgraphical(alldata):
     system(neatocommand)
     '''
 
-    break_exit('graph,1')
+    #break_exit('graph,1')
 
     Vmagviol = alldata['violation']['Vmagviol']
+    IPviol = alldata['violation']['IPviol']
+    IQviol = alldata['violation']['IQviol']
 
     node_text = {}
     for j in range(1,numbuses+1):
         bus = buses[j]
-        node_text[j] = 'Bus ' + str(j) + ' Vmagviol: '+ str(Vmagviol[bus])
-        
+        #node_text[j-1] = 'Bus ' + str(j) + ' Vmagviol: '+ str(Vmagviol[bus]) + ' Pviol: '+ str(IPviol[bus]) + ' Qviol: '+ str(IQviol[bus])
 
+        node_text[j-1] = 'Bus %d Vmagviol: %.3e Pviol %.3e Qviol %.3e'%(j, Vmagviol[bus], IPviol[bus],IQviol[bus])
+
+        
     graphplot(txtfilename, firstgvfile, node_text)
 
     break_exit('graph,2')

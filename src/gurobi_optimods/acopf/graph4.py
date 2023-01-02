@@ -64,6 +64,8 @@ def graphplot(graphfilename, gvfilename, node_text):
     for j in range(truelinect):
         G.add_edge(adj[j][0],adj[j][1])
     print('creating visualization object\n')
+    #print(node_text)
+    #reak_exit('texted')
     vis = GraphVisualization(G, pos, node_text, node_size=1, node_border_width=1, edge_width=1.5)
     print('rendering figure\n')
 

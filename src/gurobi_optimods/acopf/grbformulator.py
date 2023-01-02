@@ -725,11 +725,14 @@ def lpformulator_create_ac_constraints(alldata, model):
                 expr = gp.LinExpr([-branch.Bff, -branch.Bft, branch.Gft],
                               [cvar[busf], cvar[branch], svar[branch]])
                 branch.Qdeffconstr = model.addConstr(expr == Qvar_f[branch], name = branch.Qfcname)
+                
                 # -Btt ctt - Btf cft + Gtf stf = -Btt ctt - Btf cft - Gtf sft 
                 expr = gp.LinExpr([-branch.Btt, -branch.Btf, -branch.Gtf], # again, same minus
                               [cvar[bust], cvar[branch], svar[branch]])
                 branch.Qdeftconstr = model.addConstr(expr == Qvar_t[branch], name = branch.Qtcname)
                 count += 2
+                #print(j,-branch.Btt,-branch.Btf,-branch.Bft)
+                #break_exit('hmm')
         else:
             branch.Qdeffconstr = model.addConstr(Qvar_f[branch] == 0, name = branch.Qfcname)
             branch.Qdeftconstr = model.addConstr(Qvar_t[branch] == 0, name = branch.Qtcname)
@@ -991,6 +994,8 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
 
     log.joint("Creating derived solution values from input voltage solution.\n")
 
+    loud = False
+    
     for j in range(1,numbuses+1):
         bus = buses[j]
         bus.inpute = bus.inputV*math.cos(bus.inputA_rad)
@@ -1068,45 +1073,55 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
     for j in range(1,1+numbranches):
         branch     = branches[j]
         row = model.getRow(branch.Pdeffconstr)
-        print(j, branch.Pdeffconstr, row, branch.Pdeffconstr.Sense, branch.Pdeffconstr.RHS)
-        print(row.size())
+        if loud:
+            print(j, branch.Pdeffconstr, row, branch.Pdeffconstr.Sense, branch.Pdeffconstr.RHS)
+            print(row.size())
         sum = -branch.Pdeffconstr.RHS
         leadcoeff = 0
         for i in range(row.size()):
             var   = row.getVar(i)
             coeff = row.getCoeff(i)
             if var.Varname != Pvar_f[branch].Varname:
-                print('   ',i,coeff,var.Varname, 'at', xbuffer[var])
+                if loud:
+                    print('   ',i,coeff,var.Varname, 'at', xbuffer[var])
                 sum += coeff*xbuffer[var]
             else:
-                print('   >',i,coeff,var.Varname)
+                if loud:
+                    print('   >',i,coeff,var.Varname)
                 leadcoeff = coeff
-        print('sum =', sum,leadcoeff)
+        if loud:
+            print('sum =', sum,leadcoeff)
         xbuffer[Pvar_f[branch]] = -sum/leadcoeff;  #leadcoeff should be +1 or -1        
-
+        log.joint('%s derived at %f\n'%(Pvar_f[branch].Varname, xbuffer[Pvar_f[branch]]))
+        
         row = model.getRow(branch.Pdeftconstr)
-        print(j, branch.Pdeftconstr, row, branch.Pdeftconstr.Sense, branch.Pdeftconstr.RHS)
-        print(row.size())
+        if loud:
+            print(j, branch.Pdeftconstr, row, branch.Pdeftconstr.Sense, branch.Pdeftconstr.RHS)
+            print(row.size())
         sum = -branch.Pdeftconstr.RHS
         leadcoeff = 0
         for i in range(row.size()):
             var   = row.getVar(i)
             coeff = row.getCoeff(i)
             if var.Varname != Pvar_t[branch].Varname:
-                print('   ',i,coeff,var.Varname, 'at', xbuffer[var])
+                if loud:
+                    print('   ',i,coeff,var.Varname, 'at', xbuffer[var])
                 sum += coeff*xbuffer[var]
             else:
-                print('   >',i,coeff,var.Varname)
+                if loud:
+                    print('   >',i,coeff,var.Varname)
                 leadcoeff = coeff
-        print('sum =',sum,leadcoeff)
+        if loud:
+            print('sum =',sum,leadcoeff)
         xbuffer[Pvar_t[branch]] = -sum/leadcoeff;  #leadcoeff should be +1 or -1
         log.joint('%s derived at %f\n'%(Pvar_t[branch].Varname, xbuffer[Pvar_t[branch]]))
 
         ##################### Now, reactive power flows
 
         row = model.getRow(branch.Qdeffconstr)
-        print(j, branch.Qdeffconstr, row, branch.Qdeftconstr.Sense, branch.Qdeftconstr.RHS)
-        print('size',row.size())
+        if loud:
+            print(j, branch.Qdeffconstr, row, branch.Qdeffconstr.Sense, branch.Qdeffconstr.RHS)
+            print('size',row.size())
         sum = -branch.Qdeffconstr.RHS
         leadcoeff = 0
 
@@ -1114,34 +1129,43 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
             var   = row.getVar(i)
             coeff = row.getCoeff(i)
             if var.Varname != Qvar_f[branch].Varname:
-                print('   ',i,coeff,var.Varname, 'at', xbuffer[var])
+                if loud:
+                    print('   ',i,coeff,var.Varname, 'at', xbuffer[var])
                 sum += coeff*xbuffer[var]
             else:
-                print('   >',i,coeff,var.Varname)
+                if loud:
+                    print('   >',i,coeff,var.Varname)
                 leadcoeff = coeff
-        print('sum =', sum,leadcoeff)
+        if loud:
+            print('sum =', sum,leadcoeff)
         xbuffer[Qvar_f[branch]] = -sum/leadcoeff;  #leadcoeff should be +1 or -1
-
+        log.joint('%s derived at %f\n'%(Qvar_f[branch].Varname, xbuffer[Qvar_f[branch]]))
+        
         row = model.getRow(branch.Qdeftconstr)
-        print(j, branch.Qdeftconstr, row, branch.Qdeftconstr.Sense, branch.Qdeftconstr.RHS)
-        print(row.size())
+        if loud:
+            print('\n',j, branch.Qdeftconstr, row, branch.Qdeftconstr.Sense, branch.Qdeftconstr.RHS)
+            print(row.size())
         sum = -branch.Qdeftconstr.RHS
         leadcoeff = 0
         for i in range(row.size()):
             var   = row.getVar(i)
             coeff = row.getCoeff(i)
             if var.Varname != Qvar_t[branch].Varname:
-                print('   ',i,coeff,var.Varname, 'at', xbuffer[var])
-                sum += coeff*xbuffer[var]
+                product = coeff*xbuffer[var]
+                sum += product
+                if loud:
+                    print('   ',i,coeff,var.Varname, 'at', xbuffer[var], ' prod:',product)
+                    print('    sum:',sum)
+                
             else:
-                print('   >',i,coeff,var.Varname)
+                if loud:
+                    print('   >',i,coeff,var.Varname)
                 leadcoeff = coeff
-        print('sum =',sum,leadcoeff)
+        if loud:
+            print('sum =',sum,leadcoeff)
         xbuffer[Qvar_t[branch]] = -sum/leadcoeff;  #leadcoeff should be +1 or -1
         log.joint('%s derived at %f\n'%(Qvar_t[branch].Varname, xbuffer[Qvar_t[branch]]))
-        
-
-        #break_exit('branchPQ')
+    #break_exit('branchPQ')
 
     #next, power flow injections
     Pinjvar      = alldata['LP']['Pinjvar']    
@@ -1200,6 +1224,8 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
 
     alldata['violation'] = {} #dictionary to keep track of violations
     Vmagviol = alldata['violation']['Vmagviol'] = {}
+    IPviol = alldata['violation']['IPviol'] = {}
+    IQviol = alldata['violation']['IQviol'] = {}    
     for j in range(1,numbuses+1):
         bus = buses[j]
         alldata['violation'][bus] = {}
@@ -1343,6 +1369,14 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         log.joint('Bus ID %s #%d injection %g mingen %g maxgen %g load %g\n'%(bus.nodeID, j, injection, myPlbound, myPubound, bus.Pd))
         log.joint('   min net generation %g; max %g\n'%(minnetgen, maxnetgen))
 
+
+        candmaxviol = alldata['violation'][bus]['Pinjmax']
+        if candmaxviol < alldata['violation'][bus]['Pinjmin']:
+            candmaxviol = -alldata['violation'][bus]['Pinjmin']
+        IPviol[bus] = candmaxviol
+
+    
+
     for j in range(1,1+numbuses):
         bus  = buses[j]
 
@@ -1378,6 +1412,11 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         
         log.joint('Bus ID %s #%d injection %g mingen %g maxgen %g load %g\n'%(bus.nodeID, j, injection, myQlbound, myQubound, bus.Qd))
         log.joint('   min net generation %g; max %g\n'%(minnetgen, maxnetgen))
+
+        candmaxviol = alldata['violation'][bus]['Qinjmax']
+        if candmaxviol < alldata['violation'][bus]['Qinjmin']:
+            candmaxviol = -alldata['violation'][bus]['Qinjmin']
+        IQviol[bus] = candmaxviol            
         
     worstboundviol_report(log,badlbvar,maxlbviol,'LB')
     worstboundviol_report(log,badubvar,maxubviol,'UB')
@@ -1405,13 +1444,22 @@ def lpformulator_checkviol_simple(alldata, model, grbvariable, value, maxlbviol,
     if loud:
         log.joint("%s =  %.16e  [ LB %.4e  UB %.4e ]\n"%(grbvariable.varname, value, lb, ub))
 
-    if lb - value > maxlbviol:
+    lbviol = lb - value
+    ubviol = value - ub
+
+    if lbviol > 0:
         log.joint("LBVIOL %s  LB %.6e  x %.16e  UB %.6e\n"%(grbvariable.varname, lb, value, ub))
+        
+    if lbviol > maxlbviol:
+        log.joint(" -> incumbent MAX LBVIOL\n")
         maxlbviol = lb - value
         badlbvar = grbvariable
-  
-    if value - ub > maxubviol:
+
+    if ubviol > 0:
         log.joint("UBVIOL %s  LB %.6e  x %.16e  UB %.6e\n"%(grbvariable.varname, lb, value, ub))
+        
+    if ubviol > maxubviol:
+        log.joint(" -> incumbent MAX UBVIOL\n")        
         maxubviol = value - ub
         badubvar = grbvariable
 
