@@ -24,14 +24,10 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-    "feather-format",
     "gurobipy",
     "numpy",
     "pandas",
     "scipy",
-    "matplotlib",
-    "networkx",
-    "sklearn",
 ]
 dynamic = ["version"]
 
