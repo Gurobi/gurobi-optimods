@@ -39,6 +39,7 @@ class GraphVisualization:
         edge_width: Union[Dict[Edge, Num], Callable, Num] = None,
         edge_color: Union[Dict[Edge, str], Callable, str] = None,
         edge_opacity: Num = None,
+        edge_map: Union[Dict[Vertex, Vertex], Callable] = None,            
     ):
         # check dimensions
         if all(len(pos.get(v, [])) == 2 for v in G):
@@ -79,17 +80,30 @@ class GraphVisualization:
         self.node_border_color = node_border_color
         self.node_opacity = node_opacity
         self.edge_width = edge_width
+        self.input_edge_width = edge_width
         self.edge_color = edge_color
         self.edge_opacity = edge_opacity
+        self.edge_map = edge_map
+        #print(">>>>>>>>>",edge_map)
 
     def _get_edge_traces(self) -> List[Union[go.Scatter, go.Scatter3d]]:
         # group all edges by (color, width)
         groups = defaultdict(list)
 
+        count = 1
         for edge in self.G.edges():
             color = self._get_setting('edge_color', edge)
-            width = self._get_setting('edge_width', edge)
+
+
+            position = self.edge_map[(edge[0]+1,edge[1]+1)]
+            #print('edge',count, 'is (+1)',edge[0]+1,',',edge[1]+1, 'em', position, 'w', self.input_edge_width[position])
+            
+            width = self.input_edge_width[position] #self._get_setting('edge_width', edge)
             groups[(color, width)] += [edge]
+
+            #print('edge',count, 'is (+1)',edge[0]+1,',',edge[1]+1, 'of width', width)            
+            count += 1
+
 
         # process each group
         traces = []

@@ -1225,7 +1225,8 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     alldata['violation'] = {} #dictionary to keep track of violations
     Vmagviol = alldata['violation']['Vmagviol'] = {}
     IPviol = alldata['violation']['IPviol'] = {}
-    IQviol = alldata['violation']['IQviol'] = {}    
+    IQviol = alldata['violation']['IQviol'] = {}
+    branchlimitviol = alldata['violation']['branchlimit'] = {}
     for j in range(1,numbuses+1):
         bus = buses[j]
         alldata['violation'][bus] = {}
@@ -1278,20 +1279,26 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     for j in range(1,1+numbranches):
         branch     = branches[j]
         fromvalue = math.sqrt(xbuffer[Pvar_f[branch]]*xbuffer[Pvar_f[branch]] + xbuffer[Qvar_f[branch]]*xbuffer[Qvar_f[branch]])
+        fromviol = max(fromvalue - branch.limit,0)
         if fromvalue > branch.limit:
             log.joint('>>> error: branch # %d has \'from\' flow magnitude %f which is larger than limit %f\n'%(j, fromvalue, branch.limit))
-            thisviol = fromvalue - branch.limit
+            log.joint('    branch is ( %d %d )\n'%(branch.f, branch.t))            
+            thisviol = fromviol
             if thisviol > max_violation_value:
                 max_violation_string = 'branch_'+str(j)+'_from'
                 max_violation_value = thisviol
             
         tovalue = math.sqrt(xbuffer[Pvar_t[branch]]*xbuffer[Pvar_t[branch]] + xbuffer[Qvar_t[branch]]*xbuffer[Qvar_t[branch]])
+        toviol = max(tovalue - branch.limit,0)
         if tovalue > branch.limit:
             log.joint('>>> error: branch # %d has \'to\' flow magnitude %f which is larger than limit %f\n'%(j, tovalue, branch.limit))
-            thisviol = tovalue - branch.limit
+            log.joint('    branch is ( %d %d )\n'%(branch.f, branch.t))
+            thisviol = toviol
             if thisviol > max_violation_value:
                 max_violation_string = 'branch_'+str(j)+'_to'
                 max_violation_value = thisviol
+        alldata['violation']['branchlimit'][branch] = max(fromviol,toviol)
+        
         
     if alldata['use_ef']:
         for j in range(1,numbuses+1):
@@ -1316,7 +1323,7 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
 
         log.joint('Vmag values checked.\n')
 
-    break_exit('checked')
+    #break_exit('checked')
     log.joint('Checking power flow values.\n')
     
 
@@ -1423,7 +1430,7 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         
     log.joint('\nSummary: Max LB viol %g, Max UB viol %g\n'%(maxlbviol, maxubviol))
     log.joint('\nSummary: Max violation %g, key: %s\n'%(max_violation_value, max_violation_string))
-    break_exit('strict')
+    #break_exit('strict')
                                     
     if alldata['dographics']:
         grbgraphical(alldata)

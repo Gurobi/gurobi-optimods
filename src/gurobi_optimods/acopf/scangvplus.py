@@ -4,7 +4,7 @@ import numpy as np
 import re
 
 def scangv(filename):
-    print(filename)
+    print('Scanning gv file',filename)
 
     try:
         f     = open(filename, "r")
@@ -40,6 +40,20 @@ def scangv(filename):
             #print(node, float(foo[1][6:comma]), float(foo[1][comma+1:rightbr-1]))
             trueN += 1
 
-        #print(i, nodex[i], nodey[i])
+    thisM = 0
+    selection = np.where(criterion > 3)
+    N = len(selection[0])
+    endbus = {}
+    for k in range(N):
+        i   = selection[0][k]
+        foo = lines[i].split()
+        if foo[1][0] == '-':
+            #print(len(foo),foo)
+            busfrom = int(foo[0])
+            busto = int(foo[2])
+            #print(busfrom, busto)
+            endbus[thisM] = (busfrom, busto)
+            thisM += 1
+    
 
-    return trueN, N, nodex, nodey
+    return trueN, N, nodex, nodey, thisM, endbus

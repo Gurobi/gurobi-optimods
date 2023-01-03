@@ -60,15 +60,35 @@ def grbgraphical(alldata):
     Vmagviol = alldata['violation']['Vmagviol']
     IPviol = alldata['violation']['IPviol']
     IQviol = alldata['violation']['IQviol']
+    branchlimitviol = alldata['violation']['branchlimit']
 
     node_text = {}
+    mynode_size = {}
+    mynode_color = {}
+
+
     for j in range(1,numbuses+1):
         bus = buses[j]
         #node_text[j-1] = 'Bus ' + str(j) + ' Vmagviol: '+ str(Vmagviol[bus]) + ' Pviol: '+ str(IPviol[bus]) + ' Qviol: '+ str(IQviol[bus])
 
         node_text[j-1] = 'Bus %d Vmagviol: %.3e Pviol %.3e Qviol %.3e'%(j, Vmagviol[bus], IPviol[bus],IQviol[bus])
+        mynode_size[j-1] = 1
+        mynode_color[j-1] = 'black'
+        if abs(Vmagviol[bus]) > 1e-3 or abs(IPviol[bus]) > 1e-2 or abs(IQviol[bus]) > 1e-2:
+            mynode_size[j-1] = 15
+            mynode_color[j-1] = 'red'
 
+    myedge_width = {}
+    myedge_ends = {}
+    for j in range(1,numbranches+1):
+        branch = alldata['branches'][j]
+        myedge_ends[(branch.count_f, branch.count_t)] = j
+        myedge_ends[(branch.count_t, branch.count_f)] = j        
+        myedge_width[j] = 2
+        if abs(branchlimitviol[branch]) > 1e-3:
+            myedge_width[j] = 4
+            
+            
         
-    graphplot(txtfilename, firstgvfile, node_text)
-
+    graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, myedge_width, myedge_ends)
     break_exit('graph,2')

@@ -10,7 +10,7 @@ from graphvisualization import *
 from scangvplus import *
 from myutils import break_exit
 
-def graphplot(graphfilename, gvfilename, node_text):
+def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode_color, myedge_width, myedge_ends):
     """Description"""
     #
     # Reads a network in the format created by the graphviz library
@@ -43,10 +43,12 @@ def graphplot(graphfilename, gvfilename, node_text):
     #should check that the next line is 'END'
     #break_exit('lmn')
 
-    #trueN, nodex, nodey = scangv('first.gv')
-    trueN, N, nodex, nodey = scangv(gvfilename)
+    trueN, N, nodex, nodey, thisM, endbus = scangv(gvfilename)
+    #print(len(nodex), len(nodey), trueN, N)
 
-    print(len(nodex), len(nodey), trueN, N)
+    #endbus is a list of end buses for network branches as ordered in gvfilename
+
+
 
     #break_exit('scanned')
 
@@ -57,25 +59,43 @@ def graphplot(graphfilename, gvfilename, node_text):
 
     G = nx.Graph()
 
-    print(len(adj),m)
+    #print(len(adj),m)
 
-    #break_exit('lmn2')
-
+    reordered_width = {}
     for j in range(truelinect):
         G.add_edge(adj[j][0],adj[j][1])
-    print('creating visualization object\n')
+        fbus = adj[j][0]+1
+        tbus = adj[j][1]+1
+        position = myedge_ends[(fbus,tbus)]
+        reordered_width[j+1] = 1  #temporary: for debugging only
+        #print(j+1, 'f,t', fbus, tbus, 'width', reordered_width[j+1])
+
+    reordered_width[2] = 4
+    reordered_width[4] = 4
+    #print(reordered_width)
+
+    '''
+    for j in range(truelinect):
+        position = myedge_ends[endbus[j]]
+        print(j+1, 'end',  endbus[j], position)
+    '''
+        
+    break_exit('texted')
+    
+    print('Creating visualization object.\n')
     #print(node_text)
-    #reak_exit('texted')
-    vis = GraphVisualization(G, pos, node_text, node_size=1, node_border_width=1, edge_width=1.5)
-    print('rendering figure\n')
+
+    vis = GraphVisualization(G, pos, node_text, node_size=mynode_size, node_color = mynode_color, node_border_width=1, edge_width = myedge_width, edge_map = myedge_ends) 
+
+    print('Rendering figure.\n')
 
     xgap     = np.max(nodex) - np.min(nodex)
     ygap     = np.max(nodey) - np.min(nodey)
     myheight = 800
     mywidth  = int(math.ceil(xgap/ygap*myheight))
-    print('xgap',xgap,'ygap',ygap,'height',myheight,'width',mywidth)
+    #print('xgap',xgap,'ygap',ygap,'height',myheight,'width',mywidth)
 
     fig = vis.create_figure(height=myheight, width=mywidth, showlabel=False)
     #fig.write_image('one.png')
-    print('showing figure\n')
+    print('Showing figure.\n')
     fig.show()
