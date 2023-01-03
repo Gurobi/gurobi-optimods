@@ -11,4 +11,4 @@ The idea in one sentence: we will create open-source Python repository of implem
 Contributing
 ------------
 
-See `CONTRIBUTING.md <.github/CONTRIBUTING.md>`_ for instructions on how to propose and implement new mods.
+See `CONTRIBUTING.md <CONTRIBUTING.md>`_ for instructions on how to propose and implement new mods.
