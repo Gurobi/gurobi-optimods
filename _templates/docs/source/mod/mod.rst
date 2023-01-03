@@ -16,7 +16,7 @@ Give a brief overview of the problem being solved.
 
         Give a definition of the problem in the language of the domain expert.
 
-    .. tab:: Mathematical Model
+    .. tab:: Optimization Model
 
         Give the mathematical programming formulation of the problem here.
 

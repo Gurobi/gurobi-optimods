@@ -14,7 +14,7 @@ You are given a bipartite graph G containing n vertices and m edges. Find the ma
 
         A matching is a set of pairwise non-adjacent edges ...
 
-    .. tab:: Mathematical Model
+    .. tab:: Optimization Model
 
         For each edge :math:`(i,j)` in graph :math:`G = (V, E)`, we should select a subset. So define variables as follows
 

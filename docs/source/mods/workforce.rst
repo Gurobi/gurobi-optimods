@@ -24,7 +24,7 @@ Consider a service business, like a restaurant, that develops its workforce plan
 
         The returned assignment dataframe is a subset of the availability dataframe, with the same columns. Each row specifies that the given worker has been assigned the given shift.
 
-    .. tab:: Mathematical Model
+    .. tab:: Optimization Model
 
         Set of :math:`S` shifts to cover using set of workers :math:`W`. Workers :math:`w \in W_{s} \subseteq W` are available to work a given shift `s`, and are paid an amount :math:`c_{w}` for each assigned shift. Shift :math:`s` requires :math:`r_{s}` workers assigned. The model is defined on variables :math:`x_{ws}` such that
 
