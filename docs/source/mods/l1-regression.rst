@@ -106,7 +106,7 @@ Here we extract the coefficients of the fitted model and compare them with the c
     ols.fit(X_train, y_train)
     pd.DataFrame(data={"OLS": ols.coef_, "L1": reg.coef_}).plot.bar()
 
-.. image:: reg_coeffs.png
+.. image:: figures/reg_coeffs.png
   :width: 500
   :alt: Weighted matching result
 

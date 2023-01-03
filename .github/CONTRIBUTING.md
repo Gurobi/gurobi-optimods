@@ -44,4 +44,4 @@ To get started implementing a new mod, create the following files (replacing `<m
 
 * `src/gurobi_optimods/<mod>.py`: Implementation of the mod goes here. This must be an importable module exposing a function or class which is entry-point for using the mod.
 * `tests/test_<mod>.py`: Unit tests for the mod. Enough to exercise some simple cases and know the code is in a working state.
-* `docs/source/mods/<category>/<mod>.rst`: The documentation page for the mod. The example under `_templates` guides you through the specifics. It should included a working example showing how to use the mod. This should be a simple python script that only reads or creates input data structures and runs the main mod function or class.
+* `docs/source/mods/<mod>.rst`: The documentation page for the mod. The example under `_templates` guides you through the specifics. It should included a working example showing how to use the mod. This should be a simple python script that only reads or creates input data structures and runs the main mod function or class.

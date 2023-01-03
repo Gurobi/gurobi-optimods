@@ -2,8 +2,10 @@ The Opti Mods
 =============
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   machine-learning/index
-   graphs/index
-   classical-or/index
+   bipartite-matching
+   weighted-matching
+   card-regression
+   l1-regression
+   workforce
