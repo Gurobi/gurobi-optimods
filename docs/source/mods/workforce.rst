@@ -75,7 +75,9 @@ Data examples
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE
 
-            >>> pd.read_feather("examples/data/availability.feather")
+            >>> from gurobi_optimods import datasets
+            >>> data = datasets.load_workforce()
+            >>> data.availability
                Worker      Shift
             0     Amy 2022-07-02
             1     Amy 2022-07-03
@@ -100,19 +102,21 @@ Data examples
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE
 
-            >>> pd.read_feather("examples/data/shift_requirements.feather")
-                Required      Shift
-            0          3 2022-07-01
-            1          2 2022-07-02
-            2          4 2022-07-03
-            3          2 2022-07-04
-            4          5 2022-07-05
-            ..       ...        ...
-            9          3 2022-07-10
-            10         4 2022-07-11
-            11         5 2022-07-12
-            12         7 2022-07-13
-            13         5 2022-07-14
+            >>> from gurobi_optimods import datasets
+            >>> data = datasets.load_workforce()
+            >>> data.shift_requirements
+                    Shift  Required
+            0  2022-07-01         3
+            1  2022-07-02         2
+            2  2022-07-03         4
+            3  2022-07-04         2
+            4  2022-07-05         5
+            ..        ...       ...
+            9  2022-07-10         3
+            10 2022-07-11         4
+            11 2022-07-12         5
+            12 2022-07-13         7
+            13 2022-07-14         5
             <BLANKLINE>
             [14 rows x 2 columns]
 
@@ -125,7 +129,9 @@ Data examples
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE
 
-            >>> pd.read_feather("examples/data/pay_rates.feather")
+            >>> from gurobi_optimods import datasets
+            >>> data = datasets.load_workforce()
+            >>> data.pay_rates
             Worker  PayRate
             0    Amy       10
             1    Bob       12
@@ -149,19 +155,18 @@ Show the code required to run the mod. Users interact with the 'solver' by passi
     import pandas as pd
     pd.options.display.max_rows = 15
 
+    from gurobi_optimods.datasets import load_workforce
     from gurobi_optimods.workforce import solve_workforce_scheduling
 
 
     # Load example data.
-    availability = pd.read_feather("examples/data/availability.feather")
-    shift_requirements = pd.read_feather("examples/data/shift_requirements.feather")
-    pay_rates = pd.read_feather("examples/data/pay_rates.feather")
+    data = load_workforce()
 
     # Get winning results.
     assigned_shifts = solve_workforce_scheduling(
-        availability=availability,
-        shift_requirements=shift_requirements,
-        pay_rates=pay_rates,
+        availability=data.availability,
+        shift_requirements=data.shift_requirements,
+        pay_rates=data.pay_rates,
     )
 
 .. testoutput:: workforce
