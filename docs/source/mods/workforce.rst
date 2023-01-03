@@ -132,7 +132,7 @@ Data examples
             >>> from gurobi_optimods import datasets
             >>> data = datasets.load_workforce()
             >>> data.pay_rates
-            Worker  PayRate
+              Worker  PayRate
             0    Amy       10
             1    Bob       12
             2  Cathy       10
