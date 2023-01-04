@@ -7,6 +7,8 @@
 
 # If your mod makes sense as a standalone function:
 
+import gurobipy as gp
+
 
 def solve_mod(data):
     """
