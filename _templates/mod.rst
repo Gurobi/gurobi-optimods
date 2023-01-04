@@ -1,3 +1,5 @@
+.. This template should be copied to docs/source/mods/<mod_name>.rst
+
 My New Mod
 ==========
 
