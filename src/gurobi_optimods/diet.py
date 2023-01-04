@@ -1,14 +1,22 @@
-# Implementation of your new mod. This should be copied to
-# src/gurobi_optimods/<mod-name>.py. You may alternatively want to include
-# your mod in an existing file, if it coexists naturally with other mods.
-#
-# In general the public API should be a single class or function. Go with
-# whatever makes the most sense for this mod.
+"""
+Diet problem with a pandas interface
+"""
+
+from dataclasses import dataclass
 
 import gurobipy as gp
+from gurobipy import GRB
+import gurobipy_pandas as gppd
+import pandas as pd
 
 
-def solve_mod(data):
+@dataclass
+class DietResult:
+    menu: pd.Series
+    total_cost: float
+
+
+def solve_diet_problem(categories, foods, values):
     """
     A sphinx-compatible docstring
 
@@ -16,7 +24,23 @@ def solve_mod(data):
     :type data1: pd.DataFrame
     """
     with gp.Env() as env, gp.Model(env=env) as model:
-        # build model
+        # Build the model
+        quantity = gppd.add_vars(
+            model, foods.set_index("food"), obj="cost", name="quantity"
+        )
+        amounts = (
+            values.join(quantity, on="food")
+            .assign(amount=lambda df: df["value"] * df["quantity"])
+            .groupby("category")["amount"]
+            .sum()
+        )
+        (
+            categories.join(amounts, on="category")
+            .gppd.add_constrs(model, "amount >= min", name="lower")
+            .gppd.add_constrs(model, "amount <= max", name="upper")
+        )
+        # Solve, post-process and return solution
         model.optimize()
-        # post-process and return solution
-        return
+        if model.Status == GRB.INFEASIBLE:
+            raise ValueError("Unsatisfiable diet")
+        return DietResult(menu=quantity.gppd.X, total_cost=model.ObjVal)
