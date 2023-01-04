@@ -25,6 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "gurobipy",
+    "gurobipy-pandas",
     "numpy",
     "pandas",
     "scipy",
