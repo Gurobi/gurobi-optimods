@@ -51,7 +51,7 @@ so use doctests where possible.
 
 .. tabs::
 
-    .. tab:: ``availability``
+    .. tab:: ``categories``
 
         Give interpretation of input data.
 
@@ -59,28 +59,35 @@ so use doctests where possible.
             :options: +NORMALIZE_WHITESPACE
 
             >>> from gurobi_optimods import datasets
-            >>> data = datasets.load_workforce()
-            >>> data.availability
-               Worker      Shift
-            0     Amy 2022-07-02
-            1     Amy 2022-07-03
-            2     Amy 2022-07-05
-            3     Amy 2022-07-07
-            4     Amy 2022-07-09
-            ..    ...        ...
-            67     Gu 2022-07-10
-            68     Gu 2022-07-11
-            69     Gu 2022-07-12
-            70     Gu 2022-07-13
-            71     Gu 2022-07-14
-            <BLANKLINE>
-            [72 rows x 2 columns]
+            >>> data = datasets.load_diet()
+            >>> data.categories
+               category   min      max
+            0  calories  1800   2200.0
+            1   protein    91  10000.0
+            2       fat     0     65.0
+            3    sodium     0   1779.0
 
-        In the model, this corresponds to ...
+        The min and max columns correspond to :math:`l_j` and :math:`u_j`.
 
-    .. tab:: ``shift_requirements``
+    .. tab:: ``foods``
 
         Another bit of input data (perhaps a secondary table)
+
+            >>> from gurobi_optimods import datasets
+            >>> data = datasets.load_diet()
+            >>> data.foods
+                    food  cost
+            0  hamburger  2.49
+            1    chicken  2.89
+            2    hot dog  1.50
+            3      fries  1.89
+            4   macaroni  2.09
+            5      pizza  1.99
+            6      salad  2.49
+            7       milk  0.89
+            8  ice cream  1.59
+
+	The cost column corresponds to :math:`c_i`.
 
 |
 
