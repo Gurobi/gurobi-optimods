@@ -102,12 +102,16 @@ easy access by users.
 
     import pandas as pd
 
-    from gurobi_optimods.datasets import load_mod_data
-    from gurobi_optimods.mod import solve_mod
+    from gurobi_optimods.datasets import load_diet
+    from gurobi_optimods.diet import solve_diet_problem
 
 
-    data = load_mod_data()
-    solution = solve_mod(data.table1, data.table2)
+    data = load_diet()
+    solution = solve_diet_problem(
+        categories=data.categories,
+        foods=data.foods,
+        values=data.nutrition_values,
+    )
 
 ..  A snippet of the Gurobi log output here won't show in the rendered page,
     but serves as a doctest to make sure the code example runs. The ... lines
@@ -117,9 +121,7 @@ easy access by users.
     :hide:
 
     ...
-    Optimize a model with 14 rows, 72 columns, and 72 nonzeros
-    ...
-    Optimal objective
+    Optimize a model with 8 rows, 9 columns and 72 nonzeros
     ...
 
 The model is solved as an LP/MIP/QP by Gurobi.
@@ -131,9 +133,28 @@ The model is solved as an LP/MIP/QP by Gurobi.
 
     .. code-block:: text
 
-        Gurobi Optimizer version 9.5.1 build v9.5.1rc2 (mac64[x86])
-        Optimize a model with ...
-        Best obj ... Best bound ...
+        Gurobi Optimizer version 10.0.0 build v10.0.0rc2 (mac64[x86])
+
+        CPU model: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
+        Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
+
+        Optimize a model with 8 rows, 9 columns and 72 nonzeros
+        Model fingerprint: 0x4ec4fbc2
+        Coefficient statistics:
+        Matrix range     [2e+00, 2e+03]
+        Objective range  [9e-01, 3e+00]
+        Bounds range     [0e+00, 0e+00]
+        RHS range        [6e+01, 1e+04]
+        Presolve removed 4 rows and 0 columns
+        Presolve time: 0.00s
+        Presolved: 4 rows, 10 columns, 37 nonzeros
+
+        Iteration    Objective       Primal Inf.    Dual Inf.      Time
+            0    0.0000000e+00   1.472500e+02   0.000000e+00      0s
+            4    1.1828861e+01   0.000000e+00   0.000000e+00      0s
+
+        Solved in 4 iterations and 0.00 seconds (0.00 work units)
+        Optimal objective  1.182886111e+01
 
 |
 
