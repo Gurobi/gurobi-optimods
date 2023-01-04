@@ -6,15 +6,19 @@ import unittest
 
 import pandas as pd
 
-# from gurobi_optimods.datasets import load_mod_example_data
+from gurobi_optimods.datasets import load_diet
 from gurobi_optimods.diet import solve_diet_problem
 
 
 class TestDiet(unittest.TestCase):
-    # def test_datasets(self):
-    #    # If you added something to optimods.datasets, test it here
-    #    data = load_mod_example_data()
-    #    self.assertEqual(set(data.keys()), {"a", "b", "c"})
+    def test_datasets(self):
+        # If you added something to optimods.datasets, test it here
+        data = load_diet()
+        self.assertEqual(set(data.categories.columns), {"category", "min", "max"})
+        self.assertEqual(set(data.foods.columns), {"food", "cost"})
+        self.assertEqual(
+            set(data.nutrition_values.columns), {"food", "category", "value"}
+        )
 
     def test_survive_on_hamburgers(self):
         # I have one option. How many hamburgers must I eat to survive?
