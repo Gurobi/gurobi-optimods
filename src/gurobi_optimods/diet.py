@@ -18,10 +18,15 @@ class DietResult:
 
 def solve_diet_problem(categories, foods, values):
     """
-    A sphinx-compatible docstring
+    Choose quantities of foods to eat in order to meet the required
+    nutrient amounts in each category, for minimum total cost.
 
-    :param data1: Data structure for first argument
-    :type data1: pd.DataFrame
+    :param categories: Dataframe with columns (category, min, max)
+    :type categories: pd.DataFrame
+    :param foods: Dataframe with columns (food, cost)
+    :type foods: pd.DataFrame
+    :param values: Dataframe with columns (food, category, value)
+    :type values: pd.DataFrame
     """
     with gp.Env() as env, gp.Model(env=env) as model:
         # Build the model
