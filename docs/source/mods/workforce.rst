@@ -173,6 +173,8 @@ Show the code required to run the mod. Users interact with the 'solver' by passi
     :hide:
 
     ...
+    Optimize a model with 14 rows, 72 columns and 72 nonzeros
+    ...
     Optimal objective  4.800000000e+02
 
 The model is solved as a linear program by Gurobi.

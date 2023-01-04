@@ -20,7 +20,8 @@ Give a brief overview of the problem being solved.
 
         Give the mathematical programming formulation of the problem here.
 
-Give examples of the various input data structures, if appropriate. These outputs should be fixed, so use doctests where possible.
+Give examples of the various input data structures. These inputs should be fixed,
+so use doctests where possible.
 
 .. testsetup:: mod
 
@@ -37,7 +38,9 @@ Give examples of the various input data structures, if appropriate. These output
         .. doctest:: mod
             :options: +NORMALIZE_WHITESPACE
 
-            >>> pd.read_feather("examples/data/availability.feather")
+            >>> from gurobi_optimods import datasets
+            >>> data = datasets.load_workforce()
+            >>> data.availability
                Worker      Shift
             0     Amy 2022-07-02
             1     Amy 2022-07-03
@@ -53,65 +56,63 @@ Give examples of the various input data structures, if appropriate. These output
             <BLANKLINE>
             [72 rows x 2 columns]
 
-        In the mathematical model, this models ...
+        In the model, this corresponds to ...
 
     .. tab:: ``shift_requirements``
+
+        Another bit of input data (perhaps a secondary table)
 
 |
 
 Code
 ----
 
-Show required to run the model.
+Self contained code example to run the mod from an example dataset. Example
+datasets should bd included in the ``gurobi_optimods.datasets`` module for
+easy access by users.
 
-.. These paths need to be changed to point to your example scripts
+.. testcode:: mod
 
-.. literalinclude:: ../../../examples/mod.py
+    import pandas as pd
 
-The model is solved as a LP/MIP/QP/etc by Gurobi.
+    from gurobi_optimods.datasets import load_mod_data
+    from gurobi_optimods.mod import solve_mod
 
-.. collapse:: View Gurobi logs
+
+    data = load_mod_data()
+    solution = solve_mod(data.table1, data.table2)
+
+..  A snippet of the Gurobi log output here won't show in the rendered page,
+    but serves as a doctest to make sure the code example runs. The ... lines
+    are meaningful here, they will match anything in the output test.
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 14 rows, 72 columns, and 72 nonzeros
+    ...
+    Optimal objective
+    ...
+
+The model is solved as an LP/MIP/QP by Gurobi.
+
+..  You can include the full Gurobi log output here for the curious reader.
+    It will be visible as a collapsible section.
+
+.. collapse:: View Gurobi Logs
 
     .. code-block:: text
 
-        Gurobi Optimizer version 9.5.1 build v9.5.1rc2
-        ...
+        Gurobi Optimizer version 9.5.1 build v9.5.1rc2 (mac64[x86])
+        Optimize a model with ...
+        Best obj ... Best bound ...
 
 |
 
 Solution
 --------
 
-Show the solution. Use doctests if possible (i.e. the solution must be stable enough). Otherwise, just display it somehow.
-
-.. This import line needs to be changed to import any results you need
-
-.. testcode:: mod
-    :hide:
-
-    from examples.<mod>.modstup import some_result
-
-.. testoutput:: mod
-    :hide:
-
-    Gurobi Optimizer version 9.5.1 build v9.5.1rc2
-    ...
-
-.. doctest:: mod
-    :options: +NORMALIZE_WHITESPACE
-
-    >>> assigned_shifts
-    Worker      Shift
-    0     Amy 2022-07-03
-    1     Amy 2022-07-05
-    2     Amy 2022-07-07
-    3     Amy 2022-07-10
-    4     Amy 2022-07-11
-    ..    ...        ...
-    47     Gu 2022-07-05
-    48     Gu 2022-07-06
-    49     Gu 2022-07-07
-    50     Gu 2022-07-12
-    51     Gu 2022-07-13
-    <BLANKLINE>
-    [52 rows x 2 columns]
+Show the solution. One way is to use doctests to display simple shell outputs
+(see the workforce example). Another option is to include and display figures
+(see the graph matching examples).
