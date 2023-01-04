@@ -47,4 +47,3 @@ To get started implementing a new mod, create the following files (replacing `<m
 * `tests/test_<mod>.py`: Unit tests for the mod. Enough to exercise some simple cases and ensure that the code is in a working state.
 * `docs/source/mods/<mod>.rst`: The documentation page for the mod. The example under `_templates` guides you through the specifics. It must include a working example showing how to use the mod. This should be a simple python script that only reads or creates input data structures and runs the main mod function or class.
 * Include your mod in the toctree at `docs/source/mods/index.rst`
-* Include your mod in the api docs at `docs/source/api.rst`
