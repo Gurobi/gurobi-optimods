@@ -12,3 +12,4 @@ Contributing
 ------------
 
 See `CONTRIBUTING.md <CONTRIBUTING.md>`_ for instructions on how to propose and implement new mods.
+And have fun!
