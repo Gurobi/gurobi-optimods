@@ -116,5 +116,11 @@ Solution
 --------
 
 Show the solution. One way is to use doctests to display simple shell outputs
-(see the workforce example). Another option is to include and display figures
+(see the workforce example). This can be done simply by pasting outputs
+directly from a python shell. Another option is to include and display figures
 (see the graph matching examples).
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>>
