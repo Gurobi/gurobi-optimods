@@ -43,7 +43,7 @@ Give a brief overview of the problem being solved.
 Give examples of the various input data structures. These inputs should be fixed,
 so use doctests where possible.
 
-.. testsetup:: mod
+.. testsetup:: diet
 
     # Set pandas options for displaying dataframes, if needed
     import pandas as pd
@@ -55,7 +55,7 @@ so use doctests where possible.
 
         Give interpretation of input data.
 
-        .. doctest:: mod
+        .. doctest:: diet
             :options: +NORMALIZE_WHITESPACE
 
             >>> from gurobi_optimods import datasets
@@ -98,7 +98,7 @@ Self contained code example to run the mod from an example dataset. Example
 datasets should bd included in the ``gurobi_optimods.datasets`` module for
 easy access by users.
 
-.. testcode:: mod
+.. testcode:: diet
 
     import pandas as pd
 
@@ -117,7 +117,7 @@ easy access by users.
     but serves as a doctest to make sure the code example runs. The ... lines
     are meaningful here, they will match anything in the output test.
 
-.. testoutput:: mod
+.. testoutput:: diet
     :hide:
 
     ...
@@ -166,7 +166,20 @@ Show the solution. One way is to use doctests to display simple shell outputs
 directly from a python shell. Another option is to include and display figures
 (see the graph matching examples).
 
-.. doctest:: mod
+.. doctest:: diet
     :options: +NORMALIZE_WHITESPACE
 
-    >>>
+    >>> solution.menu.round(2)
+    food
+    hamburger    0.60
+    chicken      0.00
+    hot dog      0.00
+    fries        0.00
+    macaroni     0.00
+    pizza        0.00
+    salad        0.00
+    milk         6.97
+    ice cream    2.59
+    Name: quantity, dtype: float64
+    >>> round(solution.total_cost, 2)
+    11.83
