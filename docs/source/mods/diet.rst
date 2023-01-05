@@ -1,11 +1,14 @@
 .. This template should be copied to docs/source/mods/<mod_name>.rst
 
-My New Mod
-==========
+Stigler Diet Problem
+====================
 
-A little background on the proud history of mathprog in this field.
+Thanks `Wikipedia <https://en.wikipedia.org/wiki/Stigler_diet>`_!
 
-Also data science.
+For a moderately active man weighing 154 pounds, how much of each of 77 foods
+should be eaten on a daily basis so that the man’s intake of nine nutrients
+will be at least equal to the recommended dietary allowances (RDAs) suggested
+by the National Research Council in 1943, with the cost of the diet being minimal?
 
 Problem Specification
 ---------------------
@@ -16,11 +19,26 @@ Give a brief overview of the problem being solved.
 
     .. tab:: Domain-Specific Description
 
-        Give a definition of the problem in the language of the domain expert.
+        We have some data on various food items: their cost per unit,
+        and amount per unit of various nutrients. We are also given
+        a specification for a target diet: minimum and maximum quantities
+        of each nutrient which may be consumed.
+
+        Our goal is to find a diet (choice of food items and amounts of
+        each) which satisfies the min and max limits for all required
+        nutrients, for the lowest possible cost.
 
     .. tab:: Optimization Model
 
-        Give the mathematical programming formulation of the problem here.
+	The model is defined over foods :math:`i \in F` and nutrients :math:`j \in N`.
+        Foods have cost per unit :math:`c_{i}` and nutrients per unit :math:`n_{ij}`.
+
+        .. math::
+
+            \begin{alignat}{2}
+            \min \quad        & \sum_{i \in F} c_{i} x_{i} \\
+            \mbox{s.t.} \quad & l_{j} \le \sum_{i \in F} n_{ij} x_{i} \le u_{j} \,\, & \forall j \in N \\
+            \end{alignat}
 
 Give examples of the various input data structures. These inputs should be fixed,
 so use doctests where possible.
