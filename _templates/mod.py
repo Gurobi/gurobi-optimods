@@ -5,8 +5,6 @@
 # In general the public API should be a single class or function. Go with
 # whatever makes the most sense for this mod.
 
-# If your mod makes sense as a standalone function:
-
 import gurobipy as gp
 
 
