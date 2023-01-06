@@ -33,6 +33,7 @@ def read_configfile(alldata, filename):
     dographics           = False
     dopolar              = False
     doac                 = True
+    dodc                 = False
     branchswitching_mip  = False
     branchswitching_comp = False    
     maxdispersion_deg    = 0

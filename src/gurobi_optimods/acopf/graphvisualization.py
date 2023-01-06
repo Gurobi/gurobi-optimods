@@ -80,8 +80,9 @@ class GraphVisualization:
         self.node_border_color = node_border_color
         self.node_opacity = node_opacity
         self.edge_width = edge_width
-        self.input_edge_width = edge_width
         self.edge_color = edge_color
+        self.input_edge_width = edge_width
+        self.input_edge_color = edge_color
         self.edge_opacity = edge_opacity
         self.edge_map = edge_map
         #print(">>>>>>>>>",edge_map)
@@ -90,15 +91,18 @@ class GraphVisualization:
         # group all edges by (color, width)
         groups = defaultdict(list)
 
+        #print(self.input_edge_color)
+
         count = 1
         for edge in self.G.edges():
-            color = self._get_setting('edge_color', edge)
-
-
             position = self.edge_map[(edge[0]+1,edge[1]+1)]
             #print('edge',count, 'is (+1)',edge[0]+1,',',edge[1]+1, 'em', position, 'w', self.input_edge_width[position])
-            
+
+            color = self.input_edge_color[position] #
+            #color = self._get_setting('edge_color', edge)
+
             width = self.input_edge_width[position] #self._get_setting('edge_width', edge)
+            
             groups[(color, width)] += [edge]
 
             #print('edge',count, 'is (+1)',edge[0]+1,',',edge[1]+1, 'of width', width)            

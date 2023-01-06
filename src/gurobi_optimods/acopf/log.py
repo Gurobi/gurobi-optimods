@@ -65,4 +65,4 @@ class Logger:
         raise OPFException("\n OPFException: " + message + "Encountered an error. Quitting")
 
     def printversion(self):
-        self.joint("Version 0.0.7\n\n")
+        self.joint("Version 0.0.8\n\n")

@@ -10,7 +10,7 @@ from graphvisualization import *
 from scangvplus import *
 from myutils import break_exit
 
-def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode_color, myedge_width, myedge_ends):
+def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode_color, myedge_width, myedge_color, myedge_ends):
     """Description"""
     #
     # Reads a network in the format created by the graphviz library
@@ -85,7 +85,7 @@ def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode
     print('Creating visualization object.\n')
     #print(node_text)
 
-    vis = GraphVisualization(G, pos, node_text, node_size=mynode_size, node_color = mynode_color, node_border_width=1, edge_width = myedge_width, edge_map = myedge_ends) 
+    vis = GraphVisualization(G, pos, node_text, node_size=mynode_size, node_color = mynode_color, node_border_width=1, edge_width = myedge_width, edge_color = myedge_color, edge_map = myedge_ends) 
 
     print('Rendering figure.\n')
 

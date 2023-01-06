@@ -8,7 +8,8 @@ from myutils import break_exit
 
 from grbfile import read_configfile
 from grbgraphical import grbgraphical
-from grbformulator import lpformulator_ac
+from grbformulator_ac import lpformulator_ac
+from grbformulator_dc import lpformulator_dc
 
 if __name__ == '__main__':
     if len(sys.argv) > 3 or len(sys.argv) < 2:
@@ -34,7 +35,11 @@ if __name__ == '__main__':
         #if alldata['dographics']:  #will bring it back later
         #    grbgraphical(alldata)
 
-        lpformulator_ac(alldata)
+        if alldata['doac']:
+            lpformulator_ac(alldata)
+        else:
+            lpformulator_dc(alldata)
+            
         break_exit("formulated and solved")
         log.close_log()
 

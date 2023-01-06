@@ -33,6 +33,8 @@ class Bus:
         self.cffvarind     = -1  #the following four fields are variable indices
         self.Pinjvarind    = -1
         self.Qinjvarind    = -1
+        self.vvarind       = -1
+        self.thetavarind   = -1
         self.Pbalance      = 0
         self.inputV        = 0  #input voltage
         self.inpute        = 0  #e-value (input or derived from input voltage solution)

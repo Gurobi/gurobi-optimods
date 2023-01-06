@@ -79,16 +79,19 @@ def grbgraphical(alldata):
             mynode_color[j-1] = 'red'
 
     myedge_width = {}
+    myedge_color = {}
     myedge_ends = {}
     for j in range(1,numbranches+1):
         branch = alldata['branches'][j]
         myedge_ends[(branch.count_f, branch.count_t)] = j
         myedge_ends[(branch.count_t, branch.count_f)] = j        
-        myedge_width[j] = 2
+        myedge_width[j] = 1
+        myedge_color[j] = 'black'
         if abs(branchlimitviol[branch]) > 1e-3:
-            myedge_width[j] = 4
+            myedge_width[j] = 8
+            myedge_color[j] = 'red'
             
             
         
-    graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, myedge_width, myedge_ends)
+    graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, myedge_width, myedge_color, myedge_ends)
     break_exit('graph,2')
