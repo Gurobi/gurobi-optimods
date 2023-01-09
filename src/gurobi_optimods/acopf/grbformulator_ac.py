@@ -168,9 +168,9 @@ def lpformulator_ac_body(alldata, model):
     log = alldata['log']
 
     # Create model variables
-    lpformulator_create_ac_vars(alldata, model)
+    lpformulator_ac_create_vars(alldata, model)
     # Create model constraints
-    lpformulator_create_ac_constraints(alldata, model)
+    lpformulator_ac_create_constraints(alldata, model)
 
 
     model.update() # Update to get correct model stats
@@ -182,7 +182,7 @@ def lpformulator_ac_body(alldata, model):
 
     alldata['model'] = model
 
-def lpformulator_create_ac_vars(alldata, model):
+def lpformulator_ac_create_vars(alldata, model):
     """Create model variables for ACOPF"""
 
     log = alldata['log']
@@ -417,8 +417,6 @@ def lpformulator_create_ac_vars(alldata, model):
 
 
     zvar = {}
-
-
     if alldata['branchswitching_mip'] or alldata['branchswitching_comp']:
         log.joint('Adding branch switching variables.\n')
         for j in range(1,1+numbranches):
@@ -458,10 +456,10 @@ def lpformulator_create_ac_vars(alldata, model):
 
     # Powerflow variables
     if alldata['use_ef'] and alldata['useconvexformulation'] == False:
-        lpformulator_create_ac_efvars(alldata, model, varcount)
+        lpformulator_ac_create_efvars(alldata, model, varcount)
 
     if alldata['dopolar']:
-        lpformulator_create_ac_polar_vars(alldata, model, varcount)
+        lpformulator_ac_create_polar_vars(alldata, model, varcount)
 
     # Save variable data
     alldata['LP']['cvar']   = cvar
@@ -475,7 +473,7 @@ def lpformulator_create_ac_vars(alldata, model):
     alldata['LP']['Pinjvar'] = Pinjvar
     alldata['LP']['Qinjvar'] = Qinjvar
 
-def lpformulator_create_ac_polar_vars(alldata, model, varcount):
+def lpformulator_ac_create_polar_vars(alldata, model, varcount):
     """Create polar variables for ACOPF"""
 
     vvar         = {}
@@ -507,6 +505,8 @@ def lpformulator_create_ac_polar_vars(alldata, model, varcount):
             
             #print('------>',j, bus.nodeID, bus.inputV, 'lbound',lbound, 'ubound',ubound)
         vvar[bus] = model.addVar(obj = 0.0, lb = lbound, ub = ubound, name = "v_"+str(bus.nodeID))
+        bus.vvarind = varcount + newvarcount
+        
         ubound = 2*math.pi
         lbound = -ubound
 
@@ -516,8 +516,8 @@ def lpformulator_create_ac_polar_vars(alldata, model, varcount):
             lbound = max(lbound, candidatelbound)
             ubound = min(ubound, candidateubound)
 
-    
         thetavar[bus]  = model.addVar(obj = 0.0, lb = lbound, ub = ubound, name = "theta_"+str(bus.nodeID))
+        bus.thetavarind = varcount + newvarcount + 1        
         newvarcount += 2
 
 
@@ -566,7 +566,7 @@ def lpformulator_create_ac_polar_vars(alldata, model, varcount):
 
     varcount += newvarcount
 
-def lpformulator_create_ac_efvars(alldata, model, varcount):
+def lpformulator_ac_create_efvars(alldata, model, varcount):
     """Create nonconvex e, f variables for ACOPF"""
 
     evar         = {}
@@ -616,7 +616,7 @@ def lpformulator_create_ac_efvars(alldata, model, varcount):
     varcount += efvarcount
 
 
-def lpformulator_create_ac_constraints(alldata, model):
+def lpformulator_ac_create_constraints(alldata, model):
     """"Create constraint for ACOPF"""
 
     numbuses     = alldata['numbuses']
@@ -640,7 +640,7 @@ def lpformulator_create_ac_constraints(alldata, model):
     log          = alldata['log']
 
     log.joint("Creating constraints.\n")
-    log.joint("  Adding cost definition constraint.\n")
+    log.joint("  Adding cost definition.\n")
 
     coeff     = [gen.costvector[gen.costdegree - 1] for gen in gens.values()]
     variables = [GenPvar[gen] for gen in gens.values()]
@@ -740,7 +740,7 @@ def lpformulator_create_ac_constraints(alldata, model):
     log.joint("    %d reactive power flow definitions added.\n"%count)
 
     # Balance constraints
-    log.joint("  Adding power injection definition constraints.\n")
+    log.joint("  Adding constraints stating bus injection = total  outgoing power flow.\n")
     count = 0
     for j in range(1,1+numbuses):
         bus  = buses[j]
