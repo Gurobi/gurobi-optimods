@@ -11,7 +11,7 @@ def read_configfile(alldata, filename):
     log = alldata['log']
 
     try:
-        log.joint("  Reading configuration file %s\n"%filename)
+        log.joint("Reading configuration file %s\n"%filename)
         f     = open(filename, "r")
         lines = f.readlines()
         f.close()

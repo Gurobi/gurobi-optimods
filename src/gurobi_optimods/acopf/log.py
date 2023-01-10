@@ -1,5 +1,6 @@
 import sys
 import time
+from git import Repo # Maybe remove in final version
 from socket import gethostname
 from opfexception import OPFException
 
@@ -65,4 +66,6 @@ class Logger:
         raise OPFException("\n OPFException: " + message + "Encountered an error. Quitting")
 
     def printversion(self):
-        self.joint("Version 0.0.8\n\n")
+        repo    = Repo(search_parent_directories=True)
+        githash = repo.head.object.hexsha
+        self.joint("Version 0.0.8-g%s\n\n"%githash[:10])
