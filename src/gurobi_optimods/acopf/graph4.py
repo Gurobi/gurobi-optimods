@@ -26,6 +26,8 @@ def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode
     except:
         sys.exit("failure")
 
+    log = alldata['log']
+
     n = int(lines[0].split()[1])
     m = int(lines[0].split()[3])
 
@@ -38,15 +40,16 @@ def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode
         #print(line,int(lines[line].split()[0]), int(lines[line].split()[1]))
         adj[truelinect] = [int(lines[line].split()[0])-1, int(lines[line].split()[1])-1]
         truelinect += 1
-    print('lines',len(lines),'m',m, 'n',n)
+    #print('lines',len(lines),'m',m, 'n',n)
 
     #should check that the next line is 'END'
     #break_exit('lmn')
 
-    trueN, N, nodex, nodey, thisM, endbus = scangv(gvfilename)
+    trueN, N, nodex, nodey, thisM, endbus, revendbus = scangv(gvfilename)
     #print(len(nodex), len(nodey), trueN, N)
 
     #endbus is a list of end buses for network branches as ordered in gvfilename
+    #revendbus is the reverse index 
 
 
 
@@ -61,31 +64,39 @@ def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode
 
     #print(len(adj),m)
 
-    reordered_width = {}
+
     for j in range(truelinect):
         G.add_edge(adj[j][0],adj[j][1])
         fbus = adj[j][0]+1
         tbus = adj[j][1]+1
-        position = myedge_ends[(fbus,tbus)]
-        reordered_width[j+1] = 1  #temporary: for debugging only
         #print(j+1, 'f,t', fbus, tbus, 'width', reordered_width[j+1])
 
-    reordered_width[2] = 4
-    reordered_width[4] = 4
+    #reordered_width[2] = 4
+   # reordered_width[4] = 4
     #print(reordered_width)
 
-    '''
+
+    reordered_width = {}
+    reordered_color = {}
     for j in range(truelinect):
-        position = myedge_ends[endbus[j]]
-        print(j+1, 'end',  endbus[j], position)
-    '''
-        
-    break_exit('texted')
+        #print(j, endbus[j])
+        position_in_file = revendbus[endbus[j]]
+        original_position = myedge_ends[endbus[j]]
+        reordered_width[position_in_file] = myedge_width[original_position]
+        reordered_color[position_in_file] = myedge_color[original_position]
+        if myedge_width[original_position] > 1:
+            print(j+1, 'end',  endbus[j], 'originally at', original_position, 'final position', position_in_file)
+            print('  original color, width: ', myedge_color[original_position], myedge_width[original_position])
+                                                                                        
+
+    #crit = myedge_ends[(1865,1812)]
+    #print('???',crit, myedge_color[crit],myedge_width[crit])
+    #break_exit('texted')
     
     print('Creating visualization object.\n')
     #print(node_text)
 
-    vis = GraphVisualization(G, pos, node_text, node_size=mynode_size, node_color = mynode_color, node_border_width=1, edge_width = myedge_width, edge_color = myedge_color, edge_map = myedge_ends) 
+    vis = GraphVisualization(G, pos, node_text, node_size=mynode_size, node_color = mynode_color, node_border_width=1, edge_width = reordered_width, edge_color = reordered_color, edge_map = revendbus) #myedge_ends) 
 
     print('Rendering figure.\n')
 

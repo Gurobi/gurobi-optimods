@@ -44,6 +44,7 @@ def scangv(filename):
     selection = np.where(criterion > 3)
     N = len(selection[0])
     endbus = {}
+    revendbus = {}
     for k in range(N):
         i   = selection[0][k]
         foo = lines[i].split()
@@ -51,9 +52,11 @@ def scangv(filename):
             #print(len(foo),foo)
             busfrom = int(foo[0])
             busto = int(foo[2])
-            #print(busfrom, busto)
+            #print('>>>>>>',busfrom, busto)
             endbus[thisM] = (busfrom, busto)
+            revendbus[(busfrom, busto)] = thisM+1
+            revendbus[(busto, busfrom)] = thisM+1            
             thisM += 1
     
 
-    return trueN, N, nodex, nodey, thisM, endbus
+    return trueN, N, nodex, nodey, thisM, endbus, revendbus

@@ -96,12 +96,15 @@ class GraphVisualization:
         count = 1
         for edge in self.G.edges():
             position = self.edge_map[(edge[0]+1,edge[1]+1)]
-            #print('edge',count, 'is (+1)',edge[0]+1,',',edge[1]+1, 'em', position, 'w', self.input_edge_width[position])
 
+            width = self.input_edge_width[position] #self._get_setting('edge_width', edge)
             color = self.input_edge_color[position] #
             #color = self._get_setting('edge_color', edge)
 
-            width = self.input_edge_width[position] #self._get_setting('edge_width', edge)
+            if width > 1:
+                print('edge',count, 'is (+1)',edge[0]+1,',',edge[1]+1, 'position', position, 'w', self.input_edge_width[position])
+
+
             
             groups[(color, width)] += [edge]
 

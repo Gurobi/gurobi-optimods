@@ -33,13 +33,13 @@ def lpformulator_dc(alldata):
 
         sol_count = lpformulator_dc_opt(alldata, model)
 
-    endtime = time.time()
-    log.joint("Overall time taken (model construction + optimization): %f s.\n"%(endtime-starttime))
-    log.joint('Solution count: %d\n'%(sol_count))
+        endtime = time.time()
+        log.joint("Overall time taken (model construction + optimization): %f s.\n"%(endtime-starttime))
+        log.joint('Solution count: %d\n'%(sol_count))
 
 
-    if sol_count > 0:
-        lpformulator_dc_examine_solution(alldata, model)
+        if sol_count > 0:
+            lpformulator_dc_examine_solution(alldata, model)
     '''
     buses        = alldata['buses']
     branches     = alldata['branches']
@@ -354,6 +354,8 @@ def lpformulator_dc_opt(alldata, model):
     feastol = model.Params.FeasibilityTol
     opttol  = model.Params.OptimalityTol
     mipgap  = model.Params.MIPGap
+
+    model.Params.SolutionLimit = 2
     
     # Optimize
     model.optimize()
@@ -399,6 +401,7 @@ def lpformulator_dc_examine_solution(alldata, model):
 
     numbuses     = alldata['numbuses']
     buses        = alldata['buses']
+    branches     = alldata['branches']
     numbranches  = alldata['numbranches']
     branches     = alldata['branches']
     gens         = alldata['gens']
@@ -413,6 +416,9 @@ def lpformulator_dc_examine_solution(alldata, model):
     GenPvar      = alldata['LP']['GenPvar']
     lincostvar   = alldata['LP']['lincostvar']
 
+    #for var in model.getVars():
+    #    print(var.varname)
+
     for j in range(1,1+numbranches):
         branch     = branches[j]
         f          = branch.f
@@ -422,11 +428,14 @@ def lpformulator_dc_examine_solution(alldata, model):
         busf       = buses[count_of_f]
         bust       = buses[count_of_t]
 
-        print(Pvar_f[branch].x)
+        #print(Pvar_f[branch].x)
 
         if alldata['branchswitching_mip']:
             if zvar[branch].x < 0.5:  #turned off
                 log.joint('branch %d (%d, %d) switched off\n'%(j, f, t))
 
-
+                
     log.joint(' Done examining solution.\n')
+    if alldata['dographics']:
+        grbgraphical(alldata, 'branchswitching')
+    
