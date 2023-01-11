@@ -442,6 +442,8 @@ def read_case_thrulines(log, alldata, lines):
                 rateB    = float(thisline[6])
                 rateC    = float(thisline[7])
                 ratio    = float(thisline[8])
+                if ratio == 0:
+                    ratio = 1.0
                 angle    = float(thisline[9])
                 status   = int(thisline[10])
                 minangle = float(thisline[11])
@@ -461,7 +463,7 @@ def read_case_thrulines(log, alldata, lines):
                 if baseMVA == 0.0:
                     log.raise_exception("Error: baseMVA not available before branch section\n")
 
-                if status:
+                if True:
                     branches[numbranches] = Branch(log,numbranches, f, count_f, t,
                                                    count_t, r, x, bc, rateA/baseMVA,
                                                    rateB/baseMVA, rateC/baseMVA,
@@ -472,7 +474,8 @@ def read_case_thrulines(log, alldata, lines):
                     buses[count_f].addfrombranch(log, numbranches)
                     buses[count_t].addtobranch(log, numbranches)
 
-                linenum += 1
+                linenum +=1
+                
             # Finished reading branch section
             if lookingforendofbranch:
                 log.raise_exception("Error: Could not find end of branch section\n")

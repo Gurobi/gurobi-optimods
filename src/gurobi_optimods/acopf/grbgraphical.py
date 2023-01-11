@@ -63,20 +63,17 @@ def grbgraphical(alldata, plottype):
     mynode_color = {}
     myedge_width = {}
     myedge_color = {}
-    myedge_ends = {}
     
     #default actions for branches
     for j in range(1,numbuses+1):
         bus = buses[j]
         mynode_size[j-1] = 1
         mynode_color[j-1] = 'black'
-    
     for j in range(1,numbranches+1):
             branch = alldata['branches'][j]
-            myedge_ends[(branch.count_f, branch.count_t)] = j
-            myedge_ends[(branch.count_t, branch.count_f)] = j        
             myedge_width[j] = 1
             myedge_color[j] = 'black'
+
     
     if plottype == 'violation':
         Vmagviol = alldata['violation']['Vmagviol']
@@ -117,7 +114,6 @@ def grbgraphical(alldata, plottype):
             
             if zvar[branch].x < 0.5:  #turned off
                 log.joint('branch %d (%d, %d) has small x\n'%(j, branch.count_f, branch.count_t))
-                print('   ends',myedge_ends[(branch.count_f, branch.count_t)])
                 myedge_width[j] = 8
                 myedge_color[j] = 'blue'
         
@@ -126,6 +122,31 @@ def grbgraphical(alldata, plottype):
                 mynode_size[count_of_t-1] = 15
                 mynode_color[count_of_t-1] = 'red'
                 #print(count_of_f, count_of_t)
-        
-    graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, myedge_width, myedge_color, myedge_ends)
+
+    myedge_ends = {}
+    myedge_list_consolidated = {}
+    myedge_degrees_consolidated = {}
+                
+    loud = False
+    for j in range(1,numbranches+1):
+            branch = alldata['branches'][j]
+            myedge_ends[(branch.count_f, branch.count_t)] = j
+            myedge_ends[(branch.count_t, branch.count_f)] = j        
+            small = min(branch.count_f, branch.count_t)
+            large = max(branch.count_f, branch.count_t)
+            if (small, large) not in myedge_list_consolidated.keys():
+                myedge_degrees_consolidated[(small, large)] = 1
+                myedge_list_consolidated[(small, large)] = []
+                myedge_list_consolidated[(small, large)].append(j)
+                if loud:
+                    log.joint(' --> line %d color %s creates my consolidated list for (%d,%d)\n'%(j,myedge_color[j],small, large))
+            else:
+                myedge_degrees_consolidated[(small, large)] += 1
+                myedge_list_consolidated[(small, large)].append(j)
+                if loud:
+                    log.joint(' --> appended line %d color %s to my consolidated list for (%d,%d)\n'%(j,myedge_color[j],small, large))              
+
+    #break_exit('cons')
+                
+    graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches)
     break_exit('graph,2')

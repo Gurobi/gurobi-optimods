@@ -4,10 +4,12 @@ import plotly.graph_objects as go
 import plotutils as pu
 import psutil 
 import numpy as np
-import networkx as nx
+#import networkx as nx
+from grbgraph import *
 from collections import defaultdict
 import plotly.graph_objects as go
 from typing import Any, List, Dict, Tuple, Union, Callable
+from myutils import break_exit
 
 Vertex = Any
 Edge   = Tuple[Vertex, Vertex]
@@ -24,7 +26,7 @@ class GraphVisualization:
     #
     def __init__(
         self,
-        G: nx.Graph,
+        gG: grbGraph,
         pos: Dict[Vertex, Union[Tuple[Num, Num], Tuple[Num, Num, Num]]],
         node_text: Union[Dict[Vertex, str], Callable] = None,
         node_text_position: Union[Dict[Vertex, str], Callable, str] = None,
@@ -42,12 +44,17 @@ class GraphVisualization:
         edge_map: Union[Dict[Vertex, Vertex], Callable] = None,            
     ):
         # check dimensions
-        if all(len(pos.get(v, [])) == 2 for v in G):
+
+        self.is_3d = False
+        
+        '''
+        if all(len(pos.get(v, [])) == 2 for v in self.gG.nodes.values()):
             self.is_3d = False
-        elif all(len(pos.get(v, [])) == 3 for v in G):
+        elif all(len(pos.get(v, [])) == 3 for v in self.gG.nodes.values()):
             self.is_3d = True
         else:
             raise ValueError
+        '''
 
         # default settings
         self.default_settings = dict(
@@ -67,7 +74,7 @@ class GraphVisualization:
         )
 
         # save settings
-        self.G = G
+        self.gG = gG
         self.pos = pos
         self.node_text = node_text
         self.node_text_position = node_text_position
@@ -87,6 +94,9 @@ class GraphVisualization:
         self.edge_map = edge_map
         #print(">>>>>>>>>",edge_map)
 
+    def addlog(self, log):
+        self.log = log
+
     def _get_edge_traces(self) -> List[Union[go.Scatter, go.Scatter3d]]:
         # group all edges by (color, width)
         groups = defaultdict(list)
@@ -94,16 +104,34 @@ class GraphVisualization:
         #print(self.input_edge_color)
 
         count = 1
-        for edge in self.G.edges():
-            position = self.edge_map[(edge[0]+1,edge[1]+1)]
+        localdeg = {}
+        #for edge in self.G.edges():
+        for edgecnt in range(self.gG.m):
+            edge = self.gG.edges[edgecnt]
+            small = min(edge[0]+1,edge[1]+1)
+            large = max(edge[0]+1,edge[1]+1)
+            localdeg[small,large] = 0
+
+        loud = False
+        
+        #for edge in self.G.edges():
+        for edgecnt in range(self.gG.m):
+            edge = self.gG.edges[edgecnt]
+            small = min(edge[0]+1,edge[1]+1)
+            large = max(edge[0]+1,edge[1]+1)
+            thedeg = localdeg[small,large]
+            position = self.edge_map[(small,large,thedeg)]
 
             width = self.input_edge_width[position] #self._get_setting('edge_width', edge)
             color = self.input_edge_color[position] #
             #color = self._get_setting('edge_color', edge)
 
-            if width > 1:
-                print('edge',count, 'is (+1)',edge[0]+1,',',edge[1]+1, 'position', position, 'w', self.input_edge_width[position])
+            if loud:
 
+                self.log.joint('edge %d is (+1) (%d, %d) position %d width %d localdeg %d\n'%(count,edge[0]+1,edge[1]+1, position, self.input_edge_width[position], localdeg[small,large]))
+                #print('edge',count, 'is (+1) (',edge[0]+1,',',edge[1]+1, ') position', position, 'w', self.input_edge_width[position], 'localdeg', localdeg[small,large])
+
+            localdeg[small,large] += 1
 
             
             groups[(color, width)] += [edge]
@@ -137,7 +165,8 @@ class GraphVisualization:
 
     def _get_node_trace(self, showlabel, colorscale, showscale, colorbar_title, reversescale) -> Union[go.Scatter, go.Scatter3d]:
         x, y, z = [], [], []
-        for v in self.G.nodes():
+        #for v in self.G.nodes():
+        for v in self.gG.nodes.values():
             x += [self.pos[v][0]]
             y += [self.pos[v][1]]
             if self.is_3d:
@@ -184,13 +213,16 @@ class GraphVisualization:
         if edge is None:  # vertex-specific
             if setting is None:  # default is used
                 if callable(default_setting):  # default is a function
-                    return [def_func(v) for v in self.G.nodes()]
+                    #return [def_func(v) for v in self.G.nodes()]
+                    return [def_func(v) for v in self.gG.nodes.values()]
                 else:  # default is a constant
                     return default_setting
             elif callable(setting):  # setting is a function
-                return [setting(v) for v in self.G.nodes()]
+                #return [setting(v) for v in self.G.nodes()]
+                return [setting(v) for v in self.gG.nodes.values()]
             elif isinstance(setting, dict):  # setting is a dict
-                return [setting.get(v, def_func(v)) for v in self.G.nodes()]
+                #return [setting.get(v, def_func(v)) for v in self.G.nodes()]
+                return [setting.get(v, def_func(v)) for v in self.gG.nodes.values()]
             else:  # setting is a constant
                 return setting
         else:  # edge-specific

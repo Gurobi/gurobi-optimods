@@ -278,8 +278,11 @@ def lpformulator_dc_create_constraints(alldata, model):
             exp = Pvar_f[branch]
             if alldata['branchswitching_mip']:
                 exp += twinPvar_f[branch]
+            #angle_exp = coeff*thetavar[busf] - coeff*thetavar[bust] - coeff*branch.angle_rad
             branch.Pdeffconstr = model.addConstr(exp == coeff*thetavar[busf] - coeff*thetavar[bust] - coeff*branch.angle_rad, name = branch.Pfcname)
             count += 1
+            #print(count, coeff, branch.angle_rad, angle_exp)
+            #break_exit('pdff')
 
             if alldata['branchswitching_mip']:
                 coeff = branch.limit
@@ -287,11 +290,12 @@ def lpformulator_dc_create_constraints(alldata, model):
                 model.addConstr(Pvar_f[branch] >= -coeff*zvar[branch], name = 'dnmip_%d_%d_%d'%(j, f, t))
                 model.addConstr(twinPvar_f[branch] <=  coeff*(1-zvar[branch]), name = 'upmip_twin_%d_%d_%d'%(j, f, t))
                 model.addConstr(twinPvar_f[branch] >= -coeff*(1 - zvar[branch]), name = 'dnmip_twin_%d_%d_%d'%(j, f, t))
-            else:
-                branch.Pdeffconstr = model.addConstr( Pvar_f[branch] == 0, name = branch.Pfcname)
+        else:
+            branch.Pdeffconstr = model.addConstr( Pvar_f[branch] == 0, name = branch.Pfcname)
 
 
     log.joint("    %d active power flow definitions added.\n"%count)
+                  
 
     # Balance constraints
     log.joint("  Adding constraints stating bus injection = total outgoing power flow.\n")
@@ -355,7 +359,7 @@ def lpformulator_dc_opt(alldata, model):
     opttol  = model.Params.OptimalityTol
     mipgap  = model.Params.MIPGap
 
-    model.Params.SolutionLimit = 2
+    model.Params.SolutionLimit = 4
     
     # Optimize
     model.optimize()

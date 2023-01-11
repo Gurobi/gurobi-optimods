@@ -2,8 +2,9 @@ import sys
 import os
 import numpy as np
 import re
+from myutils import break_exit
 
-def scangv(filename):
+def scangv(filename, log):
     print('Scanning gv file',filename)
 
     try:
@@ -40,23 +41,45 @@ def scangv(filename):
             #print(node, float(foo[1][6:comma]), float(foo[1][comma+1:rightbr-1]))
             trueN += 1
 
-    thisM = 0
-    selection = np.where(criterion > 3)
-    N = len(selection[0])
+    trueM = 0
+    N = len(lines)
     endbus = {}
     revendbus = {}
-    for k in range(N):
-        i   = selection[0][k]
+    scanned_list_consolidated = {}
+    scanned_degrees_consolidated = {}
+    scanned_unique_ordered_pairs = {}
+    scanned_num_unique = 0
+    loud = False
+    for i in range(N):
         foo = lines[i].split()
-        if foo[1][0] == '-':
-            #print(len(foo),foo)
+        #print('k',k,'i',i,len(foo),foo)
+        if len(foo) > 2 and foo[1][0] == '-':
+            #print(i,len(foo),foo)
             busfrom = int(foo[0])
             busto = int(foo[2])
-            #print('>>>>>>',busfrom, busto)
-            endbus[thisM] = (busfrom, busto)
-            revendbus[(busfrom, busto)] = thisM+1
-            revendbus[(busto, busfrom)] = thisM+1            
-            thisM += 1
-    
 
-    return trueN, N, nodex, nodey, thisM, endbus, revendbus
+            small = min(busfrom, busto)
+            large = max(busfrom, busto)
+            if (small, large) not in scanned_list_consolidated.keys():
+                scanned_degrees_consolidated[(small, large)] = 1
+                scanned_list_consolidated[(small, large)] = []
+                scanned_list_consolidated[(small, large)].append(trueM)
+                scanned_unique_ordered_pairs[scanned_num_unique] = (small, large)
+                scanned_num_unique += 1
+                if loud:
+                    log.joint(' --> line %d creates scanned consolidated list for (%d,%d) --> unique ct %d\n'%(trueM,small, large, scanned_num_unique))
+            else:
+                scanned_degrees_consolidated[(small, large)] += 1
+                scanned_list_consolidated[(small, large)].append(trueM)
+                if loud:
+                    log.joint(' --> appended line %d to scanned consolidated list for (%d,%d)\n'%(trueM, small, large))                
+            
+            
+            #print('>>>>>>',busfrom, busto)
+            endbus[trueM] = (busfrom, busto)
+            revendbus[(busfrom, busto)] = trueM+1
+            revendbus[(busto, busfrom)] = trueM+1            
+            trueM += 1
+    log.joint('After scanning, number of edges is %d\n'%trueM)
+    #break_exit('scanned')
+    return trueN, N, trueM, nodex, nodey, trueM, endbus, revendbus, scanned_list_consolidated, scanned_degrees_consolidated, scanned_unique_ordered_pairs, scanned_num_unique
