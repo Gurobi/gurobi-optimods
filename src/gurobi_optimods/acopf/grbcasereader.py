@@ -257,7 +257,6 @@ def read_case_thrulines(log, alldata, lines):
             slackbus           = -1
             numbuses           = 0
             numPload           = 0
-            sumload            = 0
             sumPd = sumQd = 0
             linenum += 1
             # Read bus section
@@ -462,6 +461,8 @@ def read_case_thrulines(log, alldata, lines):
 
                 if baseMVA == 0.0:
                     log.raise_exception("Error: baseMVA not available before branch section\n")
+                if rateA < 1e-10:
+                    log.joint('Warning. Branch %d from %d to %d has unbounded rateA.\n'%(numbranches, f, t))
 
                 if True:
                     branches[numbranches] = Branch(log,numbranches, f, count_f, t,

@@ -392,7 +392,10 @@ def lpformulator_ac_create_vars(alldata, model):
         count_of_t = IDtoCountmap[t]
         busf       = buses[count_of_f]
         bust       = buses[count_of_t]
-        ubound     = branch.limit
+        if branch.constrainedflow:
+            ubound     = branch.limit
+        else:
+            ubound     = 2*(abs(alldata['summaxgenP']) + abs(alldata['summaxgenQ'])) #Generous: assumes line charging up to 100%. However it still amounts to an assumption.
         lbound     = -ubound
 
         Pvar_f[branch] = model.addVar(obj = 0.0, lb = lbound, ub = ubound,

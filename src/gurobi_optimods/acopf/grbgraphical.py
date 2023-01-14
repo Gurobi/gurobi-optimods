@@ -100,11 +100,13 @@ def grbgraphical(alldata, plottype):
             
     elif plottype == 'branchswitching':
 
+        loud = False
         for j in range(1,numbuses+1):
             bus = buses[j]
             node_text[j-1] = 'Bus ' + str(j)
 
         zvar         = alldata['LP']['zvar']
+        zholder      = alldata['LP']['zholder']
         for j in range(1,1+numbranches):
             branch     = branches[j]
             f          = branch.f
@@ -112,8 +114,10 @@ def grbgraphical(alldata, plottype):
             count_of_f = IDtoCountmap[f]
             count_of_t = IDtoCountmap[t]
             
-            if zvar[branch].x < 0.5:  #turned off
-                log.joint('branch %d (%d, %d) has small x\n'%(j, branch.count_f, branch.count_t))
+            #if zvar[branch].x < 0.5:  #turned off
+            if zholder[j-1] < 0.5:  #turned off
+                if loud:
+                    log.joint('branch %d (%d, %d) has small x\n'%(j, branch.count_f, branch.count_t))
                 myedge_width[j] = 8
                 myedge_color[j] = 'blue'
         
@@ -149,4 +153,4 @@ def grbgraphical(alldata, plottype):
     #break_exit('cons')
                 
     graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches)
-    break_exit('graph,2')
+    #break_exit('graph,2')

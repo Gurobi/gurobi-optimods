@@ -63,7 +63,7 @@ def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode
         break_exit('error')  #<--- Jarek, I suppose we have to throw an exception here.  Should this happen it indicates a bug.
 
 
-    loud = True
+    loud = False
     local_reordered_width = {}
     local_reordered_color = {}
     

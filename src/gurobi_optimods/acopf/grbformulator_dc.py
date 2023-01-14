@@ -7,6 +7,10 @@ from myutils import break_exit
 from grbfile import grbreadvoltsfile
 from grbgraphical import grbgraphical
 from grbformulator_ac import computebalbounds
+import numpy as np
+
+globalalldata = {}
+
 
 
 def lpformulator_dc(alldata):
@@ -16,6 +20,10 @@ def lpformulator_dc(alldata):
     log.joint("\nDC formulation.\n")
 
     starttime = time.time()
+
+    global globalalldata 
+    globalalldata = alldata
+
 
     # Handle special settings
     #lpformulator_setup(alldata)
@@ -37,6 +45,7 @@ def lpformulator_dc(alldata):
         log.joint("Overall time taken (model construction + optimization): %f s.\n"%(endtime-starttime))
         log.joint('Solution count: %d\n'%(sol_count))
 
+        break_exit('Solver returned.')
 
         if sol_count > 0:
             lpformulator_dc_examine_solution(alldata, model)
@@ -146,7 +155,10 @@ def lpformulator_dc_create_vars(alldata, model):
         count_of_t = IDtoCountmap[t]
         busf       = buses[count_of_f]
         bust       = buses[count_of_t]
-        ubound     = branch.limit
+        if branch.constrainedflow:
+            ubound     = branch.limit
+        else:
+            ubound     = alldata['sumPd'] #DC
         lbound     = -ubound
 
         Pvar_f[branch] = model.addVar(obj = 0.0, lb = lbound, ub = ubound,
@@ -335,7 +347,8 @@ def lpformulator_dc_create_constraints(alldata, model):
         boundzs = True
         if boundzs:
             exp = gp.LinExpr()
-            N = numbranches - 10  # <<<<<<---- here is the heuristic lower bound
+            delta = 50
+            N = numbranches - delta  # <<<<<<---- here is the heuristic lower bound
             for j in range(1,1+numbranches):
                 branch     = branches[j]
                 exp += zvar[branch]
@@ -345,6 +358,9 @@ def lpformulator_dc_create_constraints(alldata, model):
 def lpformulator_dc_opt(alldata, model):
 
     log = alldata['log']
+    numbranches  = alldata['numbranches']
+    branches     = alldata['branches']
+
     
     # Specific settings for better convergence
     #model.params.DualReductions = 0
@@ -359,11 +375,26 @@ def lpformulator_dc_opt(alldata, model):
     opttol  = model.Params.OptimalityTol
     mipgap  = model.Params.MIPGap
 
-    model.Params.SolutionLimit = 4
-    
-    # Optimize
-    model.optimize()
-    
+    model.Params.SolutionLimit = 10
+
+    if alldata['branchswitching_mip']:
+        log.joint('Using mip start with all branches kept on\n')
+        #mip start
+        zvar = alldata['LP']['zvar']
+        for j in range(1,1+numbranches):
+            branch = branches[j]
+            zvar[branch].Start = 1.0
+        
+
+        zholder = np.zeros(numbranches)
+        alldata['LP']['zholder'] = zholder
+        
+        # Optimize
+        model._vars = model.getVars()
+        model.optimize(mycallback)
+    else:
+        model.optimize()
+        
     # Check model status and re-optimize or try computing an IIS if necessary
     if model.status == GRB.INF_OR_UNBD:
         log.joint("\nModel Status: infeasible or unbounded.\n")
@@ -411,6 +442,7 @@ def lpformulator_dc_examine_solution(alldata, model):
     gens         = alldata['gens']
     IDtoCountmap = alldata['IDtoCountmap']
     log          = alldata['log']
+    if alldata['branchswitching_mip']: zholder = alldata['LP']['zholder']
 
     thetavar     = alldata['LP']['thetavar']
     Pvar_f       = alldata['LP']['Pvar_f']
@@ -423,6 +455,8 @@ def lpformulator_dc_examine_solution(alldata, model):
     #for var in model.getVars():
     #    print(var.varname)
 
+    loud = False
+    numzeros = 0
     for j in range(1,1+numbranches):
         branch     = branches[j]
         f          = branch.f
@@ -435,11 +469,50 @@ def lpformulator_dc_examine_solution(alldata, model):
         #print(Pvar_f[branch].x)
 
         if alldata['branchswitching_mip']:
+            zholder[j-1] = zvar[branch].x
             if zvar[branch].x < 0.5:  #turned off
-                log.joint('branch %d (%d, %d) switched off\n'%(j, f, t))
+                numzeros += 1
+                if loud:
+                    log.joint('branch %d (%d, %d) switched off\n'%(j, f, t))
 
+        #log.joint('numzeros: %d\n'%numzeros)
                 
     log.joint(' Done examining solution.\n')
     if alldata['dographics']:
         grbgraphical(alldata, 'branchswitching')
     
+def mycallback(model, where):
+    if where == GRB.Callback.MIPSOL:
+        #solcnt = model.cbGet(GRB.Callback.MIP_SOLCNT)
+        #print(solcnt)
+        x = model.cbGetSolution(model._vars)
+        log = globalalldata['log']
+        log.joint('Inside callback.\n')
+        objval = model.cbGet(GRB.Callback.MIPSOL_OBJ)
+        log.joint('Found new solution of value %.3e\n'%objval)
+
+        numbuses     = globalalldata['numbuses']
+        buses        = globalalldata['buses']
+        numbranches  = globalalldata['numbranches']
+        branches     = globalalldata['branches']
+        gens         = globalalldata['gens']
+        IDtoCountmap = globalalldata['IDtoCountmap']
+        log          = globalalldata['log']
+
+        thetavar     = globalalldata['LP']['thetavar']
+        Pvar_f       = globalalldata['LP']['Pvar_f']
+        twinPvar_f   = globalalldata['LP']['twinPvar_f']
+        zvar         = globalalldata['LP']['zvar']
+        zholder = globalalldata['LP']['zholder']
+        numzeros = 0        
+        for j in range(1, 1+numbranches):
+            branch = branches[j]
+            zholder[j-1] = x[branch.switchvarind]
+            if x[branch.switchvarind] < 0.5:
+                numzeros += 1
+                #print(j, x[branch.switchvarind])
+
+        #log.joint('numzeros: %d\n'%numzeros)
+        #break_exit('HEY HEY HEY')
+        grbgraphical(globalalldata, 'branchswitching')
+        #break_exit('HO HO HO')
