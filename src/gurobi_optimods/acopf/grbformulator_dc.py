@@ -297,7 +297,11 @@ def lpformulator_dc_create_constraints(alldata, model):
             #break_exit('pdff')
 
             if alldata['branchswitching_mip']:
-                coeff = branch.limit
+                if branch.constrainedflow:
+                    coeff     = branch.limit
+                else:
+                    coeff     = alldata['sumPd'] #DC
+                
                 model.addConstr(Pvar_f[branch] <=  coeff*zvar[branch], name = 'upmip_%d_%d_%d'%(j, f, t))
                 model.addConstr(Pvar_f[branch] >= -coeff*zvar[branch], name = 'dnmip_%d_%d_%d'%(j, f, t))
                 model.addConstr(twinPvar_f[branch] <=  coeff*(1-zvar[branch]), name = 'upmip_twin_%d_%d_%d'%(j, f, t))
@@ -347,7 +351,7 @@ def lpformulator_dc_create_constraints(alldata, model):
         boundzs = True
         if boundzs:
             exp = gp.LinExpr()
-            delta = 50
+            delta = numbranches
             N = numbranches - delta  # <<<<<<---- here is the heuristic lower bound
             for j in range(1,1+numbranches):
                 branch     = branches[j]
@@ -367,15 +371,15 @@ def lpformulator_dc_opt(alldata, model):
     
     #model.setParam(GRB.Param.MIPGap, 1.0e-10)
     #model.setParam(GRB.Param.FeasibilityTol, 1.0e-8)
-    model.Params.MIPGap         = 1.0e-2
-    model.Params.OptimalityTol  = 1.0e-2
+    model.Params.MIPGap         = 1.0e-4
+    model.Params.OptimalityTol  = 1.0e-4
     model.Params.FeasibilityTol = 1.0e-6 # 1.0e-8
     
     feastol = model.Params.FeasibilityTol
     opttol  = model.Params.OptimalityTol
     mipgap  = model.Params.MIPGap
 
-    model.Params.SolutionLimit = 10
+    model.Params.SolutionLimit = 3
 
     if alldata['branchswitching_mip']:
         log.joint('Using mip start with all branches kept on\n')
@@ -387,7 +391,9 @@ def lpformulator_dc_opt(alldata, model):
         
 
         zholder = np.zeros(numbranches)
-        alldata['LP']['zholder'] = zholder
+        alldata['MIP']['zholder'] = zholder
+        alldata['MIP']['solutionfound'] = False
+        alldata['MIP']['bestsolval'] = 1e50
         
         # Optimize
         model._vars = model.getVars()
@@ -442,7 +448,7 @@ def lpformulator_dc_examine_solution(alldata, model):
     gens         = alldata['gens']
     IDtoCountmap = alldata['IDtoCountmap']
     log          = alldata['log']
-    if alldata['branchswitching_mip']: zholder = alldata['LP']['zholder']
+    if alldata['branchswitching_mip']: zholder = alldata['MIP']['zholder']
 
     thetavar     = alldata['LP']['thetavar']
     Pvar_f       = alldata['LP']['Pvar_f']
@@ -491,6 +497,7 @@ def mycallback(model, where):
         objval = model.cbGet(GRB.Callback.MIPSOL_OBJ)
         log.joint('Found new solution of value %.3e\n'%objval)
 
+
         numbuses     = globalalldata['numbuses']
         buses        = globalalldata['buses']
         numbranches  = globalalldata['numbranches']
@@ -503,7 +510,8 @@ def mycallback(model, where):
         Pvar_f       = globalalldata['LP']['Pvar_f']
         twinPvar_f   = globalalldata['LP']['twinPvar_f']
         zvar         = globalalldata['LP']['zvar']
-        zholder = globalalldata['LP']['zholder']
+        zholder = globalalldata['MIP']['zholder']
+        
         numzeros = 0        
         for j in range(1, 1+numbranches):
             branch = branches[j]
@@ -514,5 +522,14 @@ def mycallback(model, where):
 
         #log.joint('numzeros: %d\n'%numzeros)
         #break_exit('HEY HEY HEY')
-        grbgraphical(globalalldata, 'branchswitching')
+
+        globalalldata['MIP']['solutionfound'] = True
+        difftol = 1e-6
+        if objval < globalalldata['MIP']['bestsolval'] - difftol:
+        
+            grbgraphical(globalalldata, 'branchswitching')
+        else:
+            log.joint('Skipping graphical display due to insufficient improvement.\n')
+
+        globalalldata['MIP']['bestsolval'] = objval
         #break_exit('HO HO HO')

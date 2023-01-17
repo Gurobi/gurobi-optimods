@@ -7,15 +7,15 @@ import numpy as np
 #import networkx as nx
 from grbgraph import *
 import math
-from graphvisualization import *
+from plotlyhandler import *
 from scangvplus import *
 from myutils import break_exit
 
-def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode_color, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches):
+def graphplot(alldata, graphfilename, gvfilename, myvertex_text, myvertex_size, myvertex_color, myvertex_border_width, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches):
     """Description"""
     #
     # Reads a network in the format created by the graphviz library
-    # Then uses the GraphVisualization library to create a plotly figure
+    # Then uses the plotlyhandler library to create a plotly figure
     # The figure is then rendered in a browser window
     #
     print('graphfilename', graphfilename, 'gvfilename', gvfilename)
@@ -46,14 +46,14 @@ def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode
     #should check that the next line is 'END'
     #break_exit('lmn')
 
-    trueN, N, trueM, nodex, nodey, thisM, endbus, revendbus, scanned_list_consolidated, scanned_degrees_consolidated, scanned_unique_ordered_pairs, scanned_num_unique = scangv(gvfilename, log)
-    #print(len(nodex), len(nodey), trueN, N)
+    trueN, N, trueM, vertexx, vertexy, thisM, endbus, revendbus, scanned_list_consolidated, scanned_degrees_consolidated, scanned_unique_ordered_pairs, scanned_num_unique = scangv(gvfilename, log)
+    #print(len(vertexx), len(vertexy), trueN, N)
 
     #endbus is a list of end buses for network branches as ordered in gvfilename
     #revendbus is the reverse index
-    #scanned_list_consolidated, degrees_consolidated are dictionaries whose keys are the node pairs (each pair in sorted order) corresponding to
-    #lines '--' in the .gv file.  list_consolidated is the array of lines whose ends are that node pair, listing the order in which
-    #the lines are found in the .gv file.  degrees_consolidated is the number of such lines (for each sorted node pair found in the file
+    #scanned_list_consolidated, degrees_consolidated are dictionaries whose keys are the vertex pairs (each pair in sorted order) corresponding to
+    #lines '--' in the .gv file.  list_consolidated is the array of lines whose ends are that vertex pair, listing the order in which
+    #the lines are found in the .gv file.  degrees_consolidated is the number of such lines (for each sorted vertex pair found in the file
 
     if trueM != numbranches:  
         log.joint('Error. Number of branches in .gv file = %d, whereas number of branches in problem = %d\n'%(trueM, numbranches))
@@ -102,14 +102,14 @@ def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode
     pos = {}
 
     for j in range(n):
-        pos[j] = ( [nodex[j], nodey[j]] )
+        pos[j] = ( [vertexx[j], vertexy[j]] )
 
     #G = nx.Graph() #doesn't work too well
     gG = grbGraph(log)
 
     for j in range(n):
-        pos[j] = ( [nodex[j], nodey[j]] )
-        gG.addnode(j)
+        pos[j] = ( [vertexx[j], vertexy[j]] )
+        gG.addvertex(j)
     
     #print(len(adj),m)
 
@@ -151,26 +151,26 @@ def graphplot(alldata, graphfilename, gvfilename, node_text, mynode_size, mynode
     gG.getmetrics()
     #break_exit('poo')
     print('Creating visualization object.\n')
-    #print(node_text)
+    #print(vertex_text)
 
-    vis = GraphVisualization(gG, pos, node_text, node_size=mynode_size, node_color = mynode_color, node_border_width=1, edge_width = reordered_width, edge_color = reordered_color, edge_map = reordered_position) #myedge_ends) 
+    PH = plotlyhandler(gG, pos, vertex_size=myvertex_size, vertex_color = myvertex_color, edge_width = reordered_width, edge_color = reordered_color, edge_map = reordered_position, vertex_text = myvertex_text, vertex_border_width = myvertex_border_width) 
 
-    vis.addlog(log)
+    PH.addlog(log)
 
 
     #for edge in gG.edges.values():
     #    print(edge[0], edge[1])
     #break_exit('showed')
     
-    print('Rendering figure.\n')
+    log.joint('Rendering figure.\n')
 
-    xgap     = np.max(nodex) - np.min(nodex)
-    ygap     = np.max(nodey) - np.min(nodey)
+    xgap     = np.max(vertexx) - np.min(vertexx)
+    ygap     = np.max(vertexy) - np.min(vertexy)
     myheight = 800
     mywidth  = int(math.ceil(xgap/ygap*myheight))
     #print('xgap',xgap,'ygap',ygap,'height',myheight,'width',mywidth)
 
-    fig = vis.create_figure(height=myheight, width=mywidth, showlabel=False)
+    fig = PH.create_figure(height=myheight, width=mywidth, showlabel=False)
     #fig.write_image('one.png')
-    print('Showing figure.\n')
+    log.joint('Showing figure.\n')
     fig.show()

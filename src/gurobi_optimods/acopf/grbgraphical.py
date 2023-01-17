@@ -61,6 +61,7 @@ def grbgraphical(alldata, plottype):
     node_text = {}
     mynode_size = {}
     mynode_color = {}
+    mynode_border_width = {}
     myedge_width = {}
     myedge_color = {}
     
@@ -69,6 +70,7 @@ def grbgraphical(alldata, plottype):
         bus = buses[j]
         mynode_size[j-1] = 1
         mynode_color[j-1] = 'black'
+        mynode_border_width[j-1] = 1
     for j in range(1,numbranches+1):
             branch = alldata['branches'][j]
             myedge_width[j] = 1
@@ -106,7 +108,7 @@ def grbgraphical(alldata, plottype):
             node_text[j-1] = 'Bus ' + str(j)
 
         zvar         = alldata['LP']['zvar']
-        zholder      = alldata['LP']['zholder']
+        zholder      = alldata['MIP']['zholder']
         for j in range(1,1+numbranches):
             branch     = branches[j]
             f          = branch.f
@@ -152,5 +154,5 @@ def grbgraphical(alldata, plottype):
 
     #break_exit('cons')
                 
-    graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches)
+    graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, mynode_border_width, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches)
     #break_exit('graph,2')

@@ -26,6 +26,7 @@ if __name__ == '__main__':
 
         alldata        = {}
         alldata['LP']  = {}
+        alldata['MIP']  = {}        
         alldata['log'] = log
 
         read_configfile(alldata, sys.argv[1])
@@ -62,10 +63,6 @@ def solve_acopf_model(configfile, logfile = ""):
         if not isinstance(configfile, str):
             log.raise_exception("Error: Configuration file argument not of type String\n")
 
-        # Initialize data
-        alldata        = {}
-        alldata['LP']  = {}
-        alldata['log'] = log
 
         # Read configuration file
         read_configfile(alldata, configfile)
