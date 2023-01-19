@@ -6,7 +6,7 @@ from graph4 import *
 from gurobipy import *
 from myutils import break_exit
 
-def grbgraphical(alldata, plottype):
+def grbgraphical(alldata, plottype, textlist):
     log         = alldata['log']
     buses       = alldata['buses']
     numbuses    = alldata['numbuses']
@@ -154,5 +154,5 @@ def grbgraphical(alldata, plottype):
 
     #break_exit('cons')
                 
-    graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, mynode_border_width, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches)
+    graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, mynode_border_width, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches, textlist)
     #break_exit('graph,2')

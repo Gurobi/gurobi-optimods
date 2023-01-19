@@ -394,6 +394,7 @@ def lpformulator_dc_opt(alldata, model):
         alldata['MIP']['zholder'] = zholder
         alldata['MIP']['solutionfound'] = False
         alldata['MIP']['bestsolval'] = 1e50
+        alldata['MIP']['solcount'] = 0
         
         # Optimize
         model._vars = model.getVars()
@@ -526,8 +527,11 @@ def mycallback(model, where):
         globalalldata['MIP']['solutionfound'] = True
         difftol = 1e-6
         if objval < globalalldata['MIP']['bestsolval'] - difftol:
-        
-            grbgraphical(globalalldata, 'branchswitching')
+            globalalldata['MIP']['solcount'] += 1
+            textlist = []
+            textlist.append('SOLUTION ' + str(globalalldata['MIP']['solcount']))
+            textlist.append('OBJ: ' + str(objval))
+            grbgraphical(globalalldata, 'branchswitching', textlist)
         else:
             log.joint('Skipping graphical display due to insufficient improvement.\n')
 

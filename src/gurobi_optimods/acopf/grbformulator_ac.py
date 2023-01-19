@@ -1436,7 +1436,8 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     #break_exit('strict')
                                     
     if alldata['dographics']:
-        grbgraphical(alldata, 'violation')
+        textlist = []
+        grbgraphical(alldata, 'violation', textlist)
 
     break_exit('strictgraphical')    
 

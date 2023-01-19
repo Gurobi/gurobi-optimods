@@ -11,7 +11,7 @@ from plotlyhandler import *
 from scangvplus import *
 from myutils import break_exit
 
-def graphplot(alldata, graphfilename, gvfilename, myvertex_text, myvertex_size, myvertex_color, myvertex_border_width, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches):
+def graphplot(alldata, graphfilename, gvfilename, myvertex_text, myvertex_size, myvertex_color, myvertex_border_width, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches, textlist):
     """Description"""
     #
     # Reads a network in the format created by the graphviz library
@@ -153,7 +153,7 @@ def graphplot(alldata, graphfilename, gvfilename, myvertex_text, myvertex_size, 
     print('Creating visualization object.\n')
     #print(vertex_text)
 
-    PH = plotlyhandler(gG, pos, vertex_size=myvertex_size, vertex_color = myvertex_color, edge_width = reordered_width, edge_color = reordered_color, edge_map = reordered_position, vertex_text = myvertex_text, vertex_border_width = myvertex_border_width) 
+    PH = plotlyhandler(gG, pos, annotation_list = textlist, vertex_size=myvertex_size, vertex_color = myvertex_color, edge_width = reordered_width, edge_color = reordered_color, edge_map = reordered_position, vertex_text = myvertex_text, vertex_border_width = myvertex_border_width) 
 
     PH.addlog(log)
 
@@ -174,3 +174,4 @@ def graphplot(alldata, graphfilename, gvfilename, myvertex_text, myvertex_size, 
     #fig.write_image('one.png')
     log.joint('Showing figure.\n')
     fig.show()
+    #break_exit('showed')
