@@ -44,11 +44,11 @@ class Bus:
     def getbusline0(self):
         return self.busline0
 
-    def addgenerator(self, log, generatorcount, generator):
-        self.genidsbycount.append(generatorcount)
+    def addgenerator(self, log, generatorcount1, generator):
+        self.genidsbycount.append(generatorcount1)
         loud = False
         if loud:
-          log.joint(" added generator # " + str(generatorcount) + " to bus ID " + str(self.nodeID))
+          log.joint(" added generator # " + str(generatorcount1) + " to bus ID " + str(self.nodeID))
           log.joint(" Pmax " + str(generator.Pmax) + " Pmin " + str(generator.Pmin) + "\n")
 
     def addfrombranch(self, log, id):
@@ -141,6 +141,7 @@ class Branch:
         self.sftvarind = -1
         self.Pftvarind = -1
         self.Qftvarind = -1
+        self.switchvarind = -1
 
         loud = False
         if loud:
@@ -342,7 +343,7 @@ def read_case_thrulines(log, alldata, lines):
         elif theword == 'mpc.gen':
             gens               = {}
             lookingforendofgen = 1
-            gencount           = 0
+            gencount1           = 0
             summaxgenP = summaxgenQ = 0
             linenum += 1
 
@@ -358,7 +359,7 @@ def read_case_thrulines(log, alldata, lines):
                     lookingforendofgen = 0
                     break
 
-                gencount += 1
+                gencount1 += 1
 
                 nodeID = int(thisline[0])
                 Pg     = float(thisline[1])
@@ -378,18 +379,18 @@ def read_case_thrulines(log, alldata, lines):
                     log.raise_exception("Error: baseMVA not available before gen section\n")
 
                 if nodeID in IDtoCountmap.keys():
-                    idgencount = IDtoCountmap[nodeID]
-                    gens[gencount] = Gen(gencount, nodeID, Pg, Qg, status,
+                    idgencount1 = IDtoCountmap[nodeID]
+                    gens[gencount1] = Gen(gencount1, nodeID, Pg, Qg, status,
                                          Pmax/baseMVA, Pmin/baseMVA, Qmax/baseMVA,
                                          Qmin/baseMVA, linenum-1)
-                    buses[idgencount].addgenerator(log, gencount, gens[gencount])
+                    buses[idgencount1].addgenerator(log, gencount1, gens[gencount1])
 
-                    if buses[idgencount].nodetype == 2 or buses[idgencount].nodetype == 3:  # But not 4
+                    if buses[idgencount1].nodetype == 2 or buses[idgencount1].nodetype == 3:  # But not 4
                         summaxgenP += Pmax
                         summaxgenQ += Qmax
 
                 else:
-                    log.raise_exception("Error: Generator # %d in nonexistent bus ID %d\n"%(gencount, nodeID))
+                    log.raise_exception("Error: Generator # %d in nonexistent bus ID %d\n"%(gencount1, nodeID))
 
                 linenum += 1
             # Finished reading gen section
@@ -503,7 +504,7 @@ def read_case_thrulines(log, alldata, lines):
                     lookingforendofgencost  = 0
                     break
 
-                if gencostcount <= gencount:
+                if gencostcount <= gencount1:
                     costtype = int(thisline[0])
                     if costtype != 2:
                         log.raise_exception("Error: Cost of generator %d is not polynomial\n"%gencostcount)
@@ -526,7 +527,7 @@ def read_case_thrulines(log, alldata, lines):
                     gens[gencostcount].addcost(log, costvector, linenum)
 
                 else:
-                    log.raise_exception("Error: Read %d gen costs but only %d generators\n"%(gencostcount, gencount))
+                    log.raise_exception("Error: Read %d gen costs but only %d generators\n"%(gencostcount, gencount1))
 
                 gencostcount += 1
                 linenum += 1

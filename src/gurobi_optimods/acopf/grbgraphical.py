@@ -12,6 +12,7 @@ def grbgraphical(alldata, plottype, textlist):
     numbuses    = alldata['numbuses']
     branches    = alldata['branches']    
     numbranches = alldata['numbranches']
+    gens         = alldata['gens']    
     gvfilename  = 'grbgraphical.gv'
     IDtoCountmap = alldata['IDtoCountmap']    
     txtfilename = 'newgraph.txt'
@@ -65,12 +66,14 @@ def grbgraphical(alldata, plottype, textlist):
     myedge_width = {}
     myedge_color = {}
     
-    #default actions for branches
+    #default actions
+    GenPvar = alldata['LP']['GenPvar']
     for j in range(1,numbuses+1):
         bus = buses[j]
         mynode_size[j-1] = 1
         mynode_color[j-1] = 'black'
         mynode_border_width[j-1] = 1
+            
     for j in range(1,numbranches+1):
             branch = alldata['branches'][j]
             myedge_width[j] = 1
@@ -103,10 +106,46 @@ def grbgraphical(alldata, plottype, textlist):
     elif plottype == 'branchswitching':
 
         loud = False
+
+        gholder = alldata['MIP']['gholder']
         for j in range(1,numbuses+1):
             bus = buses[j]
-            node_text[j-1] = 'Bus ' + str(j)
+            sumPgen = 0
+            
+            largegen = False
+            
+            for k in range(len(bus.genidsbycount)):
+                gen = gens[bus.genidsbycount[k]]
+                sumPgen += gholder[gen.count-1]
+                if False:
+                    log.joint(' bus %d gen %d produces %f\n'%(j,gen.count,gholder[gen.count-1]))
+                #break_exit('gen in grbgraphical')
 
+            if sumPgen > 500:
+                mynode_size[j-1] = 20            
+                mynode_color[j-1] = 'yellow'
+                largegen = True
+            elif sumPgen > 150:
+                mynode_size[j-1] = 15
+                mynode_color[j-1] = 'orange'                
+                largegen = True
+            elif sumPgen > 100:
+                mynode_size[j-1] = 10
+                mynode_color[j-1] = 'red'
+                largegen = True
+            if False and sumPgen > 0:
+                print('bus',j,'sumP', sumPgen, 'color',mynode_color[j-1])
+                break_exit('huhhhh')
+
+            Pload = alldata['baseMVA']*bus.Pd                
+            node_text[j-1] = 'Bus %d   Gen %7.2f  Load %7.2f'%(j, sumPgen, Pload)
+
+            if Pload > 50 and largegen == False:
+                mynode_size[j-1] = 15
+                mynode_color[j-1] = 'black'
+
+        #break_exit('bus examination')
+        
         zvar         = alldata['LP']['zvar']
         zholder      = alldata['MIP']['zholder']
         for j in range(1,1+numbranches):
@@ -120,14 +159,19 @@ def grbgraphical(alldata, plottype, textlist):
             if zholder[j-1] < 0.5:  #turned off
                 if loud:
                     log.joint('branch %d (%d, %d) has small x\n'%(j, branch.count_f, branch.count_t))
-                myedge_width[j] = 8
-                myedge_color[j] = 'blue'
-        
-                mynode_size[count_of_f-1] = 15
-                mynode_color[count_of_f-1] = 'red'
-                mynode_size[count_of_t-1] = 15
-                mynode_color[count_of_t-1] = 'red'
+                myedge_width[j] = 4
+                myedge_color[j] = 'pink'
+
+                if mynode_size[count_of_f-1] < 10: #a lot of hard-coded values...
+                    mynode_size[count_of_f-1] = 7
+                    mynode_color[count_of_f-1] = 'blue'
+
+                if mynode_size[count_of_t-1] < 10: #a lot of hard-coded values...                    
+                    mynode_size[count_of_t-1] = 7
+                    mynode_color[count_of_t-1] = 'blue'
                 #print(count_of_f, count_of_t)
+
+                
 
     myedge_ends = {}
     myedge_list_consolidated = {}
@@ -153,6 +197,11 @@ def grbgraphical(alldata, plottype, textlist):
                     log.joint(' --> appended line %d color %s to my consolidated list for (%d,%d)\n'%(j,myedge_color[j],small, large))              
 
     #break_exit('cons')
+
+    if False:
+        for j in range(1,numbuses+1):
+            if mynode_size[j-1] > 1:
+                print('pre graphplot, bus',j,'size',mynode_size[j-1],'color',mynode_color[j-1])
                 
     graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, mynode_border_width, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches, textlist)
-    #break_exit('graph,2')
+    break_exit('graph,2')

@@ -395,6 +395,8 @@ def lpformulator_dc_opt(alldata, model):
         alldata['MIP']['solutionfound'] = False
         alldata['MIP']['bestsolval'] = 1e50
         alldata['MIP']['solcount'] = 0
+        gholder = np.zeros(alldata['numgens'])
+        alldata['MIP']['gholder'] = gholder
         
         # Optimize
         model._vars = model.getVars()
@@ -449,7 +451,9 @@ def lpformulator_dc_examine_solution(alldata, model):
     gens         = alldata['gens']
     IDtoCountmap = alldata['IDtoCountmap']
     log          = alldata['log']
-    if alldata['branchswitching_mip']: zholder = alldata['MIP']['zholder']
+    if alldata['branchswitching_mip']:
+        zholder = alldata['MIP']['zholder']
+        gholder = alldata['MIP']['gholder']        
 
     thetavar     = alldata['LP']['thetavar']
     Pvar_f       = alldata['LP']['Pvar_f']
@@ -464,6 +468,14 @@ def lpformulator_dc_examine_solution(alldata, model):
 
     loud = False
     numzeros = 0
+
+    '''
+    for j1 in range(1, 1 + alldata['numgens']):
+        gen = alldata['gens'][j1]
+        print('gen',gen.count)
+        break_exit('printed')  #functionality to be added
+    '''
+    
     for j in range(1,1+numbranches):
         branch     = branches[j]
         f          = branch.f
@@ -485,9 +497,10 @@ def lpformulator_dc_examine_solution(alldata, model):
         #log.joint('numzeros: %d\n'%numzeros)
                 
     log.joint(' Done examining solution.\n')
+    '''
     if alldata['dographics']:
         grbgraphical(alldata, 'branchswitching')
-    
+    '''
 def mycallback(model, where):
     if where == GRB.Callback.MIPSOL:
         #solcnt = model.cbGet(GRB.Callback.MIP_SOLCNT)
@@ -510,8 +523,9 @@ def mycallback(model, where):
         thetavar     = globalalldata['LP']['thetavar']
         Pvar_f       = globalalldata['LP']['Pvar_f']
         twinPvar_f   = globalalldata['LP']['twinPvar_f']
-        zvar         = globalalldata['LP']['zvar']
+
         zholder = globalalldata['MIP']['zholder']
+        gholder = globalalldata['MIP']['gholder']
         
         numzeros = 0        
         for j in range(1, 1+numbranches):
@@ -524,13 +538,20 @@ def mycallback(model, where):
         #log.joint('numzeros: %d\n'%numzeros)
         #break_exit('HEY HEY HEY')
 
+        for j1 in range(1, 1 + globalalldata['numgens']):
+            gen = globalalldata['gens'][j1]
+            gholder[j1-1] = globalalldata['baseMVA']*x[gen.Pvarind] #print('gen',gen.count,x[gen.Pvarind])
+            #break_exit('printed')  #functionality to be added
+
+
         globalalldata['MIP']['solutionfound'] = True
         difftol = 1e-6
         if objval < globalalldata['MIP']['bestsolval'] - difftol:
             globalalldata['MIP']['solcount'] += 1
             textlist = []
             textlist.append('SOLUTION ' + str(globalalldata['MIP']['solcount']))
-            textlist.append('OBJ: ' + str(objval))
+            textlist.append('OBJ: %10.2f'%(objval))
+            textlist.append('Lines off: %d'%(numzeros))            
             grbgraphical(globalalldata, 'branchswitching', textlist)
         else:
             log.joint('Skipping graphical display due to insufficient improvement.\n')
