@@ -37,7 +37,7 @@ def grbgraphical(alldata, plottype, textlist):
         #f.write("     " + str(bus.nodeID)+";\n")
         f.write("     " + str(bus.count)+";\n")
     for branch in alldata['branches'].values():
-        f.write("     " + str(branch.count_f)+" -- " + str(branch.count_t)+";\n")
+        f.write("     " + str(branch.count_f)+" -- " + str(branch.count_t)+" ;\n")
         g.write(' ' + str(branch.count_f)+ ' ' + str(branch.count_t)+ '\n')
 
     f.write("}\n")
@@ -45,19 +45,16 @@ def grbgraphical(alldata, plottype, textlist):
     g.write('END\n')
     g.close()
 
-    scale       = 10
-    firstgvfile = 'first.gv'
-    sfdpcommand = 'sfdp -Goverlap_scaling='+str(scale)+' -o '+firstgvfile + ' ' + gvfilename
-    log.joint('sfdp command: ' + sfdpcommand + '\n')
-    system(sfdpcommand)
-
-    '''
-    jpgfile = 'second.jpg'
-    neatocommand = 'neato -Tjpeg -n -o '+ jpgfile + ' ' + firstgvfile
-    log.joint('neato command: ' + neatocommand + '\n')
-    system(neatocommand)
-    '''
-
+    if alldata['coordsfilename'] == None:
+               scale       = 10
+               firstgvfile = 'first.gv'
+               sfdpcommand = 'sfdp -Goverlap_scaling='+str(scale)+' -o '+firstgvfile + ' ' + gvfilename
+               log.joint('sfdp command: ' + sfdpcommand + '\n')
+               system(sfdpcommand)
+    else:
+               log.joint('Skipping graph layout computation since coordinates are given.\n')
+               firstgvfile = gvfilename
+               
     #break_exit('graph,1')
     node_text = {}
     mynode_size = {}
@@ -123,15 +120,15 @@ def grbgraphical(alldata, plottype, textlist):
 
             if sumPgen > 500:
                 mynode_size[j-1] = 20            
-                mynode_color[j-1] = 'yellow'
+                mynode_color[j-1] = 'orange'
                 largegen = True
             elif sumPgen > 150:
                 mynode_size[j-1] = 15
-                mynode_color[j-1] = 'orange'                
+                mynode_color[j-1] = 'red'                
                 largegen = True
             elif sumPgen > 100:
                 mynode_size[j-1] = 10
-                mynode_color[j-1] = 'red'
+                mynode_color[j-1] = 'purple'
                 largegen = True
             if False and sumPgen > 0:
                 print('bus',j,'sumP', sumPgen, 'color',mynode_color[j-1])
@@ -141,8 +138,8 @@ def grbgraphical(alldata, plottype, textlist):
             node_text[j-1] = 'Bus %d   Gen %7.2f  Load %7.2f'%(j, sumPgen, Pload)
 
             if Pload > 50 and largegen == False:
-                mynode_size[j-1] = 15
-                mynode_color[j-1] = 'black'
+                mynode_size[j-1] = 8
+                mynode_color[j-1] = 'blue'
 
         #break_exit('bus examination')
         
@@ -164,12 +161,11 @@ def grbgraphical(alldata, plottype, textlist):
 
                 if mynode_size[count_of_f-1] < 10: #a lot of hard-coded values...
                     mynode_size[count_of_f-1] = 7
-                    mynode_color[count_of_f-1] = 'blue'
+                    mynode_color[count_of_f-1] = 'slategrey'
 
                 if mynode_size[count_of_t-1] < 10: #a lot of hard-coded values...                    
                     mynode_size[count_of_t-1] = 7
-                    mynode_color[count_of_t-1] = 'blue'
-                #print(count_of_f, count_of_t)
+                    mynode_color[count_of_t-1] = 'slategrey'
 
                 
 
@@ -204,4 +200,4 @@ def grbgraphical(alldata, plottype, textlist):
                 print('pre graphplot, bus',j,'size',mynode_size[j-1],'color',mynode_color[j-1])
                 
     graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, mynode_border_width, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches, textlist)
-    break_exit('graph,2')
+    #break_exit('graph,2')

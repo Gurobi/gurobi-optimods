@@ -41,6 +41,9 @@ class Bus:
         self.inputf        = 0  #e-value (input or derived from input voltage solution)        
         self.outdegree = self.indegree = self.degree = 0
 
+        self.lat = -1
+        self.lon = -1
+
     def getbusline0(self):
         return self.busline0
 
@@ -510,14 +513,25 @@ def read_case_thrulines(log, alldata, lines):
                         log.raise_exception("Error: Cost of generator %d is not polynomial\n"%gencostcount)
 
                     degree = int(thisline[3]) - 1
+                    skip1 = 0
 
-                    if degree > 2 or degree < 0:
-                        log.raise_exception("Error: Degree of cost function for generator %d is illegal\n"%gencostcount)
+                    if degree == 3:
+                        coeff = float(thisline[4])
+                        skip1 = 1
+                        if coeff != 0:
+                            log.raise_exception("Error: Degree of cost function for generator %d equals %d which is illegal\n"%(gencostcount,degree))
+                        else:
+                            degree = 2
+                                      
+                    elif degree > 2 or degree < 0:
+                        log.raise_exception("Error: Degree of cost function for generator %d equals %d which is illegal\n"%(gencostcount,degree))
 
                     costvector = [0 for j in range(degree+1)]
 
                     for j in range(degree+1):
-                        tmp = thisline[4+j]
+                        tmp = thisline[4+skip1+j]
+                        #print(j, tmp)
+                        
                         if tmp[len(tmp)-1] == ";":
                             tmp = tmp[:len(tmp)-1]
 
@@ -525,6 +539,8 @@ def read_case_thrulines(log, alldata, lines):
                         costvector[j] *= (baseMVA)**(degree - j)
 
                     gens[gencostcount].addcost(log, costvector, linenum)
+
+                    #break_exit('gen')
 
                 else:
                     log.raise_exception("Error: Read %d gen costs but only %d generators\n"%(gencostcount, gencount1))

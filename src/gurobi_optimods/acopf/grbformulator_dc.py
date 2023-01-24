@@ -379,7 +379,7 @@ def lpformulator_dc_opt(alldata, model):
     opttol  = model.Params.OptimalityTol
     mipgap  = model.Params.MIPGap
 
-    model.Params.SolutionLimit = 3
+    model.Params.SolutionLimit = 20
 
     if alldata['branchswitching_mip']:
         log.joint('Using mip start with all branches kept on\n')
@@ -546,15 +546,16 @@ def mycallback(model, where):
 
         globalalldata['MIP']['solutionfound'] = True
         difftol = 1e-6
-        if objval < globalalldata['MIP']['bestsolval'] - difftol:
-            globalalldata['MIP']['solcount'] += 1
-            textlist = []
-            textlist.append('SOLUTION ' + str(globalalldata['MIP']['solcount']))
-            textlist.append('OBJ: %10.2f'%(objval))
-            textlist.append('Lines off: %d'%(numzeros))            
-            grbgraphical(globalalldata, 'branchswitching', textlist)
-        else:
-            log.joint('Skipping graphical display due to insufficient improvement.\n')
+        if globalalldata['dographics']:
+            if objval < globalalldata['MIP']['bestsolval'] - difftol:
+                globalalldata['MIP']['solcount'] += 1
+                textlist = []
+                textlist.append('SOLUTION ' + str(globalalldata['MIP']['solcount']))
+                textlist.append('OBJ: %10.2f'%(objval))
+                textlist.append('Lines off: %d'%(numzeros))            
+                grbgraphical(globalalldata, 'branchswitching', textlist)
+            else:
+                log.joint('Skipping graphical display due to insufficient improvement.\n')
 
         globalalldata['MIP']['bestsolval'] = objval
         #break_exit('HO HO HO')

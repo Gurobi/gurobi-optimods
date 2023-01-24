@@ -4,7 +4,7 @@ import numpy as np
 import re
 from myutils import break_exit
 
-def scangv(filename, log):
+def scangv(alldata, filename, log, readcoords):
     print('Scanning gv file',filename)
 
     try:
@@ -19,27 +19,34 @@ def scangv(filename, log):
 
     criterion = np.array([ len(lines[linenum].split()) for linenum in range(N) ])
     selection = np.where(criterion == 2)
-    N         = len(selection[0])
-    node      = np.full(N,-1)
-    nodex     = np.zeros(N)
-    nodey     = np.zeros(N)
-    trueN     = 0
+    buses     = alldata['buses']
 
-    for k in range(N):
-        i   = selection[0][k]
-        foo = lines[i].split()
-        #print(k, 'i',i, 'split', foo[0], foo[1])
-        if len(foo[1]) > 3 and foo[1][:4]== '[pos':
+    if readcoords:
+        N         = len(selection[0])
+        nodex     = np.zeros(N)
+        nodey     = np.zeros(N)
+        
+        for k in range(N):
+            i   = selection[0][k]
+            foo = lines[i].split()
             #print(k, 'i',i, 'split', foo[0], foo[1])
-            #print(foo)
-            comma   = foo[1].rfind(',')
-            rightbr = foo[1].rfind(']')
-            #print(comma, rightbr)
-            node        = int(foo[0])-1 #base 0
-            nodex[node] = float(foo[1][6:comma])
-            nodey[node] = float(foo[1][comma+1:rightbr-1])
-            #print(node, float(foo[1][6:comma]), float(foo[1][comma+1:rightbr-1]))
-            trueN += 1
+            if len(foo[1]) > 3 and foo[1][:4]== '[pos':
+                #print(k, 'i',i, 'split', foo[0], foo[1])
+                #print(foo)
+                comma   = foo[1].rfind(',')
+                rightbr = foo[1].rfind(']')
+                #print(comma, rightbr)
+                node        = int(foo[0])-1 #base 0
+                nodex[node] = float(foo[1][6:comma])
+                nodey[node] = float(foo[1][comma+1:rightbr-1])
+                #print(node, float(foo[1][6:comma]), float(foo[1][comma+1:rightbr-1]))
+    else:
+        N = alldata['numbuses']
+        nodex     = np.zeros(N)
+        nodey     = np.zeros(N)
+        for node in range(N):
+            nodex[node] = buses[node+1].lon
+            nodey[node] = buses[node+1].lat
 
     trueM = 0
     N = len(lines)
@@ -82,4 +89,4 @@ def scangv(filename, log):
             trueM += 1
     log.joint('After scanning, number of edges is %d\n'%trueM)
     #break_exit('scanned')
-    return trueN, N, trueM, nodex, nodey, trueM, endbus, revendbus, scanned_list_consolidated, scanned_degrees_consolidated, scanned_unique_ordered_pairs, scanned_num_unique
+    return trueM, nodex, nodey, scanned_list_consolidated, scanned_degrees_consolidated, scanned_unique_ordered_pairs, scanned_num_unique

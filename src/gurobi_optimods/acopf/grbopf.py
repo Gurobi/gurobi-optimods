@@ -6,7 +6,7 @@ from log import Logger
 from grbcasereader import read_case
 from myutils import break_exit
 
-from grbfile import read_configfile
+from grbfile import read_configfile, grbread_coords
 from grbgraphical import grbgraphical
 from grbformulator_ac import lpformulator_ac
 from grbformulator_dc import lpformulator_dc
@@ -32,8 +32,8 @@ if __name__ == '__main__':
 
     read_case(alldata)
 
-    #if alldata['dographics']:  #will bring it back later
-    #    grbgraphical(alldata)
+    if alldata['dographics'] and alldata['coordsfilename'] != None:
+        grbread_coords(alldata)
 
     if alldata['doac']:
             lpformulator_ac(alldata)
@@ -57,8 +57,8 @@ if __name__ == '__main__':
 
         read_case(alldata)
 
-        #if alldata['dographics']:  #will bring it back later
-        #    grbgraphical(alldata)
+        if alldata['dographics'] and alldata['coordsfilename'] != None:
+            grbread_coords(alldata)
 
         if alldata['doac']:
             lpformulator_ac(alldata)
@@ -97,10 +97,9 @@ def solve_acopf_model(configfile, logfile = ""):
         # Read case file holding OPF network data
         read_case(alldata)
 
-        '''
-        if alldata['dographics']:
-            grbgraphical(alldata)
-        '''
+        if alldata['dographics'] and alldata['coordsfilename'] != None:
+            grbread_coords(alldata)
+
         # Construct model from collected data and optimize it
         lpformulator_ac(alldata)
 

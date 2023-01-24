@@ -4,6 +4,7 @@ import numpy as np
 import time
 from myutils import break_exit
 import math
+import csv
 
 def read_configfile(alldata, filename):
     """Function to read configurations for OPF solve from config file"""
@@ -31,6 +32,7 @@ def read_configfile(alldata, filename):
     use_ef               = False
     substitute_nonconv   = False
     dographics           = False
+    coordsfilename       = None
     dopolar              = False
     doac                 = True
     dodc                 = False
@@ -126,6 +128,8 @@ def read_configfile(alldata, filename):
 
         elif thisline[0] == 'dographics':
             dographics = True
+            if len(thisline) > 1:
+                coordsfilename = thisline[1]
 
         elif thisline[0] == 'END':
             break
@@ -144,14 +148,41 @@ def read_configfile(alldata, filename):
               ('doac', doac), ('fixtolerance', fixtolerance), ('use_ef', use_ef),
               ('substitute_nonconv', substitute_nonconv), ('dopolar', dopolar),
               ('usemaxdispersion', usemaxdispersion), ('maxdispersion_deg', maxdispersion_deg),
-              ('dographics',dographics), ('branchswitching_mip',branchswitching_mip), ('branchswitching_comp',branchswitching_comp)]:
+              ('dographics',dographics), ('coordsfilename',coordsfilename), ('branchswitching_mip',branchswitching_mip), ('branchswitching_comp',branchswitching_comp)]:
         alldata[x[0]] = x[1]
         log.joint("  {} {}\n".format(x[0], x[1]))
 
     if alldata['casefilename'] == 'NONE':
        log.raise_exception('Error: No casefile provided\n')
 
+def grbread_coords(alldata):
+    log = alldata['log']
 
+    #reads csv file with bus coordinates
+
+    numbuses = alldata['numbuses']
+    buses = alldata['buses']
+    IDtoCountmap = alldata['IDtoCountmap']
+
+    filename = alldata['coordsfilename']
+    log.joint("reading csv coordinates file " + filename + "\n")
+
+
+    try:
+        f = open(filename, "r")
+        csvf = csv.reader(f)
+        thelist = list(csvf)
+        f.close()
+    except:
+        log.raise_exception("cannot open csv file "+filename)
+
+    for line in range(1,len(thelist)):
+        #print(thelist[line][0], float(thelist[line][3]), float(thelist[line][4]))
+        buses[line].lat = float(thelist[line][3])
+        buses[line].lon = float(thelist[line][4])
+    #break_exit('coords')
+
+       
 def grbreadvoltsfile(alldata):
     log = alldata['log']
 

@@ -14,11 +14,11 @@ from myutils import break_exit
 def graphplot(alldata, graphfilename, gvfilename, myvertex_text, myvertex_size, myvertex_color, myvertex_border_width, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches, textlist):
     """Description"""
     #
-    # Reads a network in the format created by the graphviz library
+    # When alldata['coordsfilename'] == None, it reads a network in the format created by the graphviz library
     # Then uses the plotlyhandler library to create a plotly figure
     # The figure is then rendered in a browser window
     #
-    print('graphfilename', graphfilename, 'gvfilename', gvfilename)
+    #print('graphfilename', graphfilename, 'gvfilename', gvfilename)
     #graphfilename = 'grbgraph.txt'
     try:
         f     = open(graphfilename, "r")
@@ -41,13 +41,14 @@ def graphplot(alldata, graphfilename, gvfilename, myvertex_text, myvertex_size, 
         #print(line,int(lines[line].split()[0]), int(lines[line].split()[1]))
         adj[truelinect] = [int(lines[line].split()[0])-1, int(lines[line].split()[1])-1]
         truelinect += 1
-    #print('lines',len(lines),'m',m, 'n',n)
 
-    #should check that the next line is 'END'
-    #break_exit('lmn')
 
-    trueN, N, trueM, vertexx, vertexy, thisM, endbus, revendbus, scanned_list_consolidated, scanned_degrees_consolidated, scanned_unique_ordered_pairs, scanned_num_unique = scangv(gvfilename, log)
+    #trueN, N, trueM, vertexx, vertexy, thisM, endbus, revendbus, scanned_list_consolidated, scanned_degrees_consolidated, scanned_unique_ordered_pairs, scanned_num_unique = scangv(gvfilename, log)
     #print(len(vertexx), len(vertexy), trueN, N)
+
+    trueM, vertexx, vertexy, scanned_list_consolidated, scanned_degrees_consolidated, scanned_unique_ordered_pairs, scanned_num_unique = scangv(alldata, gvfilename, log, alldata['coordsfilename'] == None)
+
+    #break_exit('scanned')
 
     #endbus is a list of end buses for network branches as ordered in gvfilename
     #revendbus is the reverse index
@@ -99,16 +100,41 @@ def graphplot(alldata, graphfilename, gvfilename, myvertex_text, myvertex_size, 
 
     #break_exit('scanned2')
 
-    pos = {}
+    if alldata['coordsfilename'] != None:  #should change this
+        vertexx -= np.min(vertexx)
+        vertexy -= np.min(vertexy)
 
+        #print('vertexx', vertexx)
+        #print('vertexy', vertexy)
+
+        deltax = np.max(vertexx) - np.min(vertexx) #min should be 0 now
+        deltay = np.max(vertexy) - np.min(vertexy) #min should be 0 now
+
+        ratioxy = deltax/deltay
+
+        scaley = 290
+        scalex = 200  #ratio approximately 1.5, mimicking the ratio between one degree of latitute and longitude
+        
+        vertexx *= scalex
+        vertexy *= scaley
+
+        if False:
+            print('vertexx', vertexx)
+            print('vertexy', vertexy)
+
+            break_exit('printedvertices')
+
+    
+
+    pos = {}
     for j in range(n):
         pos[j] = ( [vertexx[j], vertexy[j]] )
 
-    #G = nx.Graph() #doesn't work too well
+
+        
     gG = grbGraph(log)
 
     for j in range(n):
-        pos[j] = ( [vertexx[j], vertexy[j]] )
         gG.addvertex(j)
     
     #print(len(adj),m)
@@ -164,12 +190,18 @@ def graphplot(alldata, graphfilename, gvfilename, myvertex_text, myvertex_size, 
     
     log.joint('Rendering figure.\n')
 
+
+
     xgap     = np.max(vertexx) - np.min(vertexx)
     ygap     = np.max(vertexy) - np.min(vertexy)
+
+    
     myheight = 800
     mywidth  = int(math.ceil(xgap/ygap*myheight))
-    #print('xgap',xgap,'ygap',ygap,'height',myheight,'width',mywidth)
-
+     
+ 
+    print('xgap',xgap,'ygap',ygap,'height',myheight,'width',mywidth)        
+        
     fig = PH.create_figure(height=myheight, width=mywidth, showlabel=False)
     #fig.write_image('one.png')
     log.joint('Showing figure.\n')
