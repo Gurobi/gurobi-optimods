@@ -102,6 +102,7 @@ def grbgraphical(alldata, plottype, textlist):
             
     elif plottype == 'branchswitching':
 
+
         loud = False
 
         gholder = alldata['MIP']['gholder']
