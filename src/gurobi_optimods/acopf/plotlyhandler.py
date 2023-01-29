@@ -222,7 +222,7 @@ class plotlyhandler:
             autosize=False,
             height=400,
             width=450,
-            title='SOLUTION',
+            title='',
             titlefont_size=16,
             showlegend=False,
             hovermode='closest',

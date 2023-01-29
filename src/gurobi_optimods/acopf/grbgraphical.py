@@ -119,21 +119,19 @@ def grbgraphical(alldata, plottype, textlist):
                     log.joint(' bus %d gen %d produces %f\n'%(j,gen.count,gholder[gen.count-1]))
                 #break_exit('gen in grbgraphical')
 
+            '''
             if sumPgen > 500:
-                mynode_size[j-1] = 20            
-                mynode_color[j-1] = 'orange'
                 largegen = True
             elif sumPgen > 150:
-                mynode_size[j-1] = 15
-                mynode_color[j-1] = 'red'                
                 largegen = True
             elif sumPgen > 100:
-                mynode_size[j-1] = 10
-                mynode_color[j-1] = 'purple'
                 largegen = True
             if False and sumPgen > 0:
                 print('bus',j,'sumP', sumPgen, 'color',mynode_color[j-1])
                 break_exit('huhhhh')
+            '''
+
+            largegen, mynode_size[j-1], mynode_color[j-1] = grbgetgraphattr(alldata, sumPgen)
 
             Pload = alldata['baseMVA']*bus.Pd                
             node_text[j-1] = 'Bus %d   Gen %7.2f  Load %7.2f'%(j, sumPgen, Pload)
@@ -202,3 +200,51 @@ def grbgraphical(alldata, plottype, textlist):
                 
     graphplot(alldata, txtfilename, firstgvfile, node_text, mynode_size, mynode_color, mynode_border_width, myedge_width, myedge_color, myedge_ends, myedge_list_consolidated, myedge_degrees_consolidated, numbranches, textlist)
     #break_exit('graph,2')
+
+
+def grbgetgraphattr(alldata, value):
+    #looks through threshold list to find first match
+
+    color = 'Black'
+    size = 0
+    caughtit = False
+    numfeatures = alldata['graphical']['numfeatures']
+
+    if numfeatures > 0:
+        sizeval  = alldata['graphical']['sizeval']
+        colorstring = alldata['graphical']['colorstring']
+        thresh = alldata['graphical']['thresh']        
+
+        size = 0 #sizeval[numfeatures-1]
+        color = 'Black' #colorstring[numfeatures-1]
+
+        for f in range(numfeatures):
+            feature = numfeatures - f - 1
+            #print(feature, 'value', value, thresh[feature], numfeatures)
+            if value >= thresh[feature]:
+                size = sizeval[feature]
+                color = colorstring[feature]
+                caughtit = True
+                break
+
+            
+        
+    else: #if numfeatures == 0: #default case
+        if value > 500:
+            size = 20            
+            color = 'orange'
+            caughtit = True
+        elif value > 150:
+            size = 15
+            color = 'red'
+            caughtit = True            
+        elif value > 100:
+            size = 10
+            color = 'purple'
+            caughtit = True
+
+    if False: #caughtit:
+        print(value, caughtit, size, color)
+        break_exit('caughtit')
+
+    return caughtit, size, color

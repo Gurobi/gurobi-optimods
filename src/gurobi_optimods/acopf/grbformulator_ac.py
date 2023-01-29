@@ -1032,7 +1032,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         boundzs = True
         if boundzs:
             exp = gp.LinExpr()
-            delta = 1
+            delta = 10
             N = numbranches - delta  # <<<<<<---- here is the heuristic lower bound
             for j in range(1,1+numbranches):
                 branch     = branches[j]

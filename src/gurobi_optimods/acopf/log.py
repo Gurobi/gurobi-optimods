@@ -65,11 +65,15 @@ class Logger:
         self.close_log()
         raise OPFException("\n OPFException: " + message + "Encountered an error. Quitting")
 
+
+    '''
+    def printversion(self):
+        self.joint("Version 0.0.9-g\n\n")
+
+    '''
     def printversion(self):
         repo    = Repo("/Users/daniel.bienstock/git/gurobi-optimods/src/gurobi_optimods/acopf",search_parent_directories=True)
-        #repo = Repo("/Users/daniel.bienstock/git/gurobi-optimods/src/gurobi_optimods/acopf") didn't work
-        #repo = "/Users/daniel.bienstock/git/gurobi-optimods/src/gurobi_optimods/acopf"  also didn't work
         githash = repo.head.object.hexsha
-        self.joint("Version 0.0.9-g%s\n\n"%githash[:10])
-        #self.joint("Version 0.0.8\n")
+        self.joint("Version 0.0.95-g%s\n\n"%githash[:10])
+
 

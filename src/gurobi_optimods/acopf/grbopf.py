@@ -6,7 +6,7 @@ from log import Logger
 from grbcasereader import read_case
 from myutils import break_exit
 
-from grbfile import read_configfile, grbread_coords
+from grbfile import read_configfile, grbread_coords, gbread_graphattrs
 from grbgraphical import grbgraphical
 from grbformulator_ac import lpformulator_ac
 from grbformulator_dc import lpformulator_dc
@@ -32,8 +32,13 @@ if __name__ == '__main__':
 
     read_case(alldata)
 
-    if alldata['dographics'] and alldata['coordsfilename'] != None:
-        grbread_coords(alldata)
+    if alldata['dographics']:
+        alldata['graphical'] = {}
+        alldata['graphical']['numfeatures'] = 0
+        if alldata['graphattrsfilename'] != None:
+            gbread_graphattrs(alldata, alldata['graphattrsfilename'])
+        if alldata['coordsfilename'] != None:
+            grbread_coords(alldata)
 
     if alldata['doac']:
             lpformulator_ac(alldata)

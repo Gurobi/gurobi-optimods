@@ -32,6 +32,7 @@ def read_configfile(alldata, filename):
     use_ef               = False
     substitute_nonconv   = False
     dographics           = False
+    graphattrsfilename   = None
     coordsfilename       = None
     dopolar              = False
     doac                 = True
@@ -129,8 +130,10 @@ def read_configfile(alldata, filename):
         elif thisline[0] == 'dographics':
             dographics = True
             if len(thisline) > 1:
-                coordsfilename = thisline[1]
+                graphattrsfilename = thisline[1]
 
+        elif thisline[0] == 'coordsfilename':
+            coordsfilename = thisline[1]            
         elif thisline[0] == 'END':
             break
 
@@ -148,13 +151,60 @@ def read_configfile(alldata, filename):
               ('doac', doac), ('fixtolerance', fixtolerance), ('use_ef', use_ef),
               ('substitute_nonconv', substitute_nonconv), ('dopolar', dopolar),
               ('usemaxdispersion', usemaxdispersion), ('maxdispersion_deg', maxdispersion_deg),
-              ('dographics',dographics), ('coordsfilename',coordsfilename), ('branchswitching_mip',branchswitching_mip), ('branchswitching_comp',branchswitching_comp)]:
+              ('dographics',dographics), ('graphattrsfilename', graphattrsfilename), ('coordsfilename',coordsfilename), ('branchswitching_mip',branchswitching_mip), ('branchswitching_comp',branchswitching_comp)]:
         alldata[x[0]] = x[1]
         log.joint("  {} {}\n".format(x[0], x[1]))
 
     if alldata['casefilename'] == 'NONE':
        log.raise_exception('Error: No casefile provided\n')
 
+def gbread_graphattrs(alldata, filename):
+    """Function to read graphical attributes"""
+
+    log = alldata['log']
+
+    try:
+        log.joint("Reading graphical attributes file %s\n"%filename)
+        f     = open(filename, "r")
+        lines = f.readlines()
+        f.close()
+    except:
+        log.raise_exception("Error: Cannot open file %s\n"%filename)
+
+
+    numfeatures          = 0
+
+    thresh               = {}
+    colorstring          = {}
+    sizeval              = {}
+
+    linenum              = 0    
+    # Read lines of configuration file and save options
+    while linenum < len(lines):
+        thisline = lines[linenum].split()
+
+        if len(thisline) <= 0:
+            linenum += 1
+            continue
+
+        if thisline[0] == 'END':
+            break
+
+
+        thresh[numfeatures] = int(thisline[0])
+        colorstring[numfeatures] = thisline[1]
+        sizeval[numfeatures] = int(thisline[2])        
+        numfeatures += 1        
+
+
+        linenum += 1
+
+    log.joint('Read %d graphical features\n'%numfeatures)
+    alldata['graphical']['numfeatures'] = numfeatures
+    alldata['graphical']['thresh'] = thresh
+    alldata['graphical']['colorstring'] = colorstring
+    alldata['graphical']['sizeval'] = sizeval
+    
 def grbread_coords(alldata):
     log = alldata['log']
 
