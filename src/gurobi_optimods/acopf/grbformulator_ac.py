@@ -361,14 +361,14 @@ def lpformulator_ac_create_vars(alldata, model):
 
         # Sine
         if maxanglerad <= math.pi/2:
-            ubound = maxprod*sin(maxanglerad)
+            ubound = maxprod*math.sin(maxanglerad)
 
             if  minanglerad >= -0.5*math.pi:
-                lbound = maxprod*sin(minanglerad)
+                lbound = maxprod*math.sin(minanglerad)
             elif  minanglerad >= -math.pi:
                 lbound = -maxprod
             elif  minanglerad >= -1.5*math.pi:
-                ubound = maxprod*max( sin(maxanglerad), sin(minanglerad))
+                ubound = maxprod*max( math.sin(maxanglerad), math.sin(minanglerad))
                 lbound = -maxprod
             else:
                 ubound = maxprod
@@ -378,7 +378,7 @@ def lpformulator_ac_create_vars(alldata, model):
             ubound = maxprod
 
             if minanglerad >= -0.5*math.pi:
-                lbound = maxprod*sin(minanglerad)
+                lbound = maxprod*math.sin(minanglerad)
             elif minanglerad >= -math.pi:
                 lbound = -maxprod
             elif minanglerad >= -1.5*math.pi:
@@ -390,7 +390,7 @@ def lpformulator_ac_create_vars(alldata, model):
             ubound = maxprod
 
             if minanglerad >= -0.5*math.pi:
-                lbound = maxprod*min(sin(maxanglerad), sin(minanglerad))
+                lbound = maxprod*min(math.sin(maxanglerad), math.sin(minanglerad))
             elif minanglerad >= -math.pi:
                 lbound = -maxprod
             elif minanglerad >= -1.5*math.pi:
@@ -997,9 +997,9 @@ def lpformulator_ac_create_constraints(alldata, model):
                             name = "limit_t_%d_%d_%d"%(j, t, f))
             count += 2
 
-    log.joint("    %d branch limits added.n"%count)
+    log.joint("    %d branch limits added\n"%count)
 
-    # JABR
+    # JABR.
     if alldata['skipjabr'] == False:
         log.joint("  Adding Jabr constraints.\n")
         count = 0
@@ -1016,9 +1016,31 @@ def lpformulator_ac_create_constraints(alldata, model):
                                 name = "jabr_%d_%d_%d"%(j, f, t))
                 count += 1
 
-        log.joint("    %d Jabr constraints added.n"%count)
+        log.joint("    %d Jabr constraints added\n"%count)
     else:
         log.joint("  Skipping Jabr inequalities\n")
+
+    # Active loss constraints.
+    if True:
+        log.joint("  Adding active loss constraints\n")
+        count = 0
+        for j in range(1,1+numbranches):
+            branch = branches[j]
+            if branch.status:
+                f          = branch.f
+                t          = branch.t
+                count_of_f = IDtoCountmap[f]
+                count_of_t = IDtoCountmap[t]
+                busf       = buses[count_of_f]
+                bust       = buses[count_of_t]
+                model.addConstr(Pvar_f[branch] + Pvar_t[branch] >= 0,
+                                name = "aL_%d_%d_%d"%(j, f, t))
+                count += 1
+
+        log.joint("    %d active loss constraints added\n"%count)
+    else:
+        log.joint("  Skipping active loss inequalities\n")
+        
 
     # Polar representation
     if alldata['dopolar']:
@@ -1032,7 +1054,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         boundzs = True
         if boundzs:
             exp = gp.LinExpr()
-            delta = 10
+            delta = numbranches
             N = numbranches - delta  # <<<<<<---- here is the heuristic lower bound
             for j in range(1,1+numbranches):
                 branch     = branches[j]

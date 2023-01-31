@@ -66,14 +66,14 @@ class Logger:
         raise OPFException("\n OPFException: " + message + "Encountered an error. Quitting")
 
 
-    '''
+
     def printversion(self):
         self.joint("Version 0.0.9-g\n\n")
 
-    '''
+    '''   
     def printversion(self):
         repo    = Repo("/Users/daniel.bienstock/git/gurobi-optimods/src/gurobi_optimods/acopf",search_parent_directories=True)
-        githash = repo.head.object.hexsha
+        ithash = repo.head.object.hexsha
         self.joint("Version 0.0.95-g%s\n\n"%githash[:10])
-
+    '''
 

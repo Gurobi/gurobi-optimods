@@ -465,7 +465,7 @@ def read_case_thrulines(log, alldata, lines):
 
                 if baseMVA == 0.0:
                     log.raise_exception("Error: baseMVA not available before branch section\n")
-                if rateA < 1e-10:
+                if False: #rateA < 1e-10:
                     log.joint('Warning. Branch %d from %d to %d has unbounded rateA.\n'%(numbranches, f, t))
 
                 if True:
@@ -488,7 +488,7 @@ def read_case_thrulines(log, alldata, lines):
             alldata['branches']    = branches
             alldata['numbranches'] = numbranches
             log.joint("    numbranches: %d active: %d\n"%(numbranches, activebranches))
-            log.joint("    %d unconstrained\n"%zerolimit)
+            if zerolimit > 0: log.joint("    ---> %d unconstrained.\n"%zerolimit)
 
         elif theword == 'mpc.gencost':
             lookingforendofgencost = 1
