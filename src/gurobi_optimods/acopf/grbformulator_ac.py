@@ -63,7 +63,9 @@ def lpformulator_ac_opt(alldata, model):
     opttol  = model.Params.OptimalityTol
     mipgap  = model.Params.MIPGap
 
-    if alldata['branchswitching_mip'] or alldata['branchswitching_comp']:
+    #model.Params.BarHomogeneous = 1
+
+    if alldata['usemipstart'] and (alldata['branchswitching_mip'] or alldata['branchswitching_comp']):
         log.joint('Using mip start with all branches kept on\n')
         #mip start
         zvar = alldata['LP']['zvar']
@@ -125,6 +127,31 @@ def lpformulator_ac_opt(alldata, model):
             # Here we should gather optimal solution values and gather them
             # in a standardized format which ultimately will be returned to the user
             # 
+
+            #first version -- crude -- but first, some debugging
+            '''
+            branches     = alldata['branches']
+            numbranches  = alldata['numbranches']
+            Pvar_f       = alldata['LP']['Pvar_f']
+            Pvar_t       = alldata['LP']['Pvar_t']
+            minsum = 100.0
+            minsumind = -1
+            for j in range(1,1+numbranches):
+                branch     = branches[j]
+                thissum = Pvar_f[branch].x + Pvar_t[branch].x
+                if thissum < minsum:
+                    minsum = thissum
+                    minsumind = j
+            log.joint('minsum %.3e at %d\n'%(minsum,minsumind))
+            '''            
+
+
+
+            break_exit('Show solution?')
+
+            for v in model.getVars():
+                if math.fabs(v.x) > 1e-09:
+                    log.joint( v.varname + " = " +str(v.x) + "\n")
 
 
 def lpformulator_setup(alldata):
@@ -884,7 +911,7 @@ def lpformulator_ac_create_constraints(alldata, model):
                 count += 2
                 #print(j,-branch.Btt,-branch.Btf,-branch.Bft)
                 #break_exit('hmm')
-        else:
+        else:  #out of operation
             branch.Qdeffconstr = model.addConstr(Qvar_f[branch] == 0, name = branch.Qfcname)
             branch.Qdeftconstr = model.addConstr(Qvar_t[branch] == 0, name = branch.Qtcname)
 
@@ -1025,8 +1052,8 @@ def lpformulator_ac_create_constraints(alldata, model):
         log.joint("  Skipping Jabr inequalities\n")
 
     # Active loss constraints.
-    if True:
-        log.joint("  Adding active loss constraints\n")
+    if alldata['useactivelossineqs'] == True: 
+        log.joint("  Adding active loss constraints.\n")
         count = 0
         for j in range(1,1+numbranches):
             branch = branches[j]
@@ -1037,9 +1064,47 @@ def lpformulator_ac_create_constraints(alldata, model):
                 count_of_t = IDtoCountmap[t]
                 busf       = buses[count_of_f]
                 bust       = buses[count_of_t]
-                model.addConstr(Pvar_f[branch] + Pvar_t[branch] >= 0,
-                                name = "aL_%d_%d_%d"%(j, f, t))
+
+                model.addConstr(cvar[busf] + cvar[bust] >= 2*cvar[branch],
+                                name = "csc_%d_%d_%d"%(j, f, t))
+                
                 count += 1
+
+        if alldata['branchswitching_mip']:
+            # If not MIP, inequality implied by the csc ineq above.
+            for j in range(1,1+numbranches):
+                branch = branches[j]
+                if branch.status and (branch.Gff + branch.Gtt >= branch.Gft + branch.Gtf):
+
+                    f          = branch.f
+                    t          = branch.t
+                    count_of_f = IDtoCountmap[f]
+                    count_of_t = IDtoCountmap[t]
+                    busf       = buses[count_of_f]
+                    bust       = buses[count_of_t]
+                    model.addConstr(Pvar_f[branch] + Pvar_t[branch] >= 0,
+                                name = "aLa_%d_%d_%d"%(j, f, t))
+                    
+                    count += 1
+
+                    # Reactive, also.
+                    
+                    if -branch.Bff > 0 or -branch.Btt > 0:
+                        #print(j,f,t, 'f', -branch.Bff, -branch.Bft, 't', -branch.Btt, -branch.Btf)
+                        alpha = min(-branch.Bff, -branch.Btt)
+                        beta = branch.Bft + branch.Btf
+                        delta = 2*alpha - beta
+                        gamma = -branch.Gft + branch.Gtf
+                        
+                        #print(alpha,beta, delta)
+                        if delta >= 0:
+                            model.addConstr(Qvar_f[branch] + Qvar_t[branch] >= gamma*svar[branch],
+                                name = "rLa_%d_%d_%d"%(j, f, t))
+                    
+                            count += 1
+                            
+                            #break_exit('bingo')
+
 
         log.joint("    %d active loss constraints added.\n"%count)
     else:
@@ -1063,7 +1128,7 @@ def lpformulator_ac_create_constraints(alldata, model):
             for j in range(1,1+numbranches):
                 branch     = branches[j]
                 exp += zvar[branch]
-            model.addConstr(exp >= N, name = "sumzbd")
+            model.addConstr(exp >= N, name = "sumz_lower")
         
 
 def lpformulator_ac_add_polarconstraints(alldata,model):

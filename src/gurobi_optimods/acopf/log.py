@@ -1,6 +1,6 @@
 import sys
 import time
-from git import Repo # Maybe remove in final version
+#from git import Repo # Maybe remove in final version
 from socket import gethostname
 from opfexception import OPFException
 
@@ -68,7 +68,7 @@ class Logger:
 
 
     def printversion(self):
-        self.joint("Version 0.0.9-g\n\n")
+        self.joint("Version 0.1.3-g\n\n")
 
     '''   
     def printversion(self):

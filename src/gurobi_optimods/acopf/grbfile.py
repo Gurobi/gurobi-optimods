@@ -26,7 +26,8 @@ def read_configfile(alldata, filename):
     casefilename = 'NONE'
     voltsfilename = gvfilename = 'NONE'
     lpfilename = 'grbopf.lp'
-    strictcheckvoltagesolution = usevoltsolution = fixcs = skipjabr = cutplane = dodc = False
+    strictcheckvoltagesolution = usevoltsolution = fixcs = skipjabr = cutplane = dodc = usemipstart = False
+    useactivelossineqs         = False
     useconvexformulation = False
     usemaxdispersion     = False
     use_ef               = False
@@ -43,11 +44,16 @@ def read_configfile(alldata, filename):
     fixtolerance         = 0
     linenum              = 0
 
+
     # Read lines of configuration file and save options
     while linenum < len(lines):
         thisline = lines[linenum].split()
 
         if len(thisline) <= 0:
+            linenum += 1
+            continue
+
+        if thisline[0][0] == '#':
             linenum += 1
             continue
 
@@ -109,6 +115,12 @@ def read_configfile(alldata, filename):
         elif thisline[0] == 'skipjabr':
             skipjabr = True
 
+        elif thisline[0] == 'useactivelossineqs':
+            useactivelossineqs = True
+
+        elif thisline[0] == 'usemipstart':
+            usemipstart = True
+
         elif thisline[0] == 'cutplane':
             cutplane = True
 
@@ -147,7 +159,7 @@ def read_configfile(alldata, filename):
               ('strictcheckvoltagesolution', strictcheckvoltagesolution),
               ('voltsfilename', voltsfilename), ('usevoltsolution', usevoltsolution),
               ('FIXCS', fixcs), ('useconvexformulation', useconvexformulation),
-              ('skipjabr', skipjabr), ('cutplane', cutplane), ('dodc',dodc),
+              ('skipjabr', skipjabr), ('useactivelossineqs', useactivelossineqs), ('usemipstart', usemipstart), ('cutplane', cutplane), ('dodc',dodc),
               ('doac', doac), ('fixtolerance', fixtolerance), ('use_ef', use_ef),
               ('substitute_nonconv', substitute_nonconv), ('dopolar', dopolar),
               ('usemaxdispersion', usemaxdispersion), ('maxdispersion_deg', maxdispersion_deg),
