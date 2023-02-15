@@ -65,6 +65,8 @@ def lpformulator_ac_opt(alldata, model):
 
     #model.Params.BarHomogeneous = 1
 
+    writempsfile(alldata,model,'grbopf.mps')
+
     if alldata['usemipstart'] and (alldata['branchswitching_mip'] or alldata['branchswitching_comp']):
         log.joint('Using mip start with all branches kept on\n')
         #mip start
@@ -74,6 +76,10 @@ def lpformulator_ac_opt(alldata, model):
         for j in range(1,1+numbranches):
             branch = branches[j]
             zvar[branch].Start = 1.0
+            #Jarek, there is some strange behavior here
+            #print(zvar[branch], ' ',zvar[branch].Start)
+
+        writemipstart(alldata)
         
 
         zholder = np.zeros(numbranches)
@@ -1123,7 +1129,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         boundzs = True
         if boundzs:
             exp = gp.LinExpr()
-            delta = numbranches
+            delta = 0
             N = numbranches - delta  # <<<<<<---- here is the heuristic lower bound
             for j in range(1,1+numbranches):
                 branch     = branches[j]
@@ -1743,3 +1749,32 @@ def worstboundviol_report(log, badvar, maxviol,boundtype):
         log.joint('Worst %s bound violation by %s viol %g\n'%(boundtype,badvar.Varname, maxviol))
     else:
         log.joint('No %s bound violations.\n'%boundtype)
+
+def writempsfile(alldata, model, filename):
+    log = alldata['log']
+    log.joint('Writing mpsfile to %s\n'%(filename))
+    model.write(filename)
+    break_exit('wrotefile')
+
+def writemipstart(alldata):
+    # Write z variables
+    log = alldata['log']
+
+    filename = 'mipstart.mst'
+    try:
+        f = open(filename, "w")
+        log.joint("Writing mipstart in file %s.\n"%filename)
+    except:
+        log.raise_exception("Error: Cannot open file %s."%filename)
+    
+
+    zvar = alldata['LP']['zvar']
+    branches = alldata['branches']
+    numbranches = alldata['numbranches']
+    for j in range(1,1+numbranches):
+        branch = branches[j]
+        f.write('{} 1.0\n'.format(zvar[branch].Varname))
+
+    f.close()
+
+    break_exit('wrote mipstart')    
