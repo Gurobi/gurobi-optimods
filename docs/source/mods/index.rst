@@ -12,3 +12,4 @@ The Opti Mods
    mwis
    weighted-matching
    workforce
+   networkdesign
