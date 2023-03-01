@@ -26,6 +26,11 @@ cp _templates/mod.rst docs/source/mods/<mod>.rst
 9. Follow the checklist in the PR
 10. When complete, take the PR out of draft and assign a reviewer
 
+## Implementation notes
+
+- Data files should live under `src/gurobi_optimods/data/<mod-name>` to reduce clutter
+- Mods should be stateless (see the template example). This means gurobipy environments and models are created within a mod function, and closed before the function returns.
+
 ### Development environment
 
 To set up your development environment:
