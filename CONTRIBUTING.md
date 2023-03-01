@@ -19,7 +19,7 @@ cp _templates/mod.py src/gurobi_optimods/<mod>.py
 cp _templates/test_mod.py tests/test_<mod>.py
 cp _templates/mod.rst docs/source/mods/<mod>.rst
 ```
-5. Include your mod in the toctree at `docs/source/mods/index.rst`
+5. Include your mod in the toctree at `docs/source/mods/index.rst` (maintain lexicographic order)
 6. Create a new branch, commit the scaffolding files
 7. Push the branch to your fork
 8. Create a *draft* PR for your branch into gurobi-optimods/main
