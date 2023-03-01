@@ -1,7 +1,7 @@
 L1 Regression
 =============
 
-Minimum sum of absolute errors (L1) regression performs is generally more robust than ordinary least squares (OLS, L2) in that it is more resistant to outliers in the response variable. The loss function can be expressed using linear program, so fitting model coefficients is ideally suited to Gurobi.
+Minimum sum of absolute errors (L1) regression is generally more robust than ordinary least squares (OLS, L2) in that it is more resistant to outliers in the response variable. The loss function can be expressed using linear program (LP), so fitting model coefficients is ideally suited to an LP solver.
 
 The interface of this mod matches that of :code:`sklearn.linear_model.LinearRegression`. This example compares the coefficients found using L1 and L2 regression on the diabetes dataset.
 
