@@ -23,8 +23,9 @@ of the problem in the domain language of the target user:
   :width: 800
   :alt: L1 regression mod introduction
 
-2. A Mod has a simple interface, and the documentation shows usage via a
-runnable example:
+2. A Mod has a simple interface which shields the user from interacting with
+gurobipy, a clean data-in data-out style using sensible data types, and demos
+usage via a runnable example in the documentation:
 
 .. image:: assets/matching-usage.png
   :width: 400
