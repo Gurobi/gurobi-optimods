@@ -19,7 +19,7 @@ Background info for L1 regression:
 Example usage for the bipartite matching mod:
 
 .. image:: assets/matching-usage.png
-  :width: 600
+  :width: 400
   :alt: Bipartite matching mod usage
 
 Results for bipartite maching mod (displayed using networkx):
