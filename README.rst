@@ -8,13 +8,23 @@ The idea in one sentence: we will create open-source Python repository of implem
 - Intuitive for Python users
 - `Documentation! <https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/latest/#>`_
 
-The built documentation on readthedocs is not currently visible to everyone. You can build and view it yourself locally (see `CONTRIBUTING.md <CONTRIBUTING.md>`_). Here are a few snippets in the meantime.
+The built documentation on readthedocs is not currently visible to everyone. You can build and view it yourself locally (see `CONTRIBUTING.md <CONTRIBUTING.md>`_). Here are a few snippets in the meantime:
+
+Background info for L1 regression:
 
 .. image:: assets/l1-regression.png
-  :width: 400
+  :width: 600
   :alt: L1 regression mod introduction
 
+Example usage for the bipartite matching mod:
+
 .. image:: assets/matching-usage.png
+  :width: 400
+  :alt: Bipartite matching mod usage
+
+Results for bipartite maching mod (displayed using networkx):
+
+.. image:: assets/matching-results.png
   :width: 400
   :alt: Bipartite matching mod usage
 
