@@ -13,19 +13,19 @@ The built documentation on readthedocs is not currently visible to everyone. You
 Background info for L1 regression:
 
 .. image:: assets/l1-regression.png
-  :width: 600
+  :width: 800
   :alt: L1 regression mod introduction
 
 Example usage for the bipartite matching mod:
 
 .. image:: assets/matching-usage.png
-  :width: 400
+  :width: 600
   :alt: Bipartite matching mod usage
 
 Results for bipartite maching mod (displayed using networkx):
 
 .. image:: assets/matching-results.png
-  :width: 400
+  :width: 600
   :alt: Bipartite matching mod usage
 
 Contributing
