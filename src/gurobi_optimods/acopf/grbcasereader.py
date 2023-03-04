@@ -124,6 +124,7 @@ class Branch:
         self.status = status
         self.z = z = r + x*1j
         self.y = y = 1/z
+        self.ynorm2 = (y.real)*(y.real) + (y.imag)*(y.imag)
         self.Yff = Yff = (y + bc/2*1j)*invratio2
         self.Yft = Yft = -y*multft
         self.Ytf = Ytf = -y*multtf
@@ -136,6 +137,9 @@ class Branch:
         self.Btf = Btf = (self.Ytf).imag
         self.Gtt = Gtt = (self.Ytt).real
         self.Btt = Btt = (self.Ytt).imag
+
+        self.isacline = (ratio == 1) and (self.angle_rad == 0)
+        self.nongaining = (self.Gff >= 0) and (self.Gtt >= 0) and (self.Gff >= -self.Gft) and (self.Gtt >= -self.Gtf)
 
         self.inputcs   = False
         self.inputc    = 2
@@ -280,7 +284,7 @@ def read_case_thrulines(log, alldata, lines):
                     slackbus = int(thisline[0])
                     log.joint("    Slack bus: %d\n"%slackbus)
 
-                if thisline[0] != '%':
+                if thisline[0] != '%': 
                     nodeID   = int(thisline[0])
                     nodetype = int(thisline[1])
 
@@ -305,7 +309,7 @@ def read_case_thrulines(log, alldata, lines):
 
                     if baseMVA == 0.0:
                         log.raise_exception("Error: baseMVA not available before bus section\n")
-
+                        
                     buses[numbuses] = Bus(numbuses, nodeID, nodetype, Pd/baseMVA,
                                           Qd/baseMVA, Gs/baseMVA, Bs/baseMVA,
                                           Vbase, Vmax, Vmin, linenum-1)
@@ -320,7 +324,49 @@ def read_case_thrulines(log, alldata, lines):
 
                     IDtoCountmap[nodeID] = numbuses
                     numPload += (Pd > 0)
+                else:
+                    nodeID   = int(thisline[1])
+                    nodetype = int(thisline[2])
+                    log.joint('bus %d nodeID %d is isolated and has type %d\n'%(numbuses, nodeID, nodetype))
+                    log.joint('   setting it to type 4\n')
+                    nodetype = 4
+                    break_exit('isolated')
+                    
 
+                    if nodetype != 1 and nodetype != 2 and nodetype != 3 and nodetype != 4:
+                        log.raise_exception("Error: Bad bus %s has type %s\n"%(thisline[0], thisline[1]))
+
+                    if nodetype == 4:
+                        numisolated += 1
+
+                    # Trim ; if present
+                    Vmin = 0
+
+                    Pd    = 0
+                    Qd    = 0
+                    Gs    = 0
+                    Bs    = 0
+                    Vbase = float(thisline[10])
+                    Vmax  = 0
+
+                    if baseMVA == 0.0:
+                        log.raise_exception("Error: baseMVA not available before bus section\n")
+                        
+                    buses[numbuses] = Bus(numbuses, nodeID, nodetype, Pd/baseMVA,
+                                          Qd/baseMVA, Gs/baseMVA, Bs/baseMVA,
+                                          Vbase, Vmax, Vmin, linenum-1)
+
+                    if nodetype == 3:
+                        log.joint('    Bus %d ID %d is the reference bus\n'%(numbuses, nodeID))
+                        alldata['refbus'] = numbuses
+
+                    if nodetype == 1 or nodetype == 2 or nodetype == 3:
+                        sumPd += Pd
+                        sumQd += Qd
+
+                    IDtoCountmap[nodeID] = numbuses
+                    numPload += (Pd > 0)
+                    
                 linenum += 1
             # Finished reading bus section
             alldata['buses']        = buses

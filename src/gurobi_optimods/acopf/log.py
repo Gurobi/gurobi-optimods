@@ -68,7 +68,7 @@ class Logger:
 
 
     def printversion(self):
-        self.joint("Version 0.1.3-g\n\n")
+        self.joint("Version 0.1.5_030423-g\n\n")
 
     '''   
     def printversion(self):

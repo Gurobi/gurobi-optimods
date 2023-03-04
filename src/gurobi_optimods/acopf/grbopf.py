@@ -10,6 +10,7 @@ from grbfile import read_configfile, grbread_coords, gbread_graphattrs
 from grbgraphical import grbgraphical
 from grbformulator_ac import lpformulator_ac
 from grbformulator_dc import lpformulator_dc
+from grbformulator_iv import lpformulator_iv
 
 if __name__ == '__main__':
     if len(sys.argv) > 3 or len(sys.argv) < 2:
@@ -41,9 +42,11 @@ if __name__ == '__main__':
             grbread_coords(alldata)
 
     if alldata['doac']:
-            lpformulator_ac(alldata)
-    else:
+        lpformulator_ac(alldata)
+    elif alldata['dodc']:
         lpformulator_dc(alldata)
+    elif alldata['doiv']:
+        lpformulator_iv(alldata)
             
     break_exit("formulated and solved")
     log.close_log()
@@ -67,8 +70,10 @@ if __name__ == '__main__':
 
         if alldata['doac']:
             lpformulator_ac(alldata)
-        else:
+        elif alldata['dodc']:
             lpformulator_dc(alldata)
+        elif alldata['doiv']:
+            lpformulator_iv(alldata)
             
         break_exit("formulated and solved")
         log.close_log()

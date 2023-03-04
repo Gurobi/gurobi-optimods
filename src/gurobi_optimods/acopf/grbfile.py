@@ -36,7 +36,8 @@ def read_configfile(alldata, filename):
     graphattrsfilename   = None
     coordsfilename       = None
     dopolar              = False
-    doac                 = True
+    doac                 = False
+    doiv                 = False
     dodc                 = False
     branchswitching_mip  = False
     branchswitching_comp = False    
@@ -108,6 +109,13 @@ def read_configfile(alldata, filename):
 
         elif thisline[0] == 'useconvexformulation':
             useconvexformulation = True
+            doac = True
+
+        elif thisline[0] == 'doiv':
+            doiv = True
+            use_ef = True # needed
+            doac = False
+            dodc = False
 
         elif thisline[0] == 'gvfileoutput':
             gvfilename = thisline[1]
@@ -127,6 +135,7 @@ def read_configfile(alldata, filename):
         elif thisline[0] == 'dodc':
             dodc      = 1
             doac      = 0
+            doiv      = 0
             dodcbasic = 0
 
         elif thisline[0] == 'dodcbasic':
@@ -137,6 +146,7 @@ def read_configfile(alldata, filename):
         elif thisline[0] == 'doac':
             dodc      = 0
             doac      = 1
+            doiv      = 0
             dodcbasic = 0
 
         elif thisline[0] == 'dographics':
@@ -159,7 +169,7 @@ def read_configfile(alldata, filename):
               ('strictcheckvoltagesolution', strictcheckvoltagesolution),
               ('voltsfilename', voltsfilename), ('usevoltsolution', usevoltsolution),
               ('FIXCS', fixcs), ('useconvexformulation', useconvexformulation),
-              ('skipjabr', skipjabr), ('useactivelossineqs', useactivelossineqs), ('usemipstart', usemipstart), ('cutplane', cutplane), ('dodc',dodc),
+              ('skipjabr', skipjabr), ('useactivelossineqs', useactivelossineqs), ('usemipstart', usemipstart), ('cutplane', cutplane), ('dodc',dodc), ('doiv',doiv),
               ('doac', doac), ('fixtolerance', fixtolerance), ('use_ef', use_ef),
               ('substitute_nonconv', substitute_nonconv), ('dopolar', dopolar),
               ('usemaxdispersion', usemaxdispersion), ('maxdispersion_deg', maxdispersion_deg),
