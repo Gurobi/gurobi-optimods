@@ -123,3 +123,8 @@ To gasps of shock and awe, the L1 regression produces a *smaller mean absolute e
     2960.7
     >>> round(mean_squared_error(y_train, ols.predict(X_train)), 1)
     2907.3
+
+Refs
+----
+
+https://medium.com/@jingli_57859/l1-l2-norm-and-regularization-comparisons-a0f45065593d
