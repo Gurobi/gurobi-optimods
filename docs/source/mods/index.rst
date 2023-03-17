@@ -8,4 +8,5 @@ The Opti Mods
    weighted-matching
    card-regression
    l1-regression
+   network-flow
    workforce
