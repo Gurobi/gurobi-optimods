@@ -1,7 +1,5 @@
-.. This template should be copied to docs/source/mods/<mod_name>.rst
-
-My New Mod
-==========
+Optimal Power Flow
+==================
 
 A little background on the proud history of mathprog in this field.
 
@@ -75,14 +73,11 @@ easy access by users.
 
 .. testcode:: mod
 
-    import pandas as pd
+    from gurobi_optimods.opf import solve_acopf_model
+    from gurobi_optimods.datasets import load_opf
 
-    from gurobi_optimods.datasets import load_mod_data
-    from gurobi_optimods.mod import solve_mod
-
-
-    data = load_mod_data()
-    solution = solve_mod(data.table1, data.table2)
+    conf, case = load_opf()
+    solution   = solve_acopf_model(conf, case)
 
 ..  A snippet of the Gurobi log output here won't show in the rendered page,
     but serves as a doctest to make sure the code example runs. The ... lines
@@ -92,9 +87,9 @@ easy access by users.
     :hide:
 
     ...
-    Optimize a model with 14 rows, 72 columns, and 72 nonzeros
+    Constructed ACOPF model with 134 variables and 218 constraints.
     ...
-    Optimal objective
+    Model Status: optimal.
     ...
 
 The model is solved as an LP/MIP/QP by Gurobi.

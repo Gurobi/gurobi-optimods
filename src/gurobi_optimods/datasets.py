@@ -30,3 +30,9 @@ def load_workforce():
             DATA_FILE_DIR / "workforce/shift_requirements.csv", parse_dates=["Shift"]
         ),
     )
+
+
+def load_opf():
+    conf = str(DATA_FILE_DIR) + "/opf/kit.conf"
+    case = str(DATA_FILE_DIR) + "/opf/case9.m"
+    return conf, case
