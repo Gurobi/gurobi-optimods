@@ -24,7 +24,7 @@ Consider a service business, like a restaurant, that develops its workforce plan
 
         The returned assignment dataframe is a subset of the availability dataframe, with the same columns. Each row specifies that the given worker has been assigned the given shift.
 
-    .. tab:: Mathematical Model
+    .. tab:: Optimization Model
 
         Set of :math:`S` shifts to cover using set of workers :math:`W`. Workers :math:`w \in W_{s} \subseteq W` are available to work a given shift `s`, and are paid an amount :math:`c_{w}` for each assigned shift. Shift :math:`s` requires :math:`r_{s}` workers assigned. The model is defined on variables :math:`x_{ws}` such that
 
@@ -75,7 +75,9 @@ Data examples
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE
 
-            >>> pd.read_feather("examples/data/availability.feather")
+            >>> from gurobi_optimods import datasets
+            >>> data = datasets.load_workforce()
+            >>> data.availability
                Worker      Shift
             0     Amy 2022-07-02
             1     Amy 2022-07-03
@@ -100,19 +102,21 @@ Data examples
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE
 
-            >>> pd.read_feather("examples/data/shift_requirements.feather")
-                Required      Shift
-            0          3 2022-07-01
-            1          2 2022-07-02
-            2          4 2022-07-03
-            3          2 2022-07-04
-            4          5 2022-07-05
-            ..       ...        ...
-            9          3 2022-07-10
-            10         4 2022-07-11
-            11         5 2022-07-12
-            12         7 2022-07-13
-            13         5 2022-07-14
+            >>> from gurobi_optimods import datasets
+            >>> data = datasets.load_workforce()
+            >>> data.shift_requirements
+                    Shift  Required
+            0  2022-07-01         3
+            1  2022-07-02         2
+            2  2022-07-03         4
+            3  2022-07-04         2
+            4  2022-07-05         5
+            ..        ...       ...
+            9  2022-07-10         3
+            10 2022-07-11         4
+            11 2022-07-12         5
+            12 2022-07-13         7
+            13 2022-07-14         5
             <BLANKLINE>
             [14 rows x 2 columns]
 
@@ -125,8 +129,10 @@ Data examples
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE
 
-            >>> pd.read_feather("examples/data/pay_rates.feather")
-            Worker  PayRate
+            >>> from gurobi_optimods import datasets
+            >>> data = datasets.load_workforce()
+            >>> data.pay_rates
+              Worker  PayRate
             0    Amy       10
             1    Bob       12
             2  Cathy       10
@@ -144,7 +150,32 @@ Code
 
 Show the code required to run the mod. Users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output.
 
-.. literalinclude:: ../../../examples/workforce.py
+.. testcode:: workforce
+
+    import pandas as pd
+    pd.options.display.max_rows = 15
+
+    from gurobi_optimods.datasets import load_workforce
+    from gurobi_optimods.workforce import solve_workforce_scheduling
+
+
+    # Load example data.
+    data = load_workforce()
+
+    # Get winning results.
+    assigned_shifts = solve_workforce_scheduling(
+        availability=data.availability,
+        shift_requirements=data.shift_requirements,
+        pay_rates=data.pay_rates,
+    )
+
+.. testoutput:: workforce
+    :hide:
+
+    ...
+    Optimize a model with 14 rows, 72 columns and 72 nonzeros
+    ...
+    Optimal objective  4.800000000e+02
 
 The model is solved as a linear program by Gurobi.
 
@@ -180,18 +211,6 @@ Solution
 Solution is a selection of shift assignments. The returned dataframe is just a
 subset of the availability dataframe, so we can transform the results using
 normal pandas code (no gurobipy interaction).
-
-.. testcode:: workforce
-    :hide:
-
-    from examples.workforce import assigned_shifts
-    pd.options.display.max_rows = 15
-
-.. testoutput:: workforce
-    :hide:
-
-    ...
-    Optimal objective  4.800000000e+02
 
 .. doctest:: workforce
     :options: +NORMALIZE_WHITESPACE

@@ -14,8 +14,12 @@ Contents
 --------
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    mods/index
    usage
+
+.. toctree::
+   :maxdepth: 1
+
    api

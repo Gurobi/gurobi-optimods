@@ -7,7 +7,7 @@ name = "gurobi-optimods"
 description = "Gurobi OptiMods -- optimization easy to use"
 readme = "README.rst"
 requires-python = ">=3.8"
-license = { text = "MIT" }
+license = "Apache-2.0"
 keywords = ["optimization", "gurobipy", "pandas"]
 authors = [
     { name = "Simon Bowly", email = "bowly@gurobi.com" },
@@ -24,14 +24,10 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-    "feather-format",
     "gurobipy",
     "numpy",
     "pandas",
     "scipy",
-    "matplotlib",
-    "networkx",
-    "sklearn",
 ]
 dynamic = ["version"]
 
