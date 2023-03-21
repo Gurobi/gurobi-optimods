@@ -21,7 +21,6 @@ class TestNetworkFlow(unittest.TestCase):
     def test_min_cost_flow(self):
         G, _, _ = load_network_flow_example_data()
         sol, cost = min_cost_flow(G)
-        print(sol)
         self.assertEqual(cost, 150)
         self.assertEqual(
             [s[0] for s in sol],

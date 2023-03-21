@@ -4,7 +4,6 @@ as sklearn.datasets.
 """
 
 import pathlib
-from random import Random
 
 import pandas as pd
 import networkx as nx
@@ -56,5 +55,7 @@ def _create_network_flow():
     G.nodes[0]["demand"] = 20
     G.nodes[3]["demand"] = -5
     G.nodes[4]["demand"] = -15
+
+    # TODO: plot and place in docs
 
     nx.write_gml(G, "network_flow.gml")
