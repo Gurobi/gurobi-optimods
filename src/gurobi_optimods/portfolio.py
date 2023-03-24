@@ -3,6 +3,7 @@ import gurobipy as gp
 # In general the public API should be a single class or function. Go with
 # whatever makes the most sense for this mod.
 
+
 class Portfolio:
     def __init__(
         self,
@@ -29,7 +30,7 @@ class Portfolio:
 
 
 def solve_mod(data):
-    pass
+    print("stocks")
 
 
 def minimize_risk(data):

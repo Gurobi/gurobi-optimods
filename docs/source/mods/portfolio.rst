@@ -1,70 +1,70 @@
-.. This template should be copied to docs/source/mods/<mod_name>.rst
+Portfolio Optimization
+======================
 
-My New Mod
-==========
+Portfolio optimization is concerned with allocation of wealth into assets.
 
-A little background on the proud history of mathprog in this field.
-
-Also data science.
 
 Problem Specification
 ---------------------
 
-Give a brief overview of the problem being solved.
+Our methods use risk and return estimators.
 
 .. tabs::
 
     .. tab:: Domain-Specific Description
 
-        Give a definition of the problem in the language of the domain expert.
+        We consider a multi-periods portfolio optimization problem where ...
 
     .. tab:: Optimization Model
 
         Give the mathematical programming formulation of the problem here.
+        The risk is expressed as
 
-Give examples of the various input data structures. These inputs should be fixed,
-so use doctests where possible.
+        .. math::
+
+            x^\top \Sigma x
+
+            x^\mathrm{T} \Sigma x
+
+
+The risk estimator is given through a time series.
 
 .. testsetup:: mod
 
     # Set pandas options for displaying dataframes, if needed
     import pandas as pd
     pd.options.display.max_rows = 10
+    pd.options.display.max_columns = 7
 
 .. tabs::
 
-    .. tab:: ``availability``
+    .. tab:: ``stocks``
 
-        Give interpretation of input data.
+        For a number of stocks we have historic values.
 
         .. doctest:: mod
             :options: +NORMALIZE_WHITESPACE
 
             >>> from gurobi_optimods import datasets
-            >>> data = datasets.load_workforce()
-            >>> data.availability
-               Worker      Shift
-            0     Amy 2022-07-02
-            1     Amy 2022-07-03
-            2     Amy 2022-07-05
-            3     Amy 2022-07-07
-            4     Amy 2022-07-09
-            ..    ...        ...
-            67     Gu 2022-07-10
-            68     Gu 2022-07-11
-            69     Gu 2022-07-12
-            70     Gu 2022-07-13
-            71     Gu 2022-07-14
+            >>> data = datasets.load_portfolio()
+            >>> data
+                       AA        BB        CC  ...        HH        II        JJ
+            0   -0.000601  0.002353 -0.075234  ...  0.060737 -0.012869 -0.022137
+            1    0.019177  0.050008  0.041345  ... -0.026674  0.009876  0.012809
+            2   -0.020333  0.026638 -0.038999  ... -0.023153 -0.007007 -0.038034
+            3    0.001421 -0.053813 -0.013347  ... -0.012348  0.018736 -0.058373
+            4    0.008648  0.114836  0.003617  ...  0.064090 -0.011153  0.024333
+            ..        ...       ...       ...  ...       ...       ...       ...
+            240  0.007382 -0.000724 -0.002444  ... -0.007654  0.018015 -0.017135
+            241 -0.003362 -0.106913 -0.082365  ...  0.040787 -0.023020 -0.067792
+            242  0.004359 -0.029763 -0.041986  ...  0.014522 -0.017109 -0.060247
+            243 -0.018402 -0.054211 -0.075788  ... -0.013557  0.022576 -0.036793
+            244 -0.016237  0.015580 -0.026970  ... -0.005893 -0.013456 -0.032203
             <BLANKLINE>
-            [72 rows x 2 columns]
+            [245 rows x 10 columns]
 
         In the model, this corresponds to ...
 
-    .. tab:: ``shift_requirements``
-
-        Another bit of input data (perhaps a secondary table)
-
-|
 
 Code
 ----
@@ -77,12 +77,12 @@ easy access by users.
 
     import pandas as pd
 
-    from gurobi_optimods.datasets import load_mod_data
-    from gurobi_optimods.mod import solve_mod
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import solve_mod
 
 
-    data = load_mod_data()
-    solution = solve_mod(data.table1, data.table2)
+    data = load_portfolio()
+    solution = solve_mod(data)
 
 ..  A snippet of the Gurobi log output here won't show in the rendered page,
     but serves as a doctest to make sure the code example runs. The ... lines
@@ -91,11 +91,8 @@ easy access by users.
 .. testoutput:: mod
     :hide:
 
-    ...
-    Optimize a model with 14 rows, 72 columns, and 72 nonzeros
-    ...
-    Optimal objective
-    ...
+    stocks
+
 
 The model is solved as an LP/MIP/QP by Gurobi.
 
