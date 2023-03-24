@@ -7,6 +7,6 @@ The Opti Mods
    bipartite-matching
    card-regression
    l1-regression
-   opf
+   opf/index
    weighted-matching
    workforce

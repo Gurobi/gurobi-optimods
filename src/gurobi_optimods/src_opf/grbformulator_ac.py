@@ -410,7 +410,9 @@ def lpformulator_ac_create_vars(alldata, model):
                 " --- Broken assumption 1: branch j %d f %d t %d minanglerad %f maxanglerad %f\n"
                 % (j, f, t, branch.minangle_rad, branch.maxangle_rad)
             )
-            log.raise_exception("phase angle assumption 1\n")
+            log.raise_exception(
+                "phase angle assumption 1\n"
+            )  # TODO raise Python value error
 
         ubound = ubasic = maxprod
         lbound = lbasic = -maxprod

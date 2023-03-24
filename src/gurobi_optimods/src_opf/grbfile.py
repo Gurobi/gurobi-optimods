@@ -103,7 +103,9 @@ def read_configfile(alldata, filename, casefile=""):
             fixtolerance = float(thisline[2])
             if usevoltsolution:
                 log.joint("Cannot use both voltsfilename and voltsolution\n")
-                log.raise_exception("Error: Illegal option combination\n")
+                log.raise_exception(
+                    "Error: Illegal option combination\n"
+                )  # TODO raise Python value exception
 
         elif thisline[0] == "usevoltsoution":
             if voltsfilename != "NONE":

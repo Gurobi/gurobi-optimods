@@ -17,39 +17,30 @@ from .src_opf.grbformulator_iv import lpformulator_iv
 def solve_acopf_model(configfile, casefile, logfile=""):
     """Construct an ACOPF model from given data and solve it with Gurobi"""
 
-    try:
-        if not logfile:
-            logfile = "gurobiOPF.log"
+    if not logfile:
+        logfile = "gurobiOPF.log"
 
-        # Create log object
-        log = Logger(logfile)
+    # Create log object
+    log = Logger(logfile)
 
-        if not isinstance(configfile, str):
-            log.raise_exception(
-                "Error: Configuration file argument not of type String\n"
-            )
+    if not isinstance(configfile, str):
+        log.raise_exception("Error: Configuration file argument not of type String\n")
 
-        alldata = {}
-        alldata["LP"] = {}
-        alldata["MIP"] = {}
-        alldata["log"] = log
+    alldata = {}
+    alldata["LP"] = {}
+    alldata["MIP"] = {}
+    alldata["log"] = log
 
-        # Read configuration file
-        read_configfile(alldata, configfile, casefile)
+    # Read configuration file
+    read_configfile(alldata, configfile, casefile)
 
-        # Read case file holding OPF network data
-        read_case(alldata)
+    # Read case file holding OPF network data
+    read_case(alldata)
 
-        if alldata["dographics"] and alldata["coordsfilename"] != None:
-            grbread_coords(alldata)
+    if alldata["dographics"] and alldata["coordsfilename"] != None:
+        grbread_coords(alldata)
 
-        # Construct model from collected data and optimize it
-        lpformulator_ac(alldata)
+    # Construct model from collected data and optimize it
+    lpformulator_ac(alldata)
 
-        log.close_log()
-
-    except gp.GurobiError as e:
-        print("Error in Gurobi: Error code %s: %s" % (e.errno, e))
-
-    except OPFException as e:
-        print(str(e))
+    log.close_log()
