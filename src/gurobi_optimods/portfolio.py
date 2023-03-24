@@ -1,12 +1,7 @@
-# Implementation of your new mod. This should be copied to
-# src/gurobi_optimods/<mod-name>.py. You may alternatively want to include
-# your mod in an existing file, if it coexists naturally with other mods.
-#
-# In general the public API should be a single class or function. Go with
-# whatever makes the most sense for this mod.
-
 import gurobipy as gp
 
+# In general the public API should be a single class or function. Go with
+# whatever makes the most sense for this mod.
 
 def solve_mod(data):
     """
