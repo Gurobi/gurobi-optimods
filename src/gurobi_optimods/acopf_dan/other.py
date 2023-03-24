@@ -1,4 +1,4 @@
-"""
+'''
 
       if  minanglerad >= -.5*math.pi:
 	lbound = maxprod*sin(minanglerad)
@@ -13,7 +13,7 @@ else if  minanglerad >= - 1.5*math.pi:
       }
       else{
 	ubound = maxprod
-	lbound = -maxprod
+	lbound = -maxprod 
       }
     }
     else if(maxanglerad <= math.pi){
@@ -29,7 +29,7 @@ else if  minanglerad >= - 1.5*math.pi:
 	lbound = -maxprod
       }
       else{
-	lbound = -maxprod
+	lbound = -maxprod 
       }
     }
     else if(maxanglerad <= 1.5*math.pi){
@@ -45,7 +45,7 @@ else if  minanglerad >= - 1.5*math.pi:
 	lbound = -maxprod
       }
       else{
-	lbound = -maxprod
+	lbound = -maxprod 
       }
 
     }
@@ -53,4 +53,4 @@ else:
   ubound = maxprod
       lbound = -maxprod
 
-"""
+'''

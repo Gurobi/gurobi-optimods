@@ -1,21 +1,17 @@
 import sys
 import time
-
-# from git import Repo # Maybe remove in final version
+#from git import Repo # Maybe remove in final version
 from socket import gethostname
-
 from opfexception import OPFException
-
 
 class Logger:
     """Class to handle logging of the OPF solve beyond Gurobi output"""
 
     def __init__(self, logfilename):
-        self.logfilename = logfilename
-        self.logfile = open(logfilename, "w")
-        self.screen = 1
-        self.log = 1
-        localtime = time.asctime(time.localtime(time.time()))
+        self.logfile = open(logfilename,"w")
+        self.screen  = 1
+        self.log     = 1
+        localtime    = time.asctime(time.localtime(time.time()))
         self.joint("Starting log: %s\n" % localtime)
         self.joint("Running on: " + gethostname() + "\n")
         self.printversion()
@@ -39,8 +35,8 @@ class Logger:
 
         # Print to screen
         if self.screen and write == 1:
-            print(message, end=""),
-            sys.stdout.flush()
+            print(message, end = ''),
+            sys.stdout.flush() 
 
     def both_on(self):
         self.screen = self.log = 1
@@ -62,21 +58,22 @@ class Logger:
 
     # Show error message and raise exception
     def raise_exception(self, message):
-        self.log = 1
+        self.log    = 1
         self.screen = 0
         if message:
             self.joint("\n" + message)
         self.close_log()
-        raise OPFException(
-            "\n OPFException: " + message + "Encountered an error. Quitting"
-        )
+        raise OPFException("\n OPFException: " + message + "Encountered an error. Quitting")
+
+
 
     def printversion(self):
-        self.joint("Version 0.1.5_030423-g\n\n")
+        self.joint("Version 0.1.030623-g\n\n")
 
-    """
+    '''   
     def printversion(self):
         repo    = Repo("/Users/daniel.bienstock/git/gurobi-optimods/src/gurobi_optimods/acopf",search_parent_directories=True)
         ithash = repo.head.object.hexsha
         self.joint("Version 0.0.95-g%s\n\n"%githash[:10])
-    """
+    '''
+

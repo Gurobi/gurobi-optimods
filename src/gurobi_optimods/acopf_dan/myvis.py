@@ -2,7 +2,7 @@
 
 import plotly.graph_objects as go
 import plotutils as pu
-import psutil
+import psutil 
 import numpy as np
 import networkx as nx
 from collections import defaultdict
@@ -10,13 +10,11 @@ import plotly.graph_objects as go
 from typing import Any, List, Dict, Tuple, Union, Callable
 
 Vertex = Any
-Edge = Tuple[Vertex, Vertex]
-Num = Union[int, float]
-
+Edge   = Tuple[Vertex, Vertex]
+Num    = Union[int, float]
 
 class GraphVisualization:
     """Description"""
-
     #
     # See PDF linked above for full description
     #
@@ -35,9 +33,7 @@ class GraphVisualization:
         node_text_font_size: Union[Dict[Vertex, Num], Callable, str] = None,
         node_size: Union[Dict[Vertex, Num], Callable, Num] = None,
         mynode_size: Union[Dict[Vertex, str], Callable] = None,
-        node_color: Union[
-            Dict[Vertex, Union[str, Num]], Callable, Union[str, Num]
-        ] = None,
+        node_color: Union[Dict[Vertex, Union[str, Num]], Callable, Union[str, Num]] = None,
         node_border_width: Union[Dict[Vertex, Num], Callable, Num] = None,
         node_border_color: Union[Dict[Vertex, str], Callable, str] = None,
         node_opacity: Num = None,
@@ -57,16 +53,16 @@ class GraphVisualization:
         self.default_settings = dict(
             node_text=str,  # show node label
             node_text_position="middle center",
-            node_text_font_color="#000000",
-            node_text_font_family="Arial",
+            node_text_font_color='#000000',
+            node_text_font_family='Arial',
             node_text_font_size=14,
             node_size=10 if self.is_3d else 18,
-            node_color="#fcfcfc",
+            node_color='#fcfcfc',
             node_border_width=2,
-            node_border_color="#333333",
+            node_border_color='#333333',
             node_opacity=0.8,
             edge_width=4 if self.is_3d else 2,
-            edge_color="#000000",  #'#808080',
+            edge_color='#000000', #'#808080',
             edge_opacity=0.8,
         )
 
@@ -92,8 +88,8 @@ class GraphVisualization:
         groups = defaultdict(list)
 
         for edge in self.G.edges():
-            color = self._get_setting("edge_color", edge)
-            width = self._get_setting("edge_width", edge)
+            color = self._get_setting('edge_color', edge)
+            width = self._get_setting('edge_width', edge)
             groups[(color, width)] += [edge]
 
         # process each group
@@ -109,21 +105,17 @@ class GraphVisualization:
             params = dict(
                 x=x,
                 y=y,
-                mode="lines",
-                hoverinfo="none",
+                mode='lines',
+                hoverinfo='none',
                 line=dict(color=color, width=width),
-                opacity=self._get_setting("edge_opacity"),
+                opacity=self._get_setting('edge_opacity'),
             )
 
-            traces += [
-                go.Scatter3d(z=z, **params) if self.is_3d else go.Scatter(**params)
-            ]
+            traces += [go.Scatter3d(z=z, **params) if self.is_3d else go.Scatter(**params)]
 
         return traces
 
-    def _get_node_trace(
-        self, showlabel, colorscale, showscale, colorbar_title, reversescale
-    ) -> Union[go.Scatter, go.Scatter3d]:
+    def _get_node_trace(self, showlabel, colorscale, showscale, colorbar_title, reversescale) -> Union[go.Scatter, go.Scatter3d]:
         x, y, z = [], [], []
         for v in self.G.nodes():
             x += [self.pos[v][0]]
@@ -134,31 +126,31 @@ class GraphVisualization:
         params = dict(
             x=x,
             y=y,
-            mode="markers" + ("+text" if showlabel else ""),
-            hoverinfo="text",
+            mode='markers' + ('+text' if showlabel else ''),
+            hoverinfo='text',
             marker=dict(
                 showscale=showscale,
                 colorscale=colorscale,
                 reversescale=reversescale,
-                color=self._get_setting("node_color"),
-                size=self._get_setting("node_size"),
-                line_width=self._get_setting("node_border_width"),
-                line_color=self._get_setting("node_border_color"),
+                color=self._get_setting('node_color'),
+                size=self._get_setting('node_size'),
+                line_width=self._get_setting('node_border_width'),
+                line_color=self._get_setting('node_border_color'),
                 colorbar=dict(
                     thickness=15,
                     title=colorbar_title,
-                    xanchor="left",
-                    titleside="right",
+                    xanchor='left',
+                    titleside='right'
                 ),
             ),
-            text=self._get_setting("node_text"),
+            text=self._get_setting('node_text'),
             textfont=dict(
-                color=self._get_setting("node_text_font_color"),
-                family=self._get_setting("node_text_font_family"),
-                size=self._get_setting("node_text_font_size"),
+                color=self._get_setting('node_text_font_color'),
+                family=self._get_setting('node_text_font_family'),
+                size=self._get_setting('node_text_font_size')
             ),
-            textposition=self._get_setting("node_text_position"),
-            opacity=self._get_setting("node_opacity"),
+            textposition=self._get_setting('node_text_position'),
+            opacity=self._get_setting('node_opacity'),
         )
 
         trace = go.Scatter3d(z=z, **params) if self.is_3d else go.Scatter(**params)
@@ -166,9 +158,7 @@ class GraphVisualization:
 
     def _get_setting(self, setting_name, edge=None):
         default_setting = self.default_settings.get(setting_name)
-        def_func = (
-            default_setting if callable(default_setting) else lambda x: default_setting
-        )
+        def_func = default_setting if callable(default_setting) else lambda x: default_setting
         setting = self.__dict__.get(setting_name)
 
         if edge is None:  # vertex-specific
@@ -196,9 +186,9 @@ class GraphVisualization:
     def create_figure(
         self,
         showlabel=True,
-        colorscale="YlGnBu",
+        colorscale='YlGnBu',
         showscale=False,
-        colorbar_title="",
+        colorbar_title='',
         reversescale=False,
         **params
     ) -> go.Figure:
@@ -208,7 +198,7 @@ class GraphVisualization:
             zeroline=False,
             showline=False,
             visible=False,
-            ticks="",
+            ticks='',
             showticklabels=False,
         )
         scene = dict(
@@ -218,15 +208,15 @@ class GraphVisualization:
         )
 
         layout_params = dict(
-            paper_bgcolor="rgba(255,255,255,255)",  # white
-            plot_bgcolor="rgba(0,0,0,0)",  # transparent
+            paper_bgcolor='rgba(255,255,255,255)',  # white
+            plot_bgcolor='rgba(0,0,0,0)',  # transparent
             autosize=False,
             height=400,
             width=450 if showscale else 375,
-            title="",
+            title='',
             titlefont_size=16,
             showlegend=False,
-            hovermode="closest",
+            hovermode='closest',
             margin=dict(b=5, l=0, r=0, t=20),
             annotations=[],
             xaxis=axis_settings,
@@ -240,9 +230,5 @@ class GraphVisualization:
         # create figure
         fig = go.Figure(layout=go.Layout(**layout_params))
         fig.add_traces(self._get_edge_traces())
-        fig.add_trace(
-            self._get_node_trace(
-                showlabel, colorscale, showscale, colorbar_title, reversescale
-            )
-        )
+        fig.add_trace(self._get_node_trace(showlabel, colorscale, showscale, colorbar_title, reversescale))
         return fig
