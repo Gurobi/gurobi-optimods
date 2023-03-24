@@ -4,14 +4,14 @@
 
 import unittest
 
-from gurobi_optimods.datasets import load_mod_example_data
-from gurobi_optimods.mod import solve_mod
+from gurobi_optimods.datasets import load_portfolio
+from gurobi_optimods.portfolio import solve_mod
 
 
 class TestMod(unittest.TestCase):
     def test_datasets(self):
         # If you added something to optimods.datasets, test it here
-        data = load_mod_example_data()
+        data = load_portfolio()
         self.assertEqual(set(data.keys()), {"a", "b", "c"})
 
     def test_simple(self):
