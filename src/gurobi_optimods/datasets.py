@@ -32,7 +32,13 @@ def load_workforce():
     )
 
 
-def load_opf():
-    conf = str(DATA_FILE_DIR) + "/opf/kit.conf"
+def load_acopf():
+    conf = str(DATA_FILE_DIR) + "/opf/kit_acopf.conf"
+    case = str(DATA_FILE_DIR) + "/opf/case9.m"
+    return conf, case
+
+
+def load_dcopf():
+    conf = str(DATA_FILE_DIR) + "/opf/kit_dcopf.conf"
     case = str(DATA_FILE_DIR) + "/opf/case9.m"
     return conf, case

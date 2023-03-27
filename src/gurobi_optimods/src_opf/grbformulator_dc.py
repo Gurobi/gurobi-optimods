@@ -9,8 +9,6 @@ from .grbfile import grbreadvoltsfile
 from .grbgraphical import grbgraphical
 from .grbformulator_ac import computebalbounds
 
-globalalldata = {}
-
 
 def lpformulator_dc(alldata):
     """Formulate DCOPF model and solve it"""
@@ -20,13 +18,12 @@ def lpformulator_dc(alldata):
 
     starttime = time.time()
 
-    global globalalldata
-    globalalldata = alldata
-
     # Handle special settings
     # lpformulator_setup(alldata)
 
     sol_count = 0
+    solution = None
+    objval = None
     # Create model
     with gp.Env() as env, gp.Model("grbacs", env=env) as model:
         # Add model variables and constraints
@@ -50,6 +47,16 @@ def lpformulator_dc(alldata):
 
         if sol_count > 0:
             lpformulator_dc_examine_solution(alldata, model)
+            objval = model.ObjVal
+            solution = {}
+            for v in model.getVars():
+                if math.fabs(v.x) > 1e-09:
+                    log.joint(v.varname + " = " + str(v.x) + "\n")
+                    solution[v.VarName] = v.X
+                else:
+                    solution[v.VarName] = 0
+
+    return solution, objval
     """
     buses        = alldata['buses']
     branches     = alldata['branches']
@@ -438,7 +445,8 @@ def lpformulator_dc_opt(alldata, model):
 
         # Optimize
         model._vars = model.getVars()
-        model.optimize(mycallback)
+        model._data = alldata
+        model.optimize(plot_new_solution_callback)
     else:
         model.optimize()
 
@@ -541,30 +549,30 @@ def lpformulator_dc_examine_solution(alldata, model):
     """
 
 
-def mycallback(model, where):
+def plot_new_solution_callback(model, where):
     if where == GRB.Callback.MIPSOL:
         # solcnt = model.cbGet(GRB.Callback.MIP_SOLCNT)
         # print(solcnt)
         x = model.cbGetSolution(model._vars)
-        log = globalalldata["log"]
-        log.joint("Inside callback.\n")
+        log = model._data["log"]
+        # log.joint("Inside callback.\n")
         objval = model.cbGet(GRB.Callback.MIPSOL_OBJ)
         log.joint("Found new solution of value %.3e\n" % objval)
 
-        numbuses = globalalldata["numbuses"]
-        buses = globalalldata["buses"]
-        numbranches = globalalldata["numbranches"]
-        branches = globalalldata["branches"]
-        gens = globalalldata["gens"]
-        IDtoCountmap = globalalldata["IDtoCountmap"]
-        log = globalalldata["log"]
+        numbuses = model._data["numbuses"]
+        buses = model._data["buses"]
+        numbranches = model._data["numbranches"]
+        branches = model._data["branches"]
+        gens = model._data["gens"]
+        IDtoCountmap = model._data["IDtoCountmap"]
+        log = model._data["log"]
 
-        thetavar = globalalldata["LP"]["thetavar"]
-        Pvar_f = globalalldata["LP"]["Pvar_f"]
-        twinPvar_f = globalalldata["LP"]["twinPvar_f"]
+        thetavar = model._data["LP"]["thetavar"]
+        Pvar_f = model._data["LP"]["Pvar_f"]
+        twinPvar_f = model._data["LP"]["twinPvar_f"]
 
-        zholder = globalalldata["MIP"]["zholder"]
-        gholder = globalalldata["MIP"]["gholder"]
+        zholder = model._data["MIP"]["zholder"]
+        gholder = model._data["MIP"]["gholder"]
 
         numzeros = 0
         for j in range(1, 1 + numbranches):
@@ -577,27 +585,27 @@ def mycallback(model, where):
         # log.joint('numzeros: %d\n'%numzeros)
         # break_exit('HEY HEY HEY')
 
-        for j1 in range(1, 1 + globalalldata["numgens"]):
-            gen = globalalldata["gens"][j1]
+        for j1 in range(1, 1 + model._data["numgens"]):
+            gen = model._data["gens"][j1]
             gholder[j1 - 1] = (
-                globalalldata["baseMVA"] * x[gen.Pvarind]
+                model._data["baseMVA"] * x[gen.Pvarind]
             )  # print('gen',gen.count,x[gen.Pvarind])
             # break_exit('printed')  #functionality to be added
 
-        globalalldata["MIP"]["solutionfound"] = True
+        model._data["MIP"]["solutionfound"] = True
         difftol = 1e-6
-        if globalalldata["dographics"]:
-            if objval < globalalldata["MIP"]["bestsolval"] - difftol:
-                globalalldata["MIP"]["solcount"] += 1
+        if model._data["dographics"]:
+            if objval < model._data["MIP"]["bestsolval"] - difftol:
+                model._data["MIP"]["solcount"] += 1
                 textlist = []
-                textlist.append("SOLUTION " + str(globalalldata["MIP"]["solcount"]))
+                textlist.append("SOLUTION " + str(model._data["MIP"]["solcount"]))
                 textlist.append("OBJ: %10.2f" % (objval))
                 textlist.append("Lines off: %d" % (numzeros))
-                grbgraphical(globalalldata, "branchswitching", textlist)
+                grbgraphical(model._data, "branchswitching", textlist)
             else:
                 log.joint(
                     "Skipping graphical display due to insufficient improvement.\n"
                 )
 
-        globalalldata["MIP"]["bestsolval"] = objval
+        model._data["MIP"]["bestsolval"] = objval
         # break_exit('HO HO HO')

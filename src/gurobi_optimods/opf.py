@@ -14,7 +14,7 @@ from .src_opf.grbformulator_dc import lpformulator_dc
 from .src_opf.grbformulator_iv import lpformulator_iv
 
 
-def solve_acopf_model(configfile, casefile, logfile=""):
+def solve_opf_model(configfile, casefile, logfile=""):
     """Construct an ACOPF model from given data and solve it with Gurobi"""
 
     if not logfile:
@@ -47,13 +47,15 @@ def solve_acopf_model(configfile, casefile, logfile=""):
 
     # Construct model from collected data and optimize it
     if alldata["doac"]:
-        lpformulator_ac(alldata)
+        solution, objval = lpformulator_ac(alldata)
     elif alldata["dodc"]:
-        lpformulator_dc(alldata)
+        solution, objval = lpformulator_dc(alldata)
     elif alldata["doiv"]:
         lpformulator_iv(alldata)
     elif alldata["doslp_polar"]:
         alldata["doac"] = True
-        lpformulator_ac(alldata)
+        solution, objval = lpformulator_ac(alldata)
 
     log.close_log()
+
+    return solution, objval

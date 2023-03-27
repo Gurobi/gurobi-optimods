@@ -19,6 +19,8 @@ def lpformulator_ac(alldata):
 
     # Handle special settings
     lpformulator_setup(alldata)
+    solution = None
+    objval = None
 
     # Create model
     with gp.Env() as env, gp.Model("grbacs", env=env) as model:
@@ -37,15 +39,17 @@ def lpformulator_ac(alldata):
         if alldata["doslp_polar"]:
             break_exit("slp_polar formulation")
 
-            return
+            return solution, objval
 
-        lpformulator_ac_opt(alldata, model)
+        solution, objval = lpformulator_ac_opt(alldata, model)
 
     endtime = time.time()
     log.joint(
         "Overall time taken (model construction + optimization): %f s.\n"
         % (endtime - starttime)
     )
+
+    return solution, objval
 
     """
     buses        = alldata['buses']
@@ -124,7 +128,7 @@ def lpformulator_ac_opt(alldata, model):
         log.joint("Computing IIS...\n\n")
         model.computeIIS()
         log.joint("\nIIS computed, writing IIS to file acopfmodel.ilp\n\n")
-        model.write("acopfmodel.ilp")
+        model.write("acopfmodel_iis.ilp")
 
     elif model.status == GRB.UNBOUNDED:
         log.joint("\nModel Status: unbounded.\n\n")
@@ -137,6 +141,8 @@ def lpformulator_ac_opt(alldata, model):
 
     # Only print objective value and solution quality if at least
     # one feasible point is available
+    solution = None
+    objval = None
     if model.SolCount > 0:
         log.joint("Objective value = %.8e\n" % model.objVal)
         model.printQuality()
@@ -191,10 +197,16 @@ def lpformulator_ac_opt(alldata, model):
             """
 
         # break_exit('Show solution?')
-
+        objval = model.ObjVal
+        solution = {}
         for v in model.getVars():
             if math.fabs(v.x) > 1e-09:
                 log.joint(v.varname + " = " + str(v.x) + "\n")
+                solution[v.VarName] = v.X
+            else:
+                solution[v.VarName] = 0
+
+    return solution, objval
 
 
 def lpformulator_setup(alldata):
