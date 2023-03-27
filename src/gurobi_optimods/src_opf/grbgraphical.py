@@ -3,9 +3,8 @@ import math
 import time
 from gurobipy import *
 
-from .graph4 import *
-
 # from log import Logger
+from .graph4 import *
 from .myutils import break_exit
 
 

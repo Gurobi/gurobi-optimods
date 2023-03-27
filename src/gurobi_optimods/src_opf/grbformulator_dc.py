@@ -46,7 +46,7 @@ def lpformulator_dc(alldata):
         )
         log.joint("Solution count: %d\n" % (sol_count))
 
-        break_exit("Solver returned.")
+        # break_exit('Solver returned.')
 
         if sol_count > 0:
             lpformulator_dc_examine_solution(alldata, model)

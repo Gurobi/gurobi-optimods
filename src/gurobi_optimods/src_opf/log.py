@@ -1,7 +1,5 @@
 import sys
 import time
-
-# from git import Repo # Maybe remove in final version
 from socket import gethostname
 
 from .opfexception import OPFException
@@ -11,7 +9,6 @@ class Logger:
     """Class to handle logging of the OPF solve beyond Gurobi output"""
 
     def __init__(self, logfilename):
-        self.logfilename = logfilename
         self.logfile = open(logfilename, "w")
         self.screen = 1
         self.log = 1
@@ -72,7 +69,7 @@ class Logger:
         )
 
     def printversion(self):
-        self.joint("Version 0.1.5_030423-g\n\n")
+        self.joint("Version 0.1.030623-g\n\n")
 
     """
     def printversion(self):

@@ -3,7 +3,6 @@ import os
 import time
 import math
 import csv
-import pathlib
 import numpy as np
 
 from .myutils import break_exit
@@ -38,18 +37,22 @@ def read_configfile(alldata, filename, casefile=""):
     useactivelossineqs = False
     useconvexformulation = False
     usemaxdispersion = False
+    usemaxphasediff = False
     use_ef = False
     substitute_nonconv = False
     dographics = False
     graphattrsfilename = None
     coordsfilename = None
     dopolar = False
+    doslp_polar = False
     doac = False
     doiv = False
+    ivtype = None
     dodc = False
     branchswitching_mip = False
     branchswitching_comp = False
     maxdispersion_deg = 0
+    maxphasediff_deg = 360
     fixtolerance = 0
     linenum = 0
 
@@ -65,7 +68,7 @@ def read_configfile(alldata, filename, casefile=""):
             linenum += 1
             continue
 
-        if thisline[0] == "casefilename" and casefile == "":
+        if thisline[0] == "casefilename":
             casefilename = thisline[1]
 
         elif thisline[0] == "lpfilename":
@@ -80,6 +83,9 @@ def read_configfile(alldata, filename, casefile=""):
         elif thisline[0] == "dopolar":
             dopolar = True
 
+        elif thisline[0] == "doslp_polar":
+            doslp_polar = True
+
         elif thisline[0] == "branchswitching_mip":
             branchswitching_mip = True
 
@@ -89,6 +95,10 @@ def read_configfile(alldata, filename, casefile=""):
         elif thisline[0] == "usemaxdispersion":
             usemaxdispersion = True
             maxdispersion_deg = float(thisline[1])
+
+        elif thisline[0] == "usemaxphasediff":
+            usemaxphasediff = True
+            maxphasediff_deg = float(thisline[1])
 
         elif thisline[0] == "strictcheckvoltagesolution":
             strictcheckvoltagesolution = True
@@ -103,9 +113,7 @@ def read_configfile(alldata, filename, casefile=""):
             fixtolerance = float(thisline[2])
             if usevoltsolution:
                 log.joint("Cannot use both voltsfilename and voltsolution\n")
-                log.raise_exception(
-                    "Error: Illegal option combination\n"
-                )  # TODO raise Python value exception
+                log.raise_exception("Error: Illegal option combination\n")
 
         elif thisline[0] == "usevoltsoution":
             if voltsfilename != "NONE":
@@ -126,6 +134,8 @@ def read_configfile(alldata, filename, casefile=""):
             use_ef = True  # needed
             doac = False
             dodc = False
+
+            ivtype = thisline[1]
 
         elif thisline[0] == "gvfileoutput":
             gvfilename = thisline[1]
@@ -189,13 +199,17 @@ def read_configfile(alldata, filename, casefile=""):
         ("cutplane", cutplane),
         ("dodc", dodc),
         ("doiv", doiv),
+        ("ivtype", ivtype),
         ("doac", doac),
         ("fixtolerance", fixtolerance),
         ("use_ef", use_ef),
         ("substitute_nonconv", substitute_nonconv),
         ("dopolar", dopolar),
+        ("doslp_polar", doslp_polar),
         ("usemaxdispersion", usemaxdispersion),
         ("maxdispersion_deg", maxdispersion_deg),
+        ("usemaxphasediff", usemaxphasediff),
+        ("maxphasediff_deg", maxphasediff_deg),
         ("dographics", dographics),
         ("graphattrsfilename", graphattrsfilename),
         ("coordsfilename", coordsfilename),

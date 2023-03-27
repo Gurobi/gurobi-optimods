@@ -34,6 +34,11 @@ def lpformulator_ac(alldata):
 
         # break_exit('there')
 
+        if alldata["doslp_polar"]:
+            break_exit("slp_polar formulation")
+
+            return
+
         lpformulator_ac_opt(alldata, model)
 
     endtime = time.time()
@@ -48,12 +53,6 @@ def lpformulator_ac(alldata):
     gens         = alldata['gens']
     IDtoCountmap = alldata['IDtoCountmap']
     """
-
-
-def log_callback(model, where):
-    if where == GRB.Callback.MESSAGE:
-        msg = model.cbGet(GRB.Callback.MSG_STRING)
-        model._log.joint(msg)
 
 
 def lpformulator_ac_opt(alldata, model):
@@ -105,7 +104,7 @@ def lpformulator_ac_opt(alldata, model):
 
         # Optimize
         model._vars = model.getVars()
-        # model.optimize(log_callback)
+        # model.optimize(mycallback)
         model.optimize()
     else:
         model.optimize()
@@ -139,7 +138,7 @@ def lpformulator_ac_opt(alldata, model):
     # Only print objective value and solution quality if at least
     # one feasible point is available
     if model.SolCount > 0:
-        log.joint("Objective value = %g\n" % model.objVal)
+        log.joint("Objective value = %.8e\n" % model.objVal)
         model.printQuality()
         # FIXME yes, to be done
         # Here we should gather optimal solution values and gather them
@@ -205,6 +204,31 @@ def lpformulator_setup(alldata):
     log.joint("Auxiliary setup.\n")
 
     alldata["maxdispersion_rad"] = (math.pi / 180.0) * alldata["maxdispersion_deg"]
+    alldata["maxphasediff_rad"] = (math.pi / 180.0) * alldata["maxphasediff_deg"]
+
+    branches = alldata["branches"]
+    numbranches = alldata["numbranches"]
+    buses = alldata["buses"]
+
+    if alldata["usemaxphasediff"]:
+        log.joint(
+            "Applying max phase diff of %g degrees\n" % (alldata["maxphasediff_deg"])
+        )
+
+        maxrad = alldata["maxphasediff_rad"]
+
+        count = 0
+
+        for j in range(1, 1 + numbranches):
+            branch = branches[j]
+
+            if branch.maxangle_rad > maxrad:
+                branch.maxangle_rad = maxrad
+                count += 1
+            if branch.minangle_rad < -maxrad:
+                branch.minangle_rad = -maxrad
+
+        log.joint("Updated %d maxangle constraints.\n" % (count))
 
     if alldata["dopolar"]:
         log = alldata["log"]
@@ -410,9 +434,7 @@ def lpformulator_ac_create_vars(alldata, model):
                 " --- Broken assumption 1: branch j %d f %d t %d minanglerad %f maxanglerad %f\n"
                 % (j, f, t, branch.minangle_rad, branch.maxangle_rad)
             )
-            log.raise_exception(
-                "phase angle assumption 1\n"
-            )  # TODO raise Python value error
+            log.raise_exception("phase angle assumption 1\n")
 
         ubound = ubasic = maxprod
         lbound = lbasic = -maxprod
@@ -2177,6 +2199,7 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     )
     # break_exit('strict')
 
+    print(alldata["dographics"])
     if alldata["dographics"]:
         textlist = []
         grbgraphical(alldata, "violation", textlist)

@@ -283,7 +283,7 @@ def lpformulator_iv_body(alldata, model):
         alldata["lpfilename"]
     )  # FIXME remove.  Jarek: I am using this for debugging, for now
     log.joint("Wrote LP to " + alldata["lpfilename"] + "\n")
-    # break_exit('wrote lp') #
+    break_exit("wrote lp")  #
 
     alldata["model"] = model
 
@@ -304,12 +304,8 @@ def lpformulator_iv_create_vars(alldata, model):
     IDtoCountmap = alldata["IDtoCountmap"]
     gens = alldata["gens"]
 
-    # Bus related variables, first batch
-    # cffvar    = {}
-    # irvar    = {}  #buses!
-    # ijvar    = {}
-    GenPvar = {}
-    GenQvar = {}
+    # cffvars
+    cffvar = {}
 
     varcount = 0
 
@@ -340,6 +336,9 @@ def lpformulator_iv_create_vars(alldata, model):
     varcount = lpformulator_iv_create_efvars(alldata, model, varcount)
 
     # Next, generator variables
+    GenPvar = {}
+    GenQvar = {}
+
     for j in range(1, numbuses + 1):
         bus = buses[j]
         # First, injection variables
@@ -387,59 +386,60 @@ def lpformulator_iv_create_vars(alldata, model):
     Pvar_t = {}
     Qvar_t = {}
 
-    for j in range(1, 1 + numbranches):
-        branch = branches[j]
-        f = branch.f
-        t = branch.t
-        count_of_f = IDtoCountmap[f]
-        count_of_t = IDtoCountmap[t]
-        busf = buses[count_of_f]
-        bust = buses[count_of_t]
-        maxprod = buses[count_of_f].Vmax * buses[count_of_t].Vmax
-        minprod = buses[count_of_f].Vmin * buses[count_of_t].Vmin
-        if branch.constrainedflow:
-            limit = branch.limit
-        else:
-            limit = 2 * (
-                abs(alldata["summaxgenP"]) + abs(alldata["summaxgenQ"])
-            )  # Generous: assumes line charging up to 100%. However it still amounts to an assumption.
+    if alldata["ivtype"] == "plain":
+        for j in range(1, 1 + numbranches):
+            branch = branches[j]
+            f = branch.f
+            t = branch.t
+            count_of_f = IDtoCountmap[f]
+            count_of_t = IDtoCountmap[t]
+            busf = buses[count_of_f]
+            bust = buses[count_of_t]
+            maxprod = buses[count_of_f].Vmax * buses[count_of_t].Vmax
+            minprod = buses[count_of_f].Vmin * buses[count_of_t].Vmin
+            if branch.constrainedflow:
+                limit = branch.limit
+            else:
+                limit = 2 * (
+                    abs(alldata["summaxgenP"]) + abs(alldata["summaxgenQ"])
+                )  # Generous: assumes line charging up to 100%. However it still amounts to an assumption.
 
-        ubound = (
-            1e5  # 1 + np.sqrt(limit*limit/minprod ) #upper bound on current magnitude
-        )
-        lbound = -ubound
+            ubound = 1e5  # 1 + np.sqrt(limit*limit/minprod ) #upper bound on current magnitude
+            lbound = -ubound
 
-        irvar_f[branch] = model.addVar(
-            obj=0.0,
-            lb=lbound,
-            ub=ubound,
-            name="ir_f_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
-        )
-        varcount += 1
-        irvar_t[branch] = model.addVar(
-            obj=0.0,
-            lb=lbound,
-            ub=ubound,
-            name="ir_t_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
-        )
-        varcount += 1
+            irvar_f[branch] = model.addVar(
+                obj=0.0,
+                lb=lbound,
+                ub=ubound,
+                name="ir_f_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
+            )
+            varcount += 1
+            irvar_t[branch] = model.addVar(
+                obj=0.0,
+                lb=lbound,
+                ub=ubound,
+                name="ir_t_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
+            )
+            varcount += 1
 
-        ijvar_f[branch] = model.addVar(
-            obj=0.0,
-            lb=lbound,
-            ub=ubound,
-            name="ij_f_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
-        )
-        varcount += 1
-        ijvar_t[branch] = model.addVar(
-            obj=0.0,
-            lb=lbound,
-            ub=ubound,
-            name="ij_t_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
-        )
-        varcount += 1
+            ijvar_f[branch] = model.addVar(
+                obj=0.0,
+                lb=lbound,
+                ub=ubound,
+                name="ij_f_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
+            )
+            varcount += 1
+            ijvar_t[branch] = model.addVar(
+                obj=0.0,
+                lb=lbound,
+                ub=ubound,
+                name="ij_t_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
+            )
+            varcount += 1
 
-    log.joint("Added branch current variables.\n")
+        log.joint("Added branch current variables.\n")
+    else:
+        log.joint("Aggressive IV formulation, so skipping current variables.\n")
 
     for j in range(1, 1 + numbranches):
         branch = branches[j]
@@ -498,6 +498,8 @@ def lpformulator_iv_create_vars(alldata, model):
     """
     #next, bus current variables
     #coarse bounds for now
+
+    #commented out but will probably dump
     for j in range(1,numbuses+1):
         bus = buses[j]
         # First, injection variables
@@ -786,30 +788,31 @@ def lpformulator_iv_create_constraints(alldata, model):
 
             model.setObjective(newobj, GRB.MINIMIZE)
 
-    log.joint("  Adding branch current definitions.\n")
-    # (g + jb)(e + jf) = g*e - b*f + j( g*f + b*e)
-    count = 0
-    for j in range(1, 1 + numbranches):
-        branch = branches[j]
-        f = branch.f
-        t = branch.t
-        count_of_f = IDtoCountmap[f]
-        count_of_t = IDtoCountmap[t]
-        busf = buses[count_of_f]
-        bust = buses[count_of_t]
-        branch.Irfcname = "Irdef_%d_%d_%d" % (j, f, t)
-        branch.Irtcname = "Irdef_%d_%d_%d" % (j, t, f)
+    if alldata["ivtype"] == "plain":
+        log.joint("  Adding branch current definitions.\n")
+        # (g + jb)(e + jf) = g*e - b*f + j( b*e + g*f )
+        count = 0
+        for j in range(1, 1 + numbranches):
+            branch = branches[j]
+            f = branch.f
+            t = branch.t
+            count_of_f = IDtoCountmap[f]
+            count_of_t = IDtoCountmap[t]
+            busf = buses[count_of_f]
+            bust = buses[count_of_t]
+            branch.Irfcname = "Irdef_%d_%d_%d" % (j, f, t)
+            branch.Irtcname = "Irdef_%d_%d_%d" % (j, t, f)
 
-        branch.Ijfcname = "Ijdef_%d_%d_%d" % (j, f, t)
-        branch.Ijtcname = "Ijdef_%d_%d_%d" % (j, t, f)
+            branch.Ijfcname = "Ijdef_%d_%d_%d" % (j, f, t)
+            branch.Ijtcname = "Ijdef_%d_%d_%d" % (j, t, f)
 
-        if branch.status:
-            expr = (
-                branch.Gff * evar[busf]
-                - branch.Bff * fvar[busf]
-                + branch.Gft * evar[bust]
-                - branch.Bft * fvar[bust]
-            )
+            if branch.status:
+                expr = (
+                    branch.Gff * evar[busf]
+                    - branch.Bff * fvar[busf]
+                    + branch.Gft * evar[bust]
+                    - branch.Bft * fvar[bust]
+                )
             model.addConstr(expr == irvar_f[branch], name=branch.Irfcname)
 
             expr = (
@@ -838,39 +841,113 @@ def lpformulator_iv_create_constraints(alldata, model):
 
             count += 4
 
-    log.joint("    %d branch current definitions added.\n" % count)
+        log.joint("    %d branch current definitions added.\n" % count)
 
-    log.joint("  Adding branch power definitions.\n")
-    # (e + jf)*(Ir - jIj) = e*Ir + f*Ij + j( -e*Ij + f*Ir)
-    count = 0
-    for j in range(1, 1 + numbranches):
-        branch = branches[j]
-        f = branch.f
-        t = branch.t
-        count_of_f = IDtoCountmap[f]
-        count_of_t = IDtoCountmap[t]
-        busf = buses[count_of_f]
-        bust = buses[count_of_t]
-        branch.Pfcname = "Pdef_%d_%d_%d" % (j, f, t)
-        branch.Ptcname = "Pdef_%d_%d_%d" % (j, t, f)
-        branch.Qfcname = "Qdef_%d_%d_%d" % (j, f, t)
-        branch.Qtcname = "Qdef_%d_%d_%d" % (j, t, f)
+        log.joint("  Adding plain branch power definitions.\n")
+        # (e + jf)*(Ir - jIj) = e*Ir + f*Ij + j( -e*Ij + f*Ir)
+        count = 0
+        for j in range(1, 1 + numbranches):
+            branch = branches[j]
+            f = branch.f
+            t = branch.t
+            count_of_f = IDtoCountmap[f]
+            count_of_t = IDtoCountmap[t]
+            busf = buses[count_of_f]
+            bust = buses[count_of_t]
+            branch.Pfcname = "Pdef_%d_%d_%d" % (j, f, t)
+            branch.Ptcname = "Pdef_%d_%d_%d" % (j, t, f)
+            branch.Qfcname = "Qdef_%d_%d_%d" % (j, f, t)
+            branch.Qtcname = "Qdef_%d_%d_%d" % (j, t, f)
 
-        if branch.status:
-            qexpr = evar[busf] * irvar_f[branch] + fvar[busf] * ijvar_f[branch]
-            model.addConstr(qexpr == Pvar_f[branch], name=branch.Pfcname)
+            if branch.status:
+                qexpr = evar[busf] * irvar_f[branch] + fvar[busf] * ijvar_f[branch]
+                model.addConstr(qexpr == Pvar_f[branch], name=branch.Pfcname)
 
-            qexpr = evar[bust] * irvar_t[branch] + fvar[bust] * ijvar_t[branch]
-            model.addConstr(qexpr == Pvar_t[branch], name=branch.Ptcname)
+                qexpr = evar[bust] * irvar_t[branch] + fvar[bust] * ijvar_t[branch]
+                model.addConstr(qexpr == Pvar_t[branch], name=branch.Ptcname)
 
-            qexpr = -evar[busf] * ijvar_f[branch] + fvar[busf] * irvar_f[branch]
-            model.addConstr(qexpr == Qvar_f[branch], name=branch.Qfcname)
+                qexpr = -evar[busf] * ijvar_f[branch] + fvar[busf] * irvar_f[branch]
+                model.addConstr(qexpr == Qvar_f[branch], name=branch.Qfcname)
 
-            qexpr = -evar[bust] * ijvar_t[branch] + fvar[bust] * irvar_t[branch]
-            model.addConstr(qexpr == Qvar_t[branch], name=branch.Qtcname)
+                qexpr = -evar[bust] * ijvar_t[branch] + fvar[bust] * irvar_t[branch]
+                model.addConstr(qexpr == Qvar_t[branch], name=branch.Qtcname)
 
             count += 4
-    log.joint("    %d branch power flow definitions added.\n" % count)
+        log.joint("    %d branch power flow definitions added.\n" % count)
+    else:
+        log.joint(
+            "Aggressive formulation, so will define power flows as functions of voltages.\n"
+        )
+
+        log.joint("  Adding aggressive branch power definitions.\n")
+        count = 0
+        for j in range(1, 1 + numbranches):
+            branch = branches[j]
+            f = branch.f
+            t = branch.t
+            count_of_f = IDtoCountmap[f]
+            count_of_t = IDtoCountmap[t]
+            busf = buses[count_of_f]
+            bust = buses[count_of_t]
+            branch.Pfcname = "Pdef_%d_%d_%d" % (j, f, t)
+            branch.Ptcname = "Pdef_%d_%d_%d" % (j, t, f)
+            branch.Qfcname = "Qdef_%d_%d_%d" % (j, f, t)
+            branch.Qtcname = "Qdef_%d_%d_%d" % (j, t, f)
+
+            if branch.status:
+                gkk = branch.Gff
+                bkk = branch.Bff
+                gkm = branch.Gft
+                bkm = branch.Bft
+
+                # (e + jf)*(Ir - jIj) = e*Ir + f*Ij + j( -e*Ij + f*Ir)
+                # But Ir = gkk*ek - bkk*fk + gkm*em - bkm*fm,
+                # And Ij = bkk*ek + gkk*fk + bkm*em + gkm*fm
+
+                # So real power from k to m = ek*[ gkk*ek - bkk*fk + gkm*em - bkm*fm ]
+                #                           + fk*[ bkk*ek + gkk*fk + bkm*em + gkm*fm ] =
+                #
+                #                   gkk*(ek^2 + fk^2) + gkm*(ek*em + fk*fm) + bkm*(-ek*fm + em*fk)
+
+                qexpr = gkk * (evar[busf] * evar[busf] + fvar[busf] * fvar[busf])
+                qexpr += gkm * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
+                qexpr += bkm * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
+
+                model.addConstr(qexpr == Pvar_f[branch], name=branch.Pfcname)
+
+                # And imag power from k to m = -ek*[ bkk*ek + gkk*fk + bkm*em + gkm*fm ]
+                #                            +  fk*[ gkk*ek - bkk*fk + gkm*em - bkm*fm ] =
+                #
+                #                 -bkk*(ek^2 + fk^2) - bkm*( ek*em + fk*fm) + gkm*(-ek*fm + em*fk)
+
+                qexpr = -bkk * (evar[busf] * evar[busf] + fvar[busf] * fvar[busf])
+                qexpr += -bkm * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
+                qexpr += gkm * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
+
+                model.addConstr(qexpr == Qvar_f[branch], name=branch.Qfcname)
+
+                # now, the reversals
+
+                gmm = branch.Gtt
+                bmm = branch.Btt
+                gmk = branch.Gtf
+                bmk = branch.Btf
+
+                qexpr = gmm * (evar[bust] * evar[bust] + fvar[bust] * fvar[bust])
+                qexpr += gmk * (evar[bust] * evar[busf] + fvar[bust] * fvar[busf])
+                qexpr += bmk * (-evar[bust] * fvar[busf] + fvar[bust] * evar[busf])
+
+                model.addConstr(qexpr == Pvar_t[branch], name=branch.Ptcname)
+
+                qexpr = -bmm * (evar[bust] * evar[bust] + fvar[bust] * fvar[bust])
+                qexpr += -bmk * (evar[bust] * evar[busf] + fvar[bust] * fvar[busf])
+                qexpr += gmk * (-evar[bust] * fvar[busf] + fvar[bust] * evar[busf])
+
+                model.addConstr(qexpr == Qvar_t[branch], name=branch.Qtcname)
+
+                count += 4
+
+        log.joint("    %d branch power flow definitions added.\n" % count)
 
     # Balance constraints
 
@@ -969,7 +1046,7 @@ def lpformulator_iv_create_constraints(alldata, model):
     log.joint("    %d bus current balance constraints added.\n"%count)
     """
 
-    # Bus voltage limits
+    # Bus voltage limits.
 
     log.joint("  Adding voltage limits.\n")
 
@@ -987,7 +1064,7 @@ def lpformulator_iv_create_constraints(alldata, model):
 
     log.joint("    %d bus voltage limit constraints added.\n" % count)
 
-    # Branch limits
+    # Branch limits.
     log.joint("  Adding branch limits.\n")
     count = 0
     for j in range(1, 1 + numbranches):
@@ -1014,6 +1091,29 @@ def lpformulator_iv_create_constraints(alldata, model):
             count += 2
 
     log.joint("    %d branch limits added.\n" % count)
+
+    # Active loss inequalities.
+    if alldata["useactivelossineqs"] == True:
+        log.joint("  Adding active loss constraints in weak form.\n")
+        count = 0
+        for j in range(1, 1 + numbranches):
+            branch = branches[j]
+            if branch.status:
+                f = branch.f
+                t = branch.t
+                count_of_f = IDtoCountmap[f]
+                count_of_t = IDtoCountmap[t]
+                busf = buses[count_of_f]
+                bust = buses[count_of_t]
+
+                model.addConstr(
+                    Pvar_f[branch] + Pvar_t[branch] >= 0,
+                    name="aLa_%d_%d_%d" % (j, f, t),
+                )
+
+                count += 1
+
+        log.joint("    %d active loss inequalities added.\n" % count)
 
     break_exit("after linelimits")
 

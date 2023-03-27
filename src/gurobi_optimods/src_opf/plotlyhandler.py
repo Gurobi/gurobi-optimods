@@ -3,6 +3,7 @@ import plotutils as pu
 import psutil
 import numpy as np
 from collections import defaultdict
+import plotly.graph_objects as go
 from typing import Any, List, Dict, Tuple, Union, Callable
 
 from .grbgraph import *

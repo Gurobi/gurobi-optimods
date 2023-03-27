@@ -3,12 +3,13 @@
 import plotly.graph_objects as go
 import plotutils as pu
 import psutil
-import math
 import numpy as np
 
 # import networkx as nx
-from .grbgraph import *
+import math
+
 from .plotlyhandler import *
+from .grbgraph import *
 from .scangvplus import *
 from .myutils import break_exit
 

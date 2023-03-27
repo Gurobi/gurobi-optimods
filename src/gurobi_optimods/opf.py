@@ -37,10 +37,23 @@ def solve_acopf_model(configfile, casefile, logfile=""):
     # Read case file holding OPF network data
     read_case(alldata)
 
-    if alldata["dographics"] and alldata["coordsfilename"] != None:
-        grbread_coords(alldata)
+    if alldata["dographics"]:
+        alldata["graphical"] = {}
+        alldata["graphical"]["numfeatures"] = 0
+        if alldata["graphattrsfilename"] != None:
+            gbread_graphattrs(alldata, alldata["graphattrsfilename"])
+        if alldata["coordsfilename"] != None:
+            grbread_coords(alldata)
 
     # Construct model from collected data and optimize it
-    lpformulator_ac(alldata)
+    if alldata["doac"]:
+        lpformulator_ac(alldata)
+    elif alldata["dodc"]:
+        lpformulator_dc(alldata)
+    elif alldata["doiv"]:
+        lpformulator_iv(alldata)
+    elif alldata["doslp_polar"]:
+        alldata["doac"] = True
+        lpformulator_ac(alldata)
 
     log.close_log()
