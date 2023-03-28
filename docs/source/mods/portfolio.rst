@@ -1,7 +1,7 @@
 Portfolio Optimization
 ======================
 
-Portfolio optimization is concerned with allocation of wealth into assets.
+Portfolio optimization is concerned with the allocation of wealth into assets (such as stocks, bonds, commodities, etc.).
 
 
 Problem Specification
@@ -13,18 +13,48 @@ Our methods use risk and return estimators.
 
     .. tab:: Domain-Specific Description
 
-        We consider a multi-periods portfolio optimization problem where ...
+        We consider a multi-period portfolio optimization problem where ...
+
+
+    .. tab:: Data Specification
+
+        The mean-variance portfolio optimization model takes the following inputs:
+
+        * The coveriance matrix :math:`\Sigma` can be given as a pandas Dataframe or a numpy array.
+        * The return estimator :math:`\mu` ...
+
+        To minimize the risk with a given expected return ...
+        To maximize the expected return with a given maximum risk (variance) ...
+
+        risk-aversion coefficient :math:`\gamma > 0` ...
+
+
+        In each case, the returned allocation vector defines the portfolio.
 
     .. tab:: Optimization Model
 
-        Give the mathematical programming formulation of the problem here.
-        The risk is expressed as
+        The risk (variance) is expressed as:
 
         .. math::
 
             x^\top \Sigma x
 
             x^\mathrm{T} \Sigma x
+
+        The expected return is expressed as:
+
+        .. math::
+            \mu x^\top
+
+        The mathematical model is then expressed as:
+
+        .. math::
+
+            \begin{alignat}{2}
+            \max \quad        & \mu^\top x - \tfrac12 \gamma\ x^\top\Sigma x \\
+            \mbox{s.t.} \quad & 1^\top x = 1 \\
+            \end{alignat}
+
 
 
 The risk estimator is given through a time series.
@@ -38,9 +68,9 @@ The risk estimator is given through a time series.
 
 .. tabs::
 
-    .. tab:: ``stocks``
+    .. tab:: ``Assets``
 
-        For a number of stocks we have historic values.
+        For a number of assets we have historic values.
 
         .. doctest:: mod
             :options: +NORMALIZE_WHITESPACE
@@ -63,6 +93,7 @@ The risk estimator is given through a time series.
             <BLANKLINE>
             [245 rows x 10 columns]
 
+        The columns of this dataframe represented the individual assets while the rows represent the historic time steps.
         In the model, this corresponds to ...
 
 
@@ -78,20 +109,23 @@ easy access by users.
     import pandas as pd
 
     from gurobi_optimods.datasets import load_portfolio
-    from gurobi_optimods.portfolio import solve_mod
-
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
 
     data = load_portfolio()
-    solution = solve_mod(data)
+    Sigma = data.cov()
+    mu = data.mean()
 
-..  A snippet of the Gurobi log output here won't show in the rendered page,
-    but serves as a doctest to make sure the code example runs. The ... lines
-    are meaningful here, they will match anything in the output test.
+    mvp = MeanVariancePortfolio(Sigma, mu)
+    x = mvp.efficient_portfolio(0.5)
 
 .. testoutput:: mod
     :hide:
 
-    stocks
+    ...
+    Optimize a model with 1 rows, 10 columns and 10 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
 
 
 The model is solved as an LP/MIP/QP by Gurobi.
