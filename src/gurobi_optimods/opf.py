@@ -1,10 +1,9 @@
 import sys
+import logging
 
 import gurobipy as gp
 
-from .src_opf.log import Logger
 from .src_opf.grbcasereader import read_case
-from .src_opf.myutils import break_exit
 
 from .src_opf.grbfile import read_configfile, grbread_coords, gbread_graphattrs
 from .src_opf.grbgraphical import grbgraphical
@@ -19,13 +18,17 @@ def solve_opf_model(configfile, casefile, logfile=""):
     if not logfile:
         logfile = "gurobiOPF.log"
 
-    # Create log object
-    log = Logger(logfile)
+    filehandler = logging.FileHandler(filename=logfile)
+    stdouthandler = logging.StreamHandler(stream=sys.stdout)
+
+    handlers = [filehandler, stdouthandler]
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s", handlers=handlers)
 
     alldata = {}
     alldata["LP"] = {}
     alldata["MIP"] = {}
-    alldata["log"] = log
+    alldata["logfile"] = logfile
 
     # Read configuration file
     read_configfile(alldata, configfile, casefile)
@@ -51,7 +54,5 @@ def solve_opf_model(configfile, casefile, logfile=""):
     elif alldata["doslp_polar"]:
         alldata["doac"] = True
         solution, objval = lpformulator_ac(alldata)
-
-    log.close_log()
 
     return solution, objval

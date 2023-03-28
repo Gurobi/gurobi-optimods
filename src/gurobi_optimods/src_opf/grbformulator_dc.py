@@ -1,5 +1,6 @@
 import math
 import time
+import logging
 import numpy as np
 import gurobipy as gp
 from gurobipy import GRB
@@ -13,8 +14,7 @@ from .grbformulator_ac import computebalbounds
 def lpformulator_dc(alldata):
     """Formulate DCOPF model and solve it"""
 
-    log = alldata["log"]
-    log.joint("\nDC formulation.\n")
+    logging.info("\nDC formulation.")
 
     starttime = time.time()
 
@@ -25,7 +25,7 @@ def lpformulator_dc(alldata):
     solution = None
     objval = None
     # Create model
-    with gp.Env() as env, gp.Model("grbacs", env=env) as model:
+    with gp.Env() as env, gp.Model("dc_formulation_model", env=env) as model:
         # Add model variables and constraints
         lpformulator_dc_body(alldata, model)
 
@@ -37,13 +37,11 @@ def lpformulator_dc(alldata):
         sol_count = lpformulator_dc_opt(alldata, model)
 
         endtime = time.time()
-        log.joint(
-            "Overall time taken (model construction + optimization): %f s.\n"
+        logging.info(
+            "Overall time taken (model construction + optimization): %f s."
             % (endtime - starttime)
         )
-        log.joint("Solution count: %d\n" % (sol_count))
-
-        # break_exit('Solver returned.')
+        logging.info("Solution count: %d." % (sol_count))
 
         if sol_count > 0:
             lpformulator_dc_examine_solution(alldata, model)
@@ -51,7 +49,7 @@ def lpformulator_dc(alldata):
             solution = {}
             for v in model.getVars():
                 if math.fabs(v.x) > 1e-09:
-                    log.joint(v.varname + " = " + str(v.x) + "\n")
+                    logging.info(v.varname + " = " + str(v.x))
                     solution[v.VarName] = v.X
                 else:
                     solution[v.VarName] = 0
@@ -68,23 +66,21 @@ def lpformulator_dc(alldata):
 def lpformulator_dc_body(alldata, model):
     """Helper function for adding variables and constraints to the model"""
 
-    log = alldata["log"]
-
     # Create model variables
     lpformulator_dc_create_vars(alldata, model)
     # Create model constraints
     lpformulator_dc_create_constraints(alldata, model)
 
     model.update()  # Update to get correct model stats
-    log.joint(
-        "Constructed DCOPF model with %d variables and %d constraints.\n\n"
+    logging.info(
+        "Constructed DCOPF model with %d variables and %d constraints.\n"
         % (model.NumVars, model.NumConstrs)
     )
 
     model.write(
         alldata["lpfilename"]
     )  # FIXME remove.  Jarek: I am using this for debugging, for now
-    log.joint("Wrote LP to " + alldata["lpfilename"] + "\n")
+    logging.info("Wrote LP to " + alldata["lpfilename"])
     # break_exit('wrote lp') #
 
     alldata["model"] = model
@@ -93,8 +89,7 @@ def lpformulator_dc_body(alldata, model):
 def lpformulator_dc_create_vars(alldata, model):
     """Create model variables for DCOPF"""
 
-    log = alldata["log"]
-    log.joint("Creating variables.\n")
+    logging.info("Creating variables.")
 
     fixtolerance = 1e-05
     if alldata["fixtolerance"] > 0:
@@ -131,7 +126,7 @@ def lpformulator_dc_create_vars(alldata, model):
 
         Plbound = Qlbound = -GRB.INFINITY
         Pubound = Qubound = GRB.INFINITY
-        Pubound, Plbound, Qubound, Qlbound = computebalbounds(log, alldata, bus)
+        Pubound, Plbound, Qubound, Qlbound = computebalbounds(alldata, bus)
 
         Pinjvar[bus] = model.addVar(
             obj=0.0, lb=Plbound, ub=Pubound, name="IP_%d" % bus.nodeID
@@ -200,7 +195,7 @@ def lpformulator_dc_create_vars(alldata, model):
 
     zvar = {}
     if alldata["branchswitching_mip"]:
-        log.joint("Adding branch switching variables.\n")
+        logging.info("Adding branch switching variables.")
         for j in range(1, 1 + numbranches):
             branch = branches[j]
             f = branch.f
@@ -242,7 +237,7 @@ def lpformulator_dc_create_vars(alldata, model):
 
 
 def lpformulator_dc_create_constraints(alldata, model):
-    """ "Create constraint for ACOPF"""
+    """ "Create constraint for DCOPF"""
 
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
@@ -250,7 +245,6 @@ def lpformulator_dc_create_constraints(alldata, model):
     branches = alldata["branches"]
     gens = alldata["gens"]
     IDtoCountmap = alldata["IDtoCountmap"]
-    log = alldata["log"]
 
     thetavar = alldata["LP"]["thetavar"]
     Pvar_f = alldata["LP"]["Pvar_f"]
@@ -259,10 +253,9 @@ def lpformulator_dc_create_constraints(alldata, model):
     Pinjvar = alldata["LP"]["Pinjvar"]
     GenPvar = alldata["LP"]["GenPvar"]
     lincostvar = alldata["LP"]["lincostvar"]
-    log = alldata["log"]
 
-    log.joint("Creating constraints.\n")
-    log.joint("  Adding cost definition.\n")
+    logging.info("Creating constraints.")
+    logging.info("  Adding cost definition.")
 
     coeff = [gen.costvector[gen.costdegree - 1] for gen in gens.values()]
     variables = [GenPvar[gen] for gen in gens.values()]
@@ -274,14 +267,14 @@ def lpformulator_dc_create_constraints(alldata, model):
         if gen.costdegree >= 2 and gen.costvector[0] > 0 and gen.status:
             numquadgens += 1
 
-    log.joint(
-        "    Number of generators with quadratic cost coefficient: %d\n" % numquadgens
+    logging.info(
+        "    Number of generators with quadratic cost coefficient: %d." % numquadgens
     )
 
     if numquadgens > 0:
         if alldata["usequadcostvar"]:
             quadcostvar = alldata["LP"]["quadcostvar"]
-            log.joint("    Adding quadcost definition constraint\n")
+            logging.info("    Adding quadcost definition constraint.")
             qcost = gp.QuadExpr()
             for gen in gens.values():
                 if gen.costdegree == 2 and gen.costvector[0] != 0:
@@ -289,7 +282,7 @@ def lpformulator_dc_create_constraints(alldata, model):
 
             model.addConstr(qcost <= quadcostvar, name="qcostdef")
         else:
-            log.joint("    Adding quad cost to objective.\n")
+            logging.info("    Adding quad cost to objective.")
             model.update()  # Necessary to flush changes in the objective function
             oldobj = model.getObjective()
             newobj = gp.QuadExpr(oldobj)
@@ -300,7 +293,7 @@ def lpformulator_dc_create_constraints(alldata, model):
             model.setObjective(newobj, GRB.MINIMIZE)
 
     # Active PF defs
-    log.joint("  Adding active power flow definitions.\n")
+    logging.info("  Adding active power flow definitions.")
     count = 0
     for j in range(1, 1 + numbranches):
         branch = branches[j]
@@ -356,11 +349,11 @@ def lpformulator_dc_create_constraints(alldata, model):
                 Pvar_f[branch] == 0, name=branch.Pfcname
             )
 
-    log.joint("    %d active power flow definitions added.\n" % count)
+    logging.info("    %d active power flow definitions added." % count)
 
     # Balance constraints
-    log.joint(
-        "  Adding constraints stating bus injection = total outgoing power flow.\n"
+    logging.info(
+        "  Adding constraints stating bus injection = total outgoing power flow."
     )
     count = 0
     for j in range(1, 1 + numbuses):
@@ -375,10 +368,10 @@ def lpformulator_dc_create_constraints(alldata, model):
         model.addConstr(expr == Pinjvar[bus], name="PBaldef%d_%d" % (j, bus.nodeID))
 
         count += 1
-    log.joint("    %d constraints added.\n" % count)
+    logging.info("    %d constraints added." % count)
 
     # Injection defs
-    log.joint("  Adding injection definition constraints.\n")
+    logging.info("  Adding injection definition constraints.")
     count = 0
     for j in range(1, 1 + numbuses):
         bus = buses[j]
@@ -392,7 +385,7 @@ def lpformulator_dc_create_constraints(alldata, model):
         model.addConstr(Pinjvar[bus] == expr - bus.Pd, name="Bus_PInj_%d" % j)
         count += 1
 
-    log.joint("    %d injection definition constraints added.n" % count)
+    logging.info("    %d injection definition constraints added." % count)
 
     if alldata["branchswitching_mip"]:
         boundzs = True
@@ -408,18 +401,16 @@ def lpformulator_dc_create_constraints(alldata, model):
 
 def lpformulator_dc_opt(alldata, model):
 
-    log = alldata["log"]
     numbranches = alldata["numbranches"]
     branches = alldata["branches"]
 
-    # Specific settings for better convergence
-    # model.params.DualReductions = 0
+    logging.disable(logging.INFO)
+    model.params.LogFile = alldata["logfile"]
 
-    # model.setParam(GRB.Param.MIPGap, 1.0e-10)
-    # model.setParam(GRB.Param.FeasibilityTol, 1.0e-8)
+    # Specific settings for better convergence
     model.Params.MIPGap = 1.0e-4
     model.Params.OptimalityTol = 1.0e-4
-    model.Params.FeasibilityTol = 1.0e-6  # 1.0e-8
+    model.Params.FeasibilityTol = 1.0e-6
 
     feastol = model.Params.FeasibilityTol
     opttol = model.Params.OptimalityTol
@@ -428,7 +419,7 @@ def lpformulator_dc_opt(alldata, model):
     model.Params.SolutionLimit = 20
 
     if alldata["branchswitching_mip"]:
-        log.joint("Using mip start with all branches kept on\n")
+        logging.critical("Using mip start with all branches kept on.")
         # mip start
         zvar = alldata["LP"]["zvar"]
         for j in range(1, 1 + numbranches):
@@ -450,34 +441,42 @@ def lpformulator_dc_opt(alldata, model):
     else:
         model.optimize()
 
+    logging.disable(logging.NOTSET)
+
     # Check model status and re-optimize or try computing an IIS if necessary
     if model.status == GRB.INF_OR_UNBD:
-        log.joint("\nModel Status: infeasible or unbounded.\n")
-        log.joint("Re-optimizing with DualReductions turned off.\n\n")
+        logging.info("\nModel Status: infeasible or unbounded.")
+        logging.info("Re-optimizing with DualReductions turned off.\n")
+        logging.disable(logging.INFO)
         model.Params.DualReductions = 0
         model.optimize()
+        logging.disable(logging.NOTSET)
 
     if model.status == GRB.INFEASIBLE:
-        log.joint("\nModel Status: infeasible.")
-        log.joint("Computing IIS...\n\n")
+        logging.info("\nModel Status: infeasible.")
+        logging.info("Computing IIS...\n")
+        logging.disable(logging.INFO)
         model.computeIIS()
-        log.joint("\nIIS computed, writing IIS to file acopfmodel.ilp\n\n")
+        logging.disable(logging.NOTSET)
+        logging.info("\nIIS computed, writing IIS to file dcopfmodel.ilp.\n")
         model.write("acopfmodel.ilp")
 
     elif model.status == GRB.UNBOUNDED:
-        log.joint("\nModel Status: unbounded.\n\n")
+        logging.info("\nModel Status: unbounded.\n")
 
     elif model.status == GRB.INTERRUPTED:
-        log.joint("\nModel Status: interrupted.\n\n")
+        logging.info("\nModel Status: interrupted.\n")
 
     elif model.status == GRB.OPTIMAL:
-        log.joint("\nModel Status: optimal.\n\n")
+        logging.info("\nModel Status: optimal.\n")
 
     # Only print objective value and solution quality if at least
     # one feasible point is available
     if model.SolCount > 0:
-        log.joint("Objective value = %g" % model.objVal)
+        logging.info("Objective value = %g." % model.objVal)
+        logging.disable(logging.INFO)
         model.printQuality()
+        logging.disable(logging.NOTSET)
         # FIXME yes, to be done
         # Here we should gather optimal solution values and gather them
         # in a standardized format which ultimately will be returned to the user
@@ -487,7 +486,6 @@ def lpformulator_dc_opt(alldata, model):
 
 
 def lpformulator_dc_examine_solution(alldata, model):
-    log = alldata["log"]
 
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
@@ -496,7 +494,6 @@ def lpformulator_dc_examine_solution(alldata, model):
     branches = alldata["branches"]
     gens = alldata["gens"]
     IDtoCountmap = alldata["IDtoCountmap"]
-    log = alldata["log"]
     if alldata["branchswitching_mip"]:
         zholder = alldata["MIP"]["zholder"]
         gholder = alldata["MIP"]["gholder"]
@@ -538,11 +535,11 @@ def lpformulator_dc_examine_solution(alldata, model):
             if zvar[branch].x < 0.5:  # turned off
                 numzeros += 1
                 if loud:
-                    log.joint("branch %d (%d, %d) switched off\n" % (j, f, t))
+                    logging.info("branch %d (%d, %d) switched off." % (j, f, t))
 
-        # log.joint('numzeros: %d\n'%numzeros)
+        # logging.info('numzeros: %d'%numzeros)
 
-    log.joint(" Done examining solution.\n")
+    logging.info("Done examining solution.\n")
     """
     if alldata['dographics']:
         grbgraphical(alldata, 'branchswitching')
@@ -551,13 +548,9 @@ def lpformulator_dc_examine_solution(alldata, model):
 
 def plot_new_solution_callback(model, where):
     if where == GRB.Callback.MIPSOL:
-        # solcnt = model.cbGet(GRB.Callback.MIP_SOLCNT)
-        # print(solcnt)
         x = model.cbGetSolution(model._vars)
-        log = model._data["log"]
-        # log.joint("Inside callback.\n")
         objval = model.cbGet(GRB.Callback.MIPSOL_OBJ)
-        log.joint("Found new solution of value %.3e\n" % objval)
+        logging.info("Found new solution of value %.3e." % objval)
 
         numbuses = model._data["numbuses"]
         buses = model._data["buses"]
@@ -565,7 +558,6 @@ def plot_new_solution_callback(model, where):
         branches = model._data["branches"]
         gens = model._data["gens"]
         IDtoCountmap = model._data["IDtoCountmap"]
-        log = model._data["log"]
 
         thetavar = model._data["LP"]["thetavar"]
         Pvar_f = model._data["LP"]["Pvar_f"]
@@ -580,10 +572,6 @@ def plot_new_solution_callback(model, where):
             zholder[j - 1] = x[branch.switchvarind]
             if x[branch.switchvarind] < 0.5:
                 numzeros += 1
-                # print(j, x[branch.switchvarind])
-
-        # log.joint('numzeros: %d\n'%numzeros)
-        # break_exit('HEY HEY HEY')
 
         for j1 in range(1, 1 + model._data["numgens"]):
             gen = model._data["gens"][j1]
@@ -603,9 +591,8 @@ def plot_new_solution_callback(model, where):
                 textlist.append("Lines off: %d" % (numzeros))
                 grbgraphical(model._data, "branchswitching", textlist)
             else:
-                log.joint(
-                    "Skipping graphical display due to insufficient improvement.\n"
+                logging.info(
+                    "Skipping graphical display due to insufficient improvement."
                 )
 
         model._data["MIP"]["bestsolval"] = objval
-        # break_exit('HO HO HO')

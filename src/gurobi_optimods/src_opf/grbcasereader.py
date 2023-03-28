@@ -1,9 +1,7 @@
 import math
 import cmath
 import time
-
-from .myutils import *
-from .log import *
+import logging
 
 
 class Bus:
@@ -49,27 +47,27 @@ class Bus:
     def getbusline0(self):
         return self.busline0
 
-    def addgenerator(self, log, generatorcount1, generator):
+    def addgenerator(self, generatorcount1, generator):
         self.genidsbycount.append(generatorcount1)
         loud = False
         if loud:
-            log.joint(
+            logging.info(
                 " added generator # "
                 + str(generatorcount1)
                 + " to bus ID "
                 + str(self.nodeID)
             )
-            log.joint(
-                " Pmax " + str(generator.Pmax) + " Pmin " + str(generator.Pmin) + "\n"
+            logging.info(
+                " Pmax " + str(generator.Pmax) + " Pmin " + str(generator.Pmin)
             )
 
-    def addfrombranch(self, log, id):
+    def addfrombranch(self, id):
         quant = len(self.frombranchids)
         self.frombranchids[quant] = id
         self.outdegree += 1
         self.degree += 1
 
-    def addtobranch(self, log, id):
+    def addtobranch(self, id):
         quant = len(self.tobranchids)
         self.tobranchids[quant] = id
         self.indegree += 1
@@ -83,7 +81,6 @@ class Branch:
 
     def __init__(
         self,
-        log,
         count,
         f,
         count_f,
@@ -186,20 +183,19 @@ class Branch:
 
         loud = False
         if loud:
-            log.joint("\nbr " + str(count) + " f " + str(f) + " t " + str(t) + "\n")
-            log.joint("   idf " + str(count_f) + " idt " + str(count_t) + "\n")
-            log.joint("   r " + str(r) + " x " + str(x) + " bb " + str(bc) + "\n")
-            log.joint(
+            logging.info("\nbr " + str(count) + " f " + str(f) + " t " + str(t))
+            logging.info("   idf " + str(count_f) + " idt " + str(count_t))
+            logging.info("   r " + str(r) + " x " + str(x) + " bb " + str(bc))
+            logging.info(
                 "   ratio "
                 + str(self.ratio)
                 + " angle "
                 + str(angle)
                 + " angle_rad: "
                 + str(self.angle_rad)
-                + "\n"
             )
-            log.joint("   y " + str(y) + "\n")
-            log.joint(
+            logging.info("   y " + str(y))
+            logging.info(
                 "       Yff "
                 + str(Yff)
                 + " , Yft "
@@ -208,18 +204,15 @@ class Branch:
                 + str(Ytf)
                 + " , Ytt "
                 + str(Ytt)
-                + "\n"
             )
 
     def getbranchline0(self):
         return self.branchline0
 
-    def show(self, log):
-        log.joint(" < " + str(self.f) + " , " + str(self.t) + " > ")
-        log.joint(" r " + str(self.r) + " x " + str(self.x) + " bc " + str(self.bc))
-        log.joint("\n")
-        log.joint(" ra " + str(self.ratio) + " ang " + str(self.angle))
-        log.joint("\n")
+    def show(self):
+        logging.info(" < " + str(self.f) + " , " + str(self.t) + " > ")
+        logging.info(" r " + str(self.r) + " x " + str(self.x) + " bc " + str(self.bc))
+        logging.info(" ra " + str(self.ratio) + " ang " + str(self.angle))
 
 
 class Gen:
@@ -243,7 +236,7 @@ class Gen:
         self.Pvarind = -1
         self.Qvarind = -1
 
-    def addcost(self, log, costvector, linenum):
+    def addcost(self, costvector, linenum):
         self.costvector = costvector
         self.costdegree = len(costvector) - 1
         self.costlinenum = linenum
@@ -255,25 +248,24 @@ class Gen:
 def read_case(alldata):
     """Read case file and fill data dictionary"""
 
-    log = alldata["log"]
     casefilename = alldata["casefilename"]
     starttime = time.time()
 
-    log.joint("Reading case file %s\n" % casefilename)
+    logging.info("Reading case file %s." % casefilename)
     f = open(casefilename, "r")
     lines = f.readlines()
     f.close()
 
     # Read all lines of the casefile
-    read_case_thrulines(log, alldata, lines)
+    read_case_thrulines(alldata, lines)
     alldata["casefilelines"] = lines
 
     endtime = time.time()
 
-    log.joint("Reading time: %f s\n" % (endtime - starttime))
+    logging.info("Reading time: %f s." % (endtime - starttime))
 
 
-def read_case_thrulines(log, alldata, lines):
+def read_case_thrulines(alldata, lines):
     """Read thru all lines of case file and fill data dictionary"""
 
     numlines = len(lines)
@@ -299,7 +291,7 @@ def read_case_thrulines(log, alldata, lines):
             linenum += 1
             continue
 
-        log.joint("  Found %s on line %d\n" % (theword, linenum))
+        logging.info("  Found %s on line %d." % (theword, linenum))
         if theword == "mpc.baseMVA":
             tmp = thisline[2]
             # Trim ; if present
@@ -308,7 +300,7 @@ def read_case_thrulines(log, alldata, lines):
 
             alldata["baseMVA"] = float(tmp)
             baseMVA = alldata["baseMVA"]
-            log.joint("    baseMVA: %f\n" % baseMVA)
+            logging.info("    baseMVA: %f." % baseMVA)
 
         elif theword == "mpc.bus":
             buses = {}
@@ -327,14 +319,14 @@ def read_case_thrulines(log, alldata, lines):
 
                 # Look for end of section
                 if thisline[0] == "];":
-                    log.joint("    Found end of bus section on line %d\n" % linenum)
+                    logging.info("    Found end of bus section on line %d." % linenum)
                     lookingforendofbus = 0
                     break
 
                 numbuses += 1
                 if thisline[1] == "3":
                     slackbus = int(thisline[0])
-                    log.joint("    Slack bus: %d\n" % slackbus)
+                    logging.info("    Slack bus: %d." % slackbus)
 
                 if thisline[0] != "%":
                     nodeID = int(thisline[0])
@@ -384,8 +376,8 @@ def read_case_thrulines(log, alldata, lines):
                     )
 
                     if nodetype == 3:
-                        log.joint(
-                            "    Bus %d ID %d is the reference bus\n"
+                        logging.info(
+                            "    Bus %d ID %d is the reference bus."
                             % (numbuses, nodeID)
                         )
                         alldata["refbus"] = numbuses
@@ -399,13 +391,12 @@ def read_case_thrulines(log, alldata, lines):
                 else:
                     nodeID = int(thisline[1])
                     nodetype = int(thisline[2])
-                    log.joint(
-                        "bus %d nodeID %d is isolated and has type %d\n"
+                    logging.info(
+                        "bus %d nodeID %d is isolated and has type %d."
                         % (numbuses, nodeID, nodetype)
                     )
-                    log.joint("   setting it to type 4\n")
+                    logging.info("   setting it to type 4.")
                     nodetype = 4
-                    break_exit("isolated")
 
                     if (
                         nodetype != 1
@@ -448,8 +439,8 @@ def read_case_thrulines(log, alldata, lines):
                     )
 
                     if nodetype == 3:
-                        log.joint(
-                            "    Bus %d ID %d is the reference bus\n"
+                        logging.info(
+                            "    Bus %d ID %d is the reference bus."
                             % (numbuses, nodeID)
                         )
                         alldata["refbus"] = numbuses
@@ -470,18 +461,18 @@ def read_case_thrulines(log, alldata, lines):
             alldata["IDtoCountmap"] = IDtoCountmap
             alldata["slackbus"] = slackbus
 
-            log.joint("    sumloadPd %f numPload %d\n" % (sumPd, numPload))
-            log.joint("    sumloadQd %f\n" % sumQd)
+            logging.info("    sumloadPd %f numPload %d." % (sumPd, numPload))
+            logging.info("    sumloadQd %f." % sumQd)
 
             if lookingforendofbus:
                 raise ValueError("Could not find bus data section.")
 
             if slackbus < 0:
-                log.joint("    Could not find slack bus\n")
+                logging.info("    Could not find slack bus.")
 
-            log.joint("    %d buses\n" % numbuses)
+            logging.info("    %d buses." % numbuses)
             if numisolated > 0:
-                log.joint("    isolated buses: %d\n" % numisolated)
+                logging.info("    isolated buses: %d." % numisolated)
 
         elif theword == "mpc.gen":
             gens = {}
@@ -498,7 +489,7 @@ def read_case_thrulines(log, alldata, lines):
                 # Look for end of section
                 if thisline[0] == "];":
                     alldata["endofgen"] = linenum
-                    log.joint("    Found end of gen section on line %d\n" % linenum)
+                    logging.info("    Found end of gen section on line %d." % linenum)
                     lookingforendofgen = 0
                     break
 
@@ -535,7 +526,7 @@ def read_case_thrulines(log, alldata, lines):
                         Qmin / baseMVA,
                         linenum - 1,
                     )
-                    buses[idgencount1].addgenerator(log, gencount1, gens[gencount1])
+                    buses[idgencount1].addgenerator(gencount1, gens[gencount1])
 
                     if (
                         buses[idgencount1].nodetype == 2
@@ -565,9 +556,9 @@ def read_case_thrulines(log, alldata, lines):
             alldata["summaxgenP"] = summaxgenP
             alldata["summaxgenQ"] = summaxgenQ
 
-            log.joint("    number of generators: %d\n" % alldata["numgens"])
-            log.joint("    number of buses with gens: %d\n" % busgencount)
-            log.joint("    summaxPg %f summaxQg %f\n" % (summaxgenP, summaxgenQ))
+            logging.info("    number of generators: %d." % alldata["numgens"])
+            logging.info("    number of buses with gens: %d." % busgencount)
+            logging.info("    summaxPg %f summaxQg %f." % (summaxgenP, summaxgenQ))
 
         elif theword == "mpc.branch":
             branches = {}
@@ -585,7 +576,9 @@ def read_case_thrulines(log, alldata, lines):
 
                 # Look for end of branch section
                 if thisline[0] == "];":
-                    log.joint("    Found end of branch section on line %d\n" % linenum)
+                    logging.info(
+                        "    Found end of branch section on line %d." % linenum
+                    )
                     lookingforendofbranch = 0
                     break
 
@@ -613,7 +606,7 @@ def read_case_thrulines(log, alldata, lines):
 
                 if maxangle < minangle:
                     raise ValueError(
-                        "Branch # %d has illegal angle constraints\n" % numbranches
+                        "Branch # %d has illegal angle constraints." % numbranches
                     )
 
                 count_f = IDtoCountmap[f]
@@ -623,14 +616,13 @@ def read_case_thrulines(log, alldata, lines):
                     raise ValueError("baseMVA not available before branch section.")
 
                 if False:  # rateA < 1e-10: # TODO do we need it?
-                    log.joint(
-                        "Warning. Branch %d from %d to %d has unbounded rateA.\n"
+                    logging.info(
+                        "Warning. Branch %d from %d to %d has unbounded rateA."
                         % (numbranches, f, t)
                     )
 
                 if True:  # TODO do we need the if?
                     branches[numbranches] = Branch(
-                        log,
                         numbranches,
                         f,
                         count_f,
@@ -652,8 +644,8 @@ def read_case_thrulines(log, alldata, lines):
                     )
                     zerolimit += branches[numbranches].constrainedflow == 0
                     activebranches += 1
-                    buses[count_f].addfrombranch(log, numbranches)
-                    buses[count_t].addtobranch(log, numbranches)
+                    buses[count_f].addfrombranch(numbranches)
+                    buses[count_t].addtobranch(numbranches)
 
                 linenum += 1
 
@@ -663,11 +655,11 @@ def read_case_thrulines(log, alldata, lines):
 
             alldata["branches"] = branches
             alldata["numbranches"] = numbranches
-            log.joint(
-                "    numbranches: %d active: %d\n" % (numbranches, activebranches)
+            logging.info(
+                "    numbranches: %d active: %d." % (numbranches, activebranches)
             )
             if zerolimit > 0:
-                log.joint("    ---> %d unconstrained.\n" % zerolimit)
+                logging.info("    ---> %d unconstrained." % zerolimit)
 
         elif theword == "mpc.gencost":
             lookingforendofgencost = 1
@@ -681,7 +673,9 @@ def read_case_thrulines(log, alldata, lines):
 
                 # Look for end of gen section
                 if thisline[0] == "];":
-                    log.joint("    Found end of gencost section on line %d\n" % linenum)
+                    logging.info(
+                        "    Found end of gencost section on line %d." % linenum
+                    )
                     alldata["endofgencost"] = linenum
                     lookingforendofgencost = 0
                     break
@@ -725,9 +719,7 @@ def read_case_thrulines(log, alldata, lines):
                         costvector[j] = float(tmp)
                         costvector[j] *= (baseMVA) ** (degree - j)
 
-                    gens[gencostcount].addcost(log, costvector, linenum)
-
-                    # break_exit('gen')
+                    gens[gencostcount].addcost(costvector, linenum)
 
                 else:
                     raise ValueError(
@@ -752,7 +744,7 @@ def readvoltsfile(log, alldata):
 
     voltsfilename = alldata["voltsfilename"]
 
-    log.joint("  Reading volts file %s\n" % voltsfilename)
+    logging.info("  Reading volts file %s." % voltsfilename)
     f = open(voltsfilename, "r")
     lines = f.readlines()
     f.close()
@@ -781,7 +773,7 @@ def readvoltsfile(log, alldata):
                 % (thisline[0], lines[linenum])
             )
 
-    log.joint("Read %d input voltages\n" % numread)
+    logging.info("Read %d input voltages." % numread)
     alldata["inputvolts"] = inputvolts
 
 
@@ -790,7 +782,7 @@ def readflowsfile(log, alldata):
 
     flowsfilename = alldata["flowsfilename"]
 
-    log.joint("  Reading flows file %s\n" % flowsfilename)
+    logging.info("  Reading flows file %s." % flowsfilename)
     f = open(flowsfilename, "r")
     lines = f.readlines()
     f.close()
@@ -821,11 +813,11 @@ def readflowsfile(log, alldata):
 
         else:
             raise ValueError(
-                "Illegal input %s on line %s in flows file\n"
+                "Illegal input %s on line %s in flows file."
                 % (thisline[0], lines[linenum])
             )
 
-    log.joint("Read %d input flows\n" % numread)
+    logging.info("Read %d input flows." % numread)
 
     alldata["inputPf"] = inputPf
     alldata["inputPt"] = inputPt
@@ -837,7 +829,7 @@ def writegv(log, alldata, gvfilename):
     """Write gv file needed for graphical image"""
 
     f = open(gvfilename, "w")
-    log.joint("Writing to gv file %s\n" % gvfilename)
+    logging.info("Writing to gv file %s." % gvfilename)
 
     f.write("graph {\n")
 
@@ -855,7 +847,7 @@ def generateinputcs(log, alldata):
     """Description"""
     # Generates values for the Jabr c and s variables from input voltages
 
-    log.joint("  Generating input c,s values\n")
+    logging.info("  Generating input c,s values.")
 
     inputcc = {}
     inputcs = {}
@@ -890,7 +882,7 @@ def generateinputeandf(log, alldata):
     """Description"""
     # Generates rectangular coordinates for voltages from input solution (given in polar coordinates)
 
-    log.joint("  generating input e,f values\n")
+    logging.info("  generating input e,f values.")
 
     inputve = {}
     inputvf = {}

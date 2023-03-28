@@ -3,17 +3,14 @@ import os
 import time
 import math
 import csv
+import logging
 import numpy as np
-
-from .myutils import break_exit
 
 
 def read_configfile(alldata, filename, casefile=""):
     """Function to read configurations for OPF solve from config file"""
 
-    log = alldata["log"]
-
-    log.joint("Reading configuration file %s\n" % filename)
+    logging.info("Reading configuration file %s." % filename)
     f = open(filename, "r")
     lines = f.readlines()
     f.close()
@@ -111,14 +108,14 @@ def read_configfile(alldata, filename, casefile=""):
             voltsfilename = thisline[1]
             fixtolerance = float(thisline[2])
             if usevoltsolution:
-                log.joint("Cannot use both voltsfilename and voltsolution\n")
+                loging.error("Cannot use both voltsfilename and voltsolution\n")
                 raise ValueError(
                     "Illegal option combination. Cannot use both voltsfilename and voltsolution."
                 )
 
         elif thisline[0] == "usevoltsoution":
             if voltsfilename != "NONE":
-                log.joint("Cannot use both voltsfilename and voltsolution\n")
+                logging.error("Cannot use both voltsfilename and voltsolution\n")
                 raise ValueError(
                     "Illegal option combination. Cannot use both voltsfilename and voltsolution."
                 )
@@ -183,11 +180,11 @@ def read_configfile(alldata, filename, casefile=""):
             break
 
         else:
-            raise ValueError("Illegal option input %s\n" % thisline[0])
+            raise ValueError("Illegal option input %s." % thisline[0])
 
         linenum += 1
 
-    log.joint("Settings:\n")
+    logging.info("Settings:")
     for x in [
         ("casefilename", casefilename),
         ("lpfilename", lpfilename),
@@ -220,10 +217,12 @@ def read_configfile(alldata, filename, casefile=""):
         ("branchswitching_comp", branchswitching_comp),
     ]:
         alldata[x[0]] = x[1]
-        log.joint("  {} {}\n".format(x[0], x[1]))
+        logging.info("  {} {}".format(x[0], x[1]))
 
     if alldata["casefilename"] == "NONE":
         raise ValueError("No casefile provided.")
+
+    logging.info("")
 
 
 def gbread_graphattrs(alldata, filename):
@@ -289,7 +288,6 @@ def grbread_coords(alldata):
         # print(thelist[line][0], float(thelist[line][3]), float(thelist[line][4]))
         buses[line].lat = float(thelist[line][3])
         buses[line].lon = float(thelist[line][4])
-    # break_exit('coords')
 
 
 def grbreadvoltsfile(alldata):
