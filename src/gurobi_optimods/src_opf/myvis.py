@@ -51,7 +51,7 @@ class GraphVisualization:
         elif all(len(pos.get(v, [])) == 3 for v in G):
             self.is_3d = True
         else:
-            raise ValueError
+            raise ValueError("Dimension not 2 or 3")
 
         # default settings
         self.default_settings = dict(

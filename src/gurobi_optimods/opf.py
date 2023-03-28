@@ -3,7 +3,6 @@ import sys
 import gurobipy as gp
 
 from .src_opf.log import Logger
-from .src_opf.opfexception import OPFException
 from .src_opf.grbcasereader import read_case
 from .src_opf.myutils import break_exit
 
@@ -22,9 +21,6 @@ def solve_opf_model(configfile, casefile, logfile=""):
 
     # Create log object
     log = Logger(logfile)
-
-    if not isinstance(configfile, str):
-        log.raise_exception("Error: Configuration file argument not of type String\n")
 
     alldata = {}
     alldata["LP"] = {}

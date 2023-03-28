@@ -258,13 +258,11 @@ def read_case(alldata):
     log = alldata["log"]
     casefilename = alldata["casefilename"]
     starttime = time.time()
-    try:
-        log.joint("Reading case file %s\n" % casefilename)
-        f = open(casefilename, "r")
-        lines = f.readlines()
-        f.close()
-    except:
-        log.raise_exception("Error: Cannot open file %s\n" % casefilename)
+
+    log.joint("Reading case file %s\n" % casefilename)
+    f = open(casefilename, "r")
+    lines = f.readlines()
+    f.close()
 
     # Read all lines of the casefile
     read_case_thrulines(log, alldata, lines)
@@ -348,9 +346,8 @@ def read_case_thrulines(log, alldata, lines):
                         and nodetype != 3
                         and nodetype != 4
                     ):
-                        log.raise_exception(
-                            "Error: Bad bus %s has type %s\n"
-                            % (thisline[0], thisline[1])
+                        raise ValueError(
+                            "Bad bus %s has type %s." % (thisline[0], thisline[1])
                         )
 
                     if nodetype == 4:
@@ -370,9 +367,7 @@ def read_case_thrulines(log, alldata, lines):
                     Vmax = float(thisline[11])
 
                     if baseMVA == 0.0:
-                        log.raise_exception(
-                            "Error: baseMVA not available before bus section\n"
-                        )
+                        raise ValueError("baseMVA not available before bus section.")
 
                     buses[numbuses] = Bus(
                         numbuses,
@@ -418,9 +413,8 @@ def read_case_thrulines(log, alldata, lines):
                         and nodetype != 3
                         and nodetype != 4
                     ):
-                        log.raise_exception(
-                            "Error: Bad bus %s has type %s\n"
-                            % (thisline[0], thisline[1])
+                        raise ValueError(
+                            "Bad bus %s has type %s." % (thisline[0], thisline[1])
                         )
 
                     if nodetype == 4:
@@ -437,9 +431,7 @@ def read_case_thrulines(log, alldata, lines):
                     Vmax = 0
 
                     if baseMVA == 0.0:
-                        log.raise_exception(
-                            "Error: baseMVA not available before bus section\n"
-                        )
+                        raise ValueError("baseMVA not available before bus section.")
 
                     buses[numbuses] = Bus(
                         numbuses,
@@ -482,7 +474,7 @@ def read_case_thrulines(log, alldata, lines):
             log.joint("    sumloadQd %f\n" % sumQd)
 
             if lookingforendofbus:
-                log.raise_exception("Error: Could not find bus data section\n")
+                raise ValueError("Could not find bus data section.")
 
             if slackbus < 0:
                 log.joint("    Could not find slack bus\n")
@@ -527,9 +519,7 @@ def read_case_thrulines(log, alldata, lines):
                     status = 1
 
                 if baseMVA == 0.0:
-                    log.raise_exception(
-                        "Error: baseMVA not available before gen section\n"
-                    )
+                    raise ValueError("baseMVA not available before gen section.")
 
                 if nodeID in IDtoCountmap.keys():
                     idgencount1 = IDtoCountmap[nodeID]
@@ -555,15 +545,14 @@ def read_case_thrulines(log, alldata, lines):
                         summaxgenQ += Qmax
 
                 else:
-                    log.raise_exception(
-                        "Error: Generator # %d in nonexistent bus ID %d\n"
-                        % (gencount1, nodeID)
+                    raise ValueError(
+                        "Generator # %d in nonexistent bus ID %d." % (gencount1, nodeID)
                     )
 
                 linenum += 1
             # Finished reading gen section
             if lookingforendofgen:
-                log.raise_exception("Error: Could not find end of generator section\n")
+                raise ValueError("Could not find end of generator section.")
 
             alldata["gens"] = gens
             alldata["numgens"] = len(gens)
@@ -623,25 +612,23 @@ def read_case_thrulines(log, alldata, lines):
                 maxangle = float(maxangle)
 
                 if maxangle < minangle:
-                    log.raise_exception(
-                        "Error: Branch # %d has illegal angle constraints\n"
-                        % numbranches
+                    raise ValueError(
+                        "Branch # %d has illegal angle constraints\n" % numbranches
                     )
 
                 count_f = IDtoCountmap[f]
                 count_t = IDtoCountmap[t]
 
                 if baseMVA == 0.0:
-                    log.raise_exception(
-                        "Error: baseMVA not available before branch section\n"
-                    )
-                if False:  # rateA < 1e-10:
+                    raise ValueError("baseMVA not available before branch section.")
+
+                if False:  # rateA < 1e-10: # TODO do we need it?
                     log.joint(
                         "Warning. Branch %d from %d to %d has unbounded rateA.\n"
                         % (numbranches, f, t)
                     )
 
-                if True:
+                if True:  # TODO do we need the if?
                     branches[numbranches] = Branch(
                         log,
                         numbranches,
@@ -672,7 +659,7 @@ def read_case_thrulines(log, alldata, lines):
 
             # Finished reading branch section
             if lookingforendofbranch:
-                log.raise_exception("Error: Could not find end of branch section\n")
+                raise ValueError("Could not find end of branch section.")
 
             alldata["branches"] = branches
             alldata["numbranches"] = numbranches
@@ -702,9 +689,8 @@ def read_case_thrulines(log, alldata, lines):
                 if gencostcount <= gencount1:
                     costtype = int(thisline[0])
                     if costtype != 2:
-                        log.raise_exception(
-                            "Error: Cost of generator %d is not polynomial\n"
-                            % gencostcount
+                        raise ValueError(
+                            "Cost of generator %d is not polynomial\n" % gencostcount
                         )
 
                     degree = int(thisline[3]) - 1
@@ -714,16 +700,16 @@ def read_case_thrulines(log, alldata, lines):
                         coeff = float(thisline[4])
                         skip1 = 1
                         if coeff != 0:
-                            log.raise_exception(
-                                "Error: Degree of cost function for generator %d equals %d which is illegal\n"
+                            raise ValueError(
+                                "Degree of cost function for generator %d equals %d which is illegal\n"
                                 % (gencostcount, degree)
                             )
                         else:
                             degree = 2
 
                     elif degree > 2 or degree < 0:
-                        log.raise_exception(
-                            "Error: Degree of cost function for generator %d equals %d which is illegal\n"
+                        raise ValueError(
+                            "Degree of cost function for generator %d equals %d which is illegal\n"
                             % (gencostcount, degree)
                         )
 
@@ -744,8 +730,8 @@ def read_case_thrulines(log, alldata, lines):
                     # break_exit('gen')
 
                 else:
-                    log.raise_exception(
-                        "Error: Read %d gen costs but only %d generators\n"
+                    raise ValueError(
+                        "Read %d gen costs but only %d generators\n"
                         % (gencostcount, gencount1)
                     )
 
@@ -753,7 +739,7 @@ def read_case_thrulines(log, alldata, lines):
                 linenum += 1
             # Finished reading gen cost section
             if lookingforendofgencost:
-                log.raise_exception("Error: Could not find end of gencost section\n")
+                raise ValueError("Could not find end of gencost section.")
 
             linenum += 1
 
@@ -765,13 +751,11 @@ def readvoltsfile(log, alldata):
     """Read volts file and fill data dictionary"""
 
     voltsfilename = alldata["voltsfilename"]
-    try:
-        log.joint("  Reading volts file %s\n" % voltsfilename)
-        f = open(voltsfilename, "r")
-        lines = f.readlines()
-        f.close()
-    except:
-        log.raise_exception("Error: Cannot open file %s\n" % voltsfilename)
+
+    log.joint("  Reading volts file %s\n" % voltsfilename)
+    f = open(voltsfilename, "r")
+    lines = f.readlines()
+    f.close()
 
     inputvolts = {}
     numread = 0
@@ -792,8 +776,8 @@ def readvoltsfile(log, alldata):
             break
 
         else:
-            log.raise_exception(
-                "Error: Illegal input %s on line %s in volts file\n"
+            raise ValueError(
+                "Illegal input %s on line %s in volts file\n"
                 % (thisline[0], lines[linenum])
             )
 
@@ -805,13 +789,11 @@ def readflowsfile(log, alldata):
     """Read flows file and fill data dictionary"""
 
     flowsfilename = alldata["flowsfilename"]
-    try:
-        log.joint("  Reading flows file %s\n" % flowsfilename)
-        f = open(flowsfilename, "r")
-        lines = f.readlines()
-        f.close()
-    except:
-        log.raise_exception("Error: Cannot open flows file %s" % flowsfilename)
+
+    log.joint("  Reading flows file %s\n" % flowsfilename)
+    f = open(flowsfilename, "r")
+    lines = f.readlines()
+    f.close()
 
     baseMVA = alldata["baseMVA"]
     inputPf = {}
@@ -838,8 +820,8 @@ def readflowsfile(log, alldata):
             break
 
         else:
-            log.raise_exception(
-                "Error: Illegal input %s on line %s in flows file\n"
+            raise ValueError(
+                "Illegal input %s on line %s in flows file\n"
                 % (thisline[0], lines[linenum])
             )
 
@@ -854,11 +836,8 @@ def readflowsfile(log, alldata):
 def writegv(log, alldata, gvfilename):
     """Write gv file needed for graphical image"""
 
-    try:
-        f = open(gvfilename, "w")
-        log.joint("Writing to gv file %s\n" % gvfilename)
-    except:
-        log.raise_exception("Error: Cannot open file %s" % gvfilename)
+    f = open(gvfilename, "w")
+    log.joint("Writing to gv file %s\n" % gvfilename)
 
     f.write("graph {\n")
 

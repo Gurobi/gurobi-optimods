@@ -86,20 +86,22 @@ def graphplot(
 
     if trueM != numbranches:
         log.joint(
-            "Error. Number of branches in .gv file = %d, whereas number of branches in problem = %d\n"
+            "Error. Number of branches in .gv file = %d, whereas number of branches in problem = %d.\n"
             % (trueM, numbranches)
         )
-        break_exit(
-            "error"
-        )  # <--- Jarek, I suppose we have to throw an exception here.  Should this happen it indicates a bug.
+        raise ValueError(
+            "Number of branches in .gv file = %d, whereas number of branches in problem = %d."
+            % (trueM, numbranches)
+        )
     if trueM != truelinect:
         log.joint(
-            "Error. Number of branches in .gv file = %d, whereas number of branches line file = %d\n"
+            "Error. Number of branches in .gv file = %d, whereas number of branches line file = %d.\n"
             % (trueM, truelinect)
         )
-        break_exit(
-            "error"
-        )  # <--- Jarek, I suppose we have to throw an exception here.  Should this happen it indicates a bug.
+        raise ValueError(
+            "Number of branches in .gv file = %d, whereas number of branches line file = %d."
+            % (trueM, truelinect)
+        )
 
     loud = False
     local_reordered_width = {}
@@ -110,19 +112,27 @@ def graphplot(
         degscanned = scanned_degrees_consolidated[scannedordpair]
         if scannedordpair not in myedge_degrees_consolidated.keys():
             log.joint(
-                "Error. Ordered pair %d -> (%d,%d) not in consolidated list\n"
+                "Error. Ordered pair %d -> (%d,%d) not in consolidated list.\n"
                 % (j, scannedordpair[0], scannedordpair[1])
             )
-            break_exit("error")
+            raise ValueError(
+                "Ordered pair %d -> (%d,%d) not in consolidated list."
+                % (j, scannedordpair[0], scannedordpair[1])
+            )
         degmine = myedge_degrees_consolidated[scannedordpair]
         if degscanned != degmine:
             log.joint(
-                "Error. Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists\n"
+                "Error. Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists.\n"
                 % (j, scannedordpair[0], scannedordpair[1]),
                 degscanned,
                 degmine,
             )
-            break_exit("error")
+            raise ValueError(
+                "Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists.\n"
+                % (j, scannedordpair[0], scannedordpair[1]),
+                degscanned,
+                degmine,
+            )
 
         if False:
             log.joint(
@@ -205,7 +215,9 @@ def graphplot(
         addcode = gG.addedge(small, large)
         if addcode:
             log.joint("Could not add edge (%d, %d) to graph object.\n" % (small, large))
-            break_exit("error")
+            raise ValueError(
+                "Could not add edge (%d, %d) to graph object." % (small, large)
+            )
         fbus = small + 1
         tbus = large + 1
         # print(j+1, 'f,t', fbus, tbus)

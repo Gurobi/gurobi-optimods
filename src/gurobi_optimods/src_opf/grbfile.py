@@ -13,24 +13,22 @@ def read_configfile(alldata, filename, casefile=""):
 
     log = alldata["log"]
 
-    try:
-        log.joint("Reading configuration file %s\n" % filename)
-        f = open(filename, "r")
-        lines = f.readlines()
-        f.close()
-    except:
-        log.raise_exception("Error: Cannot open file %s\n" % filename)
+    log.joint("Reading configuration file %s\n" % filename)
+    f = open(filename, "r")
+    lines = f.readlines()
+    f.close()
 
     # Currently Hard-coded
     alldata["usequadcostvar"] = False
 
+    # TODO revisit default settings
     # Default values for options
     if casefile == "":
         casefilename = "NONE"
     else:
         casefilename = casefile
     voltsfilename = gvfilename = "NONE"
-    lpfilename = "grbopf.lp"
+    lpfilename = "grbopf.lp"  # TODO default should be empty
     strictcheckvoltagesolution = (
         usevoltsolution
     ) = fixcs = skipjabr = cutplane = dodc = usemipstart = False
@@ -106,19 +104,24 @@ def read_configfile(alldata, filename, casefile=""):
 
         elif thisline[0] == "voltsfilename":
             if len(thisline) < 3:
-                log.raise_exception(
-                    "Error: voltsfilename option requires filename and tolerance\n"
+                raise ValueError(
+                    "Voltsfilename option requires filename and tolerance."
                 )
+
             voltsfilename = thisline[1]
             fixtolerance = float(thisline[2])
             if usevoltsolution:
                 log.joint("Cannot use both voltsfilename and voltsolution\n")
-                log.raise_exception("Error: Illegal option combination\n")
+                raise ValueError(
+                    "Illegal option combination. Cannot use both voltsfilename and voltsolution."
+                )
 
         elif thisline[0] == "usevoltsoution":
             if voltsfilename != "NONE":
                 log.joint("Cannot use both voltsfilename and voltsolution\n")
-                log.raise_exception("Error: Illegal option combination\n")
+                raise ValueError(
+                    "Illegal option combination. Cannot use both voltsfilename and voltsolution."
+                )
 
             usevoltsolution = True  # forcing solution in casefile
 
@@ -180,7 +183,7 @@ def read_configfile(alldata, filename, casefile=""):
             break
 
         else:
-            log.raise_exception("Error: Illegal input %s\n" % thisline[0])
+            raise ValueError("Illegal option input %s\n" % thisline[0])
 
         linenum += 1
 
@@ -220,7 +223,7 @@ def read_configfile(alldata, filename, casefile=""):
         log.joint("  {} {}\n".format(x[0], x[1]))
 
     if alldata["casefilename"] == "NONE":
-        log.raise_exception("Error: No casefile provided\n")
+        raise ValueError("No casefile provided.")
 
 
 def gbread_graphattrs(alldata, filename):
@@ -228,13 +231,10 @@ def gbread_graphattrs(alldata, filename):
 
     log = alldata["log"]
 
-    try:
-        log.joint("Reading graphical attributes file %s\n" % filename)
-        f = open(filename, "r")
-        lines = f.readlines()
-        f.close()
-    except:
-        log.raise_exception("Error: Cannot open file %s\n" % filename)
+    log.joint("Reading graphical attributes file %s\n" % filename)
+    f = open(filename, "r")
+    lines = f.readlines()
+    f.close()
 
     numfeatures = 0
 
@@ -280,13 +280,10 @@ def grbread_coords(alldata):
     filename = alldata["coordsfilename"]
     log.joint("reading csv coordinates file " + filename + "\n")
 
-    try:
-        f = open(filename, "r")
-        csvf = csv.reader(f)
-        thelist = list(csvf)
-        f.close()
-    except:
-        log.raise_exception("cannot open csv file " + filename)
+    f = open(filename, "r")
+    csvf = csv.reader(f)
+    thelist = list(csvf)
+    f.close()
 
     for line in range(1, len(thelist)):
         # print(thelist[line][0], float(thelist[line][3]), float(thelist[line][4]))
@@ -305,12 +302,9 @@ def grbreadvoltsfile(alldata):
     filename = alldata["voltsfilename"]
     log.joint("reading volts file " + filename + "\n")
 
-    try:
-        f = open(filename, "r")
-        lines = f.readlines()
-        f.close()
-    except:
-        log.raise_exception("cannot open file " + filename)
+    f = open(filename, "r")
+    lines = f.readlines()
+    f.close()
 
     linenum = 0
 
@@ -333,7 +327,10 @@ def grbreadvoltsfile(alldata):
                 buses[buscount].inputV = vm
                 buses[buscount].inputA_rad = varad
             else:
-                break_exit("illegal line " + str(linenum + 1))
+                raise ValueError(
+                    "Illegal line %d in voltsfile %s." % (linenum + 1, filename)
+                )
+
         linenum += 1
 
     log.joint("Read volts file.\n")

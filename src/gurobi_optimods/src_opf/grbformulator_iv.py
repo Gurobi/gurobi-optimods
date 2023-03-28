@@ -1554,7 +1554,7 @@ def lpformulator_iv_strictchecker(alldata, model, spitoutvector):
         bus = buses[j]
         if bus.inputV > bus.Vmax:
             log.joint(
-                ">>> error: bus # %d has input voltage %f which is larger than Vmax %f\n"
+                ">>> Error: bus # %d has input voltage %f which is larger than Vmax %f\n"
                 % (j, bus.inputV, bus.Vmax)
             )
             thisviol = bus.inputV - bus.Vmax
@@ -1563,7 +1563,7 @@ def lpformulator_iv_strictchecker(alldata, model, spitoutvector):
                 max_violation_value = thisviol
         if bus.inputV < bus.Vmin:
             log.joint(
-                ">>> error: bus # %d has input voltage %f which is smaller than Vmin %f\n"
+                ">>> Error: bus # %d has input voltage %f which is smaller than Vmin %f\n"
                 % (j, bus.inputV, bus.Vmin)
             )
             thisviol = bus.Vmin - bus.inputV
@@ -1598,7 +1598,7 @@ def lpformulator_iv_strictchecker(alldata, model, spitoutvector):
         fromviol = max(fromvalue - branch.limit, 0)
         if fromvalue > branch.limit:
             log.joint(
-                ">>> error: branch # %d has 'from' flow magnitude %f which is larger than limit %f\n"
+                ">>> Error: branch # %d has 'from' flow magnitude %f which is larger than limit %f\n"
                 % (j, fromvalue, branch.limit)
             )
             log.joint("    branch is ( %d %d )\n" % (branch.f, branch.t))
@@ -1614,7 +1614,7 @@ def lpformulator_iv_strictchecker(alldata, model, spitoutvector):
         toviol = max(tovalue - branch.limit, 0)
         if tovalue > branch.limit:
             log.joint(
-                ">>> error: branch # %d has 'to' flow magnitude %f which is larger than limit %f\n"
+                ">>> Error: branch # %d has 'to' flow magnitude %f which is larger than limit %f\n"
                 % (j, tovalue, branch.limit)
             )
             log.joint("    branch is ( %d %d )\n" % (branch.f, branch.t))
@@ -2037,11 +2037,8 @@ def writemipstart(alldata):
     log = alldata["log"]
 
     filename = "mipstart.mst"
-    try:
-        f = open(filename, "w")
-        log.joint("Writing mipstart in file %s.\n" % filename)
-    except:
-        log.raise_exception("Error: Cannot open file %s." % filename)
+    f = open(filename, "w")
+    log.joint("Writing mipstart in file %s.\n" % filename)
 
     zvar = alldata["LP"]["zvar"]
     branches = alldata["branches"]

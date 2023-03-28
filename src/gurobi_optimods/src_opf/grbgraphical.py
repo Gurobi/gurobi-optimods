@@ -20,17 +20,11 @@ def grbgraphical(alldata, plottype, textlist):
     txtfilename = "newgraph.txt"
     log.joint("Graphical layout, 2\n")
 
-    try:
-        f = open(gvfilename, "w")
-        log.joint("Writing to gv file %s\n" % gvfilename)
-    except:
-        log.raise_exception("Error: Cannot open file %s\n" % gvfilename)
+    f = open(gvfilename, "w")
+    log.joint("Writing to gv file %s\n" % gvfilename)
 
-    try:
-        g = open(txtfilename, "w")
-        log.joint("Writing to txt file %s\n" % txtfilename)
-    except:
-        log.raise_exception("Error: Cannot open file %s\n" % txtfilename)
+    g = open(txtfilename, "w")
+    log.joint("Writing to txt file %s\n" % txtfilename)
 
     f.write("graph {\n")
     f.write('node [color=black, height=0, label="\\N", shape=point, width=0];\n')
