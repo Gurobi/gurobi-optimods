@@ -9,3 +9,6 @@ API
 
 .. automodule:: gurobi_optimods.matching
    :members: maximum_bipartite_matching, maximum_weighted_matching
+
+.. automodule:: gurobi_optimods.network_flow
+   :members: network_flow, min_cost_flow, shortest_path, max_flow, min_cut

@@ -1,21 +1,34 @@
 Network Flow
 ============
 
-Network flow problems appear are a generalised problem type defined on a graph.
-A common example of these would be the: min-cost flow, the max-flow/min-cut, the
-shortest path problem.
+Network flow type problems are defined on a graph or network where the goal is
+to send an amount of flow. Variants of this problem may include costs as part of
+the objective and/or capacities as part of the constraints or restrictions.
+
+Specific cases of network flow problems considered here are:
+
+- min-cost flow;
+- max-flow/min-cut;
+- and, shortest path.
 
 Problem Specification
 ---------------------
 
-Give a brief overview of the problem being solved.
+
 
 .. tabs::
 
     .. tab:: Graph Theory
 
-        Give a definition of the problem in the language of the domain expert.
-        For a given graph :math:`G` with set of vertices :math:`V` and edges :math:`E`. Depending on the problem, each edge may have differnt parameters associated to it for instance, for a given :math:`(i,j)\in E`, we may have costs :math:`c_{ij}`, capacities :math:`B_{ij}` and each node :math:`i` may have a demand :math:`d_i`.
+        For a given graph :math:`G` with set of vertices :math:`V` and edges
+        :math:`E`. Each edge may have different parameters associated to it for
+        instance, for a given :math:`(i,j)\in E`, we may have:
+
+        - costs :math:`c_{ij}\in \mathbb{R}`;
+        - and capacities :math:`B_{ij}\in\mathbb{R}`.
+
+        Similarly, each vertex :math:`i\in V` may have a demand :math:`d_i\in\mathbb{R}`.
+        There may be a source and sink nodes.
 
         - Min-cost flow: minimize the cost subject to edge capacities and fulfil
           node demand.
@@ -26,7 +39,12 @@ Give a brief overview of the problem being solved.
 
     .. tab:: Optimization Model
 
-        For a given graph :math:`G` with set of vertices :math:`V` and edges :math:`E`. Depending on the problem, each edge may have differnt parameters associated to it for instance, for a given :math:`(i,j)\in E`, we may have costs :math:`c_{ij}`, capacities :math:`B_{ij}` and each node :math:`i` may have a demand :math:`d_i`.
+        For a given graph :math:`G` with set of vertices :math:`V` and edges
+        :math:`E`. Depending on the problem, each edge may have differnt
+        parameters associated to it for instance, for a given :math:`(i,j)\in
+        E`, we may have costs :math:`c_{ij}`, capacities :math:`B_{ij}` and each
+        node :math:`i` may have a demand :math:`d_i`. The values for each case
+        are specified below.
 
         We need a set of continuous variables :math:`x_{ij}` to denote the
         amount of flow going through an edge.
@@ -40,7 +58,14 @@ Give a brief overview of the problem being solved.
             \end{alignat}
 
         Where :math:`\delta^+(\cdot)` (:math:`\delta^-(\cdot)`) denotes the outgoing (incoming) neighours.
+        Additionally, we
 
+        .. csv-table:: Parameters for the three cases.
+           :header: "Problem", ":math:`V'`",                ":math:`d_i`",    ":math:`B_{ij}`", ":math:`c_{ij}`"
+
+           "1. Min-cost flow", ":math:`V`",                 ":math:`\geq 0`", ":math:`\geq 0`", ":math:`\geq 0`"
+           "2. Max-flow",      ":math:`V\setminus\{s,t\}`", ":math:`\geq 0`", ":math:`\geq 0`", ":math:`=-1` if :math:`i=s, j\in\delta^+(s)`, :math:`0` otherwise"
+           "3. Shortest path", ":math:`V`",                 ":math:`=1` if :math:`i=s`, :math:`=-1`, if :math:`i=t`, :math:`0` otherwise",     ":math:`=1`",     ":math:`\geq 0`"
 
 
 .. tabs::
@@ -81,6 +106,10 @@ Give a brief overview of the problem being solved.
 
       TODO: add plot
 
+.. image:: figures/network-flow-result.png
+  :width: 600
+  :alt: Sample network.
+
 |
 
 Code
@@ -90,10 +119,10 @@ Self contained code example to run the mod from an example dataset. Example
 datasets should bd included in the ``gurobi_optimods.datasets`` module for
 easy access by users.
 
-.. testcode:: mod
+.. testcode:: network_flow
 
     from gurobi_optimods.datasets import load_network_flow_example_data
-    from gurobi_optimods.network_flow import solve_min_cost
+    from gurobi_optimods.network_flow import shortest_path
 
 
     G, source, sink = load_network_flow_example_data()
@@ -103,12 +132,11 @@ easy access by users.
     but serves as a doctest to make sure the code example runs. The ... lines
     are meaningful here, they will match anything in the output test.
 
-.. testoutput:: mod
+.. testoutput:: network_flow
     :hide:
+
     ...
-    Solved in 2 iterations and 0.00 seconds (0.00 work units)
     Optimal objective  7.000000000e+00
-    ...
 
 The model is solved as an LP by Gurobi.
 
@@ -149,8 +177,3 @@ Show the solution. One way is to use doctests to display simple shell outputs
 (see the workforce example). This can be done simply by pasting outputs
 directly from a python shell. Another option is to include and display figures
 (see the graph matching examples).
-
-.. doctest:: mod
-    :options: +NORMALIZE_WHITESPACE
-
-    >>>

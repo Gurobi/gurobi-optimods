@@ -6,7 +6,7 @@ Something about specific graph algorithms vs mathprog formulations?
 Problem Specification
 ---------------------
 
-You are given a bipartite graph G containing n vertices and m edges. Find the maximum matching, i.e. select as many edges as possible so that no selected edge shares a vertex with any other selected edge.
+You are given a bipartite graph :math:`G` containing :math:`n` vertices and :math:`m` edges. Find the maximum matching, i.e. select as many edges as possible so that no selected edge shares a vertex with any other selected edge.
 
 .. tabs::
 
