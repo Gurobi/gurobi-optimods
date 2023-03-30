@@ -73,11 +73,11 @@ easy access by users.
 
 .. testcode:: mod
 
-    from gurobi_optimods.opf import solve_acopf_model
-    from gurobi_optimods.datasets import load_opf
+    from gurobi_optimods.opf import solve_opf_model
+    from gurobi_optimods.datasets import load_acopf
 
-    conf, case = load_opf()
-    solution   = solve_acopf_model(conf, case)
+    conf, case = load_acopf()
+    solution   = solve_opf_model(conf, case)
 
 ..  A snippet of the Gurobi log output here won't show in the rendered page,
     but serves as a doctest to make sure the code example runs. The ... lines
@@ -87,9 +87,9 @@ easy access by users.
     :hide:
 
     ...
-    Constructed ACOPF model with 134 variables and 218 constraints.
+    Optimize a model with 218 rows, 134 columns and 541 nonzeros
     ...
-    Model Status: optimal.
+    Optimal solution found (tolerance 1.00e-03)
     ...
 
 The model is solved as an LP/MIP/QP by Gurobi.
