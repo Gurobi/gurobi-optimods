@@ -7,6 +7,16 @@ import logging
 import numpy as np
 
 
+def initialize_data_dict(logfile):
+
+    alldata = {}
+    alldata["LP"] = {}
+    alldata["MIP"] = {}
+    alldata["logfile"] = logfile
+
+    return alldata
+
+
 def read_configfile(alldata, filename, casefile=""):
     """Function to read configurations for OPF solve from config file"""
 
@@ -24,6 +34,7 @@ def read_configfile(alldata, filename, casefile=""):
         casefilename = "NONE"
     else:
         casefilename = casefile
+    dictionary_input = False
     voltsfilename = gvfilename = "NONE"
     lpfilename = "grbopf.lp"  # TODO default should be empty
     strictcheckvoltagesolution = (
@@ -65,6 +76,9 @@ def read_configfile(alldata, filename, casefile=""):
 
         if thisline[0] == "casefilename":
             casefilename = thisline[1]
+
+        elif thisline[0] == "dictionary_input":
+            dictionary_input = True
 
         elif thisline[0] == "lpfilename":
             lpfilename = thisline[1]
@@ -187,6 +201,7 @@ def read_configfile(alldata, filename, casefile=""):
     logging.info("Settings:")
     for x in [
         ("casefilename", casefilename),
+        ("dictionary_input", dictionary_input),
         ("lpfilename", lpfilename),
         ("strictcheckvoltagesolution", strictcheckvoltagesolution),
         ("voltsfilename", voltsfilename),
@@ -218,9 +233,6 @@ def read_configfile(alldata, filename, casefile=""):
     ]:
         alldata[x[0]] = x[1]
         logging.info("  {} {}".format(x[0], x[1]))
-
-    if alldata["casefilename"] == "NONE":
-        raise ValueError("No casefile provided.")
 
     logging.info("")
 

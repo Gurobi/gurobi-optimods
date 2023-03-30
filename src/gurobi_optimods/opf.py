@@ -3,9 +3,14 @@ import logging
 
 import gurobipy as gp
 
-from .src_opf.grbcasereader import read_case
+from .src_opf.grbcasereader import read_case, build_data_struct
 
-from .src_opf.grbfile import read_configfile, grbread_coords, gbread_graphattrs
+from .src_opf.grbfile import (
+    initialize_data_dict,
+    read_configfile,
+    grbread_coords,
+    gbread_graphattrs,
+)
 from .src_opf.grbgraphical import grbgraphical
 from .src_opf.grbformulator_ac import lpformulator_ac
 from .src_opf.grbformulator_dc import lpformulator_dc
@@ -17,25 +22,23 @@ def solve_opf_model(configfile, casefile, logfile=""):
 
     if not logfile:
         logfile = "gurobiOPF.log"
-
+    # Initialize output and file handler and start logging
     filehandler = logging.FileHandler(filename=logfile)
     stdouthandler = logging.StreamHandler(stream=sys.stdout)
-
     handlers = [filehandler, stdouthandler]
-
     logging.basicConfig(level=logging.INFO, format="%(message)s", handlers=handlers)
 
-    alldata = {}
-    alldata["LP"] = {}
-    alldata["MIP"] = {}
-    alldata["logfile"] = logfile
-
-    # Read configuration file
+    alldata = initialize_data_dict(logfile)
+    # Read configuration file and possibly set casefile name
     read_configfile(alldata, configfile, casefile)
+    # Use correct method to fill alldata dict depending on whether we have a dictionary input or file name for casefile
+    if type(casefile) is dict:
+        build_data_struct(alldata, casefile)
+    else:
+        # Read case file holding OPF network data. The path to case file has been set in read_configfile
+        read_case(alldata)
 
-    # Read case file holding OPF network data
-    read_case(alldata)
-
+    # Special settings for graphics
     if alldata["dographics"]:
         alldata["graphical"] = {}
         alldata["graphical"]["numfeatures"] = 0
@@ -50,9 +53,13 @@ def solve_opf_model(configfile, casefile, logfile=""):
     elif alldata["dodc"]:
         solution, objval = lpformulator_dc(alldata)
     elif alldata["doiv"]:
-        lpformulator_iv(alldata)
+        solution, objval = lpformulator_iv(alldata)
     elif alldata["doslp_polar"]:
         alldata["doac"] = True
         solution, objval = lpformulator_ac(alldata)
+
+    # Close logging handlers
+    for handler in handlers:
+        handler.close()
 
     return solution, objval

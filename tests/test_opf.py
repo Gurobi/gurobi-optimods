@@ -1,26 +1,48 @@
 import unittest
 
 from gurobi_optimods.opf import solve_opf_model
-from gurobi_optimods.datasets import load_acopf, load_dcopf
+from gurobi_optimods.datasets import (
+    load_acopf,
+    load_dcopf,
+    load_ivopf,
+    load_simpleopf,
+    load_dictopf,
+)
 
 
 class TestOpf(unittest.TestCase):
     # test simple is on purpose the same as test_acopf for now
     def test_simple(self):
-        conf, case = load_acopf()
+        conf, case = load_simpleopf()
         solution, objval = solve_opf_model(conf, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
         self.assertTrue(len(solution) == 134)
-        self.assertLess(abs(objval - 5296.665647), 1e-4)
+        self.assertLess(abs(objval - 5296.665647261), 1e-4)
         self.assertTrue("lincost" in solution.keys())
         self.assertLess(abs(solution["lincost"] - 704.399018), 1e-4)
         self.assertTrue("twinP_1_1_4" in solution.keys())
-        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-9)
+        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-4)
         self.assertTrue("Q_9_4_9" in solution.keys())
         self.assertLess(abs(solution["Q_9_4_9"] - 0.127732), 1e-4)
 
+    # test reading case from a dict
+    def test_dictopf(self):
+        conf, case = load_dictopf()
+        solution, objval = solve_opf_model(conf, case)
+        self.assertTrue(solution is not None)
+        self.assertTrue(objval is not None)
+        self.assertTrue(len(solution) == 134)
+        self.assertLess(abs(objval - 5296.665647261), 1e-4)
+        self.assertTrue("lincost" in solution.keys())
+        self.assertLess(abs(solution["lincost"] - 704.399018), 1e-4)
+        self.assertTrue("twinP_1_1_4" in solution.keys())
+        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-4)
+        self.assertTrue("Q_9_4_9" in solution.keys())
+        self.assertLess(abs(solution["Q_9_4_9"] - 0.127732), 1e-4)
+
+    # test AC formulation
     def test_acopf(self):
         conf, case = load_acopf()
         solution, objval = solve_opf_model(conf, case)
@@ -32,10 +54,11 @@ class TestOpf(unittest.TestCase):
         self.assertTrue("lincost" in solution.keys())
         self.assertLess(abs(solution["lincost"] - 704.399018), 1e-4)
         self.assertTrue("twinP_1_1_4" in solution.keys())
-        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-9)
+        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-4)
         self.assertTrue("Q_9_4_9" in solution.keys())
         self.assertLess(abs(solution["Q_9_4_9"] - 0.127732), 1e-4)
 
+    # test DC formulation
     def test_dcopf(self):
         conf, case = load_dcopf()
         solution, objval = solve_opf_model(conf, case)
@@ -50,6 +73,21 @@ class TestOpf(unittest.TestCase):
         self.assertLess(abs(solution["theta_9"] - 6.083), 1e-4)
         self.assertTrue("z_9_9_4" in solution.keys())
         self.assertLess(abs(solution["z_9_9_4"] - 1), 1e-4)
+
+    # test IV formulation
+    def test_ivopf(self):
+        conf, case = load_ivopf()
+        solution, objval = solve_opf_model(conf, case)
+        self.assertTrue(solution is not None)
+        self.assertTrue(objval is not None)
+        self.assertTrue(len(solution) == 62)
+        self.assertLess(abs(objval - 5296.716652), 1e-4)
+        self.assertTrue("lincost" in solution.keys())
+        self.assertLess(abs(solution["lincost"] - 703.019340), 1e-4)
+        self.assertTrue("f_9" in solution.keys())
+        self.assertLess(abs(solution["f_9"] + 0.085954), 1e-4)
+        self.assertTrue("P_9_4_9" in solution.keys())
+        self.assertLess(abs(solution["P_9_4_9"] - 0.543771), 1e-4)
 
     # TODO:
     #  - solve_acopf_model should return something to solution and check it

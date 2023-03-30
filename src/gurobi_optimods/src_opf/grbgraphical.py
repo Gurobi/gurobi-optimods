@@ -1,6 +1,7 @@
 import sys
 import math
 import time
+import logging
 from gurobipy import *
 
 # from log import Logger
@@ -9,7 +10,6 @@ from .myutils import break_exit
 
 
 def grbgraphical(alldata, plottype, textlist):
-    log = alldata["log"]
     buses = alldata["buses"]
     numbuses = alldata["numbuses"]
     branches = alldata["branches"]
@@ -18,13 +18,13 @@ def grbgraphical(alldata, plottype, textlist):
     gvfilename = "grbgraphical.gv"
     IDtoCountmap = alldata["IDtoCountmap"]
     txtfilename = "newgraph.txt"
-    log.joint("Graphical layout, 2\n")
+    logging.info("Graphical layout, 2\n")
 
     f = open(gvfilename, "w")
-    log.joint("Writing to gv file %s\n" % gvfilename)
+    logging.info("Writing to gv file %s." % gvfilename)
 
     g = open(txtfilename, "w")
-    log.joint("Writing to txt file %s\n" % txtfilename)
+    logging.info("Writing to txt file %s." % txtfilename)
 
     f.write("graph {\n")
     f.write('node [color=black, height=0, label="\\N", shape=point, width=0];\n')
@@ -52,10 +52,10 @@ def grbgraphical(alldata, plottype, textlist):
             + " "
             + gvfilename
         )
-        log.joint("sfdp command: " + sfdpcommand + "\n")
+        logging.info("sfdp command: " + sfdpcommand)
         system(sfdpcommand)
     else:
-        log.joint("Skipping graph layout computation since coordinates are given.\n")
+        logging.info("Skipping graph layout computation since coordinates are given.")
         firstgvfile = gvfilename
 
     # break_exit('graph,1')
@@ -124,8 +124,8 @@ def grbgraphical(alldata, plottype, textlist):
                 gen = gens[bus.genidsbycount[k]]
                 sumPgen += gholder[gen.count - 1]
                 if False:
-                    log.joint(
-                        " bus %d gen %d produces %f\n"
+                    logging.info(
+                        " bus %d gen %d produces %f."
                         % (j, gen.count, gholder[gen.count - 1])
                     )
                 # break_exit('gen in grbgraphical')
@@ -167,8 +167,8 @@ def grbgraphical(alldata, plottype, textlist):
             # if zvar[branch].x < 0.5:  #turned off
             if zholder[j - 1] < 0.5:  # turned off
                 if loud:
-                    log.joint(
-                        "branch %d (%d, %d) has small x\n"
+                    logging.info(
+                        "branch %d (%d, %d) has small x."
                         % (j, branch.count_f, branch.count_t)
                     )
                 myedge_width[j] = 4
@@ -198,16 +198,16 @@ def grbgraphical(alldata, plottype, textlist):
             myedge_list_consolidated[(small, large)] = []
             myedge_list_consolidated[(small, large)].append(j)
             if loud:
-                log.joint(
-                    " --> line %d color %s creates my consolidated list for (%d,%d)\n"
+                logging.info(
+                    " --> line %d color %s creates my consolidated list for (%d,%d)."
                     % (j, myedge_color[j], small, large)
                 )
         else:
             myedge_degrees_consolidated[(small, large)] += 1
             myedge_list_consolidated[(small, large)].append(j)
             if loud:
-                log.joint(
-                    " --> appended line %d color %s to my consolidated list for (%d,%d)\n"
+                logging.info(
+                    " --> appended line %d color %s to my consolidated list for (%d,%d)."
                     % (j, myedge_color[j], small, large)
                 )
 

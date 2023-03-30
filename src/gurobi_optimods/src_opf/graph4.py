@@ -3,6 +3,7 @@
 import plotly.graph_objects as go
 import plotutils as pu
 import psutil
+import logging
 import numpy as np
 
 # import networkx as nx
@@ -38,14 +39,9 @@ def graphplot(
     #
     # print('graphfilename', graphfilename, 'gvfilename', gvfilename)
     # graphfilename = 'grbgraph.txt'
-    try:
-        f = open(graphfilename, "r")
-        lines = f.readlines()
-        f.close()
-    except:
-        sys.exit("failure")
-
-    log = alldata["log"]
+    f = open(graphfilename, "r")
+    lines = f.readlines()
+    f.close()
 
     n = int(lines[0].split()[1])
     m = int(lines[0].split()[3])
@@ -74,7 +70,7 @@ def graphplot(
         scanned_degrees_consolidated,
         scanned_unique_ordered_pairs,
         scanned_num_unique,
-    ) = scangv(alldata, gvfilename, log, alldata["coordsfilename"] == None)
+    ) = scangv(alldata, gvfilename, alldata["coordsfilename"] == None)
 
     # break_exit('scanned')
 
@@ -85,8 +81,8 @@ def graphplot(
     # the lines are found in the .gv file.  degrees_consolidated is the number of such lines (for each sorted vertex pair found in the file
 
     if trueM != numbranches:
-        log.joint(
-            "Error. Number of branches in .gv file = %d, whereas number of branches in problem = %d.\n"
+        logging.error(
+            "Error. Number of branches in .gv file = %d, whereas number of branches in problem = %d."
             % (trueM, numbranches)
         )
         raise ValueError(
@@ -94,8 +90,8 @@ def graphplot(
             % (trueM, numbranches)
         )
     if trueM != truelinect:
-        log.joint(
-            "Error. Number of branches in .gv file = %d, whereas number of branches line file = %d.\n"
+        logging.error(
+            "Error. Number of branches in .gv file = %d, whereas number of branches line file = %d."
             % (trueM, truelinect)
         )
         raise ValueError(
@@ -111,8 +107,8 @@ def graphplot(
         scannedordpair = scanned_unique_ordered_pairs[j]
         degscanned = scanned_degrees_consolidated[scannedordpair]
         if scannedordpair not in myedge_degrees_consolidated.keys():
-            log.joint(
-                "Error. Ordered pair %d -> (%d,%d) not in consolidated list.\n"
+            logging.error(
+                "Error. Ordered pair %d -> (%d,%d) not in consolidated list."
                 % (j, scannedordpair[0], scannedordpair[1])
             )
             raise ValueError(
@@ -121,22 +117,22 @@ def graphplot(
             )
         degmine = myedge_degrees_consolidated[scannedordpair]
         if degscanned != degmine:
-            log.joint(
-                "Error. Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists.\n"
+            logging.error(
+                "Error. Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists."
                 % (j, scannedordpair[0], scannedordpair[1]),
                 degscanned,
                 degmine,
             )
             raise ValueError(
-                "Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists.\n"
+                "Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists."
                 % (j, scannedordpair[0], scannedordpair[1]),
                 degscanned,
                 degmine,
             )
 
-        if False:
-            log.joint(
-                "scanned ordered pair %d -> (%d,%d) of deg %d\n"
+        if False:  # TODO why is this?
+            logging.info(
+                "scanned ordered pair %d -> (%d,%d) of deg %d."
                 % (j, scannedordpair[0], scannedordpair[1], degscanned)
             )
 
@@ -153,8 +149,8 @@ def graphplot(
             local_reordered_width[scannedordpair][k] = width
 
             if loud and width > 1:
-                log.joint(
-                    " Width %d edge (%d,%d) orderings %d -> %d color %s.\n"
+                logging.info(
+                    " Width %d edge (%d,%d) orderings %d -> %d color %s."
                     % (width, scannedordpair[0], scannedordpair[1], j, jprime, color)
                 )
 
@@ -188,7 +184,7 @@ def graphplot(
     for j in range(n):
         pos[j] = [vertexx[j], vertexy[j]]
 
-    gG = grbGraph(log)
+    gG = grbGraph()
 
     for j in range(n):
         gG.addvertex(j)
@@ -214,7 +210,9 @@ def graphplot(
         # G.add_edge(small, large)
         addcode = gG.addedge(small, large)
         if addcode:
-            log.joint("Could not add edge (%d, %d) to graph object.\n" % (small, large))
+            logging.error(
+                "Could not add edge (%d, %d) to graph object." % (small, large)
+            )
             raise ValueError(
                 "Could not add edge (%d, %d) to graph object." % (small, large)
             )
@@ -225,8 +223,8 @@ def graphplot(
         deg = newdeg[pair]
         if ((fbus, tbus)) in scanned_list_consolidated.keys():
             if loud and local_reordered_width[pair][deg] > 0:
-                log.joint(
-                    " pair ind0 %d (%d, %d) local color %s width %d\n"
+                logging.info(
+                    " pair ind0 %d (%d, %d) local color %s width %d."
                     % (
                         j,
                         fbus,
@@ -258,13 +256,11 @@ def graphplot(
         vertex_border_width=myvertex_border_width,
     )
 
-    PH.addlog(log)
-
     # for edge in gG.edges.values():
     #    print(edge[0], edge[1])
     # break_exit('showed')
 
-    log.joint("Rendering figure.\n")
+    logging.info("Rendering figure.")
 
     xgap = np.max(vertexx) - np.min(vertexx)
     ygap = np.max(vertexy) - np.min(vertexy)
@@ -276,6 +272,6 @@ def graphplot(
 
     fig = PH.create_figure(height=myheight, width=mywidth, showlabel=False)
     # fig.write_image('one.png')
-    log.joint("Showing figure.\n")
+    logging.info("Showing figure.")
     fig.show()
     # break_exit('showed')

@@ -1,12 +1,13 @@
 import sys
 import os
-import numpy as np
+import logging
 import re
+import numpy as np
 
 from .myutils import break_exit
 
 
-def scangv(alldata, filename, log, readcoords):
+def scangv(alldata, filename, readcoords):
     print("Scanning gv file", filename)
 
     try:
@@ -76,16 +77,16 @@ def scangv(alldata, filename, log, readcoords):
                 scanned_unique_ordered_pairs[scanned_num_unique] = (small, large)
                 scanned_num_unique += 1
                 if loud:
-                    log.joint(
-                        " --> line %d creates scanned consolidated list for (%d,%d) --> unique ct %d\n"
+                    logging.info(
+                        " --> line %d creates scanned consolidated list for (%d,%d) --> unique ct %d"
                         % (trueM, small, large, scanned_num_unique)
                     )
             else:
                 scanned_degrees_consolidated[(small, large)] += 1
                 scanned_list_consolidated[(small, large)].append(trueM)
                 if loud:
-                    log.joint(
-                        " --> appended line %d to scanned consolidated list for (%d,%d)\n"
+                    logging.info(
+                        " --> appended line %d to scanned consolidated list for (%d,%d)"
                         % (trueM, small, large)
                     )
 
@@ -94,7 +95,7 @@ def scangv(alldata, filename, log, readcoords):
             revendbus[(busfrom, busto)] = trueM + 1
             revendbus[(busto, busfrom)] = trueM + 1
             trueM += 1
-    log.joint("After scanning, number of edges is %d\n" % trueM)
+    logging.info("After scanning, number of edges is %d." % trueM)
     # break_exit('scanned')
     return (
         trueM,

@@ -1,6 +1,7 @@
 import plotly.graph_objects as go
 import plotutils as pu
 import psutil
+import logging
 import numpy as np
 from collections import defaultdict
 import plotly.graph_objects as go
@@ -77,9 +78,6 @@ class plotlyhandler:
         self.edge_opacity = edge_opacity
         self.edge_map = edge_map
 
-    def addlog(self, log):
-        self.log = log
-
     def generate_edge_traces(self):  # -> List[Union[go.Scatter, go.Scatter3d]]:
         # group all edges by (color, width)
         groups = defaultdict(list)
@@ -110,7 +108,7 @@ class plotlyhandler:
 
             if loud:
 
-                self.log.joint(
+                logging.info(
                     "edge %d is (+1) (%d, %d) position %d width %d localdeg %d\n"
                     % (
                         count,

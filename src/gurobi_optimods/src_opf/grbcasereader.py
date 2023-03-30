@@ -241,12 +241,602 @@ class Gen:
         self.costdegree = len(costvector) - 1
         self.costlinenum = linenum
 
+    def addcost_plain(self, costvector):
+        self.costvector = costvector
+        self.costdegree = len(costvector) - 1
+        self.costlinenum = -1
+
+    def showcostvector(self):
+        logging.info(self.costvector)
+        for i in range(0, self.costdegree + 1):
+            logging.info(i, self.costvector[i], " ", end="")
+
     def getline0(self):
         return self.line0
 
 
+def read_case_build_dict(alldata):
+    """
+    Read case file and construct a dict out of it.
+
+    This is meant to be a helper function for translating casefiles into dict format.
+    """
+
+    casefilename = alldata["casefilename"]
+    starttime = time.time()
+
+    logging.info("Reading case file %s." % casefilename)
+    f = open(casefilename, "r")
+    lines = f.readlines()
+    f.close()
+
+    logging.info("Now building case dictionary.")
+
+    # Read all lines of the casefile
+    alldata["casefilelines"] = lines
+
+    casefile_dict = read_case_build_dict_thrulines(lines)
+    print("=========================================")
+    print(casefile_dict)
+    print("=========================================")
+
+    endtime = time.time()
+
+    logging.info("Reading time: %f s." % (endtime - starttime))
+
+    build_data_struct(alldata, casefile_dict)
+
+    return casefile_dict
+
+
+def build_data_struct(alldata, casefile_dict):
+    """
+    Fills alldata dictionary out of a given casefile dictionary
+    """
+
+    buses = {}
+    IDtoCountmap = {}
+    slackbus = -1
+    numbuses = 0
+    numPload = 0
+    sumPd = sumQd = 0
+    numisolated = 0
+
+    logging.info("Building main data structure from dictionary.")
+
+    dict_buses = casefile_dict["buses"]
+    baseMVA = alldata["baseMVA"] = casefile_dict["baseMVA"]
+
+    logging.info("Buses.")
+
+    for dbus in dict_buses.values():
+        numbuses += 1
+        count = dbus["count"]
+        nodeID = dbus["nodeID"]
+        nodetype = dbus["nodetype"]
+
+        if nodetype != 1 and nodetype != 2 and nodetype != 3 and nodetype != 4:
+            raise ValueError("Bad bus %s has type %s." % (count, nodetype))
+
+        if nodetype == 3:
+            slackbus = count
+            logging.info("    Bus %d ID %d is the reference bus." % (count, nodeID))
+            alldata["refbus"] = count
+
+        if nodetype == 4:
+            numisolated += 1
+
+        Vmin = dbus["Vmin"]
+        Pd = dbus["Pd"]
+        Qd = dbus["Qd"]
+        Gs = dbus["Gs"]
+        Bs = dbus["Bs"]
+        Vbase = dbus["Vbase"]
+        Vmax = dbus["Vmax"]
+        Vmin = dbus["Vmin"]
+        lnum = dbus["lnum"]
+
+        buses[numbuses] = Bus(
+            numbuses,
+            nodeID,
+            nodetype,
+            Pd / baseMVA,
+            Qd / baseMVA,
+            Gs / baseMVA,
+            Bs / baseMVA,
+            Vbase,
+            Vmax,
+            Vmin,
+            lnum,
+        )
+
+        if nodetype == 1 or nodetype == 2 or nodetype == 3:
+            sumPd += Pd
+            sumQd += Qd
+
+        IDtoCountmap[nodeID] = count
+        numPload += Pd > 0
+
+    alldata["buses"] = buses
+    alldata["numbuses"] = numbuses
+    alldata["sumPd"] = sumPd
+    alldata["sumQd"] = sumQd
+    alldata["IDtoCountmap"] = IDtoCountmap
+    alldata["slackbus"] = slackbus
+
+    logging.info("    sumloadPd %f numPload %d" % (sumPd, numPload))
+    logging.info("    sumloadQd %f" % sumQd)
+
+    if slackbus < 0:
+        logging.info("    Could not find slack bus.")
+
+    logging.info("    %d buses" % numbuses)
+    if numisolated > 0:
+        logging.info("    isolated buses: %d" % numisolated)
+
+    logging.info("Branches.")
+    branches = {}
+    defaultlimit = 1e20
+    numbranches = 0
+    activebranches = 0
+    zerolimit = 0
+
+    dict_branches = casefile_dict["branches"]
+    branches = {}
+
+    for dbranch in dict_branches.values():
+        # print(dbranch)
+        numbranches += 1
+        brcnt1 = dbranch["branchcount1"]
+        f = dbranch["f"]
+        t = dbranch["t"]
+        r = dbranch["r"]
+        x = dbranch["x"]
+        bc = dbranch["bc"]
+        rateA = dbranch["rateA"]
+        rateB = dbranch["rateB"]
+        rateC = dbranch["rateC"]
+        ratio = dbranch["ratio"]
+        if ratio == 0:
+            ratio = 1.0  # to be sure
+        angle = dbranch["angle"]
+        status = dbranch["status"]
+        minangle = dbranch["minangle"]
+        maxangle = dbranch["maxangle"]
+        if maxangle < minangle:
+            raise ValueError("Branch # %d has illegal angle constraints." % numbranches)
+
+        lnum = dbranch["lnum"]
+
+        count_f = IDtoCountmap[f]
+        count_t = IDtoCountmap[t]
+        branches[numbranches] = Branch(
+            brcnt1,
+            f,
+            count_f,
+            t,
+            count_t,
+            r,
+            x,
+            bc,
+            rateA / baseMVA,
+            rateB / baseMVA,
+            rateC / baseMVA,
+            ratio,
+            angle,
+            maxangle,
+            minangle,
+            status,
+            defaultlimit,
+            lnum,
+        )
+        activebranches += 1
+        buses[count_f].addfrombranch(brcnt1)
+        buses[count_t].addtobranch(brcnt1)
+
+    alldata["branches"] = branches
+    alldata["numbranches"] = numbranches
+    logging.info("    numbranches: %d active: %d" % (numbranches, activebranches))
+    if zerolimit > 0:
+        logging.info("    ---> %d unconstrained" % zerolimit)
+
+    logging.info("Generators.")
+    gens = {}
+    dict_gens = casefile_dict["generators"]
+    summaxgenP = summaxgenQ = 0
+
+    for dgen in dict_gens.values():
+        # print(dgen)
+        gencount1 = dgen["gencount1"]
+        nodeID = dgen["nodeID"]
+        Pg = dgen["Pg"]
+        Qg = dgen["Qg"]
+        status = dgen["status"]
+        Pmax = dgen["Pmax"]
+        Pmin = dgen["Pmin"]
+        Qmax = dgen["Qmax"]
+        Qmin = dgen["Qmin"]
+        lnum = dgen["lnum"]
+
+        idgencount1 = -1
+        if nodeID in IDtoCountmap.keys():
+            idgencount1 = IDtoCountmap[nodeID]
+            # print(idgencount1)
+            gens[gencount1] = Gen(
+                gencount1,
+                nodeID,
+                Pg,
+                Qg,
+                status,
+                Pmax / baseMVA,
+                Pmin / baseMVA,
+                Qmax / baseMVA,
+                Qmin / baseMVA,
+                lnum,
+            )
+
+            buses[idgencount1].addgenerator(gencount1, gens[gencount1])
+
+            if (
+                buses[idgencount1].nodetype == 2 or buses[idgencount1].nodetype == 3
+            ):  # But not 4
+                summaxgenP += Pmax
+                summaxgenQ += Qmax
+        else:
+            raise ValueError(
+                "Generator # %d in nonexistent bus ID %d." % (gencount1, nodeID)
+            )
+
+    alldata["gens"] = gens
+    alldata["numgens"] = len(gens)
+    busgencount = 0
+
+    for bus in buses.values():
+        busgencount += len(bus.genidsbycount) > 0
+
+    alldata["busgencount"] = busgencount
+    alldata["summaxgenP"] = summaxgenP
+    alldata["summaxgenQ"] = summaxgenQ
+
+    logging.info("    number of generators: %d" % alldata["numgens"])
+    logging.info("    number of buses with gens: %d" % busgencount)
+    logging.info("    summaxPg %f summaxQg %f" % (summaxgenP, summaxgenQ))
+
+    logging.info("Generator cost vectors.")
+    gencoststruct = casefile_dict["generator_cost_structure"]
+
+    for count in range(1, alldata["numgens"] + 1):
+        # print(count, gencoststruct[count])
+        gens[count].addcost_plain(gencoststruct[count]["costvector"])
+        # gens[count].showcostvector(log)
+    # break_exit('build')
+
+
+def read_case_build_dict_thrulines(lines):
+    """
+    Read thru all lines of case file and fill data dictionary.
+    This is meant to be a helper function for translating casefiles into dict format.
+    """
+
+    numlines = len(lines)
+    lookingforbus = 1
+    linenum = 2
+    baseMVA = 0.0
+
+    casefile_dict = {}
+    casefile_dict["refbus"] = -1
+
+    # Read file line by line
+    while linenum <= numlines:
+        line = lines[linenum - 1]
+        thisline = line.split()
+
+        # Skip empty line
+        if len(thisline) <= 0:
+            linenum += 1
+            continue
+
+        # Skip unnecessary lines
+        theword = thisline[0]
+        if len(theword) < 4 or theword[0:4] != "mpc.":
+            linenum += 1
+            continue
+
+        logging.info("  Found %s on line %d." % (theword, linenum))
+        if theword == "mpc.baseMVA":
+            tmp = thisline[2]
+            # Trim ; if present
+            if tmp[len(tmp) - 1] == ";":
+                tmp = tmp[: len(tmp) - 1]
+
+            casefile_dict["baseMVA"] = baseMVA = float(tmp)
+            logging.info("    baseMVA: %f" % baseMVA)
+
+        elif theword == "mpc.bus":
+            buses = {}
+            casefile_dict["buses"] = buses
+            lookingforendofbus = 1
+            slackbus = -1
+            numbuses = 0
+            linenum += 1
+            # Read bus section
+            while lookingforendofbus and linenum <= numlines:
+                line = lines[linenum - 1]
+                thisline = line.split()
+                length = len(thisline)
+
+                # Look for end of section
+                if thisline[0] == "];":
+                    logging.info("    Found end of bus section on line %d." % linenum)
+                    lookingforendofbus = 0
+                    break
+
+                numbuses += 1
+                if thisline[1] == "3":
+                    slackbus = int(thisline[0])
+                    logging.info("    Slack bus: %d" % slackbus)
+
+                if thisline[0] != "%":
+                    nodeID = int(thisline[0])
+                    nodetype = int(thisline[1])
+
+                    # Trim ; if present
+                    Vmin = thisline[12]
+                    if Vmin[len(Vmin) - 1] == ";":
+                        Vmin = Vmin[: len(Vmin) - 1]
+
+                    Vmin = float(Vmin)
+                    Pd = float(thisline[2])
+                    Qd = float(thisline[3])
+                    Gs = float(thisline[4])
+                    Bs = float(thisline[5])
+                    Vbase = float(thisline[9])
+                    Vmax = float(thisline[11])
+
+                    buses[numbuses] = {}
+                    buses[numbuses]["count"] = numbuses
+                    buses[numbuses]["nodeID"] = nodeID
+                    buses[numbuses]["nodetype"] = nodetype
+                    buses[numbuses]["Pd"] = Pd
+                    buses[numbuses]["Qd"] = Qd
+                    buses[numbuses]["Gs"] = Gs
+                    buses[numbuses]["Bs"] = Bs
+                    buses[numbuses]["Vbase"] = Vbase
+                    buses[numbuses]["Vmax"] = Vmax
+                    buses[numbuses]["Vmin"] = Vmin
+                    buses[numbuses]["lnum"] = linenum - 1
+
+                    # buses[numbuses] = Bus(numbuses, nodeID, nodetype, Pd/baseMVA, Qd/baseMVA, Gs/baseMVA, Bs/baseMVA,  Vbase, Vmax, Vmin, linenum-1)
+
+                    if nodetype == 3:
+                        logging.info(
+                            "    Bus %d ID %d is the reference bus."
+                            % (numbuses, nodeID)
+                        )
+                        casefile_dict["refbus"] = numbuses
+
+                else:
+                    nodeID = int(thisline[1])
+                    nodetype = int(thisline[2])
+                    logging.info(
+                        "bus %d nodeID %d is isolated and has type %d."
+                        % (numbuses, nodeID, nodetype)
+                    )
+                    logging.info("   setting it to type 4.")
+                    nodetype = 4
+                    # break_exit("isolated")
+
+                    # Trim ; if present
+                    Vmin = 0
+                    Pd = 0
+                    Qd = 0
+                    Gs = 0
+                    Bs = 0
+                    Vbase = float(thisline[10])
+                    Vmax = Vmin = 0
+
+                    buses[numbuses] = {}
+                    buses[numbuses]["count"] = numbuses
+                    buses[numbuses]["nodeID"] = nodeID
+                    buses[numbuses]["nodetype"] = nodetype
+                    buses[numbuses]["Pd"] = Pd
+                    buses[numbuses]["Qd"] = Qd
+                    buses[numbuses]["Gs"] = Gs
+                    buses[numbuses]["Bs"] = Bs
+                    buses[numbuses]["Vbase"] = Vbase
+                    buses[numbuses]["Vmax"] = Vmax
+                    buses[numbuses]["Vmin"] = Vmin
+
+                    # buses[numbuses] = Bus(numbuses, nodeID, nodetype, Pd/baseMVA,    Qd/baseMVA, Gs/baseMVA, Bs/baseMVA,   Vbase, Vmax, Vmin, linenum-1)
+
+                linenum += 1
+            # Finished reading bus section
+            casefile_dict["slackbus"] = slackbus
+
+            if lookingforendofbus:
+                raise ValueError("Could not find bus data section.")
+
+        elif theword == "mpc.gen":
+            casefile_dict["generators"] = gens = {}
+            lookingforendofgen = 1
+            gencount1 = 0
+            linenum += 1
+
+            # Read gen section
+            while lookingforendofgen and linenum <= numlines:
+                line = lines[linenum - 1]
+                thisline = line.split()
+
+                # Look for end of section
+                if thisline[0] == "];":
+                    logging.info("    Found end of gen section on line %d." % linenum)
+                    lookingforendofgen = 0
+                    break
+
+                gencount1 += 1
+
+                nodeID = int(thisline[0])
+                Pg = float(thisline[1])
+                Qg = float(thisline[2])
+                status = int(thisline[7])
+                Pmax = float(thisline[8])
+                Pmin = float(thisline[9])
+                Qmax = float(thisline[3])
+                Qmin = float(thisline[4])
+
+                if status <= 0:
+                    status = 0
+                else:
+                    status = 1
+
+                gens[gencount1] = {}
+                gens[gencount1]["gencount1"] = gencount1
+                gens[gencount1]["nodeID"] = nodeID
+                gens[gencount1]["Pg"] = Pg
+                gens[gencount1]["Qg"] = Qg
+                gens[gencount1]["status"] = status
+                gens[gencount1]["Pmax"] = Pmax
+                gens[gencount1]["Pmin"] = Pmin
+                gens[gencount1]["Qmax"] = Qmax
+                gens[gencount1]["Qmin"] = Qmin
+                gens[gencount1]["lnum"] = linenum - 1
+
+                linenum += 1
+            # Finished reading gen section
+            if lookingforendofgen:
+                raise ValueError("Could not find end of generator section.")
+
+        elif theword == "mpc.branch":
+            casefile_dict["branches"] = branches = {}
+            lookingforendofbranch = 1
+            numbranches = 0
+            linenum += 1
+
+            # Read branch section
+            while lookingforendofbranch and linenum <= numlines:
+                line = lines[linenum - 1]
+                thisline = line.split()
+
+                # Look for end of branch section
+                if thisline[0] == "];":
+                    logging.info(
+                        "    Found end of branch section on line %d." % linenum
+                    )
+                    lookingforendofbranch = 0
+                    break
+
+                numbranches += 1
+                f = int(thisline[0])
+                t = int(thisline[1])
+                r = float(thisline[2])
+                x = float(thisline[3])
+                bc = float(thisline[4])
+                rateA = float(thisline[5])
+                rateB = float(thisline[6])
+                rateC = float(thisline[7])
+                ratio = float(thisline[8])
+                if ratio == 0:
+                    ratio = 1.0
+                angle = float(thisline[9])
+                status = int(thisline[10])
+                minangle = float(thisline[11])
+                maxangle = thisline[12]
+                # Trim ; at the end of line
+                if maxangle[len(maxangle) - 1] == ";":
+                    maxangle = maxangle[: len(maxangle) - 1]
+                maxangle = float(maxangle)
+
+                branches[numbranches] = {}
+                branches[numbranches]["branchcount1"] = numbranches
+                branches[numbranches]["f"] = f
+                branches[numbranches]["t"] = t
+                branches[numbranches]["r"] = r
+                branches[numbranches]["x"] = x
+                branches[numbranches]["bc"] = bc
+                branches[numbranches]["rateA"] = rateA
+                branches[numbranches]["rateB"] = rateB
+                branches[numbranches]["rateC"] = rateC
+                branches[numbranches]["ratio"] = ratio
+                branches[numbranches]["angle"] = angle
+                branches[numbranches]["status"] = status
+                branches[numbranches]["minangle"] = minangle
+                branches[numbranches]["maxangle"] = maxangle
+                branches[numbranches]["lnum"] = linenum - 1
+
+                linenum += 1
+
+            # Finished reading branch section
+            if lookingforendofbranch:
+                raise ValueError("Could not find end of branch section.")
+
+        elif theword == "mpc.gencost":
+            casefile_dict["generator_cost_structure"] = gencoststruct = {}
+
+            lookingforendofgencost = 1
+            gencostcount = 1
+            linenum += 1
+
+            # Read gen cost section
+            while lookingforendofgencost and linenum <= numlines:
+                line = lines[linenum - 1]
+                thisline = line.split()
+
+                # Look for end of gen section
+                if thisline[0] == "];":
+                    logging.info(
+                        "    Found end of gencost section on line %d." % linenum
+                    )
+                    lookingforendofgencost = 0
+                    break
+
+                if gencostcount <= gencount1:
+                    gencoststruct[gencostcount] = {}
+                    costtype = int(thisline[0])
+                    degree = int(thisline[3]) - 1
+
+                    gencoststruct[gencostcount]["costtype"] = costtype
+                    gencoststruct[gencostcount]["degree"] = degree
+
+                    costvector = [0 for j in range(degree + 1)]
+
+                    for j in range(degree + 1):
+                        tmp = thisline[4 + j]
+                        # print(j, tmp)
+
+                        if tmp[len(tmp) - 1] == ";":
+                            tmp = tmp[: len(tmp) - 1]
+
+                        costvector[j] = float(tmp)
+                        costvector[j] *= (baseMVA) ** (degree - j)
+
+                    gencoststruct[gencostcount]["costvector"] = costvector
+
+                else:
+                    raise ValueError(
+                        "Read %d gen costs but only %d generators."
+                        % (gencostcount, gencount1)
+                    )
+
+                gencostcount += 1
+                linenum += 1
+            # Finished reading gen cost section
+            if lookingforendofgencost:
+                raise ValueError("Could not find end of gencost section.")
+
+            casefile_dict["generator_cost_count"] = gencostcount - 1
+            linenum += 1
+
+        linenum += 1
+    # Finished reading file line by line
+
+    return casefile_dict
+
+
 def read_case(alldata):
     """Read case file and fill data dictionary"""
+
+    if alldata["casefilename"] == "NONE":
+        raise ValueError("No casefile provided.")
 
     casefilename = alldata["casefilename"]
     starttime = time.time()

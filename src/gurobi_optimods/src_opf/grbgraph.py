@@ -1,15 +1,15 @@
+import logging
+
 from .myutils import *
-from .log import *
 
 
 class grbGraph:
-    def __init__(self, log):
+    def __init__(self):
         self.vertices = {}
         self.edges = {}
         self.n = 0  # number of vertices
         self.m = 0  # number of edges
-        self.log = log
-        log.joint("Created grbGraph object.\n")
+        logging.info("Created grbGraph object.")
 
     def addvertex(self, i):
         self.vertices[self.n] = i
@@ -24,4 +24,4 @@ class grbGraph:
             return 1
 
     def getmetrics(self):
-        self.log.joint("Graph object has %d vertices %d edges.\n" % (self.n, self.m))
+        logging.info("Graph object has %d vertices %d edges." % (self.n, self.m))

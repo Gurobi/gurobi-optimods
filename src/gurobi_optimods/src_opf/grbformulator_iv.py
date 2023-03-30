@@ -24,7 +24,7 @@ def lpformulator_iv(alldata):
     objval = None
 
     # Create model
-    with gp.Env() as env, gp.Model("grbacs", env=env) as model:
+    with gp.Env() as env, gp.Model("iv_formulation_model", env=env) as model:
         # Add model variables and constraints
         lpformulator_iv_body(alldata, model)
 
@@ -292,7 +292,7 @@ def lpformulator_iv_body(alldata, model):
         alldata["lpfilename"]
     )  # FIXME remove.  Jarek: I am using this for debugging, for now
     logging.info("Wrote LP to " + alldata["lpfilename"])
-    break_exit("wrote lp")  #
+    # break_exit("wrote lp")  #
 
     alldata["model"] = model
 
@@ -1122,7 +1122,7 @@ def lpformulator_iv_create_constraints(alldata, model):
 
         logging.info("    %d active loss inequalities added." % count)
 
-    break_exit("after linelimits")
+    # break_exit("after linelimits")
 
 
 def lpformulator_iv_add_polarconstraints(alldata, model):
