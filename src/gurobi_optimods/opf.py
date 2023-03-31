@@ -12,9 +12,7 @@ from .src_opf.grbfile import (
     grbread_graphattrs,
 )
 from .src_opf.grbgraphical import grbgraphical
-from .src_opf.grbformulator_ac import lpformulator_ac
-from .src_opf.grbformulator_dc import lpformulator_dc
-from .src_opf.grbformulator_iv import lpformulator_iv
+from .src_opf.grbformulator import construct_and_solve_model
 
 
 def solve_opf_model(settings, case, logfile=""):
@@ -28,12 +26,13 @@ def solve_opf_model(settings, case, logfile=""):
     handlers = [filehandler, stdouthandler]
     logging.basicConfig(level=logging.INFO, format="%(message)s", handlers=handlers)
 
+    # Initilize data dictionary
     alldata = initialize_data_dict(logfile)
 
-    # Read configuration file/dict and possibly set case name
+    # Read settings file/dict and possibly set case name
     read_settings(alldata, settings, case)
 
-    # Read case and populate the alldata dictionary
+    # Read case file/dict and populate the alldata dictionary
     read_case(alldata, case)
 
     # Special settings for graphics
@@ -45,16 +44,7 @@ def solve_opf_model(settings, case, logfile=""):
         if alldata["coordsfilename"] != None:
             grbread_coords(alldata)
 
-    # Construct model from collected data and optimize it
-    if alldata["doac"]:
-        solution, objval = lpformulator_ac(alldata)
-    elif alldata["dodc"]:
-        solution, objval = lpformulator_dc(alldata)
-    elif alldata["doiv"]:
-        solution, objval = lpformulator_iv(alldata)
-    elif alldata["doslp_polar"]:
-        alldata["doac"] = True
-        solution, objval = lpformulator_ac(alldata)
+    solution, objval = construct_and_solve_model(alldata)
 
     # Close logging handlers
     for handler in handlers:

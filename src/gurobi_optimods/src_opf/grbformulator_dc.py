@@ -11,58 +11,6 @@ from .grbgraphical import grbgraphical
 from .grbformulator_ac import computebalbounds
 
 
-def lpformulator_dc(alldata):
-    """Formulate DCOPF model and solve it"""
-
-    logging.info("\nDC formulation.")
-
-    starttime = time.time()
-
-    sol_count = 0
-    solution = None
-    objval = None
-    # Create model
-    with gp.Env() as env, gp.Model("dc_formulation_model", env=env) as model:
-        # Add model variables and constraints
-        lpformulator_dc_body(alldata, model)
-
-        if alldata["strictcheckvoltagesolution"]:
-            # check input solution against formulation
-            spitoutvector = True
-            # TODO-Dan Why do you need the feascode? It's not used anywhere and the function does not even return anything
-            feascode = lpformulator_dc_strictchecker(
-                alldata, model, spitoutvector
-            )  # uncomment this for check
-
-        sol_count = lpformulator_dc_opt(alldata, model)
-
-        endtime = time.time()
-        logging.info(
-            "Overall time taken (model construction + optimization): %f s."
-            % (endtime - starttime)
-        )
-        logging.info("Solution count: %d." % (sol_count))
-
-        if sol_count > 0:
-            lpformulator_dc_examine_solution(alldata, model)
-            objval = model.ObjVal
-            solution = {}
-            for v in model.getVars():
-                if math.fabs(v.x) > 1e-09:
-                    logging.info(v.varname + " = " + str(v.x))
-                    solution[v.VarName] = v.X
-                else:
-                    solution[v.VarName] = 0
-
-    return solution, objval
-    """
-    buses        = alldata['buses']
-    branches     = alldata['branches']
-    gens         = alldata['gens']
-    IDtoCountmap = alldata['IDtoCountmap']
-    """
-
-
 def lpformulator_dc_body(alldata, model):
     """Helper function for adding variables and constraints to the model"""
 
@@ -77,11 +25,10 @@ def lpformulator_dc_body(alldata, model):
         % (model.NumVars, model.NumConstrs)
     )
 
-    if alldata["lpfilename"] != None:
-        model.write(
-            alldata["lpfilename"]
-        )  # FIXME remove.  Jarek: I am using this for debugging, for now
-        logging.info("Wrote LP to " + alldata["lpfilename"])
+    model.write(
+        alldata["lpfilename"]
+    )  # FIXME remove.  Jarek: I am using this for debugging, for now
+    logging.info("Wrote LP to " + alldata["lpfilename"])
 
     alldata["model"] = model
 
@@ -397,91 +344,6 @@ def lpformulator_dc_create_constraints(alldata, model):
             model.addConstr(exp >= N, name="sumzbd")
 
 
-def lpformulator_dc_opt(alldata, model):
-    """Optimizes constructed DCOPF model"""
-
-    numbranches = alldata["numbranches"]
-    branches = alldata["branches"]
-
-    logging.disable(logging.INFO)
-    model.params.LogFile = alldata["logfile"]
-
-    # Specific settings for better convergence
-    model.Params.MIPGap = 1.0e-4
-    model.Params.OptimalityTol = 1.0e-4
-    model.Params.FeasibilityTol = 1.0e-6
-
-    feastol = model.Params.FeasibilityTol
-    opttol = model.Params.OptimalityTol
-    mipgap = model.Params.MIPGap
-
-    model.Params.SolutionLimit = 20  # TODO-Dan Why do we need a solution limit for DC?
-
-    if alldata["branchswitching_mip"]:
-        logging.critical("Using mip start with all branches kept on.")
-        # mip start
-        zvar = alldata["LP"]["zvar"]
-        for j in range(1, 1 + numbranches):
-            branch = branches[j]
-            zvar[branch].Start = 1.0
-
-        zholder = np.zeros(numbranches)
-        alldata["MIP"]["zholder"] = zholder
-        alldata["MIP"]["solutionfound"] = False
-        alldata["MIP"]["bestsolval"] = 1e50
-        alldata["MIP"]["solcount"] = 0
-        gholder = np.zeros(alldata["numgens"])
-        alldata["MIP"]["gholder"] = gholder
-
-        # Optimize
-        model._vars = model.getVars()
-        model._data = alldata
-        model.optimize(
-            plot_new_solution_callback
-        )  # TODO-Dan We only use graphviz for DCOPF. Why is that? The dographics setting does nothing for AC or IV.
-    else:
-        model.optimize()
-
-    logging.disable(logging.NOTSET)
-
-    # Check model status and re-optimize or try computing an IIS if necessary
-    if model.status == GRB.INF_OR_UNBD:
-        logging.info("\nModel Status: infeasible or unbounded.")
-        logging.info("Re-optimizing with DualReductions turned off.\n")
-        logging.disable(logging.INFO)
-        model.Params.DualReductions = 0
-        model.optimize()
-        logging.disable(logging.NOTSET)
-
-    if model.status == GRB.INFEASIBLE:
-        logging.info("\nModel Status: infeasible.")
-        logging.info("Computing IIS...\n")
-        logging.disable(logging.INFO)
-        model.computeIIS()
-        logging.disable(logging.NOTSET)
-        logging.info("\nIIS computed, writing IIS to file dcopfmodel.ilp.\n")
-        model.write("acopfmodel.ilp")
-
-    elif model.status == GRB.UNBOUNDED:
-        logging.info("\nModel Status: unbounded.\n")
-
-    elif model.status == GRB.INTERRUPTED:
-        logging.info("\nModel Status: interrupted.\n")
-
-    elif model.status == GRB.OPTIMAL:
-        logging.info("\nModel Status: optimal.\n")
-
-    # Only print objective value and solution quality if at least
-    # one feasible point is available
-    if model.SolCount > 0:
-        logging.info("Objective value = %g." % model.objVal)
-        logging.disable(logging.INFO)
-        model.printQuality()
-        logging.disable(logging.NOTSET)
-
-    return model.SolCount
-
-
 def lpformulator_dc_examine_solution(alldata, model):
     """TODO-Dan Add description"""
 
@@ -535,56 +397,3 @@ def lpformulator_dc_examine_solution(alldata, model):
     if alldata['dographics']:
         grbgraphical(alldata, 'branchswitching')
     """
-
-
-def plot_new_solution_callback(model, where):
-    """Callback to plot new feasible solutions as they are found"""
-    if where == GRB.Callback.MIPSOL:
-        x = model.cbGetSolution(model._vars)
-        objval = model.cbGet(GRB.Callback.MIPSOL_OBJ)
-        logging.info("Found new solution of value %.3e." % objval)
-
-        numbuses = model._data["numbuses"]
-        buses = model._data["buses"]
-        numbranches = model._data["numbranches"]
-        branches = model._data["branches"]
-        gens = model._data["gens"]
-        IDtoCountmap = model._data["IDtoCountmap"]
-
-        thetavar = model._data["LP"]["thetavar"]
-        Pvar_f = model._data["LP"]["Pvar_f"]
-        twinPvar_f = model._data["LP"]["twinPvar_f"]
-
-        zholder = model._data["MIP"]["zholder"]
-        gholder = model._data["MIP"]["gholder"]
-
-        numzeros = 0
-        for j in range(1, 1 + numbranches):
-            branch = branches[j]
-            zholder[j - 1] = x[branch.switchvarind]
-            if x[branch.switchvarind] < 0.5:
-                numzeros += 1
-
-        for j1 in range(1, 1 + model._data["numgens"]):
-            gen = model._data["gens"][j1]
-            gholder[j1 - 1] = (
-                model._data["baseMVA"] * x[gen.Pvarind]
-            )  # print('gen',gen.count,x[gen.Pvarind])
-            # break_exit('printed')  #functionality to be added # TODO-Dan What functionality is that?
-
-        model._data["MIP"]["solutionfound"] = True
-        difftol = 1e-6
-        if model._data["dographics"]:
-            if objval < model._data["MIP"]["bestsolval"] - difftol:
-                model._data["MIP"]["solcount"] += 1
-                textlist = []
-                textlist.append("SOLUTION " + str(model._data["MIP"]["solcount"]))
-                textlist.append("OBJ: %10.2f" % (objval))
-                textlist.append("Lines off: %d" % (numzeros))
-                grbgraphical(model._data, "branchswitching", textlist)
-            else:
-                logging.info(
-                    "Skipping graphical display due to insufficient improvement."
-                )
-
-        model._data["MIP"]["bestsolval"] = objval

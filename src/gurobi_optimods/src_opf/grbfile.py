@@ -6,7 +6,7 @@ import csv
 import logging
 import numpy as np
 
-from .settings import get_default_settings
+from .utils import get_default_settings
 
 
 def initialize_data_dict(logfile):
@@ -28,6 +28,9 @@ def read_settings(alldata, settings, casefile):
         read_configfile_dict(alldata, settings, casefile)
     else:
         read_configfile_file(alldata, settings, casefile)
+
+    if alldata["doslp_polar"] and (int(alldata["dodc"]) + int(alldata["doiv"]) == 0):
+        alldata["doac"] = True
 
     if int(alldata["doac"]) + int(alldata["dodc"]) + int(alldata["doiv"]) != 1:
         raise ValueError(

@@ -10,157 +10,6 @@ from .grbfile import grbreadvoltsfile
 from .grbgraphical import grbgraphical
 
 
-def lpformulator_ac(alldata):
-    """Formulate ACOPF model and solve it"""
-
-    # TODO-Dan The lpformulator_XX functions all look the same. Couldn't we just use one and have a switch-case over alldata["dodc"]/alldata["doac"]/alldata["doiv"]
-    #         Or is there some difference?
-
-    logging.info("\nAC formulation.")
-
-    starttime = time.time()
-
-    # Handle special settings
-    lpformulator_setup(alldata)
-    sol_count = 0
-    solution = None
-    objval = None
-
-    # Create model
-    with gp.Env() as env, gp.Model("ac_formulation_model", env=env) as model:
-        # Add model variables and constraints
-        lpformulator_ac_body(alldata, model)
-
-        if alldata["strictcheckvoltagesolution"]:
-            # check input solution against formulation
-            spitoutvector = True
-            # TODO-Dan Why do you need the feascode? It's not used anywhere and the function does not even return anything
-            feascode = lpformulator_ac_strictchecker(alldata, model, spitoutvector)
-
-        if alldata["doslp_polar"]:
-            break_exit("slp_polar formulation")  # TODO-Dan why the break_exit?
-
-        sol_count = lpformulator_ac_opt(alldata, model)
-
-        endtime = time.time()
-        logging.info(
-            "Overall time taken (model construction + optimization): %f s."
-            % (endtime - starttime)
-        )
-        logging.info("Solution count: %d." % (sol_count))
-
-        if sol_count > 0:
-            lpformulator_ac_examine_solution(alldata, model)
-            objval = model.ObjVal
-            solution = {}
-            for v in model.getVars():
-                if math.fabs(v.x) > 1e-09:
-                    logging.info(v.varname + " = " + str(v.x))
-                    solution[v.VarName] = v.X
-                else:
-                    solution[v.VarName] = 0
-
-    return solution, objval
-
-    """
-    buses        = alldata['buses']
-    branches     = alldata['branches']
-    gens         = alldata['gens']
-    IDtoCountmap = alldata['IDtoCountmap']
-    """
-
-
-def lpformulator_ac_opt(alldata, model):
-    """Optimize constructed model"""
-
-    # Disable logging handler to get Gurobi output
-    logging.disable(logging.INFO)
-    model.params.LogFile = alldata["logfile"]
-    # Specific settings for better convergence
-    if alldata["use_ef"]:
-        model.params.NonConvex = 2
-
-    model.Params.MIPGap = 1.0e-3
-    model.Params.OptimalityTol = 1.0e-3
-    model.Params.FeasibilityTol = 1.0e-6
-
-    feastol = model.Params.FeasibilityTol
-    opttol = model.Params.OptimalityTol
-    mipgap = model.Params.MIPGap
-
-    if alldata["usemipstart"] and (
-        alldata["branchswitching_mip"] or alldata["branchswitching_comp"]
-    ):
-        # logging level needs to be critical because INFO is disabled
-        logging.critical("Using mip start with all branches kept on.")
-        # mip start
-        zvar = alldata["LP"]["zvar"]
-        branches = alldata["branches"]
-        numbranches = alldata["numbranches"]
-        for j in range(1, 1 + numbranches):
-            branch = branches[j]
-            zvar[branch].Start = 1.0
-            # Jarek, there is some strange behavior here
-            # print(zvar[branch], ' ',zvar[branch].Start)
-            # TODO-Dan What strange behavior?
-
-        writemipstart(alldata)
-
-        zholder = np.zeros(numbranches)
-        alldata["MIP"]["zholder"] = zholder
-        alldata["MIP"]["solutionfound"] = False
-        alldata["MIP"]["bestsolval"] = 1e50
-        alldata["MIP"]["solcount"] = 0
-        gholder = np.zeros(alldata["numgens"])
-        alldata["MIP"]["gholder"] = gholder
-
-        # Optimize
-        model._vars = model.getVars()
-        model.optimize()
-    else:
-        model.optimize()
-
-    # Activate logging handlers
-    logging.disable(logging.NOTSET)
-
-    # Check model status and re-optimize or try computing an IIS if necessary
-    if model.status == GRB.INF_OR_UNBD:
-        logging.info("\nModel Status: infeasible or unbounded.\n")
-        logging.info("Re-optimizing with DualReductions turned off.\n")
-        logging.disable(logging.INFO)
-        model.Params.DualReductions = 0
-        model.optimize()
-        logging.disable(logging.NOTSET)
-
-    if model.status == GRB.INFEASIBLE:
-        logging.info("\nModel Status: infeasible.\n")
-        logging.info("Computing IIS...")
-        logging.disable(logging.INFO)
-        model.computeIIS()
-        logging.disable(logging.NOTSET)
-        logging.info("\nIIS computed, writing IIS to file acopfmodel.ilp.")
-        model.write("acopfmodel_iis.ilp")
-
-    elif model.status == GRB.UNBOUNDED:
-        logging.info("\nModel Status: unbounded.\n")
-
-    elif model.status == GRB.INTERRUPTED:
-        logging.info("\nModel Status: interrupted.\n")
-
-    elif model.status == GRB.OPTIMAL:
-        logging.info("\nModel Status: optimal.\n")
-
-    # Only print objective value and solution quality if at least
-    # one feasible point is available
-    if model.SolCount > 0:
-        logging.info("Objective value = %.8e." % model.objVal)
-        logging.disable(logging.INFO)
-        model.printQuality()
-        logging.disable(logging.NOTSET)
-
-    return model.SolCount
-
-
 def lpformulator_ac_examine_solution(alldata, model):
     """
     TODO-Dan What is this function and how should it be used?
@@ -214,49 +63,9 @@ def lpformulator_ac_examine_solution(alldata, model):
     logging.info("Done examining solution.\n")
 
 
-def lpformulator_setup(alldata):
-    """Helper function to handle specific settings"""
-
-    logging.info("Auxiliary setup.")
-
-    alldata["maxdispersion_rad"] = (math.pi / 180.0) * alldata["maxdispersion_deg"]
-    alldata["maxphasediff_rad"] = (math.pi / 180.0) * alldata["maxphasediff_deg"]
-
-    branches = alldata["branches"]
-    numbranches = alldata["numbranches"]
-    buses = alldata["buses"]
-
-    if alldata["usemaxphasediff"]:
-        logging.info(
-            "Applying max phase diff of %g degrees." % (alldata["maxphasediff_deg"])
-        )
-
-        maxrad = alldata["maxphasediff_rad"]
-
-        count = 0
-
-        for j in range(1, 1 + numbranches):
-            branch = branches[j]
-
-            if branch.maxangle_rad > maxrad:
-                branch.maxangle_rad = maxrad
-                count += 1
-            if branch.minangle_rad < -maxrad:
-                branch.minangle_rad = -maxrad
-
-        logging.info("Updated %d maxangle constraints." % (count))
-
-    if alldata["dopolar"]:
-        logging.info("  Polar formulation, shutting down incompatible options:")
-        alldata["use_ef"] = False
-        alldata["useconvexformulation"] = False
-        alldata["skipjabr"] = True
-        logging.info("    use_ef, useconvexformulation, jabr.")
-
-    if alldata["voltsfilename"] != None:
-        grbreadvoltsfile(alldata)
-
-
+# TODO-Dan There is a function with the same name in grbformulator_iv.
+# It looks like the other function does something slightly different.
+# Can we combine them to 1 function? Or even delete 1 of the2
 def computebalbounds(alldata, bus):
     """Computes active and reactive max and min bus flow balance values"""
 
@@ -330,12 +139,11 @@ def lpformulator_ac_body(alldata, model):
         % (model.NumVars, model.NumConstrs)
     )
 
-    if alldata["lpfilename"] != None:
-        model.write(
-            alldata["lpfilename"]
-        )  # FIXME remove.  Jarek: I am using this for debugging, for now
-        # TODO-Dan don't forget to remove at some point!
-        logging.info("Wrote LP to " + alldata["lpfilename"])
+    model.write(
+        alldata["lpfilename"]
+    )  # FIXME remove.  Jarek: I am using this for debugging, for now
+    # TODO-Dan don't forget to remove at some point!
+    logging.info("Wrote LP to " + alldata["lpfilename"])
 
     alldata["model"] = model
 
@@ -1492,6 +1300,8 @@ def lpformulator_ac_add_nonconvexconstraints(alldata, model):
     logging.info("    %d nonconvex e, f constraints added." % count)
 
 
+# TODO-Dan This function definitely looks the same as in grbformulator_iv
+# Are these the same function? If yes, please remove 1 of the 2.
 def grbderive_xtra_sol_values_fromvoltages(alldata):
     # Generates complete solution vectors from input voltages.
 
@@ -2207,6 +2017,8 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     break_exit("strictgraphical")
 
 
+# TODO-Dan This function definitely looks the same as in grbformulator_iv
+# Are these the same function? If yes, please remove 1 of the 2.
 def lpformulator_checkviol_simple(
     alldata,
     model,
@@ -2275,6 +2087,8 @@ def lpformulator_checkviol_simple(
     )
 
 
+# TODO-Dan This function definitely looks the same as in grbformulator_iv
+# Are these the same function? If yes, please remove 1 of the 2.
 def worstboundviol_report(badvar, maxviol, boundtype):
     if badvar != None:
         logging.info(
@@ -2282,29 +2096,4 @@ def worstboundviol_report(badvar, maxviol, boundtype):
             % (boundtype, badvar.Varname, maxviol)
         )
     else:
-        logging.info("No %s bound violations.\n" % boundtype)
-
-
-def writempsfile(alldata, model, filename):
-    logging.info("Writing mpsfile to %s." % (filename))
-    model.write(filename)
-    break_exit("wrotefile")
-
-
-def writemipstart(alldata):
-    # Write z variables
-
-    filename = "mipstart.mst"
-    f = open(filename, "w")
-    logging.info("Writing mipstart in file %s." % filename)
-
-    zvar = alldata["LP"]["zvar"]
-    branches = alldata["branches"]
-    numbranches = alldata["numbranches"]
-    for j in range(1, 1 + numbranches):
-        branch = branches[j]
-        f.write("{} 1.0\n".format(zvar[branch].Varname))
-
-    f.close()
-
-    break_exit("wrote mipstart")
+        logging.info("No %s bound violations." % boundtype)
