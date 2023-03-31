@@ -11,7 +11,6 @@ from .src_opf.grbfile import (
     grbread_coords,
     grbread_graphattrs,
 )
-from .src_opf.grbgraphical import grbgraphical
 from .src_opf.grbformulator import construct_and_solve_model
 
 
