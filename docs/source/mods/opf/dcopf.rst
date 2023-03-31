@@ -74,9 +74,10 @@ easy access by users.
 .. testcode:: mod
 
     from gurobi_optimods.opf import solve_opf_model
-    from gurobi_optimods.datasets import load_dcopf
+    from gurobi_optimods.datasets import load_dcopfsettings, load_case9opf
 
-    conf, case = load_dcopf()
+    conf = load_dcopfsettings()
+    case = load_case9opf()
     solution   = solve_opf_model(conf, case)
 
 ..  A snippet of the Gurobi log output here won't show in the rendered page,
