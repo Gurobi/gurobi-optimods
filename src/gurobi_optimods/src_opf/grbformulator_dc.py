@@ -77,10 +77,11 @@ def lpformulator_dc_body(alldata, model):
         % (model.NumVars, model.NumConstrs)
     )
 
-    model.write(
-        alldata["lpfilename"]
-    )  # FIXME remove.  Jarek: I am using this for debugging, for now
-    logging.info("Wrote LP to " + alldata["lpfilename"])
+    if alldata["lpfilename"] != None:
+        model.write(
+            alldata["lpfilename"]
+        )  # FIXME remove.  Jarek: I am using this for debugging, for now
+        logging.info("Wrote LP to " + alldata["lpfilename"])
 
     alldata["model"] = model
 

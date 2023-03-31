@@ -824,7 +824,7 @@ def read_case_build_dict_thrulines(lines):
 def read_case(alldata):
     """Read case file and fill data dictionary"""
 
-    if alldata["casefilename"] == "NONE":
+    if alldata["casefilename"] == None:
         raise ValueError("No casefile provided.")
 
     casefilename = alldata["casefilename"]
@@ -1320,6 +1320,9 @@ def read_case_thrulines(alldata, lines):
 
 def readvoltsfile(alldata):
     """Read volts file and fill data dictionary"""
+
+    if alldata["voltsfilename"] == None:
+        raise ValueError("No voltsfilename provided.")
 
     voltsfilename = alldata["voltsfilename"]
 

@@ -32,32 +32,37 @@ def load_workforce():
     )
 
 
-def load_acopf():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_acopf.conf"
-    case = str(DATA_FILE_DIR) + "/opf/case9.m"
-    return conf, case
-
-
-def load_dcopf():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_dcopf.conf"
-    case = str(DATA_FILE_DIR) + "/opf/case9.m"
-    return conf, case
-
-
-def load_ivopf():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_ivopf.conf"
-    case = str(DATA_FILE_DIR) + "/opf/case9.m"
-    return conf, case
-
-
-def load_simpleopf():
+def load_simpleopfsettings():
     conf = str(DATA_FILE_DIR) + "/opf/kit_simpleopf.conf"
-    case = str(DATA_FILE_DIR) + "/opf/case9.m"
+    return conf
+
+
+def load_acopfsettings():
+    conf = str(DATA_FILE_DIR) + "/opf/kit_acopf.conf"
+    return conf
+
+
+def load_dcopfsettings():
+    conf = str(DATA_FILE_DIR) + "/opf/kit_dcopf.conf"
+    return conf
+
+
+def load_ivopfsettings():
+    conf = str(DATA_FILE_DIR) + "/opf/kit_ivopf.conf"
     return conf, case
 
 
-def load_dictopf():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_dictopf.conf"
+def load_case9opf():
+    case = str(DATA_FILE_DIR) + "/opf/case9.m"
+    return case
+
+
+def load_opfdictsettings():
+    conf = {"branchswitching_mip": True, "doac": True}
+    return conf
+
+
+def load_opfdictcase():
     casefile_dict = {
         "refbus": 1,
         "baseMVA": 100.0,
@@ -385,4 +390,4 @@ def load_dictopf():
         },
         "generator_cost_count": 3,
     }
-    return conf, casefile_dict
+    return casefile_dict

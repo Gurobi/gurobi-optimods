@@ -29,8 +29,10 @@ def solve_opf_model(configfile, casefile, logfile=""):
     logging.basicConfig(level=logging.INFO, format="%(message)s", handlers=handlers)
 
     alldata = initialize_data_dict(logfile)
-    # Read configuration file and possibly set casefile name
+
+    # Read configuration file/dict and possibly set casefile name
     read_configfile(alldata, configfile, casefile)
+
     # Use correct method to fill alldata dict depending on whether we have a dictionary input or file name for casefile
     if type(casefile) is dict:
         build_data_struct(alldata, casefile)

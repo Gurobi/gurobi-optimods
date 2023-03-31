@@ -2,18 +2,22 @@ import unittest
 
 from gurobi_optimods.opf import solve_opf_model
 from gurobi_optimods.datasets import (
-    load_acopf,
-    load_dcopf,
-    load_ivopf,
-    load_simpleopf,
-    load_dictopf,
+    load_case9opf,
+    load_acopfsettings,
+    load_dcopfsettings,
+    load_ivopfsettings,
+    load_simpleopfsettings,
+    load_opfdictcase,
+    load_opfdictsettings,
 )
 
 
 class TestOpf(unittest.TestCase):
     # test simple is on purpose the same as test_acopf for now
+    # will be removed in final version
     def test_simple(self):
-        conf, case = load_simpleopf()
+        conf = load_simpleopf()
+        case = load_case9opf()
         solution, objval = solve_opf_model(conf, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
@@ -28,9 +32,45 @@ class TestOpf(unittest.TestCase):
         self.assertLess(abs(solution["Q_9_4_9"] - 0.127732), 1e-4)
 
     # test reading case from a dict
-    def test_dictopf(self):
-        conf, case = load_dictopf()
+    def test_opfdictcase(self):
+        conf = load_acopfsettings()
+        case = load_opfdictcase()
         solution, objval = solve_opf_model(conf, case)
+        # check whether the solution points looks correct
+        self.assertTrue(solution is not None)
+        self.assertTrue(objval is not None)
+        self.assertTrue(len(solution) == 134)
+        self.assertLess(abs(objval - 5296.665647261), 1e-4)
+        self.assertTrue("lincost" in solution.keys())
+        self.assertLess(abs(solution["lincost"] - 704.399018), 1e-4)
+        self.assertTrue("twinP_1_1_4" in solution.keys())
+        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-4)
+        self.assertTrue("Q_9_4_9" in solution.keys())
+        self.assertLess(abs(solution["Q_9_4_9"] - 0.127732), 1e-4)
+
+    # test reading settings from a dict
+    def test_opfdictsettings(self):
+        conf = load_opfdictsettings()
+        case = load_case9opf()
+        solution, objval = solve_opf_model(conf, case)
+        # check whether the solution points looks correct
+        self.assertTrue(solution is not None)
+        self.assertTrue(objval is not None)
+        self.assertTrue(len(solution) == 134)
+        self.assertLess(abs(objval - 5296.665647261), 1e-4)
+        self.assertTrue("lincost" in solution.keys())
+        self.assertLess(abs(solution["lincost"] - 704.399018), 1e-4)
+        self.assertTrue("twinP_1_1_4" in solution.keys())
+        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-4)
+        self.assertTrue("Q_9_4_9" in solution.keys())
+        self.assertLess(abs(solution["Q_9_4_9"] - 0.127732), 1e-4)
+
+    # test reading settings an case file from dicts
+    def test_opfdicts(self):
+        conf = load_opfdictsettings()
+        case = load_opfdictcase()
+        solution, objval = solve_opf_model(conf, case)
+        # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
         self.assertTrue(len(solution) == 134)
@@ -44,7 +84,8 @@ class TestOpf(unittest.TestCase):
 
     # test AC formulation
     def test_acopf(self):
-        conf, case = load_acopf()
+        conf = load_acopfsettings()
+        case = load_case9opf()
         solution, objval = solve_opf_model(conf, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
@@ -60,7 +101,8 @@ class TestOpf(unittest.TestCase):
 
     # test DC formulation
     def test_dcopf(self):
-        conf, case = load_dcopf()
+        conf = load_dcopfsettings()
+        case = load_case9opf()
         solution, objval = solve_opf_model(conf, case)
         # check whether the solution point looks correct
         self.assertTrue(solution is not None)
@@ -76,8 +118,10 @@ class TestOpf(unittest.TestCase):
 
     # test IV formulation
     def test_ivopf(self):
-        conf, case = load_ivopf()
+        conf = load_ivopfsettings()
+        case = load_case9opf()
         solution, objval = solve_opf_model(conf, case)
+        # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
         self.assertTrue(len(solution) == 62)
@@ -90,17 +134,15 @@ class TestOpf(unittest.TestCase):
         self.assertLess(abs(solution["P_9_4_9"] - 0.543771), 1e-4)
 
     # TODO:
-    #  - solve_acopf_model should return something to solution and check it
     #  - add test for plotting
-    #  - use logging package from Python instead of own logger
-    #  - we should also test dc and iv formulation and solving
-    #  - rename files, currently they are called grb<something> or just <something>
+    #  - rename files, currently they are called grb<something> and some have own names
     #  - get rid of break_exits
     #  - how to deal with log and other files?
-    #    - we probably want to turn off all logs from Gurobi and run everything through a message callback
-    #      to avoid a gurobi.log and an OPF.log
-    #    - we probably don't want to write any file by default
+    #    - which files do we want by default
     #  - there are additional package requirements for plotting
+    #    - in particular there is this graphviz 3rd party software
+    #    - it looks like there is also a pipy graphviz package https://pypi.org/project/graphviz/ Maybe we can use this one?
+    #    - we could check whether the graphviz package is installed
     #  - how do we want to do error handling
     #  - there is a global variable in grbformulator_dc which does not have to be one (it is used in callback)
     #

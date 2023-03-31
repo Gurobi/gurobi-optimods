@@ -219,7 +219,7 @@ def lpformulator_setup(alldata):
         alldata["skipjabr"] = True
         logging.info("    use_ef, useconvexformulation, jabr.")
 
-    if alldata["voltsfilename"] != "NONE":
+    if alldata["voltsfilename"] != None:
         grbreadvoltsfile(alldata)
 
 
@@ -286,11 +286,11 @@ def lpformulator_iv_body(alldata, model):
         % (model.NumVars, model.NumConstrs)
     )
 
-    model.write(
-        alldata["lpfilename"]
-    )  # FIXME remove.  Jarek: I am using this for debugging, for now
-    logging.info("Wrote LP to " + alldata["lpfilename"])
-    # break_exit("wrote lp")  #
+    if alldata["lpfilename"] != None:
+        model.write(
+            alldata["lpfilename"]
+        )  # FIXME remove.  Jarek: I am using this for debugging, for now
+        logging.info("Wrote LP to " + alldata["lpfilename"])
 
     alldata["model"] = model
 
@@ -324,7 +324,7 @@ def lpformulator_iv_create_vars(alldata, model):
         ubound  = maxprod
         lbound  = minprod
 
-        if alldata['FIXCS'] and bus.inputvoltage:
+        if alldata['fixcs'] and bus.inputvoltage:
             lbound = bus.inputV*bus.inputV - fixtolerance
             ubound = bus.inputV*bus.inputV + fixtolerance
 
