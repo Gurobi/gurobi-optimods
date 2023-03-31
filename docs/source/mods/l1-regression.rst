@@ -5,6 +5,9 @@ Minimum sum of absolute errors (L1) regression is generally more robust than ord
 
 The interface of this mod matches that of :code:`sklearn.linear_model.LinearRegression`. This example compares the coefficients found using L1 and L2 regression on the diabetes dataset.
 
+- Comparison to sklearn OLS: L1 norm is not implemented in sklearn. There is in general no analytic solution and gradient decent is not effective? So we need an LP solver.
+- More robust (i.e. less sensitive to outliers) than L2 norm regression (OLS). Because the error metric is linear, an increase in the deviation of an individual point has a less extreme effect.
+
 Problem Specification
 ---------------------
 
@@ -124,7 +127,17 @@ To gasps of shock and awe, the L1 regression produces a *smaller mean absolute e
     >>> round(mean_squared_error(y_train, ols.predict(X_train)), 1)
     2907.3
 
-Refs
-----
+Interesting related reading
+---------------------------
 
-https://medium.com/@jingli_57859/l1-l2-norm-and-regularization-comparisons-a0f45065593d
+- L1 regression is more commonly referred to as LAD (least absolute deviations) in the literature. I should probably change this terminology.
+- `sklego <https://scikit-lego.netlify.app/linear-models.html#Least-Absolute-Deviation-Regression>`_ has an LAD implementation
+- `Statsmodels <https://www.statsmodels.org/dev/regression.html>`_ has a quantile regression implementation (and the docs claim $q=0.5$ is equivalent to LAD)
+- :footcite:t:`birkes2011alternative`
+    - Chapter 4 intro quote: The method of least absolute deviations was introduced almost 50 years before the method of least squares, in 1757 by Roger Joseph Boscovich. He devised the method as a way to reconcile inconsistent measurements for the purpose of estimating the shape of the earth. After Pierre Simon Laplace adopted the method 30 years later, it saw occasional use, but it was soon overshadowed by the method of least squares. The popularity of least squares was at least partly due to the relative simplicity of its computations and to the supporting theory that was developed for it by Gauss and Laplace. Today, computation is not such a limitation and theoretical foundations have been laid for a variety of alternative methods, including the method of least absolute deviations (LAD).
+    - Chapter 9 quote: The strength of LAD estimation is its robustness with respect to the distribution of the response variable (although not with respect to the explanatory variables).
+- :footcite:t:`bloomfield1980least`
+    - Idea predates least squares, but the computations are more complex
+    - The development of linear programming made this problem manageable
+
+.. footbibliography::

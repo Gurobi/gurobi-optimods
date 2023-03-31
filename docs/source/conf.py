@@ -14,15 +14,16 @@ release = version
 # -- General configuration
 
 extensions = [
-    "sphinx.ext.duration",
-    "sphinx.ext.doctest",
+    "sphinx_copybutton",
+    "sphinx_tabs.tabs",
+    "sphinx_toolbox.code",
+    "sphinx_toolbox.collapse",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.doctest",
+    "sphinx.ext.duration",
     "sphinx.ext.intersphinx",
-    "sphinx_tabs.tabs",
-    "sphinx_toolbox.collapse",
-    "sphinx_toolbox.code",
-    "sphinx_copybutton",
+    "sphinxcontrib.bibtex",
 ]
 
 pygments_style = "vs"
@@ -54,3 +55,7 @@ sys.path.pop()
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
+
+# -- Bibfiles
+
+bibtex_bibfiles = ["refs/regression.bib"]
