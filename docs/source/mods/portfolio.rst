@@ -20,8 +20,8 @@ Our methods use risk and return estimators.
 
         The mean-variance portfolio optimization model takes the following inputs:
 
-        * The coveriance matrix :math:`\Sigma` can be given as a pandas Dataframe or a numpy array.
-        * The return estimator :math:`\mu` ...
+        * The covariance matrix :math:`\Sigma` can be given as a pandas Dataframe or a numpy array.
+        * The return estimator :math:`\mu` can be given as a pandas Series or a numpy array.
 
         To minimize the risk with a given expected return ...
         To maximize the expected return with a given maximum risk (variance) ...
@@ -137,11 +137,47 @@ The model is solved as an LP/MIP/QP by Gurobi.
 
     .. code-block:: text
 
-        Gurobi Optimizer version 9.5.1 build v9.5.1rc2 (mac64[x86])
-        Optimize a model with ...
-        Best obj ... Best bound ...
+        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[rosetta2])
 
-|
+        CPU model: Apple M1
+        Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
+
+        Optimize a model with 1 rows, 10 columns and 10 nonzeros
+        Model fingerprint: 0x7edd9de0
+        Model has 55 quadratic objective terms
+        Coefficient statistics:
+        Matrix range     [1e+00, 1e+00]
+        Objective range  [7e-04, 1e-02]
+        QObjective range [7e-06, 2e-03]
+        Bounds range     [0e+00, 0e+00]
+        RHS range        [1e+00, 1e+00]
+        Presolve time: 0.01s
+        Presolved: 1 rows, 10 columns, 10 nonzeros
+        Presolved model has 55 quadratic objective terms
+        Ordering time: 0.00s
+
+        Barrier statistics:
+        Free vars  : 9
+        AA' NZ     : 4.500e+01
+        Factor NZ  : 5.500e+01
+        Factor Ops : 3.850e+02 (less than 1 second per iteration)
+        Threads    : 1
+
+                        Objective                Residual
+        Iter       Primal          Dual         Primal    Dual     Compl     Time
+        0  -2.66782663e+05  2.67351515e+05  1.00e+04 2.29e-01  1.00e+06     0s
+        1   3.57093000e-01  3.15501994e+01  1.10e+01 5.56e-10  1.10e+03     0s
+        2   1.85936197e-03  3.10704279e+01  1.10e-05 5.57e-16  3.11e+00     0s
+        3   1.86314441e-03  4.49144994e-02  4.25e-09 1.73e-18  4.31e-03     0s
+        4   5.23399148e-03  1.37520789e-02  3.66e-10 8.67e-19  8.52e-04     0s
+        5   1.18389706e-02  1.47201835e-02  3.89e-16 5.55e-17  2.88e-04     0s
+        6   1.34663854e-02  1.34787942e-02  5.20e-18 7.29e-17  1.24e-06     0s
+        7   1.34773294e-02  1.34773419e-02  3.47e-18 1.67e-16  1.24e-09     0s
+        8   1.34773404e-02  1.34773404e-02  3.47e-18 1.67e-16  1.24e-12     0s
+
+        Barrier solved model in 8 iterations and 0.01 seconds (0.00 work units)
+        Optimal objective 1.34773404e-02
+
 
 Solution
 --------
@@ -154,4 +190,7 @@ directly from a python shell. Another option is to include and display figures
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>>
+    >>> x
+    array([8.82553023e-11, 9.99999999e-01, 1.03295020e-11, 5.86102033e-10,
+        6.99613414e-11, 1.43614185e-11, 1.12654841e-10, 3.00224655e-10,
+        4.16795397e-11, 1.22122632e-10])

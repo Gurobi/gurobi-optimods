@@ -4,9 +4,6 @@ import numpy as np
 import scipy.sparse as sp
 import pandas as pd
 
-# In general the public API should be a single class or function. Go with
-# whatever makes the most sense for this mod.
-
 
 class Portfolio:
     def __init__(
@@ -15,22 +12,24 @@ class Portfolio:
         Sigma,
         mu,
         initial_holdings=None,
-        maxnum_transactions=20,
-        maxnum_allocations=50,
-        min_invest_long=0.05,
-        min_invest_short=0.01,
-        max_total_short=0.1,
+        maxnum_transactions=0,
+        maxnum_assets=0,
+        min_invest_long=0,
+        min_invest_short=0,
+        leverage=0,
     ) -> None:
 
-        self.factor_matrix = H  # H.T@H is the variance-covariance matrix
-        self.covariance = Sigma  # Sigma is the variance-covariance matrix
+        self.factor_matrix = H  # H.T@H is the covariance matrix
+        self.covariance = Sigma  # Sigma is the covariance matrix
         self.mu = mu  # estimated first moments of return function
         self.initial_holdings = initial_holdings  # existing allocation
         self.maxnum_transactions = maxnum_transactions  # No more than 20 trades
-        self.maxnum_allocations = maxnum_allocations  # No more than 50 allocations at a time (e.g., online problem)
+        self.maxnum_assets = (
+            maxnum_assets  # No more than 50 assets at a time (e.g., online problem)
+        )
         self.min_invest_long = min_invest_long  # For long allocations, need at least 5% of total investment
         self.min_invest_short = min_invest_short  # For short allocations, need at least 1% of total investment
-        self.max_total_short = max_total_short  # Maximum 10% short selling
+        self.leverage = leverage  # Maximum 10% short selling
 
 
 # very simple Markowitz type mean-variance portfolio
@@ -40,12 +39,19 @@ class MeanVariancePortfolio:
         Sigma,
         mu,
     ) -> None:
-        self.covariance = Sigma
-        if hasattr(self.covariance, "to_numpy"):
-            self.covariance = self.covariance.to_numpy()
-        self.mu = mu
-        if hasattr(self.mu, "to_numpy"):
-            self.mu = self.mu.to_numpy()
+        if isinstance(Sigma, pd.DataFrame):
+            self.covariance = Sigma.to_numpy()
+        elif isinstance(Sigma, np.ndarray):
+            self.covariance = Sigma
+        else:
+            raise TypeError("Incompatible type of Sigma")
+
+        if isinstance(mu, pd.Series):
+            self.mu = mu.to_numpy()
+        elif isinstance(mu, np.ndarray):
+            self.mu = mu
+        else:
+            raise TypeError("Incompatible type of mu")
 
     def minimize_risk(self, expected_return):
         try:
@@ -102,22 +108,3 @@ class MeanVariancePortfolio:
             print("Error code " + str(e.errno) + ": " + str(e))
         except AttributeError:
             print("Encountered an attribute error")
-
-
-def minimize_risk(data):
-    """
-    A sphinx-compatible docstring
-
-    :param data1: Data structure for first argument
-    :type data1: pd.DataFrame
-    """
-
-    # min x.T @ H.T @ H @ x - mu @ x
-    # s.t. something
-
-
-def maximize_return(data):
-    pass
-    # max  mu @ x
-    # s.t. something
-    #     x.T @ H.T @ H @ x <= omega^2
