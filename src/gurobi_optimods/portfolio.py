@@ -54,57 +54,39 @@ class MeanVariancePortfolio:
             raise TypeError("Incompatible type of mu")
 
     def minimize_risk(self, expected_return):
-        try:
-            with gp.Env() as env, gp.Model("min_risk", env=env) as m:
-                x = m.addMVar(shape=self.mu.shape, name="x")
+        with gp.Env() as env, gp.Model("min_risk", env=env) as m:
+            x = m.addMVar(shape=self.mu.shape, name="x")
 
-                m.addConstr(x.sum() == 1, name="fully_invested")
-                m.addConstr(self.mu @ x >= expected_return, name="expected_return")
-                m.setObjective(x @ self.covariance @ x)
+            m.addConstr(x.sum() == 1, name="fully_invested")
+            m.addConstr(self.mu @ x >= expected_return, name="expected_return")
+            m.setObjective(x @ self.covariance @ x)
 
-                m.optimize()
+            m.optimize()
 
-                if m.Status == GRB.OPTIMAL:
-                    return x.X
-
-        except gp.GurobiError as e:
-            print("Error code " + str(e.errno) + ": " + str(e))
-        except AttributeError:
-            print("Encountered an attribute error")
+            if m.Status == GRB.OPTIMAL:
+                return x.X
 
     def maximize_return(self, max_risk):
-        try:
-            with gp.Env() as env, gp.Model("max_return", env=env) as m:
-                x = m.addMVar(shape=self.mu.shape, name="x")
-                m.addConstr(x.sum() == 1, name="fully_invested")
-                m.addConstr(x @ self.covariance @ x <= max_risk, name="max_risk")
-                m.setObjective(self.mu @ x, GRB.MAXIMIZE)
+        with gp.Env() as env, gp.Model("max_return", env=env) as m:
+            x = m.addMVar(shape=self.mu.shape, name="x")
+            m.addConstr(x.sum() == 1, name="fully_invested")
+            m.addConstr(x @ self.covariance @ x <= max_risk, name="max_risk")
+            m.setObjective(self.mu @ x, GRB.MAXIMIZE)
 
-                m.optimize()
+            m.optimize()
 
-                if m.Status == GRB.OPTIMAL:
-                    return x.X
-
-        except gp.GurobiError as e:
-            print("Error code " + str(e.errno) + ": " + str(e))
-        except AttributeError:
-            print("Encountered an attribute error")
+            if m.Status == GRB.OPTIMAL:
+                return x.X
 
     # trade-off between minimizing risk and maximizing return for a given risk-aversion coefficient gamma
     def efficient_portfolio(self, gamma):
-        try:
-            with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
-                x = m.addMVar(shape=self.mu.shape, name="x")
-                m.addConstr(x.sum() == 1, name="fully_invested")
-                m.setObjective(
-                    self.mu @ x - 0.5 * gamma * x @ self.covariance @ x, GRB.MAXIMIZE
-                )
+        with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
+            x = m.addMVar(shape=self.mu.shape, name="x")
+            m.addConstr(x.sum() == 1, name="fully_invested")
+            m.setObjective(
+                self.mu @ x - 0.5 * gamma * x @ self.covariance @ x, GRB.MAXIMIZE
+            )
 
-                m.optimize()
-                if m.Status == GRB.OPTIMAL:
-                    return x.X
-
-        except gp.GurobiError as e:
-            print("Error code " + str(e.errno) + ": " + str(e))
-        except AttributeError:
-            print("Encountered an attribute error")
+            m.optimize()
+            if m.Status == GRB.OPTIMAL:
+                return x.X
