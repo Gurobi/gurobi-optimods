@@ -122,12 +122,12 @@ def read_configfile(alldata, filename, casefile=""):
             voltsfilename = thisline[1]
             fixtolerance = float(thisline[2])
             if usevoltsolution:
-                loging.error("Cannot use both voltsfilename and voltsolution\n")
+                logging.error("Cannot use both voltsfilename and voltsolution\n")
                 raise ValueError(
                     "Illegal option combination. Cannot use both voltsfilename and voltsolution."
                 )
 
-        elif thisline[0] == "usevoltsoution":
+        elif thisline[0] == "usevoltsolution":
             if voltsfilename != "NONE":
                 logging.error("Cannot use both voltsfilename and voltsolution\n")
                 raise ValueError(
@@ -240,9 +240,7 @@ def read_configfile(alldata, filename, casefile=""):
 def gbread_graphattrs(alldata, filename):
     """Function to read graphical attributes"""
 
-    log = alldata["log"]
-
-    log.joint("Reading graphical attributes file %s\n" % filename)
+    logging.info("Reading graphical attributes file %s." % filename)
     f = open(filename, "r")
     lines = f.readlines()
     f.close()
@@ -272,7 +270,7 @@ def gbread_graphattrs(alldata, filename):
 
         linenum += 1
 
-    log.joint("Read %d graphical features\n" % numfeatures)
+    logging.info("Read %d graphical features." % numfeatures)
     alldata["graphical"]["numfeatures"] = numfeatures
     alldata["graphical"]["thresh"] = thresh
     alldata["graphical"]["colorstring"] = colorstring
@@ -280,16 +278,14 @@ def gbread_graphattrs(alldata, filename):
 
 
 def grbread_coords(alldata):
-    log = alldata["log"]
-
-    # reads csv file with bus coordinates
+    """Reads csv file with bus coordinates"""
 
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     IDtoCountmap = alldata["IDtoCountmap"]
 
     filename = alldata["coordsfilename"]
-    log.joint("reading csv coordinates file " + filename + "\n")
+    logging.info("Reading csv coordinates file %s." % filename)
 
     f = open(filename, "r")
     csvf = csv.reader(f)
@@ -303,14 +299,14 @@ def grbread_coords(alldata):
 
 
 def grbreadvoltsfile(alldata):
-    log = alldata["log"]
+    """TODO-Dan add description"""
 
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     IDtoCountmap = alldata["IDtoCountmap"]
 
     filename = alldata["voltsfilename"]
-    log.joint("reading volts file " + filename + "\n")
+    logging.info("reading volts file %s." % filename)
 
     f = open(filename, "r")
     lines = f.readlines()
@@ -331,7 +327,6 @@ def grbreadvoltsfile(alldata):
                 vm = float(thisline[3])
                 vadeg = float(thisline[5])
                 varad = vadeg * math.pi / 180.0
-                # print(busid, buscount, vm, vadeg, varad)
 
                 buses[buscount].inputvoltage = 1
                 buses[buscount].inputV = vm
@@ -343,4 +338,4 @@ def grbreadvoltsfile(alldata):
 
         linenum += 1
 
-    log.joint("Read volts file.\n")
+    logging.info("Read volts file.\n")

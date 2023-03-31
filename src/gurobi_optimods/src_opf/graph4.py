@@ -1,13 +1,9 @@
-# https://networkx.org/documentation/stable/_downloads/networkx_reference.pdf
-
 import plotly.graph_objects as go
 import plotutils as pu
 import psutil
 import logging
-import numpy as np
-
-# import networkx as nx
 import math
+import numpy as np
 
 from .plotlyhandler import *
 from .grbgraph import *
@@ -31,14 +27,11 @@ def graphplot(
     numbranches,
     textlist,
 ):
-    """Description"""
-    #
-    # When alldata['coordsfilename'] == None, it reads a network in the format created by the graphviz library
-    # Then uses the plotlyhandler library to create a plotly figure
-    # The figure is then rendered in a browser window
-    #
-    # print('graphfilename', graphfilename, 'gvfilename', gvfilename)
-    # graphfilename = 'grbgraph.txt'
+    """
+    When alldata['coordsfilename'] == None, it reads a network in the format created by the graphviz library
+    Then uses the plotlyhandler library to create a plotly figure
+    The figure is then rendered in a browser window
+    """
     f = open(graphfilename, "r")
     lines = f.readlines()
     f.close()
@@ -59,9 +52,6 @@ def graphplot(
         ]
         truelinect += 1
 
-    # trueN, N, trueM, vertexx, vertexy, thisM, endbus, revendbus, scanned_list_consolidated, scanned_degrees_consolidated, scanned_unique_ordered_pairs, scanned_num_unique = scangv(gvfilename, log)
-    # print(len(vertexx), len(vertexy), trueN, N)
-
     (
         trueM,
         vertexx,
@@ -71,8 +61,6 @@ def graphplot(
         scanned_unique_ordered_pairs,
         scanned_num_unique,
     ) = scangv(alldata, gvfilename, alldata["coordsfilename"] == None)
-
-    # break_exit('scanned')
 
     # endbus is a list of end buses for network branches as ordered in gvfilename
     # revendbus is the reverse index
@@ -130,7 +118,7 @@ def graphplot(
                 degmine,
             )
 
-        if False:  # TODO why is this?
+        if False:  # TODO-Dan why is this?
             logging.info(
                 "scanned ordered pair %d -> (%d,%d) of deg %d."
                 % (j, scannedordpair[0], scannedordpair[1], degscanned)
@@ -154,14 +142,9 @@ def graphplot(
                     % (width, scannedordpair[0], scannedordpair[1], j, jprime, color)
                 )
 
-    # break_exit('scanned2')
-
     if alldata["coordsfilename"] != None:  # should change this
         vertexx -= np.min(vertexx)
         vertexy -= np.min(vertexy)
-
-        # print('vertexx', vertexx)
-        # print('vertexy', vertexy)
 
         deltax = np.max(vertexx) - np.min(vertexx)  # min should be 0 now
         deltay = np.max(vertexy) - np.min(vertexy)  # min should be 0 now
@@ -189,15 +172,10 @@ def graphplot(
     for j in range(n):
         gG.addvertex(j)
 
-    # print(len(adj),m)
-
     newdeg = {}
     for j in range(scanned_num_unique):
         scannedordpair = scanned_unique_ordered_pairs[j]
         newdeg[scannedordpair[0], scannedordpair[1]] = 0
-
-    # print(newdeg)
-    # print(scanned_list_consolidated.keys())
 
     reordered_width = {}
     reordered_color = {}
@@ -256,10 +234,6 @@ def graphplot(
         vertex_border_width=myvertex_border_width,
     )
 
-    # for edge in gG.edges.values():
-    #    print(edge[0], edge[1])
-    # break_exit('showed')
-
     logging.info("Rendering figure.")
 
     xgap = np.max(vertexx) - np.min(vertexx)
@@ -271,7 +245,5 @@ def graphplot(
     print("xgap", xgap, "ygap", ygap, "height", myheight, "width", mywidth)
 
     fig = PH.create_figure(height=myheight, width=mywidth, showlabel=False)
-    # fig.write_image('one.png')
     logging.info("Showing figure.")
     fig.show()
-    # break_exit('showed')

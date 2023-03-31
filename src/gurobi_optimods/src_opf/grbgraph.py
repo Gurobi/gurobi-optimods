@@ -1,7 +1,5 @@
 import logging
 
-from .myutils import *
-
 
 class grbGraph:
     def __init__(self):

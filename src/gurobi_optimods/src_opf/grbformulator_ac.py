@@ -13,6 +13,9 @@ from .grbgraphical import grbgraphical
 def lpformulator_ac(alldata):
     """Formulate ACOPF model and solve it"""
 
+    # TODO-Dan The lpformulator_XX functions all look the same. Couldn't we just use one and have a switch-case over alldata["dodc"]/alldata["doac"]/alldata["doiv"]
+    #         Or is there some difference?
+
     logging.info("\nAC formulation.")
 
     starttime = time.time()
@@ -31,10 +34,11 @@ def lpformulator_ac(alldata):
         if alldata["strictcheckvoltagesolution"]:
             # check input solution against formulation
             spitoutvector = True
+            # TODO-Dan Why do you need the feascode? It's not used anywhere and the function does not even return anything
             feascode = lpformulator_ac_strictchecker(alldata, model, spitoutvector)
 
         if alldata["doslp_polar"]:
-            break_exit("slp_polar formulation")  # TODO why the break_exit?
+            break_exit("slp_polar formulation")  # TODO-Dan why the break_exit?
 
         sol_count = lpformulator_ac_opt(alldata, model)
 
@@ -67,7 +71,9 @@ def lpformulator_ac(alldata):
 
 
 def lpformulator_ac_opt(alldata, model):
+    """Optimize constructed model"""
 
+    # Disable logging handler to get Gurobi output
     logging.disable(logging.INFO)
     model.params.LogFile = alldata["logfile"]
     # Specific settings for better convergence
@@ -81,10 +87,6 @@ def lpformulator_ac_opt(alldata, model):
     feastol = model.Params.FeasibilityTol
     opttol = model.Params.OptimalityTol
     mipgap = model.Params.MIPGap
-
-    # model.Params.BarHomogeneous = 1
-
-    # writempsfile(alldata,model,'grbopf.mps')
 
     if alldata["usemipstart"] and (
         alldata["branchswitching_mip"] or alldata["branchswitching_comp"]
@@ -100,6 +102,7 @@ def lpformulator_ac_opt(alldata, model):
             zvar[branch].Start = 1.0
             # Jarek, there is some strange behavior here
             # print(zvar[branch], ' ',zvar[branch].Start)
+            # TODO-Dan What strange behavior?
 
         writemipstart(alldata)
 
@@ -113,11 +116,11 @@ def lpformulator_ac_opt(alldata, model):
 
         # Optimize
         model._vars = model.getVars()
-        # model.optimize(mycallback)
         model.optimize()
     else:
         model.optimize()
 
+    # Activate logging handlers
     logging.disable(logging.NOTSET)
 
     # Check model status and re-optimize or try computing an IIS if necessary
@@ -154,15 +157,15 @@ def lpformulator_ac_opt(alldata, model):
         logging.disable(logging.INFO)
         model.printQuality()
         logging.disable(logging.NOTSET)
-        # FIXME yes, to be done
-        # Here we should gather optimal solution values and gather them
-        # in a standardized format which ultimately will be returned to the user
-        #
 
     return model.SolCount
 
 
 def lpformulator_ac_examine_solution(alldata, model):
+    """
+    TODO-Dan What is this function and how should it be used?
+    Currently it does nothing
+    """
     # first version -- crude -- but first, some debugging
 
     branches = alldata["branches"]
@@ -255,10 +258,10 @@ def lpformulator_setup(alldata):
 
 
 def computebalbounds(alldata, bus):
-    """Compute bal bounds"""
-    # Computes active and reactive max and min bus flow balance values
+    """Computes active and reactive max and min bus flow balance values"""
 
     # First let's get max/min generations
+    # TODO-Dan What about all those "loud" settings? can we remove them?
     loud = 0  # See below
 
     baseMVA = alldata["baseMVA"]
@@ -285,6 +288,7 @@ def computebalbounds(alldata, bus):
         ):  # it is worth keeping because a user may want to debug the generator limits that they imposed, which could make a problem infeasible
             # logging.info(" Pubound for %d %f genc %d."%(bus.nodeID, Pubound, gencounter))
             # logging.info(" Plbound for %d %f genc %d."%(bus.nodeID, Plbound, gencounter))
+            # TODO-Dan How is this worth keeping if loud cannot be set by the user? The user would have to hack the code to get the debug output
             logging.info(
                 " Qubound for %d %f genc %d." % (bus.nodeID, Qubound, gencounter)
             )
@@ -301,6 +305,7 @@ def computebalbounds(alldata, bus):
         Pubound = Plbound = Qubound = Qlbound = 0
 
     if loud:  # same as above
+        # TODO-Dan same as above
         # logging.info(" Pubound for %d final %f."%(bus.nodeID, Pubound))
         # logging.info(" (Pd was %g)"%bus.Pd)
         # logging.info(" Plbound for %d final %f."%(bus.nodeID, Plbound))
@@ -328,6 +333,7 @@ def lpformulator_ac_body(alldata, model):
     model.write(
         alldata["lpfilename"]
     )  # FIXME remove.  Jarek: I am using this for debugging, for now
+    # TODO-Dan don't forget to remove at some point!
     logging.info("Wrote LP to " + alldata["lpfilename"])
 
     alldata["model"] = model
@@ -392,6 +398,7 @@ def lpformulator_ac_create_vars(alldata, model):
             obj=0.0, lb=Qlbound, ub=Qubound, name="IQ_%d" % bus.nodeID
         )
         bus.Qinjvarind = varcount
+        # TODO-Dan Why is the varcount += 1 in the below comment? Should it be uncommented?
         # comment: Qinjvar is the variable modeling total reactive power injected by bus j into the branches incident with j           varcount += 1
 
         # Next, generator variables
@@ -417,7 +424,6 @@ def lpformulator_ac_create_vars(alldata, model):
             GenQvar[gen] = model.addVar(
                 obj=0.0, lb=lower, ub=upper, name="GQ_%d_%d" % (gen.count, gen.nodeID)
             )
-            # print(genid,lower,upper)
             gen.Qvarind = varcount
             varcount += 1
 
@@ -744,7 +750,6 @@ def lpformulator_ac_create_polar_vars(alldata, model, varcount):
             lbound = max(lbound, candidatelbound)
             ubound = min(ubound, candidateubound)
 
-            # print('------>',j, bus.nodeID, bus.inputV, 'lbound',lbound, 'ubound',ubound)
         vvar[bus] = model.addVar(
             obj=0.0, lb=lbound, ub=ubound, name="v_" + str(bus.nodeID)
         )
@@ -880,7 +885,7 @@ def lpformulator_ac_create_efvars(alldata, model, varcount):
 
 
 def lpformulator_ac_create_constraints(alldata, model):
-    """ "Create constraints for ACOPF"""
+    """Create constraints for ACOPF"""
 
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
@@ -1142,7 +1147,6 @@ def lpformulator_ac_create_constraints(alldata, model):
                     count += 4
 
                 count += 2
-                # print(j,-branch.Btt,-branch.Btf,-branch.Bft)
         else:  # out of operation
             branch.Qdeffconstr = model.addConstr(
                 Qvar_f[branch] == 0, name=branch.Qfcname
@@ -1265,7 +1269,6 @@ def lpformulator_ac_create_constraints(alldata, model):
                 <= branch.limit**2,
                 name="limit_f_%d_%d_%d" % (j, f, t),
             )
-            # themodel.cbLazy(Pvar_t[branch]*Pvar_t[branch] + Qvar_t[branch]*Qvar_t[branch] <= branch.limit**2)
             model.addConstr(
                 Pvar_t[branch] * Pvar_t[branch] + Qvar_t[branch] * Qvar_t[branch]
                 <= branch.limit**2,
@@ -1342,7 +1345,6 @@ def lpformulator_ac_create_constraints(alldata, model):
                     # Reactive, also.
 
                     if -branch.Bff > 0 or -branch.Btt > 0:
-                        # print(j,f,t, 'f', -branch.Bff, -branch.Bft, 't', -branch.Btt, -branch.Btf)
                         alpha = min(-branch.Bff, -branch.Btt)
                         beta = branch.Bft + branch.Btf
                         delta = 2 * alpha - beta
@@ -1596,7 +1598,10 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
     for j in range(1, 1 + numbranches):
         branch = branches[j]
         row = model.getRow(branch.Pdeffconstr)
-        if loud:
+        if (
+            loud
+        ):  # TODO-Dan We have to discuss the loud variable. If you want to keep it then it should be handled
+            # properly via a setting and not be hard-coded
             print(
                 j,
                 branch.Pdeffconstr,
@@ -1685,6 +1690,7 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
                 leadcoeff = coeff
         if loud:
             print("sum =", sum, leadcoeff)
+
         xbuffer[Qvar_f[branch]] = -sum / leadcoeff
         # leadcoeff should be +1 or -1
         logging.info(
@@ -1769,7 +1775,7 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
 
 
 def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
-    # checks feasibility of input solution -- reports infeasibilities
+    """Checks feasibility of input solution -- reports infeasibilities"""
     logging.info("Strict feasibility check for input voltage solution.\n")
 
     if alldata["strictcheckvoltagesolution"]:
@@ -2095,7 +2101,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         # Pinjvar variable bounds should accommodate computed injection
         # get bounds for P and Q injection variables
         Pubound, Plbound, Qubound, Qlbound = computebalbounds(alldata, bus)
-        # print(Plbound, Pubound)
 
         # but also, construct min/max injection at the bus by looking at available generators and load
         myPubound = myPlbound = 0
@@ -2214,8 +2219,10 @@ def lpformulator_checkviol_simple(
     max_violation_string,
     loud,
 ):
-    # returns bounds infeasibility if setting grbvariable to value value
-    # maxlbviol, maxubviol, badlb,ubvar are updated if the infeasibility is larger
+    """
+    Returns bounds infeasibility if setting grbvariable to value value
+    maxlbviol, maxubviol, badlb, ubvar are updated if the infeasibility is larger
+    """
 
     ub = grbvariable.ub
     lb = grbvariable.lb

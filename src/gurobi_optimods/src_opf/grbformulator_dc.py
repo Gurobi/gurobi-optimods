@@ -18,9 +18,6 @@ def lpformulator_dc(alldata):
 
     starttime = time.time()
 
-    # Handle special settings
-    # lpformulator_setup(alldata)
-
     sol_count = 0
     solution = None
     objval = None
@@ -32,7 +29,10 @@ def lpformulator_dc(alldata):
         if alldata["strictcheckvoltagesolution"]:
             # check input solution against formulation
             spitoutvector = True
-            # feascode = lpformulator_dc_strictchecker(alldata, model, spitoutvector) #uncomment this for check
+            # TODO-Dan Why do you need the feascode? It's not used anywhere and the function does not even return anything
+            feascode = lpformulator_dc_strictchecker(
+                alldata, model, spitoutvector
+            )  # uncomment this for check
 
         sol_count = lpformulator_dc_opt(alldata, model)
 
@@ -81,7 +81,6 @@ def lpformulator_dc_body(alldata, model):
         alldata["lpfilename"]
     )  # FIXME remove.  Jarek: I am using this for debugging, for now
     logging.info("Wrote LP to " + alldata["lpfilename"])
-    # break_exit('wrote lp') #
 
     alldata["model"] = model
 
@@ -319,8 +318,6 @@ def lpformulator_dc_create_constraints(alldata, model):
                 name=branch.Pfcname,
             )
             count += 1
-            # print(count, coeff, branch.angle_rad, angle_exp)
-            # break_exit('pdff')
 
             if alldata["branchswitching_mip"]:
                 if branch.constrainedflow:
@@ -400,6 +397,7 @@ def lpformulator_dc_create_constraints(alldata, model):
 
 
 def lpformulator_dc_opt(alldata, model):
+    """Optimizes constructed DCOPF model"""
 
     numbranches = alldata["numbranches"]
     branches = alldata["branches"]
@@ -416,7 +414,7 @@ def lpformulator_dc_opt(alldata, model):
     opttol = model.Params.OptimalityTol
     mipgap = model.Params.MIPGap
 
-    model.Params.SolutionLimit = 20
+    model.Params.SolutionLimit = 20  # TODO-Dan Why do we need a solution limit for DC?
 
     if alldata["branchswitching_mip"]:
         logging.critical("Using mip start with all branches kept on.")
@@ -437,7 +435,9 @@ def lpformulator_dc_opt(alldata, model):
         # Optimize
         model._vars = model.getVars()
         model._data = alldata
-        model.optimize(plot_new_solution_callback)
+        model.optimize(
+            plot_new_solution_callback
+        )  # TODO-Dan We only use graphviz for DCOPF. Why is that? The dographics setting does nothing for AC or IV.
     else:
         model.optimize()
 
@@ -477,15 +477,12 @@ def lpformulator_dc_opt(alldata, model):
         logging.disable(logging.INFO)
         model.printQuality()
         logging.disable(logging.NOTSET)
-        # FIXME yes, to be done
-        # Here we should gather optimal solution values and gather them
-        # in a standardized format which ultimately will be returned to the user
-        #
 
     return model.SolCount
 
 
 def lpformulator_dc_examine_solution(alldata, model):
+    """TODO-Dan Add description"""
 
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
@@ -506,9 +503,6 @@ def lpformulator_dc_examine_solution(alldata, model):
     GenPvar = alldata["LP"]["GenPvar"]
     lincostvar = alldata["LP"]["lincostvar"]
 
-    # for var in model.getVars():
-    #    print(var.varname)
-
     loud = False
     numzeros = 0
 
@@ -528,16 +522,12 @@ def lpformulator_dc_examine_solution(alldata, model):
         busf = buses[count_of_f]
         bust = buses[count_of_t]
 
-        # print(Pvar_f[branch].x)
-
         if alldata["branchswitching_mip"]:
             zholder[j - 1] = zvar[branch].x
             if zvar[branch].x < 0.5:  # turned off
                 numzeros += 1
                 if loud:
                     logging.info("branch %d (%d, %d) switched off." % (j, f, t))
-
-        # logging.info('numzeros: %d'%numzeros)
 
     logging.info("Done examining solution.\n")
     """
@@ -547,6 +537,7 @@ def lpformulator_dc_examine_solution(alldata, model):
 
 
 def plot_new_solution_callback(model, where):
+    """Callback to plot new feasible solutions as they are found"""
     if where == GRB.Callback.MIPSOL:
         x = model.cbGetSolution(model._vars)
         objval = model.cbGet(GRB.Callback.MIPSOL_OBJ)
@@ -578,7 +569,7 @@ def plot_new_solution_callback(model, where):
             gholder[j1 - 1] = (
                 model._data["baseMVA"] * x[gen.Pvarind]
             )  # print('gen',gen.count,x[gen.Pvarind])
-            # break_exit('printed')  #functionality to be added
+            # break_exit('printed')  #functionality to be added # TODO-Dan What functionality is that?
 
         model._data["MIP"]["solutionfound"] = True
         difftol = 1e-6

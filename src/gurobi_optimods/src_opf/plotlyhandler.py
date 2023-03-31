@@ -16,14 +16,11 @@ Num = Union[int, float]
 
 
 class plotlyhandler:
-    """Description"""
+    """
+    Creates a plotly graph to be rendered
+    Input is a graph given by coordinates
+    """
 
-    #
-    #
-    # Creates a plotly graph to be rendered
-    #
-    # Input is a graph given by coordinates
-    #
     def __init__(
         self,
         gG: grbGraph,
@@ -82,8 +79,6 @@ class plotlyhandler:
         # group all edges by (color, width)
         groups = defaultdict(list)
 
-        # print(self.input_edge_color)
-
         count = 1
         localdeg = {}
         # for edge in self.G.edges():
@@ -119,13 +114,11 @@ class plotlyhandler:
                         localdeg[small, large],
                     )
                 )
-                # print('edge',count, 'is (+1) (',edge[0]+1,',',edge[1]+1, ') position', position, 'w', self.input_edge_width[position], 'localdeg', localdeg[small,large])
 
             localdeg[small, large] += 1
 
             groups[(color, width)] += [edge]
 
-            # print('edge',count, 'is (+1)',edge[0]+1,',',edge[1]+1, 'of width', width)
             count += 1
 
         # process each group
@@ -245,7 +238,7 @@ class plotlyhandler:
 
         layout_params.update(params)
 
-        if False:
+        if False:  # TODO-Dan Can this be deleted?
             print([self.vertex_size[v] for v in self.gG.vertices.values()])
             print([self.vertex_color[v] for v in self.gG.vertices.values()])
             break_exit("prefig")

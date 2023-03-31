@@ -5,12 +5,12 @@ import logging
 
 
 class Bus:
-    """Bus class"""
-
-    # This is a class that describes a bus in a power system, including loads,
-    # voltage limits, type of bus (generator, reference, etc.), ID and count.
-    # The data structure also keeps track of branches incident with the bus
-    # See comments below
+    """
+    Bus class
+    This is a class that describes a bus in a power system, including loads,
+    voltage limits, type of bus (generator, reference, etc.), ID and count.
+    The data structure also keeps track of branches incident with the bus
+    """
 
     def __init__(
         self, count, nodeID, nodetype, Pd, Qd, Gs, Bs, Vbase, Vmax, Vmin, busline0
@@ -75,9 +75,10 @@ class Bus:
 
 
 class Branch:
-    """Branch class"""
-
-    # Branch class
+    """
+    Branch class
+    TODO-Dan Please add more description if needed
+    """
 
     def __init__(
         self,
@@ -216,10 +217,11 @@ class Branch:
 
 
 class Gen:
-    """Gen class"""
-
-    # Generator class
-    # See Matpower manual for more details
+    """
+    Generator class
+    See Matpower manual for more details
+    TODO-Dan Could you please add a link
+    """
 
     def __init__(self, count, nodeID, Pg, Qg, status, Pmax, Pmin, Qmax, Qmin, line0):
         self.count = count
@@ -253,40 +255,6 @@ class Gen:
 
     def getline0(self):
         return self.line0
-
-
-def read_case_build_dict(alldata):
-    """
-    Read case file and construct a dict out of it.
-
-    This is meant to be a helper function for translating casefiles into dict format.
-    """
-
-    casefilename = alldata["casefilename"]
-    starttime = time.time()
-
-    logging.info("Reading case file %s." % casefilename)
-    f = open(casefilename, "r")
-    lines = f.readlines()
-    f.close()
-
-    logging.info("Now building case dictionary.")
-
-    # Read all lines of the casefile
-    alldata["casefilelines"] = lines
-
-    casefile_dict = read_case_build_dict_thrulines(lines)
-    print("=========================================")
-    print(casefile_dict)
-    print("=========================================")
-
-    endtime = time.time()
-
-    logging.info("Reading time: %f s." % (endtime - starttime))
-
-    build_data_struct(alldata, casefile_dict)
-
-    return casefile_dict
 
 
 def build_data_struct(alldata, casefile_dict):
@@ -446,7 +414,6 @@ def build_data_struct(alldata, casefile_dict):
     summaxgenP = summaxgenQ = 0
 
     for dgen in dict_gens.values():
-        # print(dgen)
         gencount1 = dgen["gencount1"]
         nodeID = dgen["nodeID"]
         Pg = dgen["Pg"]
@@ -461,7 +428,6 @@ def build_data_struct(alldata, casefile_dict):
         idgencount1 = -1
         if nodeID in IDtoCountmap.keys():
             idgencount1 = IDtoCountmap[nodeID]
-            # print(idgencount1)
             gens[gencount1] = Gen(
                 gencount1,
                 nodeID,
@@ -506,16 +472,44 @@ def build_data_struct(alldata, casefile_dict):
     gencoststruct = casefile_dict["generator_cost_structure"]
 
     for count in range(1, alldata["numgens"] + 1):
-        # print(count, gencoststruct[count])
         gens[count].addcost_plain(gencoststruct[count]["costvector"])
-        # gens[count].showcostvector(log)
-    # break_exit('build')
+
+
+def read_case_build_dict(alldata):
+    """
+    Read case file and construct a dict out of it.
+
+    This is a helper function for translating casefiles into dict format.
+    """
+
+    casefilename = alldata["casefilename"]
+    starttime = time.time()
+
+    logging.info("Reading case file %s." % casefilename)
+    f = open(casefilename, "r")
+    lines = f.readlines()
+    f.close()
+
+    logging.info("Now building case dictionary.")
+
+    # Read all lines of the casefile
+    alldata["casefilelines"] = lines
+
+    casefile_dict = read_case_build_dict_thrulines(lines)
+
+    endtime = time.time()
+
+    logging.info("Reading time: %f s." % (endtime - starttime))
+
+    build_data_struct(alldata, casefile_dict)
+
+    return casefile_dict
 
 
 def read_case_build_dict_thrulines(lines):
     """
     Read thru all lines of case file and fill data dictionary.
-    This is meant to be a helper function for translating casefiles into dict format.
+    This is a helper function for translating casefiles into dict format.
     """
 
     numlines = len(lines)
@@ -606,8 +600,6 @@ def read_case_build_dict_thrulines(lines):
                     buses[numbuses]["Vmin"] = Vmin
                     buses[numbuses]["lnum"] = linenum - 1
 
-                    # buses[numbuses] = Bus(numbuses, nodeID, nodetype, Pd/baseMVA, Qd/baseMVA, Gs/baseMVA, Bs/baseMVA,  Vbase, Vmax, Vmin, linenum-1)
-
                     if nodetype == 3:
                         logging.info(
                             "    Bus %d ID %d is the reference bus."
@@ -624,7 +616,6 @@ def read_case_build_dict_thrulines(lines):
                     )
                     logging.info("   setting it to type 4.")
                     nodetype = 4
-                    # break_exit("isolated")
 
                     # Trim ; if present
                     Vmin = 0
@@ -646,8 +637,6 @@ def read_case_build_dict_thrulines(lines):
                     buses[numbuses]["Vbase"] = Vbase
                     buses[numbuses]["Vmax"] = Vmax
                     buses[numbuses]["Vmin"] = Vmin
-
-                    # buses[numbuses] = Bus(numbuses, nodeID, nodetype, Pd/baseMVA,    Qd/baseMVA, Gs/baseMVA, Bs/baseMVA,   Vbase, Vmax, Vmin, linenum-1)
 
                 linenum += 1
             # Finished reading bus section
@@ -1329,7 +1318,7 @@ def read_case_thrulines(alldata, lines):
     # Finished reading file line by line
 
 
-def readvoltsfile(log, alldata):
+def readvoltsfile(alldata):
     """Read volts file and fill data dictionary"""
 
     voltsfilename = alldata["voltsfilename"]
@@ -1367,7 +1356,7 @@ def readvoltsfile(log, alldata):
     alldata["inputvolts"] = inputvolts
 
 
-def readflowsfile(log, alldata):
+def readflowsfile(alldata):
     """Read flows file and fill data dictionary"""
 
     flowsfilename = alldata["flowsfilename"]
@@ -1415,7 +1404,7 @@ def readflowsfile(log, alldata):
     alldata["inputQt"] = inputQt
 
 
-def writegv(log, alldata, gvfilename):
+def writegv(alldata, gvfilename):
     """Write gv file needed for graphical image"""
 
     f = open(gvfilename, "w")
@@ -1433,9 +1422,10 @@ def writegv(log, alldata, gvfilename):
     f.close()
 
 
-def generateinputcs(log, alldata):
-    """Description"""
-    # Generates values for the Jabr c and s variables from input voltages
+def generateinputcs(alldata):
+    """
+    Generates values for the Jabr c and s variables from input voltages
+    """
 
     logging.info("  Generating input c,s values.")
 
@@ -1468,9 +1458,10 @@ def generateinputcs(log, alldata):
     alldata["inputcs"] = inputcs
 
 
-def generateinputeandf(log, alldata):
-    """Description"""
-    # Generates rectangular coordinates for voltages from input solution (given in polar coordinates)
+def generateinputeandf(alldata):
+    """
+    Generates rectangular coordinates for voltages from input solution (given in polar coordinates)
+    """
 
     logging.info("  generating input e,f values.")
 

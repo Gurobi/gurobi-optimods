@@ -4,7 +4,6 @@ import time
 import logging
 from gurobipy import *
 
-# from log import Logger
 from .graph4 import *
 from .myutils import break_exit
 
@@ -58,7 +57,6 @@ def grbgraphical(alldata, plottype, textlist):
         logging.info("Skipping graph layout computation since coordinates are given.")
         firstgvfile = gvfilename
 
-    # break_exit('graph,1')
     node_text = {}
     mynode_size = {}
     mynode_color = {}
@@ -128,7 +126,6 @@ def grbgraphical(alldata, plottype, textlist):
                         " bus %d gen %d produces %f."
                         % (j, gen.count, gholder[gen.count - 1])
                     )
-                # break_exit('gen in grbgraphical')
 
             """
             if sumPgen > 500:
@@ -152,8 +149,6 @@ def grbgraphical(alldata, plottype, textlist):
             if Pload > 50 and largegen == False:
                 mynode_size[j - 1] = 8
                 mynode_color[j - 1] = "blue"
-
-        # break_exit('bus examination')
 
         zvar = alldata["LP"]["zvar"]
         zholder = alldata["MIP"]["zholder"]
@@ -211,9 +206,7 @@ def grbgraphical(alldata, plottype, textlist):
                     % (j, myedge_color[j], small, large)
                 )
 
-    # break_exit('cons')
-
-    if False:
+    if False:  # TODO-Dan Why do we need it?
         for j in range(1, numbuses + 1):
             if mynode_size[j - 1] > 1:
                 print(
@@ -241,11 +234,10 @@ def grbgraphical(alldata, plottype, textlist):
         numbranches,
         textlist,
     )
-    # break_exit('graph,2')
 
 
 def grbgetgraphattr(alldata, value):
-    # looks through threshold list to find first match
+    """looks through threshold list to find first match"""
 
     color = "Black"
     size = 0
@@ -262,7 +254,6 @@ def grbgetgraphattr(alldata, value):
 
         for f in range(numfeatures):
             feature = numfeatures - f - 1
-            # print(feature, 'value', value, thresh[feature], numfeatures)
             if value >= thresh[feature]:
                 size = sizeval[feature]
                 color = colorstring[feature]
@@ -283,7 +274,7 @@ def grbgetgraphattr(alldata, value):
             color = "purple"
             caughtit = True
 
-    if False:  # caughtit:
+    if False:  # caughtit: #TODO-Dan Do we need it?
         print(value, caughtit, size, color)
         break_exit("caughtit")
 

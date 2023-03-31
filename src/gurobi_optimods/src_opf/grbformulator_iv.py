@@ -11,7 +11,7 @@ from .grbgraphical import grbgraphical
 
 
 def lpformulator_iv(alldata):
-    """Formulate ACOPF model and solve it"""
+    """Formulate IVOPF model and solve it"""
 
     logging.info("\nIV formulation.")
 
@@ -31,6 +31,7 @@ def lpformulator_iv(alldata):
         if alldata["strictcheckvoltagesolution"]:
             # check input solution against formulation
             spitoutvector = True
+            # TODO-Dan Why do you need the feascode? It's not used anywhere and the function does not even return anything
             feascode = lpformulator_iv_strictchecker(alldata, model, spitoutvector)
 
         sol_count = lpformulator_iv_opt(alldata, model)
@@ -63,6 +64,8 @@ def lpformulator_iv(alldata):
 
 
 def lpformulator_iv_opt(alldata, model):
+    """Optimizes constructed IVOPF model"""
+    # TODO-Dan Can't we use the same lpformulator_opt function for all 3 model types?
 
     logging.disable(logging.INFO)
     model.params.LogFile = alldata["logfile"]
@@ -78,10 +81,6 @@ def lpformulator_iv_opt(alldata, model):
     opttol = model.Params.OptimalityTol
     mipgap = model.Params.MIPGap
 
-    # model.Params.BarHomogeneous = 1
-
-    # writempsfile(alldata,model,'grbopf.mps')
-
     if alldata["usemipstart"] and (
         alldata["branchswitching_mip"] or alldata["branchswitching_comp"]
     ):
@@ -95,6 +94,7 @@ def lpformulator_iv_opt(alldata, model):
             zvar[branch].Start = 1.0
             # Jarek, there is some strange behavior here
             # print(zvar[branch], ' ',zvar[branch].Start)
+            # TODO-Dan What strange behavior?
 
         writemipstart(alldata)
 
@@ -108,7 +108,6 @@ def lpformulator_iv_opt(alldata, model):
 
         # Optimize
         model._vars = model.getVars()
-        # model.optimize(mycallback)
         model.optimize()
     else:
         model.optimize()
@@ -225,8 +224,7 @@ def lpformulator_setup(alldata):
 
 
 def computebalbounds(alldata, bus):
-    """Compute bal bounds"""
-    # Computes active and reactive max and min bus flow balance values
+    """Computes active and reactive max and min bus flow balance values"""
 
     # First let's get max/min generations
     loud = 0  # See below
@@ -672,7 +670,6 @@ def lpformulator_iv_create_polar_vars(alldata, model, varcount):
     logging.info(
         "    Added %d new variables to handle polar formulation." % newvarcount
     )
-    # break_exit('polarvars')
 
     varcount += newvarcount
 
@@ -1235,7 +1232,7 @@ def lpformulator_iv_add_nonconvexconstraints(alldata, model):
 
 
 def grbderive_xtra_sol_values_fromvoltages(alldata):
-    # Generates complete solution vectors from input voltages.
+    """Generates complete solution vectors from input voltages."""
 
     model = alldata["model"]
 
@@ -1517,7 +1514,7 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
 
 
 def lpformulator_iv_strictchecker(alldata, model, spitoutvector):
-    # checks feasibility of input solution -- reports infeasibilities
+    """Checks feasibility of input solution -- reports infeasibilities"""
     logging.info("Strict feasibility check for input voltage solution.\n")
 
     if alldata["strictcheckvoltagesolution"]:
@@ -1961,8 +1958,10 @@ def lpformulator_checkviol_simple(
     max_violation_string,
     loud,
 ):
-    # returns bounds infeasibility if setting grbvariable to value value
-    # maxlbviol, maxubviol, badlb,ubvar are updated if the infeasibility is larger
+    """
+    Returns bounds infeasibility if setting grbvariable to value value
+    maxlbviol, maxubviol, badlb,ubvar are updated if the infeasibility is larger
+    """
 
     ub = grbvariable.ub
     lb = grbvariable.lb
@@ -2022,12 +2021,6 @@ def worstboundviol_report(badvar, maxviol, boundtype):
         )
     else:
         logging.info("No %s bound violations." % boundtype)
-
-
-def writempsfile(alldata, model, filename):
-    logging.info("Writing mpsfile to %s." % (filename))
-    model.write(filename)
-    break_exit("wrotefile")
 
 
 def writemipstart(alldata):
