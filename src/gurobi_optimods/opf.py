@@ -9,7 +9,7 @@ from .src_opf.grbfile import (
     initialize_data_dict,
     read_settings,
     grbread_coords,
-    gbread_graphattrs,
+    grbread_graphattrs,
 )
 from .src_opf.grbgraphical import grbgraphical
 from .src_opf.grbformulator_ac import lpformulator_ac
@@ -17,7 +17,7 @@ from .src_opf.grbformulator_dc import lpformulator_dc
 from .src_opf.grbformulator_iv import lpformulator_iv
 
 
-def solve_opf_model(settings, casefile, logfile=""):
+def solve_opf_model(settings, case, logfile=""):
     """Construct an ACOPF model from given data and solve it with Gurobi"""
 
     if not logfile:
@@ -30,22 +30,18 @@ def solve_opf_model(settings, casefile, logfile=""):
 
     alldata = initialize_data_dict(logfile)
 
-    # Read configuration file/dict and possibly set casefile name
-    read_settings(alldata, settings, casefile)
+    # Read configuration file/dict and possibly set case name
+    read_settings(alldata, settings, case)
 
-    # Use correct method to fill alldata dict depending on whether we have a dictionary input or file name for casefile
-    if type(casefile) is dict:
-        build_data_struct(alldata, casefile)
-    else:
-        # Read case file holding OPF network data. The path to case file has been set in read_settings
-        read_case(alldata)
+    # Read case and populate the alldata dictionary
+    read_case(alldata, case)
 
     # Special settings for graphics
     if alldata["dographics"]:
         alldata["graphical"] = {}
         alldata["graphical"]["numfeatures"] = 0
         if alldata["graphattrsfilename"] != None:
-            gbread_graphattrs(alldata, alldata["graphattrsfilename"])
+            grbread_graphattrs(alldata, alldata["graphattrsfilename"])
         if alldata["coordsfilename"] != None:
             grbread_coords(alldata)
 

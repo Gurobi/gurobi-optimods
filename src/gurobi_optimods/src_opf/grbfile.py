@@ -161,7 +161,7 @@ def read_configfile_file(alldata, filename, casefile):
     logging.info("")
 
 
-def gbread_graphattrs(alldata, filename):
+def grbread_graphattrs(alldata, filename):
     """Function to read graphical attributes"""
 
     logging.info("Reading graphical attributes file %s." % filename)

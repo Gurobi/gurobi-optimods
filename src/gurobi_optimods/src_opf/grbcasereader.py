@@ -257,7 +257,20 @@ class Gen:
         return self.line0
 
 
-def build_data_struct(alldata, casefile_dict):
+def read_case(alldata, case):
+    if type(case) is dict:
+        # Fill alldata dictionary from case dictionary
+        build_data_struct(alldata, case)
+    else:
+        # casefilename has been set in read_settings
+        if alldata["casefilename"] == None:
+            raise ValueError("No casefile provided.")
+
+        # Read case file holding OPF network data.
+        read_casefile(alldata)
+
+
+def build_data_struct(alldata, case_dict):
     """
     Fills alldata dictionary out of a given casefile dictionary
     """
@@ -272,8 +285,8 @@ def build_data_struct(alldata, casefile_dict):
 
     logging.info("Building main data structure from dictionary.")
 
-    dict_buses = casefile_dict["buses"]
-    baseMVA = alldata["baseMVA"] = casefile_dict["baseMVA"]
+    dict_buses = case_dict["buses"]
+    baseMVA = alldata["baseMVA"] = case_dict["baseMVA"]
 
     logging.info("Buses.")
 
@@ -349,7 +362,7 @@ def build_data_struct(alldata, casefile_dict):
     activebranches = 0
     zerolimit = 0
 
-    dict_branches = casefile_dict["branches"]
+    dict_branches = case_dict["branches"]
     branches = {}
 
     for dbranch in dict_branches.values():
@@ -410,7 +423,7 @@ def build_data_struct(alldata, casefile_dict):
 
     logging.info("Generators.")
     gens = {}
-    dict_gens = casefile_dict["generators"]
+    dict_gens = case_dict["generators"]
     summaxgenP = summaxgenQ = 0
 
     for dgen in dict_gens.values():
@@ -469,7 +482,7 @@ def build_data_struct(alldata, casefile_dict):
     logging.info("    summaxPg %f summaxQg %f" % (summaxgenP, summaxgenQ))
 
     logging.info("Generator cost vectors.")
-    gencoststruct = casefile_dict["generator_cost_structure"]
+    gencoststruct = case_dict["generator_cost_structure"]
 
     for count in range(1, alldata["numgens"] + 1):
         gens[count].addcost_plain(gencoststruct[count]["costvector"])
@@ -495,15 +508,15 @@ def read_case_build_dict(alldata):
     # Read all lines of the casefile
     alldata["casefilelines"] = lines
 
-    casefile_dict = read_case_build_dict_thrulines(lines)
+    case_dict = read_case_build_dict_thrulines(lines)
 
     endtime = time.time()
 
     logging.info("Reading time: %f s." % (endtime - starttime))
 
-    build_data_struct(alldata, casefile_dict)
+    build_data_struct(alldata, case_dict)
 
-    return casefile_dict
+    return case_dict
 
 
 def read_case_build_dict_thrulines(lines):
@@ -517,8 +530,8 @@ def read_case_build_dict_thrulines(lines):
     linenum = 2
     baseMVA = 0.0
 
-    casefile_dict = {}
-    casefile_dict["refbus"] = -1
+    case_dict = {}
+    case_dict["refbus"] = -1
 
     # Read file line by line
     while linenum <= numlines:
@@ -543,12 +556,12 @@ def read_case_build_dict_thrulines(lines):
             if tmp[len(tmp) - 1] == ";":
                 tmp = tmp[: len(tmp) - 1]
 
-            casefile_dict["baseMVA"] = baseMVA = float(tmp)
+            case_dict["baseMVA"] = baseMVA = float(tmp)
             logging.info("    baseMVA: %f" % baseMVA)
 
         elif theword == "mpc.bus":
             buses = {}
-            casefile_dict["buses"] = buses
+            case_dict["buses"] = buses
             lookingforendofbus = 1
             slackbus = -1
             numbuses = 0
@@ -605,7 +618,7 @@ def read_case_build_dict_thrulines(lines):
                             "    Bus %d ID %d is the reference bus."
                             % (numbuses, nodeID)
                         )
-                        casefile_dict["refbus"] = numbuses
+                        case_dict["refbus"] = numbuses
 
                 else:
                     nodeID = int(thisline[1])
@@ -640,13 +653,13 @@ def read_case_build_dict_thrulines(lines):
 
                 linenum += 1
             # Finished reading bus section
-            casefile_dict["slackbus"] = slackbus
+            case_dict["slackbus"] = slackbus
 
             if lookingforendofbus:
                 raise ValueError("Could not find bus data section.")
 
         elif theword == "mpc.gen":
-            casefile_dict["generators"] = gens = {}
+            case_dict["generators"] = gens = {}
             lookingforendofgen = 1
             gencount1 = 0
             linenum += 1
@@ -696,7 +709,7 @@ def read_case_build_dict_thrulines(lines):
                 raise ValueError("Could not find end of generator section.")
 
         elif theword == "mpc.branch":
-            casefile_dict["branches"] = branches = {}
+            case_dict["branches"] = branches = {}
             lookingforendofbranch = 1
             numbranches = 0
             linenum += 1
@@ -759,7 +772,7 @@ def read_case_build_dict_thrulines(lines):
                 raise ValueError("Could not find end of branch section.")
 
         elif theword == "mpc.gencost":
-            casefile_dict["generator_cost_structure"] = gencoststruct = {}
+            case_dict["generator_cost_structure"] = gencoststruct = {}
 
             lookingforendofgencost = 1
             gencostcount = 1
@@ -812,16 +825,16 @@ def read_case_build_dict_thrulines(lines):
             if lookingforendofgencost:
                 raise ValueError("Could not find end of gencost section.")
 
-            casefile_dict["generator_cost_count"] = gencostcount - 1
+            case_dict["generator_cost_count"] = gencostcount - 1
             linenum += 1
 
         linenum += 1
     # Finished reading file line by line
 
-    return casefile_dict
+    return case_dict
 
 
-def read_case(alldata):
+def read_casefile(alldata):
     """Read case file and fill data dictionary"""
 
     if alldata["casefilename"] == None:
