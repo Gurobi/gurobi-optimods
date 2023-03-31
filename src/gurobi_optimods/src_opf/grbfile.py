@@ -19,7 +19,7 @@ def initialize_data_dict(logfile):
     return alldata
 
 
-def read_configfile(alldata, settings, casefile):
+def read_settings(alldata, settings, casefile):
 
     # Currently Hard-coded
     alldata["usequadcostvar"] = False  # TODO-Dan What do we want to do with this?

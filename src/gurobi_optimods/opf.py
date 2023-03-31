@@ -7,7 +7,7 @@ from .src_opf.grbcasereader import read_case, build_data_struct
 
 from .src_opf.grbfile import (
     initialize_data_dict,
-    read_configfile,
+    read_settings,
     grbread_coords,
     gbread_graphattrs,
 )
@@ -17,7 +17,7 @@ from .src_opf.grbformulator_dc import lpformulator_dc
 from .src_opf.grbformulator_iv import lpformulator_iv
 
 
-def solve_opf_model(configfile, casefile, logfile=""):
+def solve_opf_model(settings, casefile, logfile=""):
     """Construct an ACOPF model from given data and solve it with Gurobi"""
 
     if not logfile:
@@ -31,13 +31,13 @@ def solve_opf_model(configfile, casefile, logfile=""):
     alldata = initialize_data_dict(logfile)
 
     # Read configuration file/dict and possibly set casefile name
-    read_configfile(alldata, configfile, casefile)
+    read_settings(alldata, settings, casefile)
 
     # Use correct method to fill alldata dict depending on whether we have a dictionary input or file name for casefile
     if type(casefile) is dict:
         build_data_struct(alldata, casefile)
     else:
-        # Read case file holding OPF network data. The path to case file has been set in read_configfile
+        # Read case file holding OPF network data. The path to case file has been set in read_settings
         read_case(alldata)
 
     # Special settings for graphics

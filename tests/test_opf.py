@@ -16,7 +16,7 @@ class TestOpf(unittest.TestCase):
     # test simple is on purpose the same as test_acopf for now
     # will be removed in final version
     def test_simple(self):
-        conf = load_simpleopf()
+        conf = load_simpleopfsettings()
         case = load_case9opf()
         solution, objval = solve_opf_model(conf, case)
         # check whether the solution points looks correct

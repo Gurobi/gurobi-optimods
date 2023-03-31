@@ -49,7 +49,7 @@ def load_dcopfsettings():
 
 def load_ivopfsettings():
     conf = str(DATA_FILE_DIR) + "/opf/kit_ivopf.conf"
-    return conf, case
+    return conf
 
 
 def load_case9opf():
