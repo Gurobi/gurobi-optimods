@@ -1,126 +1,141 @@
-.. This template should be copied to docs/source/mods/<mod_name>.rst
+Maximum Weighted Independent Set
+================================
+The maximum independent set problem is one of the fundamental problems
+in graph theory which was among the first batch of the 21 problems proved to
+be NP-hard by Karp.
 
-My New Mod
-==========
+In this mod, we consider the more general problem of the maximum weighted
+independent set (MWIS) which has applications in various fields such as molecular
+structure matching, social network analysis, and genome data mapping.
 
-A little background on the proud history of mathprog in this field.
-
-Also data science.
 
 Problem Specification
 ---------------------
 
-Give a brief overview of the problem being solved.
+Consider an undirected graph G with n vertices and m edges where each vertex is
+associated with a positive weight w. Find a maximum weighted independent set, i.e.,
+select a set of vertices in graph G where there is no edge between any pair of
+vertices and the sum of the vertex weight is maximum.
 
 .. tabs::
 
     .. tab:: Domain-Specific Description
 
-        Give a definition of the problem in the language of the domain expert.
+        Let :math:`G = (V, E, w)` be an undirected graph where each vertex
+        :math:`i \in V` has a positive weight :math:`w_i`. Find a
+        subset :math:`S \subseteq V` such that:
+
+        * No two vertices in :math:`S` are connected by an edge, and
+        * Among all such independent sets, the set :math:`S` has the maximum total vertex weight.
 
     .. tab:: Optimization Model
 
-        Give the mathematical programming formulation of the problem here.
+        For each vertex :math:`i \in V`, define a binary decision variable
+        :math:`x_i` as below:
 
-Give examples of the various input data structures. These inputs should be fixed,
-so use doctests where possible.
+        .. math::
+            x_i = \begin{cases}
+                1 & \text{if vertex}\,i\,\text{belongs to set}\,S\,\\
+                0 & \text{otherwise.} \\
+            \end{cases}
 
-.. testsetup:: mod
+        The binary integer programming model of the MWIS is then given below:
 
-    # Set pandas options for displaying dataframes, if needed
-    import pandas as pd
-    pd.options.display.max_rows = 10
+        .. math::
+            \begin{align}
+            \max \quad        & \sum_{i \in V} w_i x_i \\
+            \mbox{s.t.} \quad & x_i + x_j \leq 1 & \forall (i, j) \in E \\
+                              & x_i \in \{0, 1\} & \forall i \in V
+            \end{align}
 
-.. tabs::
+The input data for this mode includes a scipy sparse matrix in CSR format
+representing the graph :math:`G` adjacency matrix and a numpy array
+representing the weights of the vertices.
 
-    .. tab:: ``availability``
-
-        Give interpretation of input data.
-
-        .. doctest:: mod
-            :options: +NORMALIZE_WHITESPACE
-
-            >>> from gurobi_optimods import datasets
-            >>> data = datasets.load_workforce()
-            >>> data.availability
-               Worker      Shift
-            0     Amy 2022-07-02
-            1     Amy 2022-07-03
-            2     Amy 2022-07-05
-            3     Amy 2022-07-07
-            4     Amy 2022-07-09
-            ..    ...        ...
-            67     Gu 2022-07-10
-            68     Gu 2022-07-11
-            69     Gu 2022-07-12
-            70     Gu 2022-07-13
-            71     Gu 2022-07-14
-            <BLANKLINE>
-            [72 rows x 2 columns]
-
-        In the model, this corresponds to ...
-
-    .. tab:: ``shift_requirements``
-
-        Another bit of input data (perhaps a secondary table)
-
-|
 
 Code
 ----
 
-Self contained code example to run the mod from an example dataset. Example
-datasets should bd included in the ``gurobi_optimods.datasets`` module for
-easy access by users.
+The example below finds the maximum weighted independent set problem
+for a graph with 8 vertices and 12 edges known as the cube graph.
 
-.. testcode:: mod
+.. testcode:: mwis
 
-    import pandas as pd
+    import scipy.sparse as sp
+    import numpy as np
+    import networkx as nx
+    from gurobi_optimods.mwis import maximum_weighted_independent_set
 
-    from gurobi_optimods.datasets import load_mod_data
-    from gurobi_optimods.mod import solve_mod
+    # Graph adjacency matrix as a sparse matrix.
+    g = nx.cubical_graph()
+    adjacency_matrix = nx.to_scipy_sparse_array(g)
+    weights = np.array([2**i for i in range(8)])
 
+    # Compute maximum weighted independent set.
+    mwis = maximum_weighted_independent_set(adjacency_matrix, weights)
 
-    data = load_mod_data()
-    solution = solve_mod(data.table1, data.table2)
-
-..  A snippet of the Gurobi log output here won't show in the rendered page,
-    but serves as a doctest to make sure the code example runs. The ... lines
-    are meaningful here, they will match anything in the output test.
-
-.. testoutput:: mod
+.. testoutput:: mwis
     :hide:
 
     ...
-    Optimize a model with 14 rows, 72 columns, and 72 nonzeros
-    ...
-    Optimal objective
-    ...
+    Best objective 1.650000000000e+02, best bound 1.650000000000e+02, gap 0.0000%
 
-The model is solved as an LP/MIP/QP by Gurobi.
 
-..  You can include the full Gurobi log output here for the curious reader.
-    It will be visible as a collapsible section.
+The model is solved as a MIP by Gurobi.
 
 .. collapse:: View Gurobi Logs
 
     .. code-block:: text
 
-        Gurobi Optimizer version 9.5.1 build v9.5.1rc2 (mac64[x86])
-        Optimize a model with ...
-        Best obj ... Best bound ...
+        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[arm])
+        Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
+        Optimize a model with 24 rows, 8 columns and 48 nonzeros
+        Model fingerprint: 0x9eed2aa0
+        Variable types: 0 continuous, 8 integer (8 binary)
+        Coefficient statistics:
+        Matrix range     [1e+00, 1e+00]
+        Objective range  [1e+00, 1e+02]
+        Bounds range     [1e+00, 1e+00]
+        RHS range        [1e+00, 1e+00]
+        Found heuristic solution: objective 165.0000000
+        Presolve removed 24 rows and 8 columns
+        Presolve time: 0.00s
+        Presolve: All rows and columns removed
+
+        Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+        Thread count was 1 (of 8 available processors)
+
+        Solution count 1: 165
+
+        Optimal solution found (tolerance 1.00e-04)
+        Best objective 1.650000000000e+02, best bound 1.650000000000e+02, gap 0.0000%
 
 |
 
 Solution
 --------
 
-Show the solution. One way is to use doctests to display simple shell outputs
-(see the workforce example). This can be done simply by pasting outputs
-directly from a python shell. Another option is to include and display figures
-(see the graph matching examples).
+The solution is a numpy array containing the vertices in set :math:`S`. The
+vertices in the independent set are highlighted in red.
 
-.. doctest:: mod
+.. doctest:: mwis
     :options: +NORMALIZE_WHITESPACE
 
-    >>>
+    >>> mwis
+    array([0, 2, 5, 7])
+    >>> maximum_vertex_weight = sum(weights[mwis])
+    >>> maximum_vertex_weight
+    165
+
+
+.. doctest:: mwis
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> import networkx as nx
+    >>> import matplotlib.pyplot as plt
+    >>> color_map= ["red" if node in mwis else "lightgrey" for node in g.nodes()]
+    >>> nx.draw(g, node_color=color_map, node_size=600, with_labels=True)
+
+
+.. image:: figures/mwis.png
+  :width: 600
