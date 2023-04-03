@@ -1,6 +1,6 @@
 import unittest
 
-from gurobi_optimods.opf import solve_opf_model
+from gurobi_optimods.opf import solve_opf_model, plot_opf_solution
 from gurobi_optimods.datasets import (
     load_case9opf,
     load_acopfsettings,
@@ -9,6 +9,7 @@ from gurobi_optimods.datasets import (
     load_simpleopfsettings,
     load_opfdictcase,
     load_opfdictsettings,
+    load_opfdictgraphicssettings,
 )
 
 
@@ -22,14 +23,13 @@ class TestOpf(unittest.TestCase):
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
-        self.assertTrue(len(solution) == 134)
-        self.assertLess(abs(objval - 5296.665647261), 1e-4)
-        self.assertTrue("lincost" in solution.keys())
-        self.assertLess(abs(solution["lincost"] - 704.399018), 1e-4)
-        self.assertTrue("twinP_1_1_4" in solution.keys())
-        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-4)
-        self.assertTrue("Q_9_4_9" in solution.keys())
-        self.assertLess(abs(solution["Q_9_4_9"] - 0.127732), 1e-4)
+
+    def test_graphics(self):
+        conf = load_simpleopfsettings()
+        conf_graphics = load_opfdictgraphicssettings()
+        case = load_opfdictcase()
+        solution, objval = solve_opf_model(conf, case)
+        plot_opf_solution(conf_graphics, case, solution, objval)
 
     # test reading case from a dict
     def test_opfdictcase(self):

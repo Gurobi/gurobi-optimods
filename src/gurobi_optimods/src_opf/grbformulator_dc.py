@@ -7,7 +7,6 @@ from gurobipy import GRB
 
 from .myutils import break_exit
 from .grbfile import grbreadvoltsfile
-from .grbgraphical import grbgraphical
 from .grbformulator_ac import computebalbounds
 
 
@@ -393,7 +392,3 @@ def lpformulator_dc_examine_solution(alldata, model):
                     logging.info("branch %d (%d, %d) switched off." % (j, f, t))
 
     logging.info("Done examining solution.\n")
-    """
-    if alldata['dographics']:
-        grbgraphical(alldata, 'branchswitching')
-    """

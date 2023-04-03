@@ -7,14 +7,12 @@ class OpfType(Enum):
     IV = "IV"
 
 
-def get_default_settings(casefile):
+def get_default_optimization_settings(casefile):
     """Returns a dictionary holding all default settings"""
 
     settings = {
         "casefilename": None,
         "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this?
-        "gvfilename": None,  # TODO-Dan where is this used?
-        "graphattrsfilename": None,  # TODO-Dan where is this used?
         "lpfilename": "grbopf.lp",  # TODO default should be None
         "dictionary_input": False,  # TODO-Dan Please document what each setting does
         "strictcheckvoltagesolution": False,
@@ -29,8 +27,6 @@ def get_default_settings(casefile):
         "usemaxphasediff": False,
         "use_ef": False,
         "substitute_nonconv": False,
-        "dographics": False,
-        "coordsfilename": None,
         "dopolar": False,
         "doslp_polar": False,
         "doac": False,
@@ -42,6 +38,25 @@ def get_default_settings(casefile):
         "maxdispersion_deg": 0.0,
         "maxphasediff_deg": 360.0,
         "fixtolerance": 0.0,
+    }
+
+    if type(casefile) is not dict and casefile != "":
+        settings["casefilename"] = casefile
+
+    return settings
+
+
+def get_default_graphics_settings(casefile):
+    """Returns a dictionary holding all default settings"""
+
+    settings = {
+        "casefilename": None,
+        "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this?
+        "gvfilename": None,  # TODO-Dan where is this used?
+        "graphattrsfilename": None,  # TODO-Dan where is this used?
+        "coordsfilename": None,
+        "branchswitching_mip": False,
+        "branchswitching_comp": False,
     }
 
     if type(casefile) is not dict and casefile != "":

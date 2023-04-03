@@ -7,7 +7,6 @@ from gurobipy import GRB
 
 from .myutils import break_exit
 from .grbfile import grbreadvoltsfile
-from .grbgraphical import grbgraphical
 
 
 def lpformulator_ac_examine_solution(alldata, model):
@@ -2010,11 +2009,9 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     )
 
     print(alldata["dographics"])
-    if alldata["dographics"]:
-        textlist = []
-        grbgraphical(alldata, "violation", textlist)
-
-    break_exit("strictgraphical")
+    # if alldata["dographics"]:
+    #    textlist = []
+    #    grbgraphical(alldata, "violation", textlist)
 
 
 # TODO-Dan This function definitely looks the same as in grbformulator_iv

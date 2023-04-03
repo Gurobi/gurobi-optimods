@@ -62,6 +62,11 @@ def load_opfdictsettings():
     return conf
 
 
+def load_opfdictgraphicssettings():
+    conf = {"branchswitching_mip": True}
+    return conf
+
+
 def load_opfdictcase():
     casefile_dict = {
         "refbus": 1,

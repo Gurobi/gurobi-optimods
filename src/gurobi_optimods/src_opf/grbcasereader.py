@@ -835,6 +835,7 @@ def read_case_build_dict_thrulines(lines):
 
 
 def read_casefile(alldata):
+    # TODO Parse matlab file to matlab data file (MAT) and read it in through Python numpy
     """Read case file and fill data dictionary"""
 
     if alldata["casefilename"] == None:

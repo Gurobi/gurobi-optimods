@@ -3,11 +3,11 @@ import time
 import logging
 import numpy as np
 import gurobipy as gp
+from collections import OrderedDict
 from gurobipy import GRB
 
 from .utils import OpfType
 from .grbfile import grbreadvoltsfile
-from .grbgraphical import grbgraphical
 from .grbformulator_ac import (
     lpformulator_ac_body,
     lpformulator_ac_examine_solution,
@@ -78,13 +78,16 @@ def construct_and_solve_model(alldata):
         if sol_count > 0:
             lpformulator_examine_solution(alldata, model, opftype)
             objval = model.ObjVal
-            solution = {}
+            # we are using an ordered dict to maintain the index of variables so we can access them by index when plotting solution
+            solution = OrderedDict()
+            index = 0
             for v in model.getVars():
-                if math.fabs(v.x) > 1e-09:
-                    logging.info(v.varname + " = " + str(v.x))
+                if math.fabs(v.X) > 1e-09:
+                    logging.info(v.varname + " = " + str(v.X))
                     solution[v.VarName] = v.X
                 else:
-                    solution[v.VarName] = 0
+                    solution[v.VarName] = 0.0
+                index += 1
 
     return solution, objval
 
@@ -160,7 +163,7 @@ def lpformulator_optimize(alldata, model, opftype):
     # TODO-Dan To me it looked like only lpformulator_dc_opt had a different if check for no reason. Can you explain?
     # The check for DC was
     # if alldata["branchswitching_mip"]:
-    #  The content of the if-clause is the same among DC,AC,IV
+    #  The content of the if-clause is the same among DC,AC
     if (
         alldata["usemipstart"]
         and (alldata["branchswitching_mip"] or alldata["branchswitching_comp"])
@@ -189,17 +192,7 @@ def lpformulator_optimize(alldata, model, opftype):
         gholder = np.zeros(alldata["numgens"])
         alldata["MIP"]["gholder"] = gholder
 
-        # Optimize
-        model._vars = model.getVars()
-        if opftype != OpfType.DC:
-            model.optimize()
-        else:
-            model._data = alldata
-            model.optimize(
-                plot_new_solution_callback
-            )  # TODO-Dan We only use graphviz for DCOPF (i.e., it was only in lpformulator_dc_opt). Why is that? The dographics setting does nothing for AC or IV.
-    else:
-        model.optimize()
+    model.optimize()
 
     # Activate logging handlers
     logging.disable(logging.NOTSET)
@@ -292,59 +285,6 @@ def lpformulator_setup(alldata, opftype):
                 branch.minangle_rad = -maxrad
 
         logging.info("Updated %d maxangle constraints." % (count))
-
-
-def plot_new_solution_callback(model, where):
-    """Callback to plot new feasible solutions as they are found"""
-    if where == GRB.Callback.MIPSOL:
-        x = model.cbGetSolution(model._vars)
-        objval = model.cbGet(GRB.Callback.MIPSOL_OBJ)
-        logging.info("Found new solution of value %.3e." % objval)
-
-        numbuses = model._data["numbuses"]
-        buses = model._data["buses"]
-        numbranches = model._data["numbranches"]
-        branches = model._data["branches"]
-        gens = model._data["gens"]
-        IDtoCountmap = model._data["IDtoCountmap"]
-
-        thetavar = model._data["LP"]["thetavar"]
-        Pvar_f = model._data["LP"]["Pvar_f"]
-        twinPvar_f = model._data["LP"]["twinPvar_f"]
-
-        zholder = model._data["MIP"]["zholder"]
-        gholder = model._data["MIP"]["gholder"]
-
-        numzeros = 0
-        for j in range(1, 1 + numbranches):
-            branch = branches[j]
-            zholder[j - 1] = x[branch.switchvarind]
-            if x[branch.switchvarind] < 0.5:
-                numzeros += 1
-
-        for j1 in range(1, 1 + model._data["numgens"]):
-            gen = model._data["gens"][j1]
-            gholder[j1 - 1] = (
-                model._data["baseMVA"] * x[gen.Pvarind]
-            )  # print('gen',gen.count,x[gen.Pvarind])
-            # break_exit('printed')  #functionality to be added # TODO-Dan What functionality is that?
-
-        model._data["MIP"]["solutionfound"] = True
-        difftol = 1e-6
-        if model._data["dographics"]:
-            if objval < model._data["MIP"]["bestsolval"] - difftol:
-                model._data["MIP"]["solcount"] += 1
-                textlist = []
-                textlist.append("SOLUTION " + str(model._data["MIP"]["solcount"]))
-                textlist.append("OBJ: %10.2f" % (objval))
-                textlist.append("Lines off: %d" % (numzeros))
-                grbgraphical(model._data, "branchswitching", textlist)
-            else:
-                logging.info(
-                    "Skipping graphical display due to insufficient improvement."
-                )
-
-        model._data["MIP"]["bestsolval"] = objval
 
 
 def writempsfile(alldata, model, filename):

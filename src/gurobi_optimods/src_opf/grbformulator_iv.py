@@ -7,7 +7,6 @@ from gurobipy import GRB
 
 from .myutils import break_exit
 from .grbfile import grbreadvoltsfile
-from .grbgraphical import grbgraphical
 
 
 def lpformulator_iv_examine_solution(alldata, model):
@@ -1774,11 +1773,11 @@ def lpformulator_iv_strictchecker(alldata, model, spitoutvector):
         % (max_violation_value, max_violation_string)
     )
 
-    if alldata["dographics"]:
-        textlist = []
-        grbgraphical(alldata, "violation", textlist)
+    # if alldata["dographics"]:
+    #    textlist = []
+    #    grbgraphical(alldata, "violation", textlist)
 
-    break_exit("strictgraphical")
+    # break_exit("strictgraphical")
 
 
 def lpformulator_checkviol_simple(

@@ -6,10 +6,10 @@ import csv
 import logging
 import numpy as np
 
-from .utils import get_default_settings
+from .utils import get_default_optimization_settings, get_default_graphics_settings
 
 
-def initialize_data_dict(logfile):
+def initialize_data_dict(logfile=""):
 
     alldata = {}
     alldata["LP"] = {}
@@ -19,15 +19,18 @@ def initialize_data_dict(logfile):
     return alldata
 
 
-def read_settings(alldata, settings, casefile):
+def read_optimization_settings(alldata, settings, casefile):
 
     # Currently Hard-coded
     alldata["usequadcostvar"] = False  # TODO-Dan What do we want to do with this?
 
+    # TODO revisit default settings
+    defaults = get_default_optimization_settings(casefile)
+    # TODO get rid of this if-clause
     if type(settings) is dict:
-        read_configfile_dict(alldata, settings, casefile)
+        read_configfile_dict(alldata, settings, casefile, defaults)
     else:
-        read_configfile_file(alldata, settings, casefile)
+        read_configfile_file(alldata, settings, casefile, defaults)
 
     if alldata["doslp_polar"] and (int(alldata["dodc"]) + int(alldata["doiv"]) == 0):
         alldata["doac"] = True
@@ -38,10 +41,20 @@ def read_settings(alldata, settings, casefile):
         )
 
 
-def read_configfile_dict(alldata, settings, casefile):
+def read_graphics_settings(alldata, settings, casefile):
+
+    # TODO revisit default settings
+    defaults = get_default_graphics_settings(casefile)
+    # TODO get rid of this if-clause
+    if type(settings) is dict:
+        read_configfile_dict(alldata, settings, casefile, defaults)
+    else:
+        read_configfile_file(alldata, settings, casefile, defaults)
+
+
+def read_configfile_dict(alldata, settings, casefile, defaults):
     """Sets settings in alldata from a settings dict"""
 
-    defaults = get_default_settings(casefile)
     for s in settings.keys():
         if s not in defaults.keys():
             raise ValueError("Illegal option string %s." % s)
@@ -52,17 +65,13 @@ def read_configfile_dict(alldata, settings, casefile):
         alldata[s] = defaults[s]
 
 
-def read_configfile_file(alldata, filename, casefile):
+def read_configfile_file(alldata, filename, casefile, settings):
     """Function to read configurations for OPF solve from config file"""
 
     logging.info("Reading configuration file %s." % filename)
     f = open(filename, "r")
     lines = f.readlines()
     f.close()
-
-    # TODO revisit default settings
-    # Default values for settings
-    settings = get_default_settings(casefile)
 
     linenum = 0
     # Read lines of configuration file and save options

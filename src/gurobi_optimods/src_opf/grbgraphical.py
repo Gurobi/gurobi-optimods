@@ -8,6 +8,48 @@ from .graph4 import *
 from .myutils import break_exit
 
 
+def plot_solution(alldata, solution, objval):
+    """Plot feasible solution"""
+
+    logging.info("Plotting solution with value %.3e." % objval)
+    x = list(solution.values())
+    numbuses = alldata["numbuses"]
+    buses = alldata["buses"]
+    numbranches = alldata["numbranches"]
+    branches = alldata["branches"]
+    gens = alldata["gens"]
+    IDtoCountmap = alldata["IDtoCountmap"]
+
+    # thetavar = alldata["LP"]["thetavar"]
+    # Pvar_f = alldata["LP"]["Pvar_f"]
+    # twinPvar_f = alldata["LP"]["twinPvar_f"]
+
+    zholder = np.zeros(numbranches)
+    alldata["MIP"]["zholder"] = zholder
+    gholder = np.zeros(alldata["numgens"])
+    alldata["MIP"]["gholder"] = gholder
+    zholder = alldata["MIP"]["zholder"]
+    gholder = alldata["MIP"]["gholder"]
+
+    numzeros = 0
+    for j in range(1, 1 + numbranches):
+        branch = branches[j]
+        zholder[j - 1] = x[branch.switchvarind]
+        if x[branch.switchvarind] < 0.5:
+            numzeros += 1
+
+    for j1 in range(1, 1 + alldata["numgens"]):
+        gen = alldata["gens"][j1]
+        gholder[j1 - 1] = (
+            alldata["baseMVA"] * x[gen.Pvarind]
+        )  # print('gen',gen.count,x[gen.Pvarind])
+        # break_exit('printed')  #functionality to be added # TODO-Dan What functionality is that?
+    textlist = []
+    textlist.append("OBJ: %10.2f" % (objval))
+    textlist.append("Lines off: %d" % (numzeros))
+    grbgraphical(alldata, "branchswitching", textlist)
+
+
 def grbgraphical(alldata, plottype, textlist):
     buses = alldata["buses"]
     numbuses = alldata["numbuses"]
@@ -65,7 +107,6 @@ def grbgraphical(alldata, plottype, textlist):
     myedge_color = {}
 
     # default actions
-    GenPvar = alldata["LP"]["GenPvar"]
     for j in range(1, numbuses + 1):
         bus = buses[j]
         mynode_size[j - 1] = 1
@@ -150,7 +191,6 @@ def grbgraphical(alldata, plottype, textlist):
                 mynode_size[j - 1] = 8
                 mynode_color[j - 1] = "blue"
 
-        zvar = alldata["LP"]["zvar"]
         zholder = alldata["MIP"]["zholder"]
         for j in range(1, 1 + numbranches):
             branch = branches[j]
@@ -159,7 +199,6 @@ def grbgraphical(alldata, plottype, textlist):
             count_of_f = IDtoCountmap[f]
             count_of_t = IDtoCountmap[t]
 
-            # if zvar[branch].x < 0.5:  #turned off
             if zholder[j - 1] < 0.5:  # turned off
                 if loud:
                     logging.info(
