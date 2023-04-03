@@ -8,8 +8,8 @@ def maximum_weighted_independent_set(adjacency_matrix, weights):
     """Find a set of mutually non-adjacent vertices with maximum weighted sum.
 
     Args:
-        adjacency_matrix (sp.csr_matrix): The adjacency matrix in sparse
-            CSR format.
+        adjacency_matrix (sp.csr_matrix): The upper triangular adjacency
+            matrix in sparse CSR format.
         weights (np.array): Vertex weight array.
 
     Returns:
