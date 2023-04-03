@@ -9,8 +9,8 @@ from gurobi_optimods.mwis import maximum_weighted_independent_set
 
 
 def get_adjacency_matrix(num_vertices, density, seed):
-    """Create the adjacency matrix for a random graph with the given number
-        of vertices and density.
+    """Create the upper triangular adjacency matrix for a random graph
+        with the given number of vertices and density.
 
     Args:
         num_vertices (int): Number of vertices.
@@ -49,7 +49,7 @@ class TestMWIS(unittest.TestCase):
         weights = np.random.randint(1, 100, size=num_vertices)
         mwis = maximum_weighted_independent_set(adjacency_matrix, weights)
         self.assertEqual(len(mwis), 1)
-        self.assertEqual(weights[mwis[0]], max(weights))
+        self.assertEqual(sum(weights[mwis]), max(weights))
 
     def test_empty_graph(self):
         num_vertices, density, seed = 10, 0, 0
