@@ -10,6 +10,7 @@ from gurobi_optimods.datasets import (
     load_opfdictcase,
     load_opfdictsettings,
     load_opfdictgraphicssettings,
+    load_case9solution,
 )
 
 
@@ -25,10 +26,16 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(objval is not None)
 
     def test_graphics(self):
-        conf = load_simpleopfsettings()
         conf_graphics = load_opfdictgraphicssettings()
         case = load_opfdictcase()
-        solution, objval = solve_opf_model(conf, case)
+        solution, objval = load_case9solution()
+        plot_opf_solution(conf_graphics, case, solution, objval)
+
+    def test_graphics_after_solving(self):
+        conf_optimization = load_opfdictsettings()
+        case = load_opfdictcase()
+        solution, objval = solve_opf_model(conf_optimization, case)
+        conf_graphics = load_opfdictgraphicssettings()
         plot_opf_solution(conf_graphics, case, solution, objval)
 
     # test reading case from a dict
