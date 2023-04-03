@@ -2,7 +2,7 @@ Maximum Weighted Independent Set
 ================================
 The maximum independent set problem is one of the fundamental problems
 in graph theory which was among the first batch of the 21 problems proved to
-be NP-hard by Karp.
+be NP-hard.
 
 In this mod, we consider the more general problem of the maximum weighted
 independent set (MWIS) which has applications in various fields such as molecular
@@ -25,8 +25,8 @@ vertices and the sum of the vertex weight is maximum.
         :math:`i \in V` has a positive weight :math:`w_i`. Find a
         subset :math:`S \subseteq V` such that:
 
-        * No two vertices in :math:`S` are connected by an edge, and
-        * Among all such independent sets, the set :math:`S` has the maximum total vertex weight.
+        * no two vertices in :math:`S` are connected by an edge, and
+        * among all such independent sets, the set :math:`S` has the maximum total vertex weight.
 
     .. tab:: Optimization Model
 
@@ -48,27 +48,28 @@ vertices and the sum of the vertex weight is maximum.
                               & x_i \in \{0, 1\} & \forall i \in V
             \end{align}
 
-The input data for this mode includes a scipy sparse matrix in CSR format
-representing the graph :math:`G` adjacency matrix and a numpy array
-representing the weights of the vertices.
+The input data for this mod includes a scipy sparse matrix in CSR format
+representing the graph :math:`G` adjacency matrix (upper triangular) and a
+numpy array representing the weights of the vertices.
 
 
 Code
 ----
 
-The example below finds the maximum weighted independent set problem
-for a graph with 8 vertices and 12 edges known as the cube graph.
+The example below finds the maximum weighted independent set for
+a graph with 8 vertices and 12 edges known as the cube graph.
 
 .. testcode:: mwis
 
     import scipy.sparse as sp
-    import numpy as np
     import networkx as nx
+    import numpy as np
     from gurobi_optimods.mwis import maximum_weighted_independent_set
 
-    # Graph adjacency matrix as a sparse matrix.
+    # Graph adjacency matrix (upper triangular) as a sparse matrix.
     g = nx.cubical_graph()
-    adjacency_matrix = nx.to_scipy_sparse_array(g)
+    adjacency_matrix = sp.triu(nx.to_scipy_sparse_array(g))
+    # Vertex weights
     weights = np.array([2**i for i in range(8)])
 
     # Compute maximum weighted independent set.
@@ -89,8 +90,8 @@ The model is solved as a MIP by Gurobi.
 
         Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[arm])
         Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
-        Optimize a model with 24 rows, 8 columns and 48 nonzeros
-        Model fingerprint: 0x9eed2aa0
+        Optimize a model with 12 rows, 8 columns and 24 nonzeros
+        Model fingerprint: 0x31a65d0e
         Variable types: 0 continuous, 8 integer (8 binary)
         Coefficient statistics:
         Matrix range     [1e+00, 1e+00]
@@ -98,7 +99,7 @@ The model is solved as a MIP by Gurobi.
         Bounds range     [1e+00, 1e+00]
         RHS range        [1e+00, 1e+00]
         Found heuristic solution: objective 165.0000000
-        Presolve removed 24 rows and 8 columns
+        Presolve removed 12 rows and 8 columns
         Presolve time: 0.00s
         Presolve: All rows and columns removed
 
@@ -115,8 +116,7 @@ The model is solved as a MIP by Gurobi.
 Solution
 --------
 
-The solution is a numpy array containing the vertices in set :math:`S`. The
-vertices in the independent set are highlighted in red.
+The solution is a numpy array containing the vertices in set :math:`S`.
 
 .. doctest:: mwis
     :options: +NORMALIZE_WHITESPACE
@@ -133,9 +133,11 @@ vertices in the independent set are highlighted in red.
 
     >>> import networkx as nx
     >>> import matplotlib.pyplot as plt
+    >>> layout = nx.spring_layout(g, seed=0)
     >>> color_map= ["red" if node in mwis else "lightgrey" for node in g.nodes()]
-    >>> nx.draw(g, node_color=color_map, node_size=600, with_labels=True)
+    >>> nx.draw(g, pos=layout, node_color=color_map, node_size=600, with_labels=True)
 
+The vertices in the independent set are highlighted in red.
 
 .. image:: figures/mwis.png
   :width: 600
