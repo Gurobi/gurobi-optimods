@@ -8,7 +8,7 @@ from grbgraph import *
 from collections import defaultdict
 import plotly.graph_objects as go
 from typing import Any, List, Dict, Tuple, Union, Callable
-from myutils import break_exit
+from .utils import break_exit
 
 Vertex = Any
 Edge = Tuple[Vertex, Vertex]

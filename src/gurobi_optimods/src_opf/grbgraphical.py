@@ -5,7 +5,7 @@ import logging
 from gurobipy import *
 
 from .graph4 import *
-from .myutils import break_exit
+from .utils import break_exit
 
 
 def plot_solution(alldata, solution, objval):

@@ -4,7 +4,7 @@ import logging
 import re
 import numpy as np
 
-from .myutils import break_exit
+from .utils import break_exit
 
 
 def scangv(alldata, filename, readcoords):

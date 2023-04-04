@@ -8,7 +8,7 @@ import numpy as np
 from .plotlyhandler import *
 from .grbgraph import *
 from .scangvplus import *
-from .myutils import break_exit
+from .utils import break_exit
 
 
 def graphplot(

@@ -1,4 +1,16 @@
 from enum import Enum
+import sys
+
+
+def break_exit(foo):
+    """
+    For Dan only
+    Will be definitely removed in the final version
+    """
+
+    stuff = input("(" + foo + ") break> ")
+    if stuff == "x" or stuff == "q":
+        sys.exit("bye")
 
 
 class OpfType(Enum):
