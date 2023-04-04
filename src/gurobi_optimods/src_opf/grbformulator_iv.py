@@ -1104,6 +1104,8 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
         bus.inputf = bus.inputV * math.sin(bus.inputA_rad)
 
     if alldata["use_ef"]:
+        evar = alldata["LP"]["evar"]
+        fvar = alldata["LP"]["fvar"]
         for j in range(1, numbuses + 1):
             bus = buses[j]
             xbuffer[evar[bus]] = bus.inpute

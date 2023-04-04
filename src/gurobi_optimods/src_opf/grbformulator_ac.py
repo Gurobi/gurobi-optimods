@@ -275,7 +275,7 @@ def lpformulator_ac_create_vars(alldata, model):
             if minanglerad >= -0.5 * math.pi:
                 lbound = minprod * min(math.cos(maxanglerad), math.cos(minanglerad))
             elif minanglerad >= -math.pi:
-                lbound = maxprod * math.cos(minangle_rad)  # Which is negative
+                lbound = maxprod * math.cos(minanglerad)  # Which is negative
             elif minanglerad >= -1.5 * math.pi:
                 lbound = -maxprod
             else:
@@ -1339,6 +1339,8 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
         bus.inputf = bus.inputV * math.sin(bus.inputA_rad)
 
     if alldata["use_ef"]:
+        evar = alldata["LP"]["evar"]
+        fvar = alldata["LP"]["fvar"]
         for j in range(1, numbuses + 1):
             bus = buses[j]
             xbuffer[evar[bus]] = bus.inpute

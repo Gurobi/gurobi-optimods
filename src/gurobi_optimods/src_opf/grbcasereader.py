@@ -48,6 +48,7 @@ class Bus:
         return self.busline0
 
     def addgenerator(self, generatorcount1, generator):
+        logger = logging.getLogger("OpfLogger")
         self.genidsbycount.append(generatorcount1)
         loud = False
         if loud:
@@ -180,8 +181,9 @@ class Branch:
         self.Qftvarind = -1
         self.switchvarind = -1
 
-        loud = False
+        loud = False  # TODO-Dan Do we need this?
         if loud:
+            logger = logging.getLogger("OpfLogger")
             logger.info("\nbr " + str(count) + " f " + str(f) + " t " + str(t))
             logger.info("   idf " + str(count_f) + " idt " + str(count_t))
             logger.info("   r " + str(r) + " x " + str(x) + " bb " + str(bc))
@@ -209,6 +211,7 @@ class Branch:
         return self.branchline0
 
     def show(self):
+        logger = logging.getLogger("OpfLogger")
         logger.info(" < " + str(self.f) + " , " + str(self.t) + " > ")
         logger.info(" r " + str(self.r) + " x " + str(self.x) + " bc " + str(self.bc))
         logger.info(" ra " + str(self.ratio) + " ang " + str(self.angle))
@@ -247,6 +250,7 @@ class Gen:
         self.costlinenum = -1
 
     def showcostvector(self):
+        logger = logging.getLogger("OpfLogger")
         logger.info(self.costvector)
         for i in range(0, self.costdegree + 1):
             logger.info(i, self.costvector[i], " ", end="")
