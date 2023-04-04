@@ -1,6 +1,11 @@
 import unittest
 
-from gurobi_optimods.opf import solve_opf_model, plot_opf_solution
+from gurobi_optimods.opf import (
+    solve_opf_model,
+    plot_opf_solution,
+    read_settings_from_file,
+    read_case_from_file,
+)
 from gurobi_optimods.datasets import (
     load_case9opf,
     load_acopfsettings,
@@ -10,6 +15,7 @@ from gurobi_optimods.datasets import (
     load_opfdictcase,
     load_opfdictsettings,
     load_opfdictgraphicssettings,
+    load_opfgraphicssettings,
     load_case9solution,
 )
 
@@ -18,65 +24,41 @@ class TestOpf(unittest.TestCase):
     # test simple is on purpose the same as test_acopf for now
     # will be removed in final version
     def test_simple(self):
-        conf = load_simpleopfsettings()
-        case = load_case9opf()
-        solution, objval = solve_opf_model(conf, case)
+        settingsfile = load_simpleopfsettings()
+        settings = read_settings_from_file(settingsfile)
+        casefile = load_case9opf()
+        case = read_case_from_file(casefile)
+        solution, objval = solve_opf_model(settings, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
 
     def test_graphics(self):
-        conf_graphics = load_opfdictgraphicssettings()
+        settings_graphics_dict = load_opfdictgraphicssettings()
         case = load_opfdictcase()
         solution, objval = load_case9solution()
-        plot_opf_solution(conf_graphics, case, solution, objval)
+        plot_opf_solution(settings_graphics_dict, case, solution, objval)
 
     def test_graphics_after_solving(self):
-        conf_optimization = load_opfdictsettings()
+        settings_optimization_dict = load_opfdictsettings()
         case = load_opfdictcase()
-        solution, objval = solve_opf_model(conf_optimization, case)
-        conf_graphics = load_opfdictgraphicssettings()
-        plot_opf_solution(conf_graphics, case, solution, objval)
+        solution, objval = solve_opf_model(settings_optimization_dict, case)
+        settings_graphics_dict = load_opfdictgraphicssettings()
+        plot_opf_solution(settings_graphics_dict, case, solution, objval)
 
-    # test reading case from a dict
-    def test_opfdictcase(self):
-        conf = load_acopfsettings()
-        case = load_opfdictcase()
-        solution, objval = solve_opf_model(conf, case)
-        # check whether the solution points looks correct
-        self.assertTrue(solution is not None)
-        self.assertTrue(objval is not None)
-        self.assertTrue(len(solution) == 134)
-        self.assertLess(abs(objval - 5296.665647261), 1e-4)
-        self.assertTrue("lincost" in solution.keys())
-        self.assertLess(abs(solution["lincost"] - 704.399018), 1e-4)
-        self.assertTrue("twinP_1_1_4" in solution.keys())
-        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-4)
-        self.assertTrue("Q_9_4_9" in solution.keys())
-        self.assertLess(abs(solution["Q_9_4_9"] - 0.127732), 1e-4)
+    def test_graphics_settings_file(self):
+        settingsfile = load_opfgraphicssettings()
+        settings_graphics_dict = read_settings_from_file(settingsfile, True)
+        casefile = load_case9opf()
+        case = read_case_from_file(casefile)
+        solution, objval = load_case9solution()
+        plot_opf_solution(settings_graphics_dict, case, solution, objval)
 
-    # test reading settings from a dict
-    def test_opfdictsettings(self):
-        conf = load_opfdictsettings()
-        case = load_case9opf()
-        solution, objval = solve_opf_model(conf, case)
-        # check whether the solution points looks correct
-        self.assertTrue(solution is not None)
-        self.assertTrue(objval is not None)
-        self.assertTrue(len(solution) == 134)
-        self.assertLess(abs(objval - 5296.665647261), 1e-4)
-        self.assertTrue("lincost" in solution.keys())
-        self.assertLess(abs(solution["lincost"] - 704.399018), 1e-4)
-        self.assertTrue("twinP_1_1_4" in solution.keys())
-        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-4)
-        self.assertTrue("Q_9_4_9" in solution.keys())
-        self.assertLess(abs(solution["Q_9_4_9"] - 0.127732), 1e-4)
-
-    # test reading settings an case file from dicts
+    # test reading settings and case file from dicts
     def test_opfdicts(self):
-        conf = load_opfdictsettings()
+        settings = load_opfdictsettings()
         case = load_opfdictcase()
-        solution, objval = solve_opf_model(conf, case)
+        solution, objval = solve_opf_model(settings, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
@@ -91,9 +73,11 @@ class TestOpf(unittest.TestCase):
 
     # test AC formulation
     def test_acopf(self):
-        conf = load_acopfsettings()
-        case = load_case9opf()
-        solution, objval = solve_opf_model(conf, case)
+        settingsfile = load_acopfsettings()
+        settings = read_settings_from_file(settingsfile)
+        casefile = load_case9opf()
+        case = read_case_from_file(casefile)
+        solution, objval = solve_opf_model(settings, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
@@ -108,9 +92,11 @@ class TestOpf(unittest.TestCase):
 
     # test DC formulation
     def test_dcopf(self):
-        conf = load_dcopfsettings()
-        case = load_case9opf()
-        solution, objval = solve_opf_model(conf, case)
+        settingsfile = load_dcopfsettings()
+        settings = read_settings_from_file(settingsfile)
+        casefile = load_case9opf()
+        case = read_case_from_file(casefile)
+        solution, objval = solve_opf_model(settings, case)
         # check whether the solution point looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
@@ -125,9 +111,11 @@ class TestOpf(unittest.TestCase):
 
     # test IV formulation
     def test_ivopf(self):
-        conf = load_ivopfsettings()
-        case = load_case9opf()
-        solution, objval = solve_opf_model(conf, case)
+        settingsfile = load_ivopfsettings()
+        settings = read_settings_from_file(settingsfile)
+        casefile = load_case9opf()
+        case = read_case_from_file(casefile)
+        solution, objval = solve_opf_model(settings, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)

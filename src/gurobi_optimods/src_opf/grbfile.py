@@ -19,18 +19,14 @@ def initialize_data_dict(logfile=""):
     return alldata
 
 
-def read_optimization_settings(alldata, settings, casefile):
+def read_optimization_settings(alldata, settings):
 
     # Currently Hard-coded
     alldata["usequadcostvar"] = False  # TODO-Dan What do we want to do with this?
 
     # TODO revisit default settings
-    defaults = get_default_optimization_settings(casefile)
-    # TODO get rid of this if-clause
-    if type(settings) is dict:
-        read_settings_dict(alldata, settings, casefile, defaults)
-    else:
-        read_settings_file(alldata, settings, casefile, defaults)
+    defaults = get_default_optimization_settings()
+    read_settings_dict(alldata, settings, defaults)
 
     if alldata["doslp_polar"] and (int(alldata["dodc"]) + int(alldata["doiv"]) == 0):
         alldata["doac"] = True
@@ -40,36 +36,43 @@ def read_optimization_settings(alldata, settings, casefile):
             "Illegal option combination. Have to use exactly 1 of options [doac, dodc, doiv]."
         )
 
+    logger = logging.getLogger("OpfLogger")
+    logger.info("Settings:")
+    for s in defaults.keys():
+        logger.info("  {} {}".format(s, alldata[s]))
 
-def read_graphics_settings(alldata, settings, casefile):
+    logger.info("")
+
+
+def read_graphics_settings(alldata, settings):
 
     # TODO revisit default settings
-    defaults = get_default_graphics_settings(casefile)
-    # TODO get rid of this if-clause
-    if type(settings) is dict:
-        read_settings_dict(alldata, settings, casefile, defaults)
-    else:
-        read_settings_file(alldata, settings, casefile, defaults)
+    defaults = get_default_graphics_settings()
+    read_settings_dict(alldata, settings, defaults)
 
 
-def read_settings_dict(alldata, settings, casefile, defaults):
-    """Sets settings in alldata from a settings dict"""
+def read_settings_dict(alldata, inputsettings, defaults):
+    """Sets input settings in alldata from a settings dict"""
 
-    for s in settings.keys():
+    for s in inputsettings.keys():
         if s not in defaults.keys():
             raise ValueError("Illegal option string %s." % s)
-        # Possible TODO do we have to check for correct types of values settings[s]?
-        defaults[s] = settings[s]
+        # Possible TODO do we have to check for correct types of values inputsettings[s]?
+        defaults[s] = inputsettings[s]
 
     for s in defaults.keys():
         alldata[s] = defaults[s]
 
 
-def read_settings_file(alldata, filename, casefile, settings):
+def read_settings_file(filename, graphics=False):
     """Function to read configurations for OPF solve from config file"""
 
-    logger = logging.getLogger("OpfLogger")
-    logger.info("Reading configuration file %s." % filename)
+    settings = {}
+    if graphics:
+        settings = get_default_graphics_settings()
+    else:
+        settings = get_default_optimization_settings()
+
     f = open(filename, "r")
     lines = f.readlines()
     f.close()
@@ -128,9 +131,6 @@ def read_settings_file(alldata, filename, casefile, settings):
                 )
 
             if settings["usevoltsolution"]:
-                logging.error(
-                    "Cannot use options voltsfilename and voltsolution at the same time."
-                )
                 raise ValueError(
                     "Illegal option combination. Cannot use both options voltsfilename and voltsolution."
                 )
@@ -140,9 +140,6 @@ def read_settings_file(alldata, filename, casefile, settings):
 
         elif thisline[0] == "usevoltsolution":
             if settings["voltsfilename"] != None:
-                logging.error(
-                    "Cannot use options voltsfilename and voltsolution at the same time."
-                )
                 raise ValueError(
                     "Illegal option combination. Cannot use both voltsfilename and voltsolution."
                 )
@@ -166,12 +163,7 @@ def read_settings_file(alldata, filename, casefile, settings):
 
         linenum += 1
 
-    logger.info("Settings:")
-    for s in settings.keys():
-        alldata[s] = settings[s]
-        logger.info("  {} {}".format(s, settings[s]))
-
-    logger.info("")
+    return settings
 
 
 def grbread_graphattrs(alldata, filename):

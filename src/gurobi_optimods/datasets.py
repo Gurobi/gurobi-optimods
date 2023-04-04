@@ -69,6 +69,11 @@ def load_opfdictgraphicssettings():
     return conf
 
 
+def load_opfgraphicssettings():
+    conf = str(DATA_FILE_DIR) + "/opf/kit_graphics.conf"
+    return conf
+
+
 def load_opfdictcase():
     casefile_dict = {
         "refbus": 1,

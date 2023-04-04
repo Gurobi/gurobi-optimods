@@ -1,3 +1,4 @@
+import sys
 import math
 import cmath
 import time
@@ -259,20 +260,7 @@ class Gen:
         return self.line0
 
 
-def read_case(alldata, case):
-    if type(case) is dict:
-        # Fill alldata dictionary from case dictionary
-        build_data_struct(alldata, case)
-    else:
-        # casefilename has been set in read_settings
-        if alldata["casefilename"] == None:
-            raise ValueError("No casefile provided.")
-
-        # Read case file holding OPF network data.
-        read_casefile(alldata)
-
-
-def build_data_struct(alldata, case_dict):
+def read_case(alldata, case_dict):
     """
     Fills alldata dictionary out of a given casefile dictionary
     """
@@ -286,7 +274,7 @@ def build_data_struct(alldata, case_dict):
     sumPd = sumQd = 0
     numisolated = 0
 
-    logger.info("Building main data structure from dictionary.")
+    logger.info("Building case data structures from dictionary.")
 
     dict_buses = case_dict["buses"]
     baseMVA = alldata["baseMVA"] = case_dict["baseMVA"]
@@ -491,35 +479,33 @@ def build_data_struct(alldata, case_dict):
         gens[count].addcost_plain(gencoststruct[count]["costvector"])
 
 
-def read_case_build_dict(alldata):
+def read_case_file(casefile):
     """
-    Read case file and construct a dict out of it.
-
-    This is a helper function for translating casefiles into dict format.
+    # TODO Parse matlab file to matlab data file (MAT) and read it in through Python numpy
+    Read case file and fill data dictionary
     """
 
-    logger = logging.getLogger("OpfLogger")
-    casefilename = alldata["casefilename"]
+    stdouthandler = logging.StreamHandler(stream=sys.stdout)
+    formatter = logging.Formatter("%(message)s")
+    stdouthandler.setFormatter(formatter)
+    logger = logging.getLogger("CaseReadingLogger")
+    logger.setLevel(logging.INFO)
+    logger.addHandler(stdouthandler)
+
+    logger.info("Reading case file %s." % casefile)
     starttime = time.time()
-
-    logger.info("Reading case file %s." % casefilename)
-    f = open(casefilename, "r")
+    f = open(casefile, "r")
     lines = f.readlines()
     f.close()
 
-    logger.info("Now building case dictionary.")
-
     # Read all lines of the casefile
-    alldata["casefilelines"] = lines
-
+    logger.info("Now building case dictionary.")
     case_dict = read_case_build_dict_thrulines(lines)
-
     endtime = time.time()
+    logger.info("Reading and building time: %f s." % (endtime - starttime))
+    logger.info("")
 
-    logger.info("Reading time: %f s." % (endtime - starttime))
-
-    build_data_struct(alldata, case_dict)
-
+    stdouthandler.close()
     return case_dict
 
 
@@ -529,7 +515,7 @@ def read_case_build_dict_thrulines(lines):
     This is a helper function for translating casefiles into dict format.
     """
 
-    logger = logging.getLogger("OpfLogger")
+    logger = logging.getLogger("CaseReadingLogger")
     numlines = len(lines)
     lookingforbus = 1
     linenum = 2
@@ -835,504 +821,6 @@ def read_case_build_dict_thrulines(lines):
     # Finished reading file line by line
 
     return case_dict
-
-
-def read_casefile(alldata):
-    # TODO Parse matlab file to matlab data file (MAT) and read it in through Python numpy
-    """Read case file and fill data dictionary"""
-
-    logger = logging.getLogger("OpfLogger")
-    if alldata["casefilename"] == None:
-        raise ValueError("No casefile provided.")
-
-    casefilename = alldata["casefilename"]
-    starttime = time.time()
-
-    logger.info("Reading case file %s." % casefilename)
-    f = open(casefilename, "r")
-    lines = f.readlines()
-    f.close()
-
-    # Read all lines of the casefile
-    read_case_thrulines(alldata, lines)
-    alldata["casefilelines"] = lines
-
-    endtime = time.time()
-
-    logger.info("Reading time: %f s." % (endtime - starttime))
-
-
-def read_case_thrulines(alldata, lines):
-    """Read thru all lines of case file and fill data dictionary"""
-
-    logger = logging.getLogger("OpfLogger")
-    numlines = len(lines)
-    lookingforbus = 1
-    linenum = 2
-    numisolated = 0
-    baseMVA = 0.0
-    alldata["refbus"] = -1
-
-    # Read file line by line
-    while linenum <= numlines:
-        line = lines[linenum - 1]
-        thisline = line.split()
-
-        # Skip empty line
-        if len(thisline) <= 0:
-            linenum += 1
-            continue
-
-        # Skip unnecessary lines
-        theword = thisline[0]
-        if len(theword) < 4 or theword[0:4] != "mpc.":
-            linenum += 1
-            continue
-
-        logger.info("  Found %s on line %d." % (theword, linenum))
-        if theword == "mpc.baseMVA":
-            tmp = thisline[2]
-            # Trim ; if present
-            if tmp[len(tmp) - 1] == ";":
-                tmp = tmp[: len(tmp) - 1]
-
-            alldata["baseMVA"] = float(tmp)
-            baseMVA = alldata["baseMVA"]
-            logger.info("    baseMVA: %f." % baseMVA)
-
-        elif theword == "mpc.bus":
-            buses = {}
-            IDtoCountmap = {}
-            lookingforendofbus = 1
-            slackbus = -1
-            numbuses = 0
-            numPload = 0
-            sumPd = sumQd = 0
-            linenum += 1
-            # Read bus section
-            while lookingforendofbus and linenum <= numlines:
-                line = lines[linenum - 1]
-                thisline = line.split()
-                length = len(thisline)
-
-                # Look for end of section
-                if thisline[0] == "];":
-                    logger.info("    Found end of bus section on line %d." % linenum)
-                    lookingforendofbus = 0
-                    break
-
-                numbuses += 1
-                if thisline[1] == "3":
-                    slackbus = int(thisline[0])
-                    logger.info("    Slack bus: %d." % slackbus)
-
-                if thisline[0] != "%":
-                    nodeID = int(thisline[0])
-                    nodetype = int(thisline[1])
-
-                    if (
-                        nodetype != 1
-                        and nodetype != 2
-                        and nodetype != 3
-                        and nodetype != 4
-                    ):
-                        raise ValueError(
-                            "Bad bus %s has type %s." % (thisline[0], thisline[1])
-                        )
-
-                    if nodetype == 4:
-                        numisolated += 1
-
-                    # Trim ; if present
-                    Vmin = thisline[12]
-                    if Vmin[len(Vmin) - 1] == ";":
-                        Vmin = Vmin[: len(Vmin) - 1]
-
-                    Vmin = float(Vmin)
-                    Pd = float(thisline[2])
-                    Qd = float(thisline[3])
-                    Gs = float(thisline[4])
-                    Bs = float(thisline[5])
-                    Vbase = float(thisline[9])
-                    Vmax = float(thisline[11])
-
-                    if baseMVA == 0.0:
-                        raise ValueError("baseMVA not available before bus section.")
-
-                    buses[numbuses] = Bus(
-                        numbuses,
-                        nodeID,
-                        nodetype,
-                        Pd / baseMVA,
-                        Qd / baseMVA,
-                        Gs / baseMVA,
-                        Bs / baseMVA,
-                        Vbase,
-                        Vmax,
-                        Vmin,
-                        linenum - 1,
-                    )
-
-                    if nodetype == 3:
-                        logger.info(
-                            "    Bus %d ID %d is the reference bus."
-                            % (numbuses, nodeID)
-                        )
-                        alldata["refbus"] = numbuses
-
-                    if nodetype == 1 or nodetype == 2 or nodetype == 3:
-                        sumPd += Pd
-                        sumQd += Qd
-
-                    IDtoCountmap[nodeID] = numbuses
-                    numPload += Pd > 0
-                else:
-                    nodeID = int(thisline[1])
-                    nodetype = int(thisline[2])
-                    logger.info(
-                        "bus %d nodeID %d is isolated and has type %d."
-                        % (numbuses, nodeID, nodetype)
-                    )
-                    logger.info("   setting it to type 4.")
-                    nodetype = 4
-
-                    if (
-                        nodetype != 1
-                        and nodetype != 2
-                        and nodetype != 3
-                        and nodetype != 4
-                    ):
-                        raise ValueError(
-                            "Bad bus %s has type %s." % (thisline[0], thisline[1])
-                        )
-
-                    if nodetype == 4:
-                        numisolated += 1
-
-                    # Trim ; if present
-                    Vmin = 0
-
-                    Pd = 0
-                    Qd = 0
-                    Gs = 0
-                    Bs = 0
-                    Vbase = float(thisline[10])
-                    Vmax = 0
-
-                    if baseMVA == 0.0:
-                        raise ValueError("baseMVA not available before bus section.")
-
-                    buses[numbuses] = Bus(
-                        numbuses,
-                        nodeID,
-                        nodetype,
-                        Pd / baseMVA,
-                        Qd / baseMVA,
-                        Gs / baseMVA,
-                        Bs / baseMVA,
-                        Vbase,
-                        Vmax,
-                        Vmin,
-                        linenum - 1,
-                    )
-
-                    if nodetype == 3:
-                        logger.info(
-                            "    Bus %d ID %d is the reference bus."
-                            % (numbuses, nodeID)
-                        )
-                        alldata["refbus"] = numbuses
-
-                    if nodetype == 1 or nodetype == 2 or nodetype == 3:
-                        sumPd += Pd
-                        sumQd += Qd
-
-                    IDtoCountmap[nodeID] = numbuses
-                    numPload += Pd > 0
-
-                linenum += 1
-            # Finished reading bus section
-            alldata["buses"] = buses
-            alldata["numbuses"] = numbuses
-            alldata["sumPd"] = sumPd
-            alldata["sumQd"] = sumQd
-            alldata["IDtoCountmap"] = IDtoCountmap
-            alldata["slackbus"] = slackbus
-
-            logger.info("    sumloadPd %f numPload %d." % (sumPd, numPload))
-            logger.info("    sumloadQd %f." % sumQd)
-
-            if lookingforendofbus:
-                raise ValueError("Could not find bus data section.")
-
-            if slackbus < 0:
-                logger.info("    Could not find slack bus.")
-
-            logger.info("    %d buses." % numbuses)
-            if numisolated > 0:
-                logger.info("    isolated buses: %d." % numisolated)
-
-        elif theword == "mpc.gen":
-            gens = {}
-            lookingforendofgen = 1
-            gencount1 = 0
-            summaxgenP = summaxgenQ = 0
-            linenum += 1
-
-            # Read gen section
-            while lookingforendofgen and linenum <= numlines:
-                line = lines[linenum - 1]
-                thisline = line.split()
-
-                # Look for end of section
-                if thisline[0] == "];":
-                    alldata["endofgen"] = linenum
-                    logger.info("    Found end of gen section on line %d." % linenum)
-                    lookingforendofgen = 0
-                    break
-
-                gencount1 += 1
-
-                nodeID = int(thisline[0])
-                Pg = float(thisline[1])
-                Qg = float(thisline[2])
-                status = int(thisline[7])
-                Pmax = float(thisline[8])
-                Pmin = float(thisline[9])
-                Qmax = float(thisline[3])
-                Qmin = float(thisline[4])
-
-                if status <= 0:
-                    status = 0
-                else:
-                    status = 1
-
-                if baseMVA == 0.0:
-                    raise ValueError("baseMVA not available before gen section.")
-
-                if nodeID in IDtoCountmap.keys():
-                    idgencount1 = IDtoCountmap[nodeID]
-                    gens[gencount1] = Gen(
-                        gencount1,
-                        nodeID,
-                        Pg,
-                        Qg,
-                        status,
-                        Pmax / baseMVA,
-                        Pmin / baseMVA,
-                        Qmax / baseMVA,
-                        Qmin / baseMVA,
-                        linenum - 1,
-                    )
-                    buses[idgencount1].addgenerator(gencount1, gens[gencount1])
-
-                    if (
-                        buses[idgencount1].nodetype == 2
-                        or buses[idgencount1].nodetype == 3
-                    ):  # But not 4
-                        summaxgenP += Pmax
-                        summaxgenQ += Qmax
-
-                else:
-                    raise ValueError(
-                        "Generator # %d in nonexistent bus ID %d." % (gencount1, nodeID)
-                    )
-
-                linenum += 1
-            # Finished reading gen section
-            if lookingforendofgen:
-                raise ValueError("Could not find end of generator section.")
-
-            alldata["gens"] = gens
-            alldata["numgens"] = len(gens)
-            busgencount = 0
-
-            for bus in buses.values():
-                busgencount += len(bus.genidsbycount) > 0
-
-            alldata["busgencount"] = busgencount
-            alldata["summaxgenP"] = summaxgenP
-            alldata["summaxgenQ"] = summaxgenQ
-
-            logger.info("    number of generators: %d." % alldata["numgens"])
-            logger.info("    number of buses with gens: %d." % busgencount)
-            logger.info("    summaxPg %f summaxQg %f." % (summaxgenP, summaxgenQ))
-
-        elif theword == "mpc.branch":
-            branches = {}
-            defaultlimit = 1e20
-            lookingforendofbranch = 1
-            numbranches = 0
-            activebranches = 0
-            zerolimit = 0
-            linenum += 1
-
-            # Read branch section
-            while lookingforendofbranch and linenum <= numlines:
-                line = lines[linenum - 1]
-                thisline = line.split()
-
-                # Look for end of branch section
-                if thisline[0] == "];":
-                    logger.info("    Found end of branch section on line %d." % linenum)
-                    lookingforendofbranch = 0
-                    break
-
-                numbranches += 1
-                f = int(thisline[0])
-                t = int(thisline[1])
-                r = float(thisline[2])
-                x = float(thisline[3])
-                bc = float(thisline[4])
-                rateA = float(thisline[5])
-                rateB = float(thisline[6])
-                rateC = float(thisline[7])
-                ratio = float(thisline[8])
-                if ratio == 0:
-                    ratio = 1.0
-                angle = float(thisline[9])
-                status = int(thisline[10])
-                minangle = float(thisline[11])
-                maxangle = thisline[12]
-                # Trim ; at the end of line
-                if maxangle[len(maxangle) - 1] == ";":
-                    maxangle = maxangle[: len(maxangle) - 1]
-
-                maxangle = float(maxangle)
-
-                if maxangle < minangle:
-                    raise ValueError(
-                        "Branch # %d has illegal angle constraints." % numbranches
-                    )
-
-                count_f = IDtoCountmap[f]
-                count_t = IDtoCountmap[t]
-
-                if baseMVA == 0.0:
-                    raise ValueError("baseMVA not available before branch section.")
-
-                if False:  # rateA < 1e-10: # TODO do we need it?
-                    logger.info(
-                        "Warning. Branch %d from %d to %d has unbounded rateA."
-                        % (numbranches, f, t)
-                    )
-
-                if True:  # TODO do we need the if?
-                    branches[numbranches] = Branch(
-                        numbranches,
-                        f,
-                        count_f,
-                        t,
-                        count_t,
-                        r,
-                        x,
-                        bc,
-                        rateA / baseMVA,
-                        rateB / baseMVA,
-                        rateC / baseMVA,
-                        ratio,
-                        angle,
-                        maxangle,
-                        minangle,
-                        status,
-                        defaultlimit,
-                        linenum - 1,
-                    )
-                    zerolimit += branches[numbranches].constrainedflow == 0
-                    activebranches += 1
-                    buses[count_f].addfrombranch(numbranches)
-                    buses[count_t].addtobranch(numbranches)
-
-                linenum += 1
-
-            # Finished reading branch section
-            if lookingforendofbranch:
-                raise ValueError("Could not find end of branch section.")
-
-            alldata["branches"] = branches
-            alldata["numbranches"] = numbranches
-            logger.info(
-                "    numbranches: %d active: %d." % (numbranches, activebranches)
-            )
-            if zerolimit > 0:
-                logger.info("    ---> %d unconstrained." % zerolimit)
-
-        elif theword == "mpc.gencost":
-            lookingforendofgencost = 1
-            gencostcount = 1
-            linenum += 1
-
-            # Read gen cost section
-            while lookingforendofgencost and linenum <= numlines:
-                line = lines[linenum - 1]
-                thisline = line.split()
-
-                # Look for end of gen section
-                if thisline[0] == "];":
-                    logger.info(
-                        "    Found end of gencost section on line %d." % linenum
-                    )
-                    alldata["endofgencost"] = linenum
-                    lookingforendofgencost = 0
-                    break
-
-                if gencostcount <= gencount1:
-                    costtype = int(thisline[0])
-                    if costtype != 2:
-                        raise ValueError(
-                            "Cost of generator %d is not polynomial\n" % gencostcount
-                        )
-
-                    degree = int(thisline[3]) - 1
-                    skip1 = 0
-
-                    if degree == 3:
-                        coeff = float(thisline[4])
-                        skip1 = 1
-                        if coeff != 0:
-                            raise ValueError(
-                                "Degree of cost function for generator %d equals %d which is illegal\n"
-                                % (gencostcount, degree)
-                            )
-                        else:
-                            degree = 2
-
-                    elif degree > 2 or degree < 0:
-                        raise ValueError(
-                            "Degree of cost function for generator %d equals %d which is illegal\n"
-                            % (gencostcount, degree)
-                        )
-
-                    costvector = [0 for j in range(degree + 1)]
-
-                    for j in range(degree + 1):
-                        tmp = thisline[4 + skip1 + j]
-                        # print(j, tmp)
-
-                        if tmp[len(tmp) - 1] == ";":
-                            tmp = tmp[: len(tmp) - 1]
-
-                        costvector[j] = float(tmp)
-                        costvector[j] *= (baseMVA) ** (degree - j)
-
-                    gens[gencostcount].addcost(costvector, linenum)
-
-                else:
-                    raise ValueError(
-                        "Read %d gen costs but only %d generators\n"
-                        % (gencostcount, gencount1)
-                    )
-
-                gencostcount += 1
-                linenum += 1
-            # Finished reading gen cost section
-            if lookingforendofgencost:
-                raise ValueError("Could not find end of gencost section.")
-
-            linenum += 1
-
-        linenum += 1
-    # Finished reading file line by line
 
 
 def readvoltsfile(alldata):

@@ -19,7 +19,7 @@ class OpfType(Enum):
     IV = "IV"
 
 
-def get_default_optimization_settings(casefile):
+def get_default_optimization_settings():
     """Returns a dictionary holding all default settings"""
 
     settings = {
@@ -52,13 +52,10 @@ def get_default_optimization_settings(casefile):
         "fixtolerance": 0.0,
     }
 
-    if type(casefile) is not dict and casefile != "":
-        settings["casefilename"] = casefile
-
     return settings
 
 
-def get_default_graphics_settings(casefile):
+def get_default_graphics_settings():
     """Returns a dictionary holding all default settings"""
 
     settings = {
@@ -70,8 +67,5 @@ def get_default_graphics_settings(casefile):
         "branchswitching_mip": False,
         "branchswitching_comp": False,
     }
-
-    if type(casefile) is not dict and casefile != "":
-        settings["casefilename"] = casefile
 
     return settings
