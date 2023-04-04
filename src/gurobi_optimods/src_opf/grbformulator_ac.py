@@ -141,11 +141,9 @@ def lpformulator_ac_body(alldata, model):
         % (model.NumVars, model.NumConstrs)
     )
 
-    model.write(
-        alldata["lpfilename"]
-    )  # FIXME remove.  Jarek: I am using this for debugging, for now
-    # TODO-Dan don't forget to remove at some point!
-    logger.info("Wrote LP to " + alldata["lpfilename"])
+    if alldata["lpfilename"] != None:
+        model.write(alldata["lpfilename"])
+        logger.info("Wrote LP to " + alldata["lpfilename"])
 
     alldata["model"] = model
 

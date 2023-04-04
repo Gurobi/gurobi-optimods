@@ -32,6 +32,7 @@ def graphplot(
     Then uses the plotlyhandler library to create a plotly figure
     The figure is then rendered in a browser window
     """
+    logger = logging.getLogger("OpfLogger")
     f = open(graphfilename, "r")
     lines = f.readlines()
     f.close()
@@ -43,7 +44,7 @@ def graphplot(
     truelinect = 0
     for line in range(1, m + 1):
         if lines[line].split()[0] == "END":
-            print("found end of graph file after {} lines\n".format(truelinect))
+            logger.info("found end of graph file after {} lines\n".format(truelinect))
             break
         # print(line,int(lines[line].split()[0]), int(lines[line].split()[1]))
         adj[truelinect] = [
@@ -69,7 +70,7 @@ def graphplot(
     # the lines are found in the .gv file.  degrees_consolidated is the number of such lines (for each sorted vertex pair found in the file
 
     if trueM != numbranches:
-        logging.error(
+        logger.error(
             "Error. Number of branches in .gv file = %d, whereas number of branches in problem = %d."
             % (trueM, numbranches)
         )
@@ -78,7 +79,7 @@ def graphplot(
             % (trueM, numbranches)
         )
     if trueM != truelinect:
-        logging.error(
+        logger.error(
             "Error. Number of branches in .gv file = %d, whereas number of branches line file = %d."
             % (trueM, truelinect)
         )
@@ -95,7 +96,7 @@ def graphplot(
         scannedordpair = scanned_unique_ordered_pairs[j]
         degscanned = scanned_degrees_consolidated[scannedordpair]
         if scannedordpair not in myedge_degrees_consolidated.keys():
-            logging.error(
+            logger.error(
                 "Error. Ordered pair %d -> (%d,%d) not in consolidated list."
                 % (j, scannedordpair[0], scannedordpair[1])
             )
@@ -105,7 +106,7 @@ def graphplot(
             )
         degmine = myedge_degrees_consolidated[scannedordpair]
         if degscanned != degmine:
-            logging.error(
+            logger.error(
                 "Error. Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists."
                 % (j, scannedordpair[0], scannedordpair[1]),
                 degscanned,
@@ -119,7 +120,7 @@ def graphplot(
             )
 
         if False:  # TODO-Dan why is this?
-            logging.info(
+            logger.info(
                 "scanned ordered pair %d -> (%d,%d) of deg %d."
                 % (j, scannedordpair[0], scannedordpair[1], degscanned)
             )
@@ -137,7 +138,7 @@ def graphplot(
             local_reordered_width[scannedordpair][k] = width
 
             if loud and width > 1:
-                logging.info(
+                logger.info(
                     " Width %d edge (%d,%d) orderings %d -> %d color %s."
                     % (width, scannedordpair[0], scannedordpair[1], j, jprime, color)
                 )
@@ -157,9 +158,9 @@ def graphplot(
         vertexx *= scalex
         vertexy *= scaley
 
-        if False:
-            print("vertexx", vertexx)
-            print("vertexy", vertexy)
+        if False:  # TODO-Dan Do we need this?
+            logger.info("vertexx", vertexx)
+            logger.info("vertexy", vertexy)
 
             break_exit("printedvertices")
 
@@ -188,7 +189,7 @@ def graphplot(
         # G.add_edge(small, large)
         addcode = gG.addedge(small, large)
         if addcode:
-            logging.error(
+            logger.error(
                 "Could not add edge (%d, %d) to graph object." % (small, large)
             )
             raise ValueError(
@@ -218,8 +219,7 @@ def graphplot(
 
     gG.getmetrics()
     # break_exit('poo')
-    print("Creating visualization object.\n")
-    # print(vertex_text)
+    logger.info("Creating visualization object.")
 
     PH = plotlyhandler(
         gG,
@@ -234,7 +234,7 @@ def graphplot(
         vertex_border_width=myvertex_border_width,
     )
 
-    logging.info("Rendering figure.")
+    logger.info("Rendering figure.")
 
     xgap = np.max(vertexx) - np.min(vertexx)
     ygap = np.max(vertexy) - np.min(vertexy)
@@ -242,8 +242,8 @@ def graphplot(
     myheight = 800
     mywidth = int(math.ceil(xgap / ygap * myheight))
 
-    print("xgap", xgap, "ygap", ygap, "height", myheight, "width", mywidth)
+    logger.info("xgap %f ygap %f height %f width %f" % (xgap, ygap, myheight, mywidth))
 
     fig = PH.create_figure(height=myheight, width=mywidth, showlabel=False)
-    logging.info("Showing figure.")
+    logger.info("Showing figure.")
     fig.show()

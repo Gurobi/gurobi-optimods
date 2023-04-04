@@ -2,7 +2,7 @@ import sys
 import math
 import time
 import logging
-from gurobipy import *
+from os import system
 
 from .graph4 import *
 from .utils import break_exit
@@ -11,7 +11,8 @@ from .utils import break_exit
 def plot_solution(alldata, solution, objval):
     """Plot feasible solution"""
 
-    logging.info("Plotting solution with value %.3e." % objval)
+    logger = logging.getLogger("OpfLogger")
+    logger.info("Plotting solution with value %.3e." % objval)
     x = list(solution.values())
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
@@ -51,6 +52,8 @@ def plot_solution(alldata, solution, objval):
 
 
 def grbgraphical(alldata, plottype, textlist):
+
+    logger = logging.getLogger("OpfLogger")
     buses = alldata["buses"]
     numbuses = alldata["numbuses"]
     branches = alldata["branches"]
@@ -59,13 +62,13 @@ def grbgraphical(alldata, plottype, textlist):
     gvfilename = "grbgraphical.gv"
     IDtoCountmap = alldata["IDtoCountmap"]
     txtfilename = "newgraph.txt"
-    logging.info("Graphical layout, 2\n")
+    logger.info("Graphical layout, 2\n")
 
     f = open(gvfilename, "w")
-    logging.info("Writing to gv file %s." % gvfilename)
+    logger.info("Writing to gv file %s." % gvfilename)
 
     g = open(txtfilename, "w")
-    logging.info("Writing to txt file %s." % txtfilename)
+    logger.info("Writing to txt file %s." % txtfilename)
 
     f.write("graph {\n")
     f.write('node [color=black, height=0, label="\\N", shape=point, width=0];\n')
@@ -93,10 +96,10 @@ def grbgraphical(alldata, plottype, textlist):
             + " "
             + gvfilename
         )
-        logging.info("sfdp command: " + sfdpcommand)
+        logger.info("sfdp command: " + sfdpcommand)
         system(sfdpcommand)
     else:
-        logging.info("Skipping graph layout computation since coordinates are given.")
+        logger.info("Skipping graph layout computation since coordinates are given.")
         firstgvfile = gvfilename
 
     node_text = {}
@@ -163,7 +166,7 @@ def grbgraphical(alldata, plottype, textlist):
                 gen = gens[bus.genidsbycount[k]]
                 sumPgen += gholder[gen.count - 1]
                 if False:
-                    logging.info(
+                    logger.info(
                         " bus %d gen %d produces %f."
                         % (j, gen.count, gholder[gen.count - 1])
                     )
@@ -201,7 +204,7 @@ def grbgraphical(alldata, plottype, textlist):
 
             if zholder[j - 1] < 0.5:  # turned off
                 if loud:
-                    logging.info(
+                    logger.info(
                         "branch %d (%d, %d) has small x."
                         % (j, branch.count_f, branch.count_t)
                     )
@@ -232,7 +235,7 @@ def grbgraphical(alldata, plottype, textlist):
             myedge_list_consolidated[(small, large)] = []
             myedge_list_consolidated[(small, large)].append(j)
             if loud:
-                logging.info(
+                logger.info(
                     " --> line %d color %s creates my consolidated list for (%d,%d)."
                     % (j, myedge_color[j], small, large)
                 )
@@ -240,7 +243,7 @@ def grbgraphical(alldata, plottype, textlist):
             myedge_degrees_consolidated[(small, large)] += 1
             myedge_list_consolidated[(small, large)].append(j)
             if loud:
-                logging.info(
+                logger.info(
                     " --> appended line %d color %s to my consolidated list for (%d,%d)."
                     % (j, myedge_color[j], small, large)
                 )
@@ -248,7 +251,7 @@ def grbgraphical(alldata, plottype, textlist):
     if False:  # TODO-Dan Why do we need it?
         for j in range(1, numbuses + 1):
             if mynode_size[j - 1] > 1:
-                print(
+                logger.info(
                     "pre graphplot, bus",
                     j,
                     "size",

@@ -33,7 +33,7 @@ class TestOpf(unittest.TestCase):
         # read case file and return a case dictionary
         case = read_case_from_file(casefile)
         # solve opf model and return a solution and the final objective value
-        solution, objval = solve_opf_model(settings, case)
+        solution, objval = solve_opf_model(settings, case, "OPF.log")
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)

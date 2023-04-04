@@ -8,7 +8,9 @@ from .utils import break_exit
 
 
 def scangv(alldata, filename, readcoords):
-    print("Scanning gv file", filename)
+
+    logger = logging.getLogger("OpfLogger")
+    logger.info("Scanning gv file %s.", filename)
 
     try:
         f = open(filename, "r")
@@ -77,7 +79,7 @@ def scangv(alldata, filename, readcoords):
                 scanned_unique_ordered_pairs[scanned_num_unique] = (small, large)
                 scanned_num_unique += 1
                 if loud:
-                    logging.info(
+                    logger.info(
                         " --> line %d creates scanned consolidated list for (%d,%d) --> unique ct %d"
                         % (trueM, small, large, scanned_num_unique)
                     )
@@ -85,7 +87,7 @@ def scangv(alldata, filename, readcoords):
                 scanned_degrees_consolidated[(small, large)] += 1
                 scanned_list_consolidated[(small, large)].append(trueM)
                 if loud:
-                    logging.info(
+                    logger.info(
                         " --> appended line %d to scanned consolidated list for (%d,%d)"
                         % (trueM, small, large)
                     )
@@ -95,7 +97,7 @@ def scangv(alldata, filename, readcoords):
             revendbus[(busfrom, busto)] = trueM + 1
             revendbus[(busto, busfrom)] = trueM + 1
             trueM += 1
-    logging.info("After scanning, number of edges is %d." % trueM)
+    logger.info("After scanning, number of edges is %d." % trueM)
     # break_exit('scanned')
     return (
         trueM,

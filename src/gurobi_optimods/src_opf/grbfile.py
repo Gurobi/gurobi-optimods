@@ -6,7 +6,12 @@ import csv
 import logging
 import numpy as np
 
-from .utils import get_default_optimization_settings, get_default_graphics_settings
+from .utils import (
+    get_default_optimization_settings,
+    get_default_graphics_settings,
+    initialize_logger,
+    remove_and_close_handlers,
+)
 
 
 def initialize_data_dict(logfile=""):
@@ -67,11 +72,7 @@ def read_settings_dict(alldata, inputsettings, defaults):
 def read_settings_file(filename, graphics=False):
     """Function to read configurations for OPF solve from config file"""
 
-    stdouthandler = logging.StreamHandler(stream=sys.stdout)
-    logging.basicConfig(
-        level=logging.INFO, format="%(message)s", handlers=[stdouthandler]
-    )
-    logger = logging.getLogger("SettingsReadingLogger")
+    logger, handlers = initialize_logger("SettingsReadingLogger")
 
     logger.info("Reading settings file %s." % filename)
     starttime = time.time()
@@ -97,7 +98,8 @@ def read_settings_file(filename, graphics=False):
 
     logger.info("")
 
-    stdouthandler.close()
+    remove_and_close_handlers(logger, handlers)
+
     return settings_dict
 
 

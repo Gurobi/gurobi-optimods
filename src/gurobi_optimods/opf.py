@@ -15,19 +15,35 @@ from .src_opf.grbfile import (
 )
 from .src_opf.grbformulator import construct_and_solve_model
 from .src_opf.grbgraphical import plot_solution
+from .src_opf.utils import initialize_logger, remove_and_close_handlers
 
 
 def solve_opf_model(settings, case, logfile=""):
-    """Construct an OPF model from given data and solve it with Gurobi"""
+    """
+    Construct an OPF model from given data and solve it with Gurobi
 
-    if not logfile:
-        logfile = "gurobiOPF.log"
+
+    Parameters
+    ----------
+    settings : dictionary
+        Dictionary holding settings
+
+    case : dictionary
+        Dictionary holding case data
+
+    logfile: string
+        Name of log file. Can be empty.
+
+
+    Returns
+    -------
+    OrderedDict, float
+        A feasible solution point if any was found as an OrderedDict and
+        the final objective value.
+    """
+
     # Initialize output and file handler and start logging
-    filehandler = logging.FileHandler(filename=logfile)
-    stdouthandler = logging.StreamHandler(stream=sys.stdout)
-    handlers = [filehandler, stdouthandler]
-    logging.basicConfig(level=logging.INFO, format="%(message)s", handlers=handlers)
-    logger = logging.getLogger("OpfLogger")
+    logger, handlers = initialize_logger("OpfLogger", logfile, True)
 
     # Initilize data dictionary
     alldata = initialize_data_dict(logfile)
@@ -40,9 +56,7 @@ def solve_opf_model(settings, case, logfile=""):
 
     solution, objval = construct_and_solve_model(alldata)
 
-    # Close logging handlers
-    for handler in handlers:
-        handler.close()
+    remove_and_close_handlers(logger, handlers)
 
     return solution, objval
 
@@ -51,7 +65,27 @@ def plot_opf_solution(settings, case, solution, objval):
     """
     Read the given case and plot a given solution.
     In best case the solution has been computed by the solve_opf_model function
+    so the indices of variables fit the ones computed by the previously
+    constructed model.
+
+
+    Parameters
+    ----------
+    settings : dictionary
+        Dictionary holding settings
+
+    case : dictionary
+        Dictionary holding case data
+
+    solution : OrderedDict
+        OrderedDictionary holding solution data.
+
+    objval : float
+        Objective value
     """
+
+    # Initialize output and file handler and start logging
+    logger, handlers = initialize_logger("OpfLogger")
 
     # Initilize data dictionary
     alldata = initialize_data_dict()
@@ -71,12 +105,28 @@ def plot_opf_solution(settings, case, solution, objval):
 
     plot_solution(alldata, solution, objval)
 
+    remove_and_close_handlers(logger, handlers)
+
 
 def read_settings_from_file(settingsfile, graphics=False):
     """
     Helper function for users
     Used to construct a settings dictionary which can be used as input
     for all other API functions
+
+    Parameters
+    ----------
+    settingsfile :
+        Name of and possibly full path to settings file
+
+    graphics :
+
+
+    Returns
+    -------
+    dictionary
+        Dictionary object of the given settings which is to be used in
+        other API functions
     """
 
     settings_dict = read_settings_file(settingsfile, graphics)
@@ -97,7 +147,7 @@ def read_case_from_file(casefile):
 
     Returns
     -------
-    case_dict
+    dictionary
         Dictionary object of the given case which is to be used in
         other API functions
     """

@@ -102,8 +102,8 @@ class plotlyhandler:
             color = self.input_edge_color[position]
 
             if loud:
-
-                logging.info(
+                logger = logging.getLogger("OpfLogger")
+                logger.info(
                     "edge %d is (+1) (%d, %d) position %d width %d localdeg %d\n"
                     % (
                         count,
@@ -239,8 +239,9 @@ class plotlyhandler:
         layout_params.update(params)
 
         if False:  # TODO-Dan Can this be deleted?
-            print([self.vertex_size[v] for v in self.gG.vertices.values()])
-            print([self.vertex_color[v] for v in self.gG.vertices.values()])
+            logger = logging.getLogger("OpfLogger")
+            logger.info([self.vertex_size[v] for v in self.gG.vertices.values()])
+            logger.info([self.vertex_color[v] for v in self.gG.vertices.values()])
             break_exit("prefig")
 
         # create figure and add traces

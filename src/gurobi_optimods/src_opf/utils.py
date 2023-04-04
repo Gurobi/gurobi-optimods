@@ -1,4 +1,5 @@
 from enum import Enum
+import logging
 import sys
 
 
@@ -11,6 +12,31 @@ def break_exit(foo):
     stuff = input("(" + foo + ") break> ")
     if stuff == "x" or stuff == "q":
         sys.exit("bye")
+
+
+def initialize_logger(loggername, logfile="", usefilehandler=False):
+    logger = logging.getLogger("OpfLogger")
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(message)s")
+    stdouthandler = logging.StreamHandler(stream=sys.stdout)
+    stdouthandler.setLevel(logging.INFO)
+    stdouthandler.setFormatter(formatter)
+    handlers = [stdouthandler]
+    if usefilehandler and logfile:
+        filehandler = logging.FileHandler(filename=logfile)
+        filehandler.setLevel(logging.INFO)
+        filehandler.setFormatter(formatter)
+        handlers.append(filehandler)
+    for h in handlers:
+        logger.addHandler(h)
+
+    return logger, handlers
+
+
+def remove_and_close_handlers(logger, handlers):
+    for h in handlers:
+        logger.removeHandler(h)
+        h.close()
 
 
 class OpfType(Enum):

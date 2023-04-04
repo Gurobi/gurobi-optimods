@@ -4,6 +4,8 @@ import cmath
 import time
 import logging
 
+from .utils import initialize_logger, remove_and_close_handlers
+
 
 class Bus:
     """
@@ -485,11 +487,7 @@ def read_case_file(casefile):
     Read case file and fill data dictionary
     """
 
-    stdouthandler = logging.StreamHandler(stream=sys.stdout)
-    logging.basicConfig(
-        level=logging.INFO, format="%(message)s", handlers=[stdouthandler]
-    )
-    logger = logging.getLogger("CaseReadingLogger")
+    logger, handlers = initialize_logger("CaseReadingLogger")
 
     logger.info("Reading case file %s." % casefile)
     starttime = time.time()
@@ -504,7 +502,8 @@ def read_case_file(casefile):
     logger.info("Reading and building time: %f s." % (endtime - starttime))
     logger.info("")
 
-    stdouthandler.close()
+    remove_and_close_handlers(logger, handlers)
+
     return case_dict
 
 

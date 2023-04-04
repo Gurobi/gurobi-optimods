@@ -7,7 +7,8 @@ class grbGraph:
         self.edges = {}
         self.n = 0  # number of vertices
         self.m = 0  # number of edges
-        logging.info("Created grbGraph object.")
+        logger = logging.getLogger("OpfLogger")
+        logger.info("Created grbGraph object.")
 
     def addvertex(self, i):
         self.vertices[self.n] = i
@@ -22,4 +23,5 @@ class grbGraph:
             return 1
 
     def getmetrics(self):
-        logging.info("Graph object has %d vertices %d edges." % (self.n, self.m))
+        logger = logging.getLogger("OpfLogger")
+        logger.info("Graph object has %d vertices %d edges." % (self.n, self.m))
