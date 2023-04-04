@@ -24,6 +24,7 @@ from .grbformulator_iv import (
 def construct_and_solve_model(alldata):
     """Construct OPF model and solve it"""
 
+    logger = logging.getLogger("OpfLogger")
     opftype = None
     if alldata["doac"]:
         opftype = OpfType.AC
@@ -37,7 +38,7 @@ def construct_and_solve_model(alldata):
             "Illegal option combination. Have to use exactly 1 of options [doac, dodc, doiv]."
         )
 
-    logging.info("\n%s formulation." % opftype.value)
+    logger.info("\n%s formulation." % opftype.value)
 
     starttime = time.time()
 
@@ -69,11 +70,11 @@ def construct_and_solve_model(alldata):
         sol_count = lpformulator_optimize(alldata, model, opftype)
 
         endtime = time.time()
-        logging.info(
+        logger.info(
             "Overall time taken (model construction + optimization): %f s."
             % (endtime - starttime)
         )
-        logging.info("Solution count: %d." % (sol_count))
+        logger.info("Solution count: %d." % (sol_count))
 
         if sol_count > 0:
             lpformulator_examine_solution(alldata, model, opftype)
@@ -83,7 +84,7 @@ def construct_and_solve_model(alldata):
             index = 0
             for v in model.getVars():
                 if math.fabs(v.X) > 1e-09:
-                    logging.info(v.varname + " = " + str(v.X))
+                    logger.info(v.varname + " = " + str(v.X))
                     solution[v.VarName] = v.X
                 else:
                     solution[v.VarName] = 0.0
@@ -138,6 +139,7 @@ def lpformulator_examine_solution(alldata, model, opftype):
 def lpformulator_optimize(alldata, model, opftype):
     """Optimize constructed model"""
 
+    logger = logging.getLogger("OpfLogger")
     # Disable logging handler to get Gurobi output
     logging.disable(logging.INFO)
     model.params.LogFile = alldata["logfile"]
@@ -170,7 +172,7 @@ def lpformulator_optimize(alldata, model, opftype):
         or (alldata["branchswitching_mip"] and opftype == OpfType.DC)
     ):
         # logging level needs to be critical because INFO is disabled
-        logging.critical("Using mip start with all branches kept on.")
+        logger.critical("Using mip start with all branches kept on.")
         # mip start
         zvar = alldata["LP"]["zvar"]
         branches = alldata["branches"]
@@ -199,35 +201,35 @@ def lpformulator_optimize(alldata, model, opftype):
 
     # Check model status and re-optimize or try computing an IIS if necessary
     if model.status == GRB.INF_OR_UNBD:
-        logging.info("\nModel Status: infeasible or unbounded.\n")
-        logging.info("Re-optimizing with DualReductions turned off.\n")
+        logger.info("\nModel Status: infeasible or unbounded.\n")
+        logger.info("Re-optimizing with DualReductions turned off.\n")
         logging.disable(logging.INFO)
         model.Params.DualReductions = 0
         model.optimize()
         logging.disable(logging.NOTSET)
 
     if model.status == GRB.INFEASIBLE:
-        logging.info("\nModel Status: infeasible.\n")
-        logging.info("Computing IIS...")
+        logger.info("\nModel Status: infeasible.\n")
+        logger.info("Computing IIS...")
         logging.disable(logging.INFO)
         model.computeIIS()
         logging.disable(logging.NOTSET)
-        logging.info("\nIIS computed, writing IIS to file acopfmodel.ilp.")
+        logger.info("\nIIS computed, writing IIS to file acopfmodel.ilp.")
         model.write("acopfmodel_iis.ilp")
 
     elif model.status == GRB.UNBOUNDED:
-        logging.info("\nModel Status: unbounded.\n")
+        logger.info("\nModel Status: unbounded.\n")
 
     elif model.status == GRB.INTERRUPTED:
-        logging.info("\nModel Status: interrupted.\n")
+        logger.info("\nModel Status: interrupted.\n")
 
     elif model.status == GRB.OPTIMAL:
-        logging.info("\nModel Status: optimal.\n")
+        logger.info("\nModel Status: optimal.\n")
 
     # Only print objective value and solution quality if at least
     # one feasible point is available
     if model.SolCount > 0:
-        logging.info("Objective value = %.8e." % model.objVal)
+        logger.info("Objective value = %.8e." % model.objVal)
         logging.disable(logging.INFO)
         model.printQuality()
         logging.disable(logging.NOTSET)
@@ -238,20 +240,21 @@ def lpformulator_optimize(alldata, model, opftype):
 def lpformulator_setup(alldata, opftype):
     """Helper function to handle specific settings"""
 
+    logger = logging.getLogger("OpfLogger")
     # Additional setup is only meant for AC and IV
     if opftype == OpfType.DC:
         return
 
-    logging.info("Auxiliary setup.")
+    logger.info("Auxiliary setup.")
 
     alldata["maxdispersion_rad"] = (math.pi / 180.0) * alldata["maxdispersion_deg"]
 
     if alldata["dopolar"]:
-        logging.info("  Polar formulation, shutting down incompatible options:")
+        logger.info("  Polar formulation, shutting down incompatible options:")
         alldata["use_ef"] = False
         alldata["useconvexformulation"] = False
         alldata["skipjabr"] = True
-        logging.info("    use_ef, useconvexformulation, jabr.")
+        logger.info("    use_ef, useconvexformulation, jabr.")
 
     if alldata["voltsfilename"] != None:
         grbreadvoltsfile(alldata)
@@ -267,7 +270,7 @@ def lpformulator_setup(alldata, opftype):
     buses = alldata["buses"]
 
     if alldata["usemaxphasediff"]:
-        logging.info(
+        logger.info(
             "Applying max phase diff of %g degrees." % (alldata["maxphasediff_deg"])
         )
 
@@ -284,20 +287,22 @@ def lpformulator_setup(alldata, opftype):
             if branch.minangle_rad < -maxrad:
                 branch.minangle_rad = -maxrad
 
-        logging.info("Updated %d maxangle constraints." % (count))
+        logger.info("Updated %d maxangle constraints." % (count))
 
 
 def writempsfile(alldata, model, filename):
     """Helper function for debugging"""
-    logging.info("Writing mpsfile to %s." % (filename))
+    logger = logging.getLogger("OpfLogger")
+    logger.info("Writing mpsfile to %s." % (filename))
     model.write(filename)
 
 
 def writemipstart(alldata):
 
+    logger = logging.getLogger("OpfLogger")
     filename = "mipstart.mst"
     f = open(filename, "w")
-    logging.info("Writing mipstart in file %s." % filename)
+    logger.info("Writing mipstart in file %s." % filename)
 
     zvar = alldata["LP"]["zvar"]
     branches = alldata["branches"]

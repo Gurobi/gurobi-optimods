@@ -28,9 +28,9 @@ def read_optimization_settings(alldata, settings, casefile):
     defaults = get_default_optimization_settings(casefile)
     # TODO get rid of this if-clause
     if type(settings) is dict:
-        read_configfile_dict(alldata, settings, casefile, defaults)
+        read_settings_dict(alldata, settings, casefile, defaults)
     else:
-        read_configfile_file(alldata, settings, casefile, defaults)
+        read_settings_file(alldata, settings, casefile, defaults)
 
     if alldata["doslp_polar"] and (int(alldata["dodc"]) + int(alldata["doiv"]) == 0):
         alldata["doac"] = True
@@ -47,12 +47,12 @@ def read_graphics_settings(alldata, settings, casefile):
     defaults = get_default_graphics_settings(casefile)
     # TODO get rid of this if-clause
     if type(settings) is dict:
-        read_configfile_dict(alldata, settings, casefile, defaults)
+        read_settings_dict(alldata, settings, casefile, defaults)
     else:
-        read_configfile_file(alldata, settings, casefile, defaults)
+        read_settings_file(alldata, settings, casefile, defaults)
 
 
-def read_configfile_dict(alldata, settings, casefile, defaults):
+def read_settings_dict(alldata, settings, casefile, defaults):
     """Sets settings in alldata from a settings dict"""
 
     for s in settings.keys():
@@ -65,10 +65,11 @@ def read_configfile_dict(alldata, settings, casefile, defaults):
         alldata[s] = defaults[s]
 
 
-def read_configfile_file(alldata, filename, casefile, settings):
+def read_settings_file(alldata, filename, casefile, settings):
     """Function to read configurations for OPF solve from config file"""
 
-    logging.info("Reading configuration file %s." % filename)
+    logger = logging.getLogger("OpfLogger")
+    logger.info("Reading configuration file %s." % filename)
     f = open(filename, "r")
     lines = f.readlines()
     f.close()
@@ -165,18 +166,19 @@ def read_configfile_file(alldata, filename, casefile, settings):
 
         linenum += 1
 
-    logging.info("Settings:")
+    logger.info("Settings:")
     for s in settings.keys():
         alldata[s] = settings[s]
-        logging.info("  {} {}".format(s, settings[s]))
+        logger.info("  {} {}".format(s, settings[s]))
 
-    logging.info("")
+    logger.info("")
 
 
 def grbread_graphattrs(alldata, filename):
     """Function to read graphical attributes"""
 
-    logging.info("Reading graphical attributes file %s." % filename)
+    logger = logging.getLogger("OpfLogger")
+    logger.info("Reading graphical attributes file %s." % filename)
     f = open(filename, "r")
     lines = f.readlines()
     f.close()
@@ -206,7 +208,7 @@ def grbread_graphattrs(alldata, filename):
 
         linenum += 1
 
-    logging.info("Read %d graphical features." % numfeatures)
+    logger.info("Read %d graphical features." % numfeatures)
     alldata["graphical"]["numfeatures"] = numfeatures
     alldata["graphical"]["thresh"] = thresh
     alldata["graphical"]["colorstring"] = colorstring
@@ -216,12 +218,13 @@ def grbread_graphattrs(alldata, filename):
 def grbread_coords(alldata):
     """Reads csv file with bus coordinates"""
 
+    logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     IDtoCountmap = alldata["IDtoCountmap"]
 
     filename = alldata["coordsfilename"]
-    logging.info("Reading csv coordinates file %s." % filename)
+    logger.info("Reading csv coordinates file %s." % filename)
 
     f = open(filename, "r")
     csvf = csv.reader(f)
@@ -237,12 +240,13 @@ def grbread_coords(alldata):
 def grbreadvoltsfile(alldata):
     """TODO-Dan add description"""
 
+    logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     IDtoCountmap = alldata["IDtoCountmap"]
 
     filename = alldata["voltsfilename"]
-    logging.info("reading volts file %s." % filename)
+    logger.info("reading volts file %s." % filename)
 
     f = open(filename, "r")
     lines = f.readlines()
@@ -274,4 +278,4 @@ def grbreadvoltsfile(alldata):
 
         linenum += 1
 
-    logging.info("Read volts file.\n")
+    logger.info("Read volts file.\n")

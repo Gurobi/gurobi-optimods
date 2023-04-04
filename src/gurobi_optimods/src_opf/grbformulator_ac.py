@@ -16,6 +16,7 @@ def lpformulator_ac_examine_solution(alldata, model):
     """
     # first version -- crude -- but first, some debugging
 
+    logger = logging.getLogger("OpfLogger")
     branches = alldata["branches"]
     numbranches = alldata["numbranches"]
     IDtoCountmap = alldata["IDtoCountmap"]
@@ -47,19 +48,19 @@ def lpformulator_ac_examine_solution(alldata, model):
                 actualLoss_r = (branch.r)*actualI2
 
 
-                logging.info('j %d f %d Pft %8.4f Qft %8.4f cff %8.4f aL %.2e r %.2e iaL %.3e I2 %.3e aL_r %.3e.'%(j,f,Pvar_f[branch].x, Qvar_f[branch].x, cvar[busf].x, aLoss, branch.r, impliedaLoss, actualI2, actualLoss_r))
-                #logging.info('          Qft %8.4f Qtf %8.4f rL %.2e x %.2e.'%(Qvar_f[branch].x, Qvar_t[branch].x, rLoss, branch.x))
+                logger.info('j %d f %d Pft %8.4f Qft %8.4f cff %8.4f aL %.2e r %.2e iaL %.3e I2 %.3e aL_r %.3e.'%(j,f,Pvar_f[branch].x, Qvar_f[branch].x, cvar[busf].x, aLoss, branch.r, impliedaLoss, actualI2, actualLoss_r))
+                #logger.info('          Qft %8.4f Qtf %8.4f rL %.2e x %.2e.'%(Qvar_f[branch].x, Qvar_t[branch].x, rLoss, branch.x))
                 if aLoss < minaloss:
                     minaloss = aLoss
                     minalossind = j
 
 
 
-        logging.info('minaloss %.3e at %d.'%(minaloss,minalossind))
+        logger.info('minaloss %.3e at %d.'%(minaloss,minalossind))
 
         """
 
-    logging.info("Done examining solution.\n")
+    logger.info("Done examining solution.\n")
 
 
 # TODO-Dan There is a function with the same name in grbformulator_iv.
@@ -68,6 +69,7 @@ def lpformulator_ac_examine_solution(alldata, model):
 def computebalbounds(alldata, bus):
     """Computes active and reactive max and min bus flow balance values"""
 
+    logger = logging.getLogger("OpfLogger")
     # First let's get max/min generations
     # TODO-Dan What about all those "loud" settings? can we remove them?
     loud = 0  # See below
@@ -94,13 +96,13 @@ def computebalbounds(alldata, bus):
         if (
             loud
         ):  # it is worth keeping because a user may want to debug the generator limits that they imposed, which could make a problem infeasible
-            # logging.info(" Pubound for %d %f genc %d."%(bus.nodeID, Pubound, gencounter))
-            # logging.info(" Plbound for %d %f genc %d."%(bus.nodeID, Plbound, gencounter))
+            # logger.info(" Pubound for %d %f genc %d."%(bus.nodeID, Pubound, gencounter))
+            # logger.info(" Plbound for %d %f genc %d."%(bus.nodeID, Plbound, gencounter))
             # TODO-Dan How is this worth keeping if loud cannot be set by the user? The user would have to hack the code to get the debug output
-            logging.info(
+            logger.info(
                 " Qubound for %d %f genc %d." % (bus.nodeID, Qubound, gencounter)
             )
-            logging.info(
+            logger.info(
                 " Qlbound for %d %f genc %d." % (bus.nodeID, Qlbound, gencounter)
             )
 
@@ -114,12 +116,12 @@ def computebalbounds(alldata, bus):
 
     if loud:  # same as above
         # TODO-Dan same as above
-        # logging.info(" Pubound for %d final %f."%(bus.nodeID, Pubound))
-        # logging.info(" (Pd was %g)"%bus.Pd)
-        # logging.info(" Plbound for %d final %f."%(bus.nodeID, Plbound))
-        logging.info(" Qubound for %d final %f." % (bus.nodeID, Qubound))
-        logging.info(" (Qd was %g)" % bus.Qd)
-        logging.info(" Qlbound for %d final %f." % (bus.nodeID, Qlbound))
+        # logger.info(" Pubound for %d final %f."%(bus.nodeID, Pubound))
+        # logger.info(" (Pd was %g)"%bus.Pd)
+        # logger.info(" Plbound for %d final %f."%(bus.nodeID, Plbound))
+        logger.info(" Qubound for %d final %f." % (bus.nodeID, Qubound))
+        logger.info(" (Qd was %g)" % bus.Qd)
+        logger.info(" Qlbound for %d final %f." % (bus.nodeID, Qlbound))
 
     return Pubound, Plbound, Qubound, Qlbound
 
@@ -127,13 +129,14 @@ def computebalbounds(alldata, bus):
 def lpformulator_ac_body(alldata, model):
     """Helper function for adding variables and constraints to the model"""
 
+    logger = logging.getLogger("OpfLogger")
     # Create model variables
     lpformulator_ac_create_vars(alldata, model)
     # Create model constraints
     lpformulator_ac_create_constraints(alldata, model)
 
     model.update()  # Update to get correct model stats
-    logging.info(
+    logger.info(
         "Constructed ACOPF model with %d variables and %d constraints.\n"
         % (model.NumVars, model.NumConstrs)
     )
@@ -142,7 +145,7 @@ def lpformulator_ac_body(alldata, model):
         alldata["lpfilename"]
     )  # FIXME remove.  Jarek: I am using this for debugging, for now
     # TODO-Dan don't forget to remove at some point!
-    logging.info("Wrote LP to " + alldata["lpfilename"])
+    logger.info("Wrote LP to " + alldata["lpfilename"])
 
     alldata["model"] = model
 
@@ -150,7 +153,8 @@ def lpformulator_ac_body(alldata, model):
 def lpformulator_ac_create_vars(alldata, model):
     """Create model variables for ACOPF"""
 
-    logging.info("Creating variables.")
+    logger = logging.getLogger("OpfLogger")
+    logger.info("Creating variables.")
 
     fixtolerance = 1e-05
 
@@ -251,7 +255,7 @@ def lpformulator_ac_create_vars(alldata, model):
 
         # Assumption 1.  zero angle difference is always allowed! More precisely minangle_rad <= 0 and maxaxangle_rad >= 0
         if branch.maxangle_rad < 0 or branch.minangle_rad > 0:
-            logging.error(
+            logger.error(
                 " --- Broken assumption 1: branch j %d f %d t %d minanglerad %f maxanglerad %f."
                 % (j, f, t, branch.minangle_rad, branch.maxangle_rad)
             )
@@ -465,7 +469,7 @@ def lpformulator_ac_create_vars(alldata, model):
 
     zvar = {}
     if alldata["branchswitching_mip"] or alldata["branchswitching_comp"]:
-        logging.info("Adding branch switching variables.")
+        logger.info("Adding branch switching variables.")
         for j in range(1, 1 + numbranches):
             branch = branches[j]
             f = branch.f
@@ -534,6 +538,7 @@ def lpformulator_ac_create_vars(alldata, model):
 def lpformulator_ac_create_polar_vars(alldata, model, varcount):
     """Create polar variables for ACOPF"""
 
+    logger = logging.getLogger("OpfLogger")
     vvar = {}
     thetavar = {}
     numbuses = alldata["numbuses"]
@@ -544,7 +549,7 @@ def lpformulator_ac_create_polar_vars(alldata, model, varcount):
     newvarcount = 0
     fixtolerance = alldata["fixtolerance"]
 
-    logging.info("  Creating variables for polar formulation.")
+    logger.info("  Creating variables for polar formulation.")
 
     for j in range(1, numbuses + 1):
         bus = buses[j]
@@ -583,7 +588,7 @@ def lpformulator_ac_create_polar_vars(alldata, model, varcount):
     thetaftvar = {}
     vfvtvar = {}
 
-    logging.info("    Assumption. Phase angle diffs between -pi and pi.")
+    logger.info("    Assumption. Phase angle diffs between -pi and pi.")
 
     for j in range(1, 1 + numbranches):
         branch = branches[j]
@@ -634,9 +639,7 @@ def lpformulator_ac_create_polar_vars(alldata, model, varcount):
     alldata["LP"]["thetaftvar"] = thetaftvar
     alldata["LP"]["vfvtvar"] = vfvtvar
 
-    logging.info(
-        "    Added %d new variables to handle polar formulation." % newvarcount
-    )
+    logger.info("    Added %d new variables to handle polar formulation." % newvarcount)
 
     varcount += newvarcount
 
@@ -644,6 +647,7 @@ def lpformulator_ac_create_polar_vars(alldata, model, varcount):
 def lpformulator_ac_create_efvars(alldata, model, varcount):
     """Create nonconvex e, f variables for ACOPF"""
 
+    logger = logging.getLogger("OpfLogger")
     evar = {}
     fvar = {}
     numbuses = alldata["numbuses"]
@@ -654,7 +658,7 @@ def lpformulator_ac_create_efvars(alldata, model, varcount):
     if alldata["fixtolerance"] > 0:
         fixtolerance = alldata["fixtolerance"]
 
-    logging.info("  Creating e,f variables.")
+    logger.info("  Creating e,f variables.")
 
     for j in range(1, numbuses + 1):
         bus = buses[j]
@@ -687,7 +691,7 @@ def lpformulator_ac_create_efvars(alldata, model, varcount):
     alldata["LP"]["evar"] = evar
     alldata["LP"]["fvar"] = fvar
 
-    logging.info("  Added %d e, f variables." % efvarcount)
+    logger.info("  Added %d e, f variables." % efvarcount)
 
     varcount += efvarcount
 
@@ -695,6 +699,7 @@ def lpformulator_ac_create_efvars(alldata, model, varcount):
 def lpformulator_ac_create_constraints(alldata, model):
     """Create constraints for ACOPF"""
 
+    logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     numbranches = alldata["numbranches"]
@@ -719,8 +724,8 @@ def lpformulator_ac_create_constraints(alldata, model):
     lincostvar = alldata["LP"]["lincostvar"]
     zvar = alldata["LP"]["zvar"]
 
-    logging.info("Creating constraints.")
-    logging.info("  Adding cost definition.")
+    logger.info("Creating constraints.")
+    logger.info("  Adding cost definition.")
 
     coeff = [gen.costvector[gen.costdegree - 1] for gen in gens.values()]
     variables = [GenPvar[gen] for gen in gens.values()]
@@ -732,14 +737,14 @@ def lpformulator_ac_create_constraints(alldata, model):
         if gen.costdegree >= 2 and gen.costvector[0] > 0 and gen.status:
             numquadgens += 1
 
-    logging.info(
+    logger.info(
         "    Number of generators with quadratic cost coefficient: %d." % numquadgens
     )
 
     if numquadgens > 0:
         if alldata["usequadcostvar"]:
             quadcostvar = alldata["LP"]["quadcostvar"]
-            logging.info("    Adding quadcost definition constraint.")
+            logger.info("    Adding quadcost definition constraint.")
             qcost = gp.QuadExpr()
             for gen in gens.values():
                 if gen.costdegree == 2 and gen.costvector[0] != 0:
@@ -747,7 +752,7 @@ def lpformulator_ac_create_constraints(alldata, model):
 
             model.addConstr(qcost <= quadcostvar, name="qcostdef")
         else:
-            logging.info("    Adding quad cost to objective.")
+            logger.info("    Adding quad cost to objective.")
             model.update()  # Necessary to flush changes in the objective function
             oldobj = model.getObjective()
             newobj = gp.QuadExpr(oldobj)
@@ -758,7 +763,7 @@ def lpformulator_ac_create_constraints(alldata, model):
             model.setObjective(newobj, GRB.MINIMIZE)
 
     # Active PF defs
-    logging.info("  Adding active power flow definitions.")
+    logger.info("  Adding active power flow definitions.")
     count = 0
     for j in range(1, 1 + numbranches):
         branch = branches[j]
@@ -860,10 +865,10 @@ def lpformulator_ac_create_constraints(alldata, model):
                 Pvar_t[branch] == 0, name=branch.Ptcname
             )
 
-    logging.info("    %d active power flow definitions added." % count)
+    logger.info("    %d active power flow definitions added." % count)
 
     # Reactive PF defs
-    logging.info("  Adding reactive power flow definitions.")
+    logger.info("  Adding reactive power flow definitions.")
     count = 0
     for j in range(1, 1 + numbranches):
         branch = branches[j]
@@ -963,10 +968,10 @@ def lpformulator_ac_create_constraints(alldata, model):
                 Qvar_t[branch] == 0, name=branch.Qtcname
             )
 
-    logging.info("    %d reactive power flow definitions added." % count)
+    logger.info("    %d reactive power flow definitions added." % count)
 
     # Balance constraints
-    logging.info(
+    logger.info(
         "  Adding constraints stating bus injection = total outgoing power flow."
     )
     count = 0
@@ -1031,10 +1036,10 @@ def lpformulator_ac_create_constraints(alldata, model):
             )
         count += 1
 
-    logging.info("    %d balance constraints added." % count)
+    logger.info("    %d balance constraints added." % count)
 
     # Injection defs
-    logging.info("  Adding injection definition constraints.")
+    logger.info("  Adding injection definition constraints.")
     count = 0
     for j in range(1, 1 + numbuses):
         bus = buses[j]
@@ -1057,10 +1062,10 @@ def lpformulator_ac_create_constraints(alldata, model):
         model.addConstr(Qinjvar[bus] == expr - bus.Qd, name="Bus_QInj_%d" % j)
         count += 2
 
-    logging.info("    %d injection definition constraints added." % count)
+    logger.info("    %d injection definition constraints added." % count)
 
     # Branch limits
-    logging.info("  Adding branch limits.")
+    logger.info("  Adding branch limits.")
     count = 0
     for j in range(1, 1 + numbranches):
         branch = branches[j]
@@ -1084,11 +1089,11 @@ def lpformulator_ac_create_constraints(alldata, model):
             )
             count += 2
 
-    logging.info("    %d branch limits added." % count)
+    logger.info("    %d branch limits added." % count)
 
     # JABR.
     if alldata["skipjabr"] == False:
-        logging.info("  Adding Jabr constraints.")
+        logger.info("  Adding Jabr constraints.")
         count = 0
         for j in range(1, 1 + numbranches):
             branch = branches[j]
@@ -1106,13 +1111,13 @@ def lpformulator_ac_create_constraints(alldata, model):
                 )
                 count += 1
 
-        logging.info("    %d Jabr constraints added." % count)
+        logger.info("    %d Jabr constraints added." % count)
     else:
-        logging.info("  Skipping Jabr inequalities.")
+        logger.info("  Skipping Jabr inequalities.")
 
     # Active loss constraints.
     if alldata["useactivelossineqs"] == True:
-        logging.info("  Adding active loss constraints.")
+        logger.info("  Adding active loss constraints.")
         count = 0
         for j in range(1, 1 + numbranches):
             branch = branches[j]
@@ -1167,9 +1172,9 @@ def lpformulator_ac_create_constraints(alldata, model):
 
                             count += 1
 
-        logging.info("    %d active loss constraints added." % count)
+        logger.info("    %d active loss constraints added." % count)
     else:
-        logging.info("  Skipping active loss inequalities.")
+        logger.info("  Skipping active loss inequalities.")
 
     # Polar representation
     if alldata["dopolar"]:
@@ -1185,7 +1190,7 @@ def lpformulator_ac_create_constraints(alldata, model):
             exp = gp.LinExpr()
             delta = numbranches
             N = numbranches - delta  # <<<<<<---- here is the heuristic lower bound
-            logging.info("In bound_zs constraint, N = %d." % (N))
+            logger.info("In bound_zs constraint, N = %d." % (N))
             for j in range(1, 1 + numbranches):
                 branch = branches[j]
                 exp += zvar[branch]
@@ -1195,6 +1200,7 @@ def lpformulator_ac_create_constraints(alldata, model):
 def lpformulator_ac_add_polarconstraints(alldata, model):
     """Create polar representation constraints for ACOPF"""
 
+    logger = logging.getLogger("OpfLogger")
     buses = alldata["buses"]
     numbuses = alldata["numbuses"]
     branches = alldata["branches"]
@@ -1210,7 +1216,7 @@ def lpformulator_ac_add_polarconstraints(alldata, model):
     svar = alldata["LP"]["svar"]
     count = 0
 
-    logging.info("  Adding polar constraints.")
+    logger.info("  Adding polar constraints.")
 
     for j in range(1, 1 + numbuses):
         bus = buses[j]
@@ -1249,12 +1255,13 @@ def lpformulator_ac_add_polarconstraints(alldata, model):
         )
         count += 6  # Count general constraints as well
 
-    logging.info("    %d polar constraints added." % count)
+    logger.info("    %d polar constraints added." % count)
 
 
 def lpformulator_ac_add_nonconvexconstraints(alldata, model):
     """Create nonconvex e, f constraints"""
 
+    logger = logging.getLogger("OpfLogger")
     buses = alldata["buses"]
     numbuses = alldata["numbuses"]
     branches = alldata["branches"]
@@ -1265,7 +1272,7 @@ def lpformulator_ac_add_nonconvexconstraints(alldata, model):
     svar = alldata["LP"]["svar"]
     IDtoCountmap = alldata["IDtoCountmap"]
     count = 0
-    logging.info("  Adding nonconvex e, f, constraints.")
+    logger.info("  Adding nonconvex e, f, constraints.")
 
     for j in range(1, 1 + numbuses):
         bus = buses[j]
@@ -1296,7 +1303,7 @@ def lpformulator_ac_add_nonconvexconstraints(alldata, model):
             )
             count += 2
 
-    logging.info("    %d nonconvex e, f constraints added." % count)
+    logger.info("    %d nonconvex e, f constraints added." % count)
 
 
 # TODO-Dan This function definitely looks the same as in grbformulator_iv
@@ -1304,6 +1311,7 @@ def lpformulator_ac_add_nonconvexconstraints(alldata, model):
 def grbderive_xtra_sol_values_fromvoltages(alldata):
     # Generates complete solution vectors from input voltages.
 
+    logger = logging.getLogger("OpfLogger")
     model = alldata["model"]
 
     model.update()
@@ -1321,7 +1329,7 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
     cvar = alldata["LP"]["cvar"]
     svar = alldata["LP"]["svar"]
 
-    logging.info("Creating derived solution values from input voltage solution.")
+    logger.info("Creating derived solution values from input voltage solution.")
 
     loud = False
 
@@ -1398,7 +1406,7 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
                 xbuffer[cvar[branch]] = vfvt * c
                 xbuffer[svar[branch]] = vfvt * s
 
-    logging.info("Derived e, f, c, s values.")
+    logger.info("Derived e, f, c, s values.")
 
     Pvar_f = alldata["LP"]["Pvar_f"]
     Pvar_t = alldata["LP"]["Pvar_t"]
@@ -1437,7 +1445,7 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
             print("sum =", sum, leadcoeff)
         xbuffer[Pvar_f[branch]] = -sum / leadcoeff
         # leadcoeff should be +1 or -1
-        logging.info(
+        logger.info(
             "%s derived at %f." % (Pvar_f[branch].Varname, xbuffer[Pvar_f[branch]])
         )
 
@@ -1468,7 +1476,7 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
             print("sum =", sum, leadcoeff)
         xbuffer[Pvar_t[branch]] = -sum / leadcoeff
         # leadcoeff should be +1 or -1
-        logging.info(
+        logger.info(
             "%s derived at %f." % (Pvar_t[branch].Varname, xbuffer[Pvar_t[branch]])
         )
 
@@ -1503,7 +1511,7 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
 
         xbuffer[Qvar_f[branch]] = -sum / leadcoeff
         # leadcoeff should be +1 or -1
-        logging.info(
+        logger.info(
             "%s derived at %f." % (Qvar_f[branch].Varname, xbuffer[Qvar_f[branch]])
         )
 
@@ -1547,7 +1555,7 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
             print("sum =", sum, leadcoeff)
         xbuffer[Qvar_t[branch]] = -sum / leadcoeff
         # leadcoeff should be +1 or -1
-        logging.info(
+        logger.info(
             "%s derived at %f." % (Qvar_t[branch].Varname, xbuffer[Qvar_t[branch]])
         )
 
@@ -1586,7 +1594,9 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
 
 def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     """Checks feasibility of input solution -- reports infeasibilities"""
-    logging.info("Strict feasibility check for input voltage solution.\n")
+
+    logger = logging.getLogger("OpfLogger")
+    logger.info("Strict feasibility check for input voltage solution.\n")
 
     if alldata["strictcheckvoltagesolution"]:
         grbderive_xtra_sol_values_fromvoltages(alldata)
@@ -1619,12 +1629,12 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     badlbvar = None
     badubvar = None
 
-    logging.info("Direct bus magnitude bounds check. Error issued if infeasibility.")
+    logger.info("Direct bus magnitude bounds check. Error issued if infeasibility.")
 
     for j in range(1, numbuses + 1):
         bus = buses[j]
         if bus.inputV > bus.Vmax:
-            logging.error(
+            logger.error(
                 ">>> Error: bus # %d has input voltage %f which is larger than Vmax %f."
                 % (j, bus.inputV, bus.Vmax)
             )
@@ -1633,7 +1643,7 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
                 max_violation_string = "bus_" + str(bus.nodeID) + "_Vmax"
                 max_violation_value = thisviol
         if bus.inputV < bus.Vmin:
-            logging.error(
+            logger.error(
                 ">>> Error: bus # %d has input voltage %f which is smaller than Vmin %f."
                 % (j, bus.inputV, bus.Vmin)
             )
@@ -1651,9 +1661,9 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
 
         Vmagviol[bus] = candmaxviol
 
-    logging.info("Checked input Vmag values.")
+    logger.info("Checked input Vmag values.")
 
-    logging.info("Direct branch limit check. Error issued if infeasible.")
+    logger.info("Direct branch limit check. Error issued if infeasible.")
 
     Pvar_f = alldata["LP"]["Pvar_f"]
     Pvar_t = alldata["LP"]["Pvar_t"]
@@ -1668,11 +1678,11 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         )
         fromviol = max(fromvalue - branch.limit, 0)
         if fromvalue > branch.limit:
-            logging.error(
+            logger.error(
                 ">>> Error: branch # %d has 'from' flow magnitude %f which is larger than limit %f."
                 % (j, fromvalue, branch.limit)
             )
-            logging.error("    branch is ( %d %d )." % (branch.f, branch.t))
+            logger.error("    branch is ( %d %d )." % (branch.f, branch.t))
             thisviol = fromviol
             if thisviol > max_violation_value:
                 max_violation_string = "branch_" + str(j) + "_from"
@@ -1684,11 +1694,11 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         )
         toviol = max(tovalue - branch.limit, 0)
         if tovalue > branch.limit:
-            logging.error(
+            logger.error(
                 ">>> Error: branch # %d has 'to' flow magnitude %f which is larger than limit %f."
                 % (j, tovalue, branch.limit)
             )
-            logging.error("    branch is ( %d %d )." % (branch.f, branch.t))
+            logger.error("    branch is ( %d %d )." % (branch.f, branch.t))
             thisviol = toviol
             if thisviol > max_violation_value:
                 max_violation_string = "branch_" + str(j) + "_to"
@@ -1743,10 +1753,10 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
             alldata["LP"]["xbuffer"][evar[bus]] = bus.inpute
             alldata["LP"]["xbuffer"][fvar[bus]] = bus.inputf
 
-        logging.info("e, f values.")
+        logger.info("e, f values.")
 
     if alldata["dopolar"]:
-        logging.info(
+        logger.info(
             "Checking polar quantities. Note: bounds shifted by input solution."
         )  # which will repeat the Vmag value check, so ...
         vvar = alldata["LP"]["vvar"]
@@ -1774,9 +1784,9 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
                 True,
             )
 
-        logging.info("Vmag values checked.")
+        logger.info("Vmag values checked.")
 
-    logging.info("Checking power flow values.")
+    logger.info("Checking power flow values.")
 
     for j in range(1, 1 + numbranches):
         branch = branches[j]
@@ -1864,7 +1874,7 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
             True,
         )
 
-    logging.info("Checking flow balance constraints.")
+    logger.info("Checking flow balance constraints.")
     Pinjvar = alldata["LP"]["Pinjvar"]
     Qinjvar = alldata["LP"]["Qinjvar"]
 
@@ -1922,11 +1932,11 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         minnetgen = myPlbound - bus.Pd
         maxnetgen = myPubound - bus.Pd
 
-        logging.info(
+        logger.info(
             "Bus ID %s #%d injection %g mingen %g maxgen %g load %g."
             % (bus.nodeID, j, injection, myPlbound, myPubound, bus.Pd)
         )
-        logging.info("   min net generation %g; max %g." % (minnetgen, maxnetgen))
+        logger.info("   min net generation %g; max %g." % (minnetgen, maxnetgen))
 
         candmaxviol = alldata["violation"][bus]["Pinjmax"]
         if candmaxviol < alldata["violation"][bus]["Pinjmin"]:
@@ -1988,11 +1998,11 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         minnetgen = myQlbound - bus.Qd
         maxnetgen = myQubound - bus.Qd
 
-        logging.info(
+        logger.info(
             "Bus ID %s #%d injection %g mingen %g maxgen %g load %g."
             % (bus.nodeID, j, injection, myQlbound, myQubound, bus.Qd)
         )
-        logging.info("   min net generation %g; max %g." % (minnetgen, maxnetgen))
+        logger.info("   min net generation %g; max %g." % (minnetgen, maxnetgen))
 
         candmaxviol = alldata["violation"][bus]["Qinjmax"]
         if candmaxviol < alldata["violation"][bus]["Qinjmin"]:
@@ -2002,8 +2012,8 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     worstboundviol_report(badlbvar, maxlbviol, "LB")
     worstboundviol_report(badubvar, maxubviol, "UB")
 
-    logging.info("\nSummary: Max LB viol %g, Max UB viol %g." % (maxlbviol, maxubviol))
-    logging.info(
+    logger.info("\nSummary: Max LB viol %g, Max UB viol %g." % (maxlbviol, maxubviol))
+    logger.info(
         "\nSummary: Max violation %g, key: %s."
         % (max_violation_value, max_violation_string)
     )
@@ -2034,11 +2044,12 @@ def lpformulator_checkviol_simple(
     maxlbviol, maxubviol, badlb, ubvar are updated if the infeasibility is larger
     """
 
+    logger = logging.getLogger("OpfLogger")
     ub = grbvariable.ub
     lb = grbvariable.lb
 
     if loud:
-        logging.info(
+        logger.info(
             "%s =  %.16e  [ LB %.4e  UB %.4e ]" % (grbvariable.varname, value, lb, ub)
         )
 
@@ -2046,24 +2057,24 @@ def lpformulator_checkviol_simple(
     ubviol = value - ub
 
     if lbviol > 0:
-        logging.info(
+        logger.info(
             "LBVIOL %s  LB %.6e  x %.16e  UB %.6e"
             % (grbvariable.varname, lb, value, ub)
         )
 
     if lbviol > maxlbviol:
-        logging.info(" -> incumbent MAX LBVIOL")
+        logger.info(" -> incumbent MAX LBVIOL")
         maxlbviol = lb - value
         badlbvar = grbvariable
 
     if ubviol > 0:
-        logging.info(
+        logger.info(
             "UBVIOL %s  LB %.6e  x %.16e  UB %.6e"
             % (grbvariable.varname, lb, value, ub)
         )
 
     if ubviol > maxubviol:
-        logging.info(" -> incumbent MAX UBVIOL")
+        logger.info(" -> incumbent MAX UBVIOL")
         maxubviol = value - ub
         badubvar = grbvariable
 
@@ -2087,10 +2098,12 @@ def lpformulator_checkviol_simple(
 # TODO-Dan This function definitely looks the same as in grbformulator_iv
 # Are these the same function? If yes, please remove 1 of the 2.
 def worstboundviol_report(badvar, maxviol, boundtype):
+
+    logger = logging.getLogger("OpfLogger")
     if badvar != None:
-        logging.info(
+        logger.info(
             "Worst %s bound violation by %s viol %g."
             % (boundtype, badvar.Varname, maxviol)
         )
     else:
-        logging.info("No %s bound violations." % boundtype)
+        logger.info("No %s bound violations." % boundtype)

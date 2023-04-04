@@ -26,6 +26,7 @@ def solve_opf_model(settings, case, logfile=""):
     stdouthandler = logging.StreamHandler(stream=sys.stdout)
     handlers = [filehandler, stdouthandler]
     logging.basicConfig(level=logging.INFO, format="%(message)s", handlers=handlers)
+    logger = logging.getLogger("OpfLogger")
 
     # Initilize data dictionary
     alldata = initialize_data_dict(logfile)

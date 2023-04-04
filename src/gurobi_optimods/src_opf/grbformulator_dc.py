@@ -13,13 +13,14 @@ from .grbformulator_ac import computebalbounds
 def lpformulator_dc_body(alldata, model):
     """Helper function for adding variables and constraints to the model"""
 
+    logger = logging.getLogger("OpfLogger")
     # Create model variables
     lpformulator_dc_create_vars(alldata, model)
     # Create model constraints
     lpformulator_dc_create_constraints(alldata, model)
 
     model.update()  # Update to get correct model stats
-    logging.info(
+    logger.info(
         "Constructed DCOPF model with %d variables and %d constraints.\n"
         % (model.NumVars, model.NumConstrs)
     )
@@ -27,7 +28,7 @@ def lpformulator_dc_body(alldata, model):
     model.write(
         alldata["lpfilename"]
     )  # FIXME remove.  Jarek: I am using this for debugging, for now
-    logging.info("Wrote LP to " + alldata["lpfilename"])
+    logger.info("Wrote LP to " + alldata["lpfilename"])
 
     alldata["model"] = model
 
@@ -35,7 +36,8 @@ def lpformulator_dc_body(alldata, model):
 def lpformulator_dc_create_vars(alldata, model):
     """Create model variables for DCOPF"""
 
-    logging.info("Creating variables.")
+    logger = logging.getLogger("OpfLogger")
+    logger.info("Creating variables.")
 
     fixtolerance = 1e-05
     if alldata["fixtolerance"] > 0:
@@ -141,7 +143,7 @@ def lpformulator_dc_create_vars(alldata, model):
 
     zvar = {}
     if alldata["branchswitching_mip"]:
-        logging.info("Adding branch switching variables.")
+        logger.info("Adding branch switching variables.")
         for j in range(1, 1 + numbranches):
             branch = branches[j]
             f = branch.f
@@ -185,6 +187,7 @@ def lpformulator_dc_create_vars(alldata, model):
 def lpformulator_dc_create_constraints(alldata, model):
     """ "Create constraint for DCOPF"""
 
+    logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     numbranches = alldata["numbranches"]
@@ -200,8 +203,8 @@ def lpformulator_dc_create_constraints(alldata, model):
     GenPvar = alldata["LP"]["GenPvar"]
     lincostvar = alldata["LP"]["lincostvar"]
 
-    logging.info("Creating constraints.")
-    logging.info("  Adding cost definition.")
+    logger.info("Creating constraints.")
+    logger.info("  Adding cost definition.")
 
     coeff = [gen.costvector[gen.costdegree - 1] for gen in gens.values()]
     variables = [GenPvar[gen] for gen in gens.values()]
@@ -213,14 +216,14 @@ def lpformulator_dc_create_constraints(alldata, model):
         if gen.costdegree >= 2 and gen.costvector[0] > 0 and gen.status:
             numquadgens += 1
 
-    logging.info(
+    logger.info(
         "    Number of generators with quadratic cost coefficient: %d." % numquadgens
     )
 
     if numquadgens > 0:
         if alldata["usequadcostvar"]:
             quadcostvar = alldata["LP"]["quadcostvar"]
-            logging.info("    Adding quadcost definition constraint.")
+            logger.info("    Adding quadcost definition constraint.")
             qcost = gp.QuadExpr()
             for gen in gens.values():
                 if gen.costdegree == 2 and gen.costvector[0] != 0:
@@ -228,7 +231,7 @@ def lpformulator_dc_create_constraints(alldata, model):
 
             model.addConstr(qcost <= quadcostvar, name="qcostdef")
         else:
-            logging.info("    Adding quad cost to objective.")
+            logger.info("    Adding quad cost to objective.")
             model.update()  # Necessary to flush changes in the objective function
             oldobj = model.getObjective()
             newobj = gp.QuadExpr(oldobj)
@@ -239,7 +242,7 @@ def lpformulator_dc_create_constraints(alldata, model):
             model.setObjective(newobj, GRB.MINIMIZE)
 
     # Active PF defs
-    logging.info("  Adding active power flow definitions.")
+    logger.info("  Adding active power flow definitions.")
     count = 0
     for j in range(1, 1 + numbranches):
         branch = branches[j]
@@ -293,10 +296,10 @@ def lpformulator_dc_create_constraints(alldata, model):
                 Pvar_f[branch] == 0, name=branch.Pfcname
             )
 
-    logging.info("    %d active power flow definitions added." % count)
+    logger.info("    %d active power flow definitions added." % count)
 
     # Balance constraints
-    logging.info(
+    logger.info(
         "  Adding constraints stating bus injection = total outgoing power flow."
     )
     count = 0
@@ -312,10 +315,10 @@ def lpformulator_dc_create_constraints(alldata, model):
         model.addConstr(expr == Pinjvar[bus], name="PBaldef%d_%d" % (j, bus.nodeID))
 
         count += 1
-    logging.info("    %d constraints added." % count)
+    logger.info("    %d constraints added." % count)
 
     # Injection defs
-    logging.info("  Adding injection definition constraints.")
+    logger.info("  Adding injection definition constraints.")
     count = 0
     for j in range(1, 1 + numbuses):
         bus = buses[j]
@@ -329,7 +332,7 @@ def lpformulator_dc_create_constraints(alldata, model):
         model.addConstr(Pinjvar[bus] == expr - bus.Pd, name="Bus_PInj_%d" % j)
         count += 1
 
-    logging.info("    %d injection definition constraints added." % count)
+    logger.info("    %d injection definition constraints added." % count)
 
     if alldata["branchswitching_mip"]:
         boundzs = True
@@ -346,6 +349,7 @@ def lpformulator_dc_create_constraints(alldata, model):
 def lpformulator_dc_examine_solution(alldata, model):
     """TODO-Dan Add description"""
 
+    logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     branches = alldata["branches"]
@@ -389,6 +393,6 @@ def lpformulator_dc_examine_solution(alldata, model):
             if zvar[branch].x < 0.5:  # turned off
                 numzeros += 1
                 if loud:
-                    logging.info("branch %d (%d, %d) switched off." % (j, f, t))
+                    logger.info("branch %d (%d, %d) switched off." % (j, f, t))
 
-    logging.info("Done examining solution.\n")
+    logger.info("Done examining solution.\n")

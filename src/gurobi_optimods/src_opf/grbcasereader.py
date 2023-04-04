@@ -51,15 +51,13 @@ class Bus:
         self.genidsbycount.append(generatorcount1)
         loud = False
         if loud:
-            logging.info(
+            logger.info(
                 " added generator # "
                 + str(generatorcount1)
                 + " to bus ID "
                 + str(self.nodeID)
             )
-            logging.info(
-                " Pmax " + str(generator.Pmax) + " Pmin " + str(generator.Pmin)
-            )
+            logger.info(" Pmax " + str(generator.Pmax) + " Pmin " + str(generator.Pmin))
 
     def addfrombranch(self, id):
         quant = len(self.frombranchids)
@@ -184,10 +182,10 @@ class Branch:
 
         loud = False
         if loud:
-            logging.info("\nbr " + str(count) + " f " + str(f) + " t " + str(t))
-            logging.info("   idf " + str(count_f) + " idt " + str(count_t))
-            logging.info("   r " + str(r) + " x " + str(x) + " bb " + str(bc))
-            logging.info(
+            logger.info("\nbr " + str(count) + " f " + str(f) + " t " + str(t))
+            logger.info("   idf " + str(count_f) + " idt " + str(count_t))
+            logger.info("   r " + str(r) + " x " + str(x) + " bb " + str(bc))
+            logger.info(
                 "   ratio "
                 + str(self.ratio)
                 + " angle "
@@ -195,8 +193,8 @@ class Branch:
                 + " angle_rad: "
                 + str(self.angle_rad)
             )
-            logging.info("   y " + str(y))
-            logging.info(
+            logger.info("   y " + str(y))
+            logger.info(
                 "       Yff "
                 + str(Yff)
                 + " , Yft "
@@ -211,9 +209,9 @@ class Branch:
         return self.branchline0
 
     def show(self):
-        logging.info(" < " + str(self.f) + " , " + str(self.t) + " > ")
-        logging.info(" r " + str(self.r) + " x " + str(self.x) + " bc " + str(self.bc))
-        logging.info(" ra " + str(self.ratio) + " ang " + str(self.angle))
+        logger.info(" < " + str(self.f) + " , " + str(self.t) + " > ")
+        logger.info(" r " + str(self.r) + " x " + str(self.x) + " bc " + str(self.bc))
+        logger.info(" ra " + str(self.ratio) + " ang " + str(self.angle))
 
 
 class Gen:
@@ -249,9 +247,9 @@ class Gen:
         self.costlinenum = -1
 
     def showcostvector(self):
-        logging.info(self.costvector)
+        logger.info(self.costvector)
         for i in range(0, self.costdegree + 1):
-            logging.info(i, self.costvector[i], " ", end="")
+            logger.info(i, self.costvector[i], " ", end="")
 
     def getline0(self):
         return self.line0
@@ -275,6 +273,7 @@ def build_data_struct(alldata, case_dict):
     Fills alldata dictionary out of a given casefile dictionary
     """
 
+    logger = logging.getLogger("OpfLogger")
     buses = {}
     IDtoCountmap = {}
     slackbus = -1
@@ -283,12 +282,12 @@ def build_data_struct(alldata, case_dict):
     sumPd = sumQd = 0
     numisolated = 0
 
-    logging.info("Building main data structure from dictionary.")
+    logger.info("Building main data structure from dictionary.")
 
     dict_buses = case_dict["buses"]
     baseMVA = alldata["baseMVA"] = case_dict["baseMVA"]
 
-    logging.info("Buses.")
+    logger.info("Buses.")
 
     for dbus in dict_buses.values():
         numbuses += 1
@@ -301,7 +300,7 @@ def build_data_struct(alldata, case_dict):
 
         if nodetype == 3:
             slackbus = count
-            logging.info("    Bus %d ID %d is the reference bus." % (count, nodeID))
+            logger.info("    Bus %d ID %d is the reference bus." % (count, nodeID))
             alldata["refbus"] = count
 
         if nodetype == 4:
@@ -345,17 +344,17 @@ def build_data_struct(alldata, case_dict):
     alldata["IDtoCountmap"] = IDtoCountmap
     alldata["slackbus"] = slackbus
 
-    logging.info("    sumloadPd %f numPload %d" % (sumPd, numPload))
-    logging.info("    sumloadQd %f" % sumQd)
+    logger.info("    sumloadPd %f numPload %d" % (sumPd, numPload))
+    logger.info("    sumloadQd %f" % sumQd)
 
     if slackbus < 0:
-        logging.info("    Could not find slack bus.")
+        logger.info("    Could not find slack bus.")
 
-    logging.info("    %d buses" % numbuses)
+    logger.info("    %d buses" % numbuses)
     if numisolated > 0:
-        logging.info("    isolated buses: %d" % numisolated)
+        logger.info("    isolated buses: %d" % numisolated)
 
-    logging.info("Branches.")
+    logger.info("Branches.")
     branches = {}
     defaultlimit = 1e20
     numbranches = 0
@@ -417,11 +416,11 @@ def build_data_struct(alldata, case_dict):
 
     alldata["branches"] = branches
     alldata["numbranches"] = numbranches
-    logging.info("    numbranches: %d active: %d" % (numbranches, activebranches))
+    logger.info("    numbranches: %d active: %d" % (numbranches, activebranches))
     if zerolimit > 0:
-        logging.info("    ---> %d unconstrained" % zerolimit)
+        logger.info("    ---> %d unconstrained" % zerolimit)
 
-    logging.info("Generators.")
+    logger.info("Generators.")
     gens = {}
     dict_gens = case_dict["generators"]
     summaxgenP = summaxgenQ = 0
@@ -477,11 +476,11 @@ def build_data_struct(alldata, case_dict):
     alldata["summaxgenP"] = summaxgenP
     alldata["summaxgenQ"] = summaxgenQ
 
-    logging.info("    number of generators: %d" % alldata["numgens"])
-    logging.info("    number of buses with gens: %d" % busgencount)
-    logging.info("    summaxPg %f summaxQg %f" % (summaxgenP, summaxgenQ))
+    logger.info("    number of generators: %d" % alldata["numgens"])
+    logger.info("    number of buses with gens: %d" % busgencount)
+    logger.info("    summaxPg %f summaxQg %f" % (summaxgenP, summaxgenQ))
 
-    logging.info("Generator cost vectors.")
+    logger.info("Generator cost vectors.")
     gencoststruct = case_dict["generator_cost_structure"]
 
     for count in range(1, alldata["numgens"] + 1):
@@ -495,15 +494,16 @@ def read_case_build_dict(alldata):
     This is a helper function for translating casefiles into dict format.
     """
 
+    logger = logging.getLogger("OpfLogger")
     casefilename = alldata["casefilename"]
     starttime = time.time()
 
-    logging.info("Reading case file %s." % casefilename)
+    logger.info("Reading case file %s." % casefilename)
     f = open(casefilename, "r")
     lines = f.readlines()
     f.close()
 
-    logging.info("Now building case dictionary.")
+    logger.info("Now building case dictionary.")
 
     # Read all lines of the casefile
     alldata["casefilelines"] = lines
@@ -512,7 +512,7 @@ def read_case_build_dict(alldata):
 
     endtime = time.time()
 
-    logging.info("Reading time: %f s." % (endtime - starttime))
+    logger.info("Reading time: %f s." % (endtime - starttime))
 
     build_data_struct(alldata, case_dict)
 
@@ -525,6 +525,7 @@ def read_case_build_dict_thrulines(lines):
     This is a helper function for translating casefiles into dict format.
     """
 
+    logger = logging.getLogger("OpfLogger")
     numlines = len(lines)
     lookingforbus = 1
     linenum = 2
@@ -549,7 +550,7 @@ def read_case_build_dict_thrulines(lines):
             linenum += 1
             continue
 
-        logging.info("  Found %s on line %d." % (theword, linenum))
+        logger.info("  Found %s on line %d." % (theword, linenum))
         if theword == "mpc.baseMVA":
             tmp = thisline[2]
             # Trim ; if present
@@ -557,7 +558,7 @@ def read_case_build_dict_thrulines(lines):
                 tmp = tmp[: len(tmp) - 1]
 
             case_dict["baseMVA"] = baseMVA = float(tmp)
-            logging.info("    baseMVA: %f" % baseMVA)
+            logger.info("    baseMVA: %f" % baseMVA)
 
         elif theword == "mpc.bus":
             buses = {}
@@ -574,14 +575,14 @@ def read_case_build_dict_thrulines(lines):
 
                 # Look for end of section
                 if thisline[0] == "];":
-                    logging.info("    Found end of bus section on line %d." % linenum)
+                    logger.info("    Found end of bus section on line %d." % linenum)
                     lookingforendofbus = 0
                     break
 
                 numbuses += 1
                 if thisline[1] == "3":
                     slackbus = int(thisline[0])
-                    logging.info("    Slack bus: %d" % slackbus)
+                    logger.info("    Slack bus: %d" % slackbus)
 
                 if thisline[0] != "%":
                     nodeID = int(thisline[0])
@@ -614,7 +615,7 @@ def read_case_build_dict_thrulines(lines):
                     buses[numbuses]["lnum"] = linenum - 1
 
                     if nodetype == 3:
-                        logging.info(
+                        logger.info(
                             "    Bus %d ID %d is the reference bus."
                             % (numbuses, nodeID)
                         )
@@ -623,11 +624,11 @@ def read_case_build_dict_thrulines(lines):
                 else:
                     nodeID = int(thisline[1])
                     nodetype = int(thisline[2])
-                    logging.info(
+                    logger.info(
                         "bus %d nodeID %d is isolated and has type %d."
                         % (numbuses, nodeID, nodetype)
                     )
-                    logging.info("   setting it to type 4.")
+                    logger.info("   setting it to type 4.")
                     nodetype = 4
 
                     # Trim ; if present
@@ -671,7 +672,7 @@ def read_case_build_dict_thrulines(lines):
 
                 # Look for end of section
                 if thisline[0] == "];":
-                    logging.info("    Found end of gen section on line %d." % linenum)
+                    logger.info("    Found end of gen section on line %d." % linenum)
                     lookingforendofgen = 0
                     break
 
@@ -721,9 +722,7 @@ def read_case_build_dict_thrulines(lines):
 
                 # Look for end of branch section
                 if thisline[0] == "];":
-                    logging.info(
-                        "    Found end of branch section on line %d." % linenum
-                    )
+                    logger.info("    Found end of branch section on line %d." % linenum)
                     lookingforendofbranch = 0
                     break
 
@@ -785,7 +784,7 @@ def read_case_build_dict_thrulines(lines):
 
                 # Look for end of gen section
                 if thisline[0] == "];":
-                    logging.info(
+                    logger.info(
                         "    Found end of gencost section on line %d." % linenum
                     )
                     lookingforendofgencost = 0
@@ -838,13 +837,14 @@ def read_casefile(alldata):
     # TODO Parse matlab file to matlab data file (MAT) and read it in through Python numpy
     """Read case file and fill data dictionary"""
 
+    logger = logging.getLogger("OpfLogger")
     if alldata["casefilename"] == None:
         raise ValueError("No casefile provided.")
 
     casefilename = alldata["casefilename"]
     starttime = time.time()
 
-    logging.info("Reading case file %s." % casefilename)
+    logger.info("Reading case file %s." % casefilename)
     f = open(casefilename, "r")
     lines = f.readlines()
     f.close()
@@ -855,12 +855,13 @@ def read_casefile(alldata):
 
     endtime = time.time()
 
-    logging.info("Reading time: %f s." % (endtime - starttime))
+    logger.info("Reading time: %f s." % (endtime - starttime))
 
 
 def read_case_thrulines(alldata, lines):
     """Read thru all lines of case file and fill data dictionary"""
 
+    logger = logging.getLogger("OpfLogger")
     numlines = len(lines)
     lookingforbus = 1
     linenum = 2
@@ -884,7 +885,7 @@ def read_case_thrulines(alldata, lines):
             linenum += 1
             continue
 
-        logging.info("  Found %s on line %d." % (theword, linenum))
+        logger.info("  Found %s on line %d." % (theword, linenum))
         if theword == "mpc.baseMVA":
             tmp = thisline[2]
             # Trim ; if present
@@ -893,7 +894,7 @@ def read_case_thrulines(alldata, lines):
 
             alldata["baseMVA"] = float(tmp)
             baseMVA = alldata["baseMVA"]
-            logging.info("    baseMVA: %f." % baseMVA)
+            logger.info("    baseMVA: %f." % baseMVA)
 
         elif theword == "mpc.bus":
             buses = {}
@@ -912,14 +913,14 @@ def read_case_thrulines(alldata, lines):
 
                 # Look for end of section
                 if thisline[0] == "];":
-                    logging.info("    Found end of bus section on line %d." % linenum)
+                    logger.info("    Found end of bus section on line %d." % linenum)
                     lookingforendofbus = 0
                     break
 
                 numbuses += 1
                 if thisline[1] == "3":
                     slackbus = int(thisline[0])
-                    logging.info("    Slack bus: %d." % slackbus)
+                    logger.info("    Slack bus: %d." % slackbus)
 
                 if thisline[0] != "%":
                     nodeID = int(thisline[0])
@@ -969,7 +970,7 @@ def read_case_thrulines(alldata, lines):
                     )
 
                     if nodetype == 3:
-                        logging.info(
+                        logger.info(
                             "    Bus %d ID %d is the reference bus."
                             % (numbuses, nodeID)
                         )
@@ -984,11 +985,11 @@ def read_case_thrulines(alldata, lines):
                 else:
                     nodeID = int(thisline[1])
                     nodetype = int(thisline[2])
-                    logging.info(
+                    logger.info(
                         "bus %d nodeID %d is isolated and has type %d."
                         % (numbuses, nodeID, nodetype)
                     )
-                    logging.info("   setting it to type 4.")
+                    logger.info("   setting it to type 4.")
                     nodetype = 4
 
                     if (
@@ -1032,7 +1033,7 @@ def read_case_thrulines(alldata, lines):
                     )
 
                     if nodetype == 3:
-                        logging.info(
+                        logger.info(
                             "    Bus %d ID %d is the reference bus."
                             % (numbuses, nodeID)
                         )
@@ -1054,18 +1055,18 @@ def read_case_thrulines(alldata, lines):
             alldata["IDtoCountmap"] = IDtoCountmap
             alldata["slackbus"] = slackbus
 
-            logging.info("    sumloadPd %f numPload %d." % (sumPd, numPload))
-            logging.info("    sumloadQd %f." % sumQd)
+            logger.info("    sumloadPd %f numPload %d." % (sumPd, numPload))
+            logger.info("    sumloadQd %f." % sumQd)
 
             if lookingforendofbus:
                 raise ValueError("Could not find bus data section.")
 
             if slackbus < 0:
-                logging.info("    Could not find slack bus.")
+                logger.info("    Could not find slack bus.")
 
-            logging.info("    %d buses." % numbuses)
+            logger.info("    %d buses." % numbuses)
             if numisolated > 0:
-                logging.info("    isolated buses: %d." % numisolated)
+                logger.info("    isolated buses: %d." % numisolated)
 
         elif theword == "mpc.gen":
             gens = {}
@@ -1082,7 +1083,7 @@ def read_case_thrulines(alldata, lines):
                 # Look for end of section
                 if thisline[0] == "];":
                     alldata["endofgen"] = linenum
-                    logging.info("    Found end of gen section on line %d." % linenum)
+                    logger.info("    Found end of gen section on line %d." % linenum)
                     lookingforendofgen = 0
                     break
 
@@ -1149,9 +1150,9 @@ def read_case_thrulines(alldata, lines):
             alldata["summaxgenP"] = summaxgenP
             alldata["summaxgenQ"] = summaxgenQ
 
-            logging.info("    number of generators: %d." % alldata["numgens"])
-            logging.info("    number of buses with gens: %d." % busgencount)
-            logging.info("    summaxPg %f summaxQg %f." % (summaxgenP, summaxgenQ))
+            logger.info("    number of generators: %d." % alldata["numgens"])
+            logger.info("    number of buses with gens: %d." % busgencount)
+            logger.info("    summaxPg %f summaxQg %f." % (summaxgenP, summaxgenQ))
 
         elif theword == "mpc.branch":
             branches = {}
@@ -1169,9 +1170,7 @@ def read_case_thrulines(alldata, lines):
 
                 # Look for end of branch section
                 if thisline[0] == "];":
-                    logging.info(
-                        "    Found end of branch section on line %d." % linenum
-                    )
+                    logger.info("    Found end of branch section on line %d." % linenum)
                     lookingforendofbranch = 0
                     break
 
@@ -1209,7 +1208,7 @@ def read_case_thrulines(alldata, lines):
                     raise ValueError("baseMVA not available before branch section.")
 
                 if False:  # rateA < 1e-10: # TODO do we need it?
-                    logging.info(
+                    logger.info(
                         "Warning. Branch %d from %d to %d has unbounded rateA."
                         % (numbranches, f, t)
                     )
@@ -1248,11 +1247,11 @@ def read_case_thrulines(alldata, lines):
 
             alldata["branches"] = branches
             alldata["numbranches"] = numbranches
-            logging.info(
+            logger.info(
                 "    numbranches: %d active: %d." % (numbranches, activebranches)
             )
             if zerolimit > 0:
-                logging.info("    ---> %d unconstrained." % zerolimit)
+                logger.info("    ---> %d unconstrained." % zerolimit)
 
         elif theword == "mpc.gencost":
             lookingforendofgencost = 1
@@ -1266,7 +1265,7 @@ def read_case_thrulines(alldata, lines):
 
                 # Look for end of gen section
                 if thisline[0] == "];":
-                    logging.info(
+                    logger.info(
                         "    Found end of gencost section on line %d." % linenum
                     )
                     alldata["endofgencost"] = linenum
@@ -1335,12 +1334,13 @@ def read_case_thrulines(alldata, lines):
 def readvoltsfile(alldata):
     """Read volts file and fill data dictionary"""
 
+    logger = logging.getLogger("OpfLogger")
     if alldata["voltsfilename"] == None:
         raise ValueError("No voltsfilename provided.")
 
     voltsfilename = alldata["voltsfilename"]
 
-    logging.info("  Reading volts file %s." % voltsfilename)
+    logger.info("  Reading volts file %s." % voltsfilename)
     f = open(voltsfilename, "r")
     lines = f.readlines()
     f.close()
@@ -1369,16 +1369,17 @@ def readvoltsfile(alldata):
                 % (thisline[0], lines[linenum])
             )
 
-    logging.info("Read %d input voltages." % numread)
+    logger.info("Read %d input voltages." % numread)
     alldata["inputvolts"] = inputvolts
 
 
 def readflowsfile(alldata):
     """Read flows file and fill data dictionary"""
 
+    logger = logging.getLogger("OpfLogger")
     flowsfilename = alldata["flowsfilename"]
 
-    logging.info("  Reading flows file %s." % flowsfilename)
+    logger.info("  Reading flows file %s." % flowsfilename)
     f = open(flowsfilename, "r")
     lines = f.readlines()
     f.close()
@@ -1413,7 +1414,7 @@ def readflowsfile(alldata):
                 % (thisline[0], lines[linenum])
             )
 
-    logging.info("Read %d input flows." % numread)
+    logger.info("Read %d input flows." % numread)
 
     alldata["inputPf"] = inputPf
     alldata["inputPt"] = inputPt
@@ -1424,8 +1425,9 @@ def readflowsfile(alldata):
 def writegv(alldata, gvfilename):
     """Write gv file needed for graphical image"""
 
+    logger = logging.getLogger("OpfLogger")
     f = open(gvfilename, "w")
-    logging.info("Writing to gv file %s." % gvfilename)
+    logger.info("Writing to gv file %s." % gvfilename)
 
     f.write("graph {\n")
 
@@ -1444,7 +1446,8 @@ def generateinputcs(alldata):
     Generates values for the Jabr c and s variables from input voltages
     """
 
-    logging.info("  Generating input c,s values.")
+    logger = logging.getLogger("OpfLogger")
+    logger.info("  Generating input c,s values.")
 
     inputcc = {}
     inputcs = {}
@@ -1480,7 +1483,8 @@ def generateinputeandf(alldata):
     Generates rectangular coordinates for voltages from input solution (given in polar coordinates)
     """
 
-    logging.info("  generating input e,f values.")
+    logger = logging.getLogger("OpfLogger")
+    logger.info("  generating input e,f values.")
 
     inputve = {}
     inputvf = {}
