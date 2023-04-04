@@ -73,12 +73,19 @@ easy access by users.
 
 .. testcode:: mod
 
-    from gurobi_optimods.opf import solve_opf_model
+    from gurobi_optimods.opf import solve_opf_model, read_settings_from_file, read_case_from_file
     from gurobi_optimods.datasets import load_acopfsettings, load_case9opf
 
-    conf = load_acopfsettings()
-    case = load_case9opf()
-    solution   = solve_opf_model(conf, case)
+    # load path to settings file
+    settingsfile = load_acopfsettings()
+    # read settings file and return a settings dictionary
+    settings = read_settings_from_file(settingsfile)
+    # load path to case file
+    casefile = load_case9opf()
+    # read case file and return a case dictionary
+    case = read_case_from_file(casefile)
+    # solve opf model and return a solution and the final objective value
+    solution, objval = solve_opf_model(settings, case)
 
 ..  A snippet of the Gurobi log output here won't show in the rendered page,
     but serves as a doctest to make sure the code example runs. The ... lines

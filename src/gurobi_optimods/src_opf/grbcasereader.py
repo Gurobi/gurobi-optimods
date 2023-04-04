@@ -486,11 +486,10 @@ def read_case_file(casefile):
     """
 
     stdouthandler = logging.StreamHandler(stream=sys.stdout)
-    formatter = logging.Formatter("%(message)s")
-    stdouthandler.setFormatter(formatter)
+    logging.basicConfig(
+        level=logging.INFO, format="%(message)s", handlers=[stdouthandler]
+    )
     logger = logging.getLogger("CaseReadingLogger")
-    logger.setLevel(logging.INFO)
-    logger.addHandler(stdouthandler)
 
     logger.info("Reading case file %s." % casefile)
     starttime = time.time()
@@ -499,8 +498,8 @@ def read_case_file(casefile):
     f.close()
 
     # Read all lines of the casefile
-    logger.info("Now building case dictionary.")
-    case_dict = read_case_build_dict_thrulines(lines)
+    logger.info("Building case dictionary.")
+    case_dict = read_case_build_dict(lines)
     endtime = time.time()
     logger.info("Reading and building time: %f s." % (endtime - starttime))
     logger.info("")
@@ -509,7 +508,7 @@ def read_case_file(casefile):
     return case_dict
 
 
-def read_case_build_dict_thrulines(lines):
+def read_case_build_dict(lines):
     """
     Read thru all lines of case file and fill data dictionary.
     This is a helper function for translating casefiles into dict format.

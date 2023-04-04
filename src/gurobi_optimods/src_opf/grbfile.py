@@ -37,7 +37,7 @@ def read_optimization_settings(alldata, settings):
         )
 
     logger = logging.getLogger("OpfLogger")
-    logger.info("Settings:")
+    logger.info("All settings:")
     for s in defaults.keys():
         logger.info("  {} {}".format(s, alldata[s]))
 
@@ -67,6 +67,14 @@ def read_settings_dict(alldata, inputsettings, defaults):
 def read_settings_file(filename, graphics=False):
     """Function to read configurations for OPF solve from config file"""
 
+    stdouthandler = logging.StreamHandler(stream=sys.stdout)
+    logging.basicConfig(
+        level=logging.INFO, format="%(message)s", handlers=[stdouthandler]
+    )
+    logger = logging.getLogger("SettingsReadingLogger")
+
+    logger.info("Reading settings file %s." % filename)
+    starttime = time.time()
     settings = {}
     if graphics:
         settings = get_default_graphics_settings()
@@ -77,6 +85,29 @@ def read_settings_file(filename, graphics=False):
     lines = f.readlines()
     f.close()
 
+    # Read all lines of the casefile
+    logger.info("Building settings dictionary.")
+    settings_dict = read_settings_build_dict(settings, lines)
+    endtime = time.time()
+    logger.info("Reading and building time: %f s." % (endtime - starttime))
+    logger.info("")
+    logger.info("Non-default settings read from file.")
+    for s in settings_dict.keys():
+        logger.info("  {} {}".format(s, settings_dict[s]))
+
+    logger.info("")
+
+    stdouthandler.close()
+    return settings_dict
+
+
+def read_settings_build_dict(settings, lines):
+    """
+    Read thru all lines of settings file and fill data dictionary.
+    This is a helper function for translating casefiles into dict format.
+    """
+
+    settings_dict = {}
     linenum = 0
     # Read lines of configuration file and save options
     while linenum < len(lines):
@@ -103,26 +134,26 @@ def read_settings_file(filename, graphics=False):
             raise ValueError("Illegal option string %s." % thisline[3])
 
         if len(thisline) == 2:
-            settings[thisline[0]] = thisline[1]
+            settings_dict[thisline[0]] = thisline[1]
 
         elif len(thisline) == 1:
-            settings[thisline[0]] = True
+            settings_dict[thisline[0]] = True
 
         # handle special settings
         if thisline[0] == "usemaxdispersion":
-            settings["usemaxdispersion"] = True
+            settings_dict["usemaxdispersion"] = True
             if len(thisline) > 1:
-                settings["maxdispersion_deg"] = float(thisline[1])
+                settings_dict["maxdispersion_deg"] = float(thisline[1])
 
         elif thisline[0] == "usemaxphasediff":
-            settings["usemaxphasediff"] = True
+            settings_dict["usemaxphasediff"] = True
             if len(thisline) > 1:
-                settings["maxphasediff_deg"] = float(thisline[1])
+                settings_dict["maxphasediff_deg"] = float(thisline[1])
 
         elif thisline[0] == "strictcheckvoltagesolution":
-            settings["strictcheckvoltagesolution"] = True
+            settings_dict["strictcheckvoltagesolution"] = True
             if len(thisline) > 1:
-                settings["voltsfilename"] = thisline[1]
+                settings_dict["voltsfilename"] = thisline[1]
 
         elif thisline[0] == "voltsfilename":
             if len(thisline) < 3:
@@ -130,40 +161,40 @@ def read_settings_file(filename, graphics=False):
                     "Voltsfilename option requires filename and tolerance."
                 )
 
-            if settings["usevoltsolution"]:
+            if settings_dict["usevoltsolution"]:
                 raise ValueError(
                     "Illegal option combination. Cannot use both options voltsfilename and voltsolution."
                 )
 
-            settings["voltsfilename"] = thisline[1]
-            settings["fixtolerance"] = float(thisline[2])
+            settings_dict["voltsfilename"] = thisline[1]
+            settings_dict["fixtolerance"] = float(thisline[2])
 
         elif thisline[0] == "usevoltsolution":
-            if settings["voltsfilename"] != None:
+            if settings_dict["voltsfilename"] != None:
                 raise ValueError(
                     "Illegal option combination. Cannot use both voltsfilename and voltsolution."
                 )
 
-            settings["usevoltsolution"] = True  # forcing solution in casefile
+            settings_dict["usevoltsolution"] = True  # forcing solution in casefile
 
         elif thisline[0] == "useconvexformulation":
-            settings["useconvexformulation"] = True
-            settings["doac"] = True
+            settings_dict["useconvexformulation"] = True
+            settings_dict["doac"] = True
 
         elif thisline[0] == "doiv":
-            settings["doiv"] = True
-            settings["use_ef"] = True  # needed
+            settings_dict["doiv"] = True
+            settings_dict["use_ef"] = True  # needed
             if len(thisline) > 1:
-                settings["ivtype"] = thisline[1]
+                settings_dict["ivtype"] = thisline[1]
 
         elif thisline[0] == "dographics":
-            settings["dographics"] = True
+            settings_dict["dographics"] = True
             if len(thisline) > 1:
-                settings["graphattrsfilename"] = thisline[1]
+                settings_dict["graphattrsfilename"] = thisline[1]
 
         linenum += 1
 
-    return settings
+    return settings_dict
 
 
 def grbread_graphattrs(alldata, filename):

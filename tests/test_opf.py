@@ -24,34 +24,53 @@ class TestOpf(unittest.TestCase):
     # test simple is on purpose the same as test_acopf for now
     # will be removed in final version
     def test_simple(self):
+        # load path to settings file
         settingsfile = load_simpleopfsettings()
+        # read settings file and return a settings dictionary
         settings = read_settings_from_file(settingsfile)
+        # load path to case file
         casefile = load_case9opf()
+        # read case file and return a case dictionary
         case = read_case_from_file(casefile)
+        # solve opf model and return a solution and the final objective value
         solution, objval = solve_opf_model(settings, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
 
     def test_graphics(self):
+        # load settings dictionary
         settings_graphics_dict = load_opfdictgraphicssettings()
+        # load case dictionary
         case = load_opfdictcase()
+        # load a precomputed solution and objective value
         solution, objval = load_case9solution()
+        # plot the given solution
         plot_opf_solution(settings_graphics_dict, case, solution, objval)
 
     def test_graphics_after_solving(self):
+        # load settings dictionary
         settings_optimization_dict = load_opfdictsettings()
+        # load case dictionary
         case = load_opfdictcase()
+        # solve opf model and return a solution and the final objective value
         solution, objval = solve_opf_model(settings_optimization_dict, case)
+        # plot the computed solution
         settings_graphics_dict = load_opfdictgraphicssettings()
         plot_opf_solution(settings_graphics_dict, case, solution, objval)
 
     def test_graphics_settings_file(self):
+        # load path to settings file
         settingsfile = load_opfgraphicssettings()
+        # read settings file and return a settings dictionary
         settings_graphics_dict = read_settings_from_file(settingsfile, True)
+        # load path to case file
         casefile = load_case9opf()
+        # read case file and return a case dictionary
         case = read_case_from_file(casefile)
+        # load a precomputed solution and objective value
         solution, objval = load_case9solution()
+        # plot the computed solution
         plot_opf_solution(settings_graphics_dict, case, solution, objval)
 
     # test reading settings and case file from dicts
@@ -73,10 +92,15 @@ class TestOpf(unittest.TestCase):
 
     # test AC formulation
     def test_acopf(self):
+        # load path to settings file
         settingsfile = load_acopfsettings()
+        # read settings file and return a settings dictionary
         settings = read_settings_from_file(settingsfile)
+        # load path to case file
         casefile = load_case9opf()
+        # read case file and return a case dictionary
         case = read_case_from_file(casefile)
+        # solve opf model and return a solution and the final objective value
         solution, objval = solve_opf_model(settings, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
@@ -92,10 +116,15 @@ class TestOpf(unittest.TestCase):
 
     # test DC formulation
     def test_dcopf(self):
+        # load path to settings file
         settingsfile = load_dcopfsettings()
+        # read settings file and return a settings dictionary
         settings = read_settings_from_file(settingsfile)
+        # load path to case file
         casefile = load_case9opf()
+        # read case file and return a case dictionary
         case = read_case_from_file(casefile)
+        # solve opf model and return a solution and the final objective value
         solution, objval = solve_opf_model(settings, case)
         # check whether the solution point looks correct
         self.assertTrue(solution is not None)
@@ -111,10 +140,15 @@ class TestOpf(unittest.TestCase):
 
     # test IV formulation
     def test_ivopf(self):
+        # load path to settings file
         settingsfile = load_ivopfsettings()
+        # read settings file and return a settings dictionary
         settings = read_settings_from_file(settingsfile)
+        # load path to case file
         casefile = load_case9opf()
+        # read case file and return a case dictionary
         case = read_case_from_file(casefile)
+        # solve opf model and return a solution and the final objective value
         solution, objval = solve_opf_model(settings, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
@@ -127,17 +161,3 @@ class TestOpf(unittest.TestCase):
         self.assertLess(abs(solution["f_9"] + 0.085954), 1e-4)
         self.assertTrue("P_9_4_9" in solution.keys())
         self.assertLess(abs(solution["P_9_4_9"] - 0.543771), 1e-4)
-
-    # TODO:
-    #  - add test for plotting
-    #  - rename files, currently they are called grb<something> and some have own names
-    #  - get rid of break_exits
-    #  - how to deal with log and other files?
-    #    - which files do we want by default
-    #  - there are additional package requirements for plotting
-    #    - in particular there is this graphviz 3rd party software
-    #    - it looks like there is also a pipy graphviz package https://pypi.org/project/graphviz/ Maybe we can use this one?
-    #    - we could check whether the graphviz package is installed
-    #  - how do we want to do error handling
-    #  - there is a global variable in grbformulator_dc which does not have to be one (it is used in callback)
-    #
