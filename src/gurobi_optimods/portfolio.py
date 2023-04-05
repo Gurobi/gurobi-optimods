@@ -97,7 +97,7 @@ class MeanVariancePortfolio:
             x = m.addMVar(shape=self.mu.shape, name="x")
             m.addConstr(x.sum() == 1, name="fully_invested")
             m.setObjective(
-                self.mu @ x - 0.5 * gamma * x @ self.covariance @ x, GRB.MAXIMIZE
+                self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)), GRB.MAXIMIZE
             )
 
             m.optimize()
