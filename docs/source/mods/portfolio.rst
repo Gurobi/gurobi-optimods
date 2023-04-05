@@ -1,7 +1,7 @@
 Portfolio Optimization
 ======================
 
-Portfolio optimization is concerned with the allocation of wealth into assets (such as stocks, bonds, commodities, etc.).
+Portfolio optimization is concerned with the allocation of wealth into assets (such as stocks, bonds, commodities, etc.). This mod returns portfolios on the efficient frontier given expected returns and variances.
 
 
 Problem Specification
@@ -13,40 +13,10 @@ Our methods use risk and return estimators.
 
     .. tab:: Domain-Specific Description
 
-        We consider a multi-period portfolio optimization problem where ...
+        We consider a single-period portfolio optimization problem where want to allocate wealth into :math:`n` risky assets. The returned portfolio :math:`x` is an efficient mean-variance portfolio given returns :math:`\mu`, covariance :math:`\Sigma` and risk aversion :math:`\gamma`.
 
 
-    .. tab:: Data Specification
-
-        The mean-variance portfolio optimization model takes the following inputs:
-
-        * The covariance matrix :math:`\Sigma` can be given as a pandas Dataframe or a numpy array.
-        * The return estimator :math:`\mu` can be given as a pandas Series or a numpy array.
-
-        To minimize the risk with a given expected return ...
-        To maximize the expected return with a given maximum risk (variance) ...
-
-        risk-aversion coefficient :math:`\gamma > 0` ...
-
-
-        In each case, the returned allocation vector defines the portfolio.
-
-    .. tab:: Optimization Model
-
-        The risk (variance) is expressed as:
-
-        .. math::
-
-            x^\top \Sigma x
-
-            x^\mathrm{T} \Sigma x
-
-        The expected return is expressed as:
-
-        .. math::
-            \mu x^\top
-
-        The mathematical model is then expressed as:
+    .. tab:: Mathematical Description
 
         .. math::
 
@@ -55,9 +25,29 @@ Our methods use risk and return estimators.
             \mbox{s.t.} \quad & 1^\top x = 1 \\
             \end{alignat}
 
+        * :math:`\mu` is the vector of expected returns.
+        * :math:`\Sigma` is the return covariance matrix.
+        * :math:`x` is the portfolio where :math:`x_i` denotes the fraction of wealth invested in the risky asset :math:`i`.
+        * :math:`\gamma\geq0` is the risk aversion coefficient.
 
 
-The risk estimator is given through a time series.
+
+Data Specification
+------------------
+
+The mean-variance portfolio optimization model takes the following inputs:
+
+* The covariance matrix :math:`\Sigma` can be given as a pandas Dataframe or a numpy array.
+* The return estimator :math:`\mu` can be given as a pandas Series or a numpy array.
+
+
+The returned allocation vector :math:`x` is a pandas Series or a numpy ndarray (depending on the input types).
+
+
+Example
+-------
+
+Here we derive the matrix :math:`\Sigma` and the vector :math:`\mu` from a time series of logarithmic historic returns:
 
 .. testsetup:: mod
 
@@ -66,43 +56,29 @@ The risk estimator is given through a time series.
     pd.options.display.max_rows = 10
     pd.options.display.max_columns = 7
 
-.. tabs::
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
 
-    .. tab:: ``Assets``
+    >>> from gurobi_optimods import datasets
+    >>> data = datasets.load_portfolio()
+    >>> data
+                AA        BB        CC  ...        HH        II        JJ
+    0   -0.000601  0.002353 -0.075234  ...  0.060737 -0.012869 -0.022137
+    1    0.019177  0.050008  0.041345  ... -0.026674  0.009876  0.012809
+    2   -0.020333  0.026638 -0.038999  ... -0.023153 -0.007007 -0.038034
+    3    0.001421 -0.053813 -0.013347  ... -0.012348  0.018736 -0.058373
+    4    0.008648  0.114836  0.003617  ...  0.064090 -0.011153  0.024333
+    ..        ...       ...       ...  ...       ...       ...       ...
+    240  0.007382 -0.000724 -0.002444  ... -0.007654  0.018015 -0.017135
+    241 -0.003362 -0.106913 -0.082365  ...  0.040787 -0.023020 -0.067792
+    242  0.004359 -0.029763 -0.041986  ...  0.014522 -0.017109 -0.060247
+    243 -0.018402 -0.054211 -0.075788  ... -0.013557  0.022576 -0.036793
+    244 -0.016237  0.015580 -0.026970  ... -0.005893 -0.013456 -0.032203
+    <BLANKLINE>
+    [245 rows x 10 columns]
 
-        For a number of assets we have historic values.
+The columns of this dataframe represent the individual assets ("AA", "BB", ..., "JJ") while the rows represent the historic time steps. We use pandas functionality to compute a simple mean estimator and corresponding covariance from this dataframe:
 
-        .. doctest:: mod
-            :options: +NORMALIZE_WHITESPACE
-
-            >>> from gurobi_optimods import datasets
-            >>> data = datasets.load_portfolio()
-            >>> data
-                       AA        BB        CC  ...        HH        II        JJ
-            0   -0.000601  0.002353 -0.075234  ...  0.060737 -0.012869 -0.022137
-            1    0.019177  0.050008  0.041345  ... -0.026674  0.009876  0.012809
-            2   -0.020333  0.026638 -0.038999  ... -0.023153 -0.007007 -0.038034
-            3    0.001421 -0.053813 -0.013347  ... -0.012348  0.018736 -0.058373
-            4    0.008648  0.114836  0.003617  ...  0.064090 -0.011153  0.024333
-            ..        ...       ...       ...  ...       ...       ...       ...
-            240  0.007382 -0.000724 -0.002444  ... -0.007654  0.018015 -0.017135
-            241 -0.003362 -0.106913 -0.082365  ...  0.040787 -0.023020 -0.067792
-            242  0.004359 -0.029763 -0.041986  ...  0.014522 -0.017109 -0.060247
-            243 -0.018402 -0.054211 -0.075788  ... -0.013557  0.022576 -0.036793
-            244 -0.016237  0.015580 -0.026970  ... -0.005893 -0.013456 -0.032203
-            <BLANKLINE>
-            [245 rows x 10 columns]
-
-        The columns of this dataframe represented the individual assets while the rows represent the historic time steps.
-        In the model, this corresponds to ...
-
-
-Code
-----
-
-Self contained code example to run the mod from an example dataset. Example
-datasets should bd included in the ``gurobi_optimods.datasets`` module for
-easy access by users.
 
 .. testcode:: mod
 
@@ -114,9 +90,10 @@ easy access by users.
     data = load_portfolio()
     Sigma = data.cov()
     mu = data.mean()
+    gamma = 0.5
 
     mvp = MeanVariancePortfolio(Sigma, mu)
-    x = mvp.efficient_portfolio(0.5)
+    x = mvp.efficient_portfolio(gamma)
 
 .. testoutput:: mod
     :hide:
@@ -128,7 +105,6 @@ easy access by users.
     ...
 
 
-The model is solved as an LP/MIP/QP by Gurobi.
 
 ..  You can include the full Gurobi log output here for the curious reader.
     It will be visible as a collapsible section.
@@ -182,15 +158,20 @@ The model is solved as an LP/MIP/QP by Gurobi.
 Solution
 --------
 
-Show the solution. One way is to use doctests to display simple shell outputs
-(see the workforce example). This can be done simply by pasting outputs
-directly from a python shell. Another option is to include and display figures
-(see the graph matching examples).
+The returned Series contains the relative investment for each asset; here for example we would invest all our wealth into asset "BB".
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
     >>> x
-    array([8.82553023e-11, 9.99999999e-01, 1.03295020e-11, 5.86102033e-10,
-        6.99613414e-11, 1.43614185e-11, 1.12654841e-10, 3.00224655e-10,
-        4.16795397e-11, 1.22122632e-10])
+    AA    8.825530e-11
+    BB    1.000000e+00
+    CC    1.032950e-11
+    DD    5.861020e-10
+    EE    6.996134e-11
+    FF    1.436142e-11
+    GG    1.126548e-10
+    HH    3.002247e-10
+    II    4.167954e-11
+    JJ    1.221226e-10
+    dtype: float64

@@ -40,18 +40,31 @@ class MeanVariancePortfolio:
         mu,
     ) -> None:
         if isinstance(Sigma, pd.DataFrame):
+            self.resultType = "pandas"
+            self.index = Sigma.index
             self.covariance = Sigma.to_numpy()
         elif isinstance(Sigma, np.ndarray):
             self.covariance = Sigma
+            self.resultType = "numpy"
         else:
             raise TypeError("Incompatible type of Sigma")
 
         if isinstance(mu, pd.Series):
+            self.resultType = "pandas"
             self.mu = mu.to_numpy()
         elif isinstance(mu, np.ndarray):
             self.mu = mu
+            self.resultType = "numpy"
         else:
             raise TypeError("Incompatible type of mu")
+
+    def _convert_result(self, x):
+        if self.resultType == "numpy":
+            return x
+        elif self.resultType == "pandas":
+            return pd.Series(x, index=self.index)
+        else:
+            assert False
 
     def minimize_risk(self, expected_return):
         with gp.Env() as env, gp.Model("min_risk", env=env) as m:
@@ -64,7 +77,7 @@ class MeanVariancePortfolio:
             m.optimize()
 
             if m.Status == GRB.OPTIMAL:
-                return x.X
+                return self._convert_result(x.X)
 
     def maximize_return(self, max_risk):
         with gp.Env() as env, gp.Model("max_return", env=env) as m:
@@ -76,7 +89,7 @@ class MeanVariancePortfolio:
             m.optimize()
 
             if m.Status == GRB.OPTIMAL:
-                return x.X
+                return self._convert_result(x.X)
 
     # trade-off between minimizing risk and maximizing return for a given risk-aversion coefficient gamma
     def efficient_portfolio(self, gamma):
@@ -89,4 +102,4 @@ class MeanVariancePortfolio:
 
             m.optimize()
             if m.Status == GRB.OPTIMAL:
-                return x.X
+                return self._convert_result(x.X)
