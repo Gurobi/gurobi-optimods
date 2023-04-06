@@ -50,7 +50,7 @@ def get_default_optimization_settings():
 
     settings = {
         "casefilename": None,
-        "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this?
+        "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this? I will.  It is a plain text file that has, for each bus, a line of the form "bus 8 M 1.099999e+00 A 9.051238e-01" (bus numbers 1 through N) plus a final "END" line
         "lpfilename": "grbopf.lp",  # TODO default should be None
         "dictionary_input": False,  # TODO-Dan Please document what each setting does
         "strictcheckvoltagesolution": False,
@@ -86,9 +86,9 @@ def get_default_graphics_settings():
 
     settings = {
         "casefilename": None,
-        "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this?
-        "gvfilename": None,  # TODO-Dan where is this used?
-        "graphattrsfilename": None,  # TODO-Dan where is this used?
+        "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this? Will do
+        "gvfilename": None,  # TODO-Dan where is this used?  It may only get used if we are using sfdp
+        "graphattrsfilename": None,  # TODO-Dan where is this used? These are color choices for rendering graphics
         "coordsfilename": None,
         "branchswitching_mip": False,
         "branchswitching_comp": False,

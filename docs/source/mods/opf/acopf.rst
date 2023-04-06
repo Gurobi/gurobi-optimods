@@ -1,7 +1,7 @@
 ACOPF
 =====
 
-A little background on the proud history of mathprog in this field.
+Prior to specifying the mathematical structure of the problem it is important to present basic concepts and terminology used by the power systems community.
 
 Also data science.
 

@@ -8,6 +8,7 @@ from gurobi_optimods.opf import (
 )
 from gurobi_optimods.datasets import (
     load_case9opf,
+    load_caseNYopf,
     load_acopfsettings,
     load_dcopfsettings,
     load_ivopfsettings,
@@ -30,6 +31,21 @@ class TestOpf(unittest.TestCase):
         settings = read_settings_from_file(settingsfile)
         # load path to case file
         casefile = load_case9opf()
+        # read case file and return a case dictionary
+        case = read_case_from_file(casefile)
+        # solve opf model and return a solution and the final objective value
+        solution, objval = solve_opf_model(settings, case, "OPF.log")
+        # check whether the solution points looks correct
+        self.assertTrue(solution is not None)
+        self.assertTrue(objval is not None)
+
+    def test_NY(self):
+        # load path to settings file
+        settingsfile = load_simpleopfsettings()
+        # read settings file and return a settings dictionary
+        settings = read_settings_from_file(settingsfile)
+        # load path to case file
+        casefile = load_caseNYopf()
         # read case file and return a case dictionary
         case = read_case_from_file(casefile)
         # solve opf model and return a solution and the final objective value

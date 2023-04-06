@@ -59,6 +59,11 @@ def load_case9opf():
     return case
 
 
+def load_caseNYopf():
+    case = str(DATA_FILE_DIR) + "/opf/caseNY.m"
+    return case
+
+
 def load_opfdictsettings():
     conf = {"branchswitching_mip": True, "doac": True}
     return conf

@@ -79,6 +79,7 @@ def read_settings_file(filename, graphics=False):
     settings = {}
     if graphics:
         settings = get_default_graphics_settings()
+        # Jarek, if we want to allow plotting via coordinates, we need to restructure this
     else:
         settings = get_default_optimization_settings()
 
