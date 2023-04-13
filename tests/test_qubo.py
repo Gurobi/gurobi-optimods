@@ -4,6 +4,7 @@
 
 import unittest
 import numpy as np
+from numpy.testing import assert_array_equal
 
 # from gurobi_optimods.datasets import load_mod_example_data
 from gurobi_optimods.qubo import solve_qubo
@@ -23,9 +24,9 @@ class TestQubo(unittest.TestCase):
     def test_positive(self):
         Q = np.array([[2, 5], [3, 6]])
         solution = solve_qubo(coeff_matrix=Q)
-        self.assertEqual(solution, np.array([0, 0]))
+        assert_array_equal(solution, np.array([0, 0]))
 
     def test_negative(self):
         Q = np.array([[-2, -5], [-3, -6]])
         solution = solve_qubo(coeff_matrix=Q)
-        self.assertEqual(solution, np.array([1, 1]))
+        assert_array_equal(solution, np.array([1, 1]))

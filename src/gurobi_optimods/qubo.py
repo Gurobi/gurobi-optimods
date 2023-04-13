@@ -1,21 +1,16 @@
-# Implementation of your new mod. This should be copied to
-# src/gurobi_optimods/<mod-name>.py. You may alternatively want to include
-# your mod in an existing file, if it coexists naturally with other mods.
-#
-# In general the public API should be a single class or function. Go with
-# whatever makes the most sense for this mod.
-
 import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
 
 
-def solve_qubo(coeff_matrix):
+def solve_qubo(coeff_matrix) -> np.array:
     """
-    A sphinx-compatible docstring
+    Solve a quadratic unconstrained binary optimization (QUBO) problem,
+    i.e., minimize a quadratic function defined by a coefficient matrix
+    over a binary decision variable vector
 
-    :param data1: Data structure for first argument
-    :type data1: pd.DataFrame
+    :param coeff_matrix: quadratic coefficient matrix
+    :type coeff_matrix: np.array
     """
 
     if coeff_matrix is None:

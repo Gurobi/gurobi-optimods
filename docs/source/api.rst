@@ -9,3 +9,6 @@ API
 
 .. automodule:: gurobi_optimods.matching
    :members: maximum_bipartite_matching, maximum_weighted_matching
+
+.. automodule:: gurobi_optimods.qubo
+   :members: solve_qubo
