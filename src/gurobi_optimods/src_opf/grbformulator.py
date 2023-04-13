@@ -84,7 +84,10 @@ def construct_and_solve_model(alldata):
             index = 0
             for v in model.getVars():
                 if math.fabs(v.X) > 1e-09:
-                    logger.info(v.varname + " = " + str(v.X))
+                    if (
+                        model.NumVars < 100
+                    ):  # Only print the solution if it's not too big
+                        logger.info(v.varname + " = " + str(v.X))
                     solution[v.VarName] = v.X
                 else:
                     solution[v.VarName] = 0.0

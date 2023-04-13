@@ -3,7 +3,7 @@ import logging
 
 import gurobipy as gp
 
-from .src_opf.grbcasereader import read_case, read_case_file
+from .src_opf.grbcasereader import read_case, read_case_file, read_case_file_mat
 
 from .src_opf.grbfile import (
     initialize_data_dict,
@@ -143,7 +143,8 @@ def read_case_from_file(casefile):
     Parameters
     ----------
     casefile :
-        Name of and possibly full path to case file
+        Name of and possibly full path to case file given as .m file
+        The .m file should be in standard MATPOWER notation
 
     Returns
     -------
@@ -153,5 +154,29 @@ def read_case_from_file(casefile):
     """
 
     case_dict = read_case_file(casefile)
+
+    return case_dict
+
+
+def read_case_from_mat_file(casefile):
+    """
+    Helper function for users
+    Used to construct a case dictionary which can be used as input
+    for all other API functions
+
+    Parameters
+    ----------
+    casefile :
+        Name of and possibly full path to case file given as .mat file
+        The .mat file should be in standard MATPOWER notation
+
+    Returns
+    -------
+    dictionary
+        Dictionary object of the given case which is to be used in
+        other API functions
+    """
+
+    case_dict = read_case_file_mat(casefile)
 
     return case_dict

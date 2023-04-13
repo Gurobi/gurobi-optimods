@@ -9,6 +9,8 @@ Optimal Power Flow
 
 blablabla A little background on the proud history of mathprog in this field.
 
+test test test
+
 Also data science.
 
 Problem Specification
@@ -80,7 +82,7 @@ easy access by users.
 .. testcode:: mod
 
     from gurobi_optimods.opf import solve_opf_model, read_settings_from_file, read_case_from_file
-    from gurobi_optimods.datasets import load_dcopfsettings, load_case9opf
+    from gurobi_optimods.datasets import load_dcopfsettings, load_caseopf
 
 
     # load path to settings file
@@ -88,7 +90,7 @@ easy access by users.
     # read settings file and return a settings dictionary
     settings = read_settings_from_file(settingsfile)
     # load path to case file
-    casefile = load_case9opf()
+    casefile = load_caseopf("9")
     # read case file and return a case dictionary
     case = read_case_from_file(casefile)
     # solve opf model and return a solution and the final objective value

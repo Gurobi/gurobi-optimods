@@ -3,6 +3,7 @@ import math
 import cmath
 import time
 import logging
+import scipy
 
 from .utils import initialize_logger, remove_and_close_handlers
 
@@ -483,7 +484,6 @@ def read_case(alldata, case_dict):
 
 def read_case_file(casefile):
     """
-    # TODO Parse matlab file to matlab data file (MAT) and read it in through Python numpy
     Read case file and fill data dictionary
     """
 
@@ -505,6 +505,174 @@ def read_case_file(casefile):
     remove_and_close_handlers(logger, handlers)
 
     return case_dict
+
+
+def read_case_file_mat(casefile):
+    """
+    Read case .mat file and create a compatible data dictionary out of it
+    """
+
+    logger, handlers = initialize_logger("CaseReadingLogger")
+    starttime = time.time()
+    case_dict = {}
+    case_dict["refbus"] = -1
+
+    logger.info("Reading case file %s." % casefile)
+    mat = loadmat(casefile)
+
+    if "mpc" not in mat.keys():
+        raise ValueError("Provided .mat file does not have an mpc field")
+
+    mpc = mat["mpc"]
+
+    for x in ["baseMVA", "bus", "gen", "branch", "gencost"]:
+        if x not in mpc.keys():
+            raise ValueError("Provided .mat file does not have a %s field" % x)
+
+    case_dict["baseMVA"] = mpc["baseMVA"]
+    mpcbuses = mpc["bus"]
+    mpcgen = mpc["gen"]
+    mpcbranch = mpc["branch"]
+    mpcgencost = mpc["gencost"]
+
+    slackbus = -1
+    refbus = -1
+    numbuses = 0
+    buses = {}
+    for b in mpcbuses:
+        numbuses += 1
+        buses[numbuses] = {}
+        buses[numbuses]["count"] = numbuses
+        buses[numbuses]["nodeID"] = int(b[0])
+        buses[numbuses]["nodetype"] = int(b[1])
+        buses[numbuses]["Pd"] = b[2]
+        buses[numbuses]["Qd"] = b[3]
+        buses[numbuses]["Gs"] = b[4]
+        buses[numbuses]["Bs"] = b[5]
+        buses[numbuses]["Vbase"] = b[9]
+        buses[numbuses]["Vmax"] = b[11]
+        buses[numbuses]["Vmin"] = b[12]
+        buses[numbuses]["lnum"] = -1
+        if buses[numbuses]["nodetype"] == 3:
+            slackbus = buses[numbuses]["nodeID"]
+            refbus = numbuses
+            logger.info("    Slack bus: %d" % slackbus)
+            logger.info(
+                "    Bus %d ID %d is the reference bus."
+                % (numbuses, buses[numbuses]["nodeID"])
+            )
+
+    case_dict["slackbus"] = slackbus
+    case_dict["refbus"] = refbus
+    case_dict["buses"] = buses
+
+    numgens = 0
+    gens = {}
+    for g in mpcgen:
+        numgens += 1
+        gens[numgens] = {}
+        gens[numgens]["gencount1"] = numgens
+        gens[numgens]["nodeID"] = int(g[0])
+        gens[numgens]["Pg"] = g[1]
+        gens[numgens]["Qg"] = g[2]
+        gens[numgens]["Qmax"] = g[3]
+        gens[numgens]["Qmin"] = g[4]
+        gens[numgens]["status"] = 0 if g[7] <= 0 else 1
+        gens[numgens]["Pmax"] = g[8]
+        gens[numgens]["Pmin"] = g[9]
+        gens[numgens]["lnum"] = -1
+
+    case_dict["generators"] = gens
+
+    numbranches = 0
+    branches = {}
+    for b in mpcbranch:
+        numbranches += 1
+        branches[numbranches] = {}
+        branches[numbranches]["branchcount1"] = numbranches
+        branches[numbranches]["f"] = b[0]
+        branches[numbranches]["t"] = b[1]
+        branches[numbranches]["r"] = b[2]
+        branches[numbranches]["x"] = b[3]
+        branches[numbranches]["bc"] = b[4]
+        branches[numbranches]["rateA"] = b[5]
+        branches[numbranches]["rateB"] = b[6]
+        branches[numbranches]["rateC"] = b[7]
+        branches[numbranches]["ratio"] = 1.0 if b[8] == 0.0 else b[8]
+        branches[numbranches]["angle"] = b[9]
+        branches[numbranches]["status"] = b[10]
+        branches[numbranches]["minangle"] = b[11]
+        branches[numbranches]["maxangle"] = b[12]
+        branches[numbranches]["lnum"] = -1
+
+    case_dict["branches"] = branches
+
+    numgencosts = 0
+    gencosts = {}
+    for g in mpcgencost:
+        numgencosts += 1
+        gencosts[numgencosts] = {}
+        gencosts[numgencosts]["costtype"] = g[0]
+        degree = int(g[3])
+        gencosts[numgencosts]["degree"] = degree - 1
+        costvector = [0 for j in range(degree)]
+
+        for j in range(degree):
+            tmp = g[4 + j]
+            costvector[j] = tmp
+            costvector[j] *= mpc["baseMVA"] ** (degree - j - 1)
+
+        gencosts[numgencosts]["costvector"] = costvector
+
+    if numgencosts > numgens:
+        raise ValueError(
+            "Read %d gen costs but only %d generators." % (numgencosts, numgens)
+        )
+
+    case_dict["generator_cost_structure"] = gencosts
+
+    endtime = time.time()
+    logger.info("Reading and building time: %f s." % (endtime - starttime))
+    logger.info("")
+    remove_and_close_handlers(logger, handlers)
+
+    return case_dict
+
+
+def loadmat(filename):
+    """
+    This function should be called instead of direct scipy.io.loadmat
+    as it cures the problem of not properly recovering Python dictionaries
+    from mat files. It calls the function check keys to cure all entries
+    which are still mat-objects
+    """
+    data = scipy.io.loadmat(filename, struct_as_record=False, squeeze_me=True)
+    return _check_keys(data)
+
+
+def _check_keys(dict):
+    """
+    Checks if entries in dictionary are mat-objects. If yes
+    todict is called to change them to nested dictionaries
+    """
+    for key in dict:
+        if isinstance(dict[key], scipy.io.matlab.mat_struct):
+            dict[key] = _todict(dict[key])
+    return dict
+
+
+def _todict(matobj):
+    """
+    A recursive function which constructs from matobjects nested dictionaries
+    """
+    dict = {}
+    for strg in matobj._fieldnames:
+        elem = matobj.__dict__[strg]
+        if isinstance(elem, scipy.io.matlab.mat_struct):
+            dict[strg] = _todict(elem)
+        else:
+            dict[strg] = elem
+    return dict
 
 
 def read_case_build_dict(lines):

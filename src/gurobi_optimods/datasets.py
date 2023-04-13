@@ -54,14 +54,20 @@ def load_ivopfsettings():
     return conf
 
 
-def load_case9opf():
-    case = str(DATA_FILE_DIR) + "/opf/case9.m"
+def load_caseopf(number):
+    case = str(DATA_FILE_DIR) + "/opf/case" + number + ".m"
     return case
 
 
-def load_caseNYopf():
+def load_caseopfmat(number):
+    case = str(DATA_FILE_DIR) + "/opf/case" + number + ".mat"
+    return case
+
+
+def load_caseNYopf():  # real world data case
     case = str(DATA_FILE_DIR) + "/opf/caseNY.m"
-    return case
+    casemat = str(DATA_FILE_DIR) + "/opf/caseNY.mat"
+    return case, casemat
 
 
 def load_opfdictsettings():
@@ -85,7 +91,7 @@ def load_opfdictcase():
         "baseMVA": 100.0,
         "buses": {
             1: {
-                "count": 1,
+                "count": 1,  # TODO-Dan Do we need the count? If yes, why?
                 "nodeID": 1,
                 "nodetype": 3,
                 "Pd": 0.0,
@@ -95,7 +101,7 @@ def load_opfdictcase():
                 "Vbase": 345.0,
                 "Vmax": 1.1,
                 "Vmin": 0.9,
-                "lnum": 18,
+                "lnum": 18,  # TODO-Dan Do we need the line number? If yes, why?
             },
             2: {
                 "count": 2,
@@ -205,7 +211,7 @@ def load_opfdictcase():
         "slackbus": 1,
         "generators": {
             1: {
-                "gencount1": 1,
+                "gencount1": 1,  # TODO-Dan Do we need the gencount1 value? If yes, why?
                 "nodeID": 1,
                 "Pg": 0.0,
                 "Qg": 0.0,
@@ -214,7 +220,7 @@ def load_opfdictcase():
                 "Pmin": 10.0,
                 "Qmax": 300.0,
                 "Qmin": -300.0,
-                "lnum": 32,
+                "lnum": 32,  # TODO-Dan Do we need the line number? If yes, why?
             },
             2: {
                 "gencount1": 2,
@@ -243,7 +249,7 @@ def load_opfdictcase():
         },
         "branches": {
             1: {
-                "branchcount1": 1,
+                "branchcount1": 1,  # TODO-Dan Do we need the branchcount? If yes, why?
                 "f": 1,
                 "t": 4,
                 "r": 0.0,
@@ -257,7 +263,7 @@ def load_opfdictcase():
                 "status": 1,
                 "minangle": -360.0,
                 "maxangle": 360.0,
-                "lnum": 40,
+                "lnum": 40,  # TODO-Dan Do we need the line number? If yes, why?
             },
             2: {
                 "branchcount1": 2,
