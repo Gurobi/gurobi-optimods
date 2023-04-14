@@ -15,7 +15,20 @@ from .utils import (
 
 
 def initialize_data_dict(logfile=""):
+    """
+    Initializes a dictionary holding all necessary data
 
+
+    Parameters
+    ----------
+    logfile : string, optional
+        Name of log file. Can be empty
+
+    Returns
+    -------
+    dictionary
+        Returns a dictionary with a few initialized default fields
+    """
     alldata = {}
     alldata["LP"] = {}
     alldata["MIP"] = {}
@@ -25,6 +38,19 @@ def initialize_data_dict(logfile=""):
 
 
 def read_optimization_settings(alldata, settings):
+    """
+    Reads settings dictionary holding settings for an optimization call
+    and saves non-default settings to alldata dictionary.
+    Also performs basic checks for incompatible settings
+
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    settings : dictionary
+        Dictionary holding settings used for an optimization call provided by the user
+    """
 
     # Currently Hard-coded
     alldata["usequadcostvar"] = False  # TODO-Dan What do we want to do with this?
@@ -50,6 +76,17 @@ def read_optimization_settings(alldata, settings):
 
 
 def read_graphics_settings(alldata, settings):
+    """
+    Reads settings dictionary holding settings for a graphics call
+    and saves non-default settings to alldata dictionary
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    settings : dictionary
+        Dictionary holding settings used for a graphics call provided by the user
+    """
 
     # TODO revisit default settings
     defaults = get_default_graphics_settings()
@@ -57,7 +94,18 @@ def read_graphics_settings(alldata, settings):
 
 
 def read_settings_dict(alldata, inputsettings, defaults):
-    """Sets input settings in alldata from a settings dict"""
+    """
+    Sets input settings in alldata from a settings dict.
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    inputsettings : dictionary
+        Dictionary holding settings provided by the user
+    defaults: dictionary
+        Dictionary holding optimization or graphics default settings
+    """
 
     for s in inputsettings.keys():
         if s not in defaults.keys():
@@ -70,7 +118,22 @@ def read_settings_dict(alldata, inputsettings, defaults):
 
 
 def read_settings_file(filename, graphics=False):
-    """Function to read configurations for OPF solve from config file"""
+    """
+    Function to read settings from a file
+
+    Parameters
+    ----------
+    filename : string
+        Path to text based file holding user settings
+    graphics : boolean, optional
+        If set to true, then graphic specific settings are expected. Otherwise,
+        settings for an optimization call are expected
+
+    Returns
+    -------
+    dictionary
+        A dictionary holding all non-default settings
+    """
 
     logger, handlers = initialize_logger("SettingsReadingLogger")
 
@@ -106,8 +169,20 @@ def read_settings_file(filename, graphics=False):
 
 def read_settings_build_dict(settings, lines):
     """
-    Read thru all lines of settings file and fill data dictionary.
-    This is a helper function for translating casefiles into dict format.
+    Helper function to read thru all lines of a previously given settings
+    file and return a dictionary holding all non-default settings
+
+    Parameters
+    ----------
+    settings : dictionary
+        Settings dictionary provided by the user
+    lines : list
+        List of all lines of a previously read in settings file
+
+    Returns
+    -------
+    dictionary
+        A dictionary holding all non-default settings
     """
 
     settings_dict = {}
@@ -201,7 +276,17 @@ def read_settings_build_dict(settings, lines):
 
 
 def grbread_graphattrs(alldata, filename):
-    """Function to read graphical attributes"""
+    """
+    Function to read graphical attributes from a user-given file and
+    save these into the alldata dictionary
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    filename : string
+        Path to text based file holding user-given graph attributes
+    """
 
     logger = logging.getLogger("OpfLogger")
     logger.info("Reading graphical attributes file %s." % filename)
@@ -242,7 +327,15 @@ def grbread_graphattrs(alldata, filename):
 
 
 def grbread_coords(alldata):
-    """Reads csv file with bus coordinates"""
+    """
+    Function to read a csv file with bus coordinates for plotting.
+    The csv filename is given via the coordsfilename setting
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    """
 
     logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
@@ -264,7 +357,16 @@ def grbread_coords(alldata):
 
 
 def grbreadvoltsfile(alldata):
-    """TODO-Dan add description"""
+    """
+    TODO-Dan Review description
+    Function to read a file holding input voltages for buses.
+    The voltage filename is given via the voltsfilename setting
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    """
 
     logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]

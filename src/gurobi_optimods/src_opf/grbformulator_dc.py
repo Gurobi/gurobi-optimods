@@ -11,7 +11,16 @@ from .grbformulator_ac import computebalbounds
 
 
 def lpformulator_dc_body(alldata, model):
-    """Helper function for adding variables and constraints to the model"""
+    """
+    Adds variables and constraints for DC formulation to a given Gurobi model
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    """
 
     logger = logging.getLogger("OpfLogger")
     # Create model variables
@@ -33,7 +42,16 @@ def lpformulator_dc_body(alldata, model):
 
 
 def lpformulator_dc_create_vars(alldata, model):
-    """Create model variables for DCOPF"""
+    """
+    Creates and adds variables for DC formulation to a given Gurobi model
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    """
 
     logger = logging.getLogger("OpfLogger")
     logger.info("Creating variables.")
@@ -184,7 +202,16 @@ def lpformulator_dc_create_vars(alldata, model):
 
 
 def lpformulator_dc_create_constraints(alldata, model):
-    """ "Create constraint for DCOPF"""
+    """
+    Creates and adds constraints for DC formulation to a given Gurobi model
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    """
 
     logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
@@ -346,7 +373,16 @@ def lpformulator_dc_create_constraints(alldata, model):
 
 
 def lpformulator_dc_examine_solution(alldata, model):
-    """TODO-Dan Add description"""
+    """
+    TODO-Dan Add description about what exactly this function does and how it is used
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Constructed Gurobi model
+    """
 
     logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
@@ -368,7 +404,7 @@ def lpformulator_dc_examine_solution(alldata, model):
     GenPvar = alldata["LP"]["GenPvar"]
     lincostvar = alldata["LP"]["lincostvar"]
 
-    loud = False
+    loud = False  # TODO-Dan Remove?
     numzeros = 0
 
     """

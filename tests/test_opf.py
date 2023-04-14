@@ -32,7 +32,6 @@ class TestOpf(unittest.TestCase):
     objvals_ac = [5296.686204, 8081.187603]
     lincost_ac = [704.365640, 6108.954838]
     e_1_ac = [1.0999999, -1.0599999]
-
     # AC relaxation test values
     numvars_acconv = [89, 174, 667, 1580, 3506]
     objvals_acconv = [5296.66532, 8074.9102, 41710.3065, 129338.093, 718613.607]
@@ -255,6 +254,7 @@ class TestOpf(unittest.TestCase):
         # load path to settings file
         settingsfile = load_opfgraphicssettings()
         # read settings file and return a settings dictionary
+        # set second argument to True because it's a graphics settings file
         settings_graphics_dict = read_settings_from_file(settingsfile, True)
         # load path to case file
         casefile = load_caseopf("9")

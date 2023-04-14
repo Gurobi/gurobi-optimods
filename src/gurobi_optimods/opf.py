@@ -32,14 +32,14 @@ def solve_opf_model(settings, case, logfile=""):
         Dictionary holding case data
 
     logfile: string
-        Name of log file. Can be empty.
+        Name of log file. Can be empty
 
 
     Returns
     -------
     OrderedDict, float
         A feasible solution point if any was found as an OrderedDict and
-        the final objective value.
+        the final objective value
     """
 
     # Initialize output and file handler and start logging
@@ -78,7 +78,7 @@ def plot_opf_solution(settings, case, solution, objval):
         Dictionary holding case data
 
     solution : OrderedDict
-        OrderedDictionary holding solution data.
+        OrderedDictionary holding solution data
 
     objval : float
         Objective value
@@ -116,10 +116,12 @@ def read_settings_from_file(settingsfile, graphics=False):
 
     Parameters
     ----------
-    settingsfile :
+    settingsfile : string
         Name of and possibly full path to settings file
 
-    graphics :
+    graphics : boolean, optional
+        If set to true, then the function expects a settings file
+        with special graphics settings
 
 
     Returns

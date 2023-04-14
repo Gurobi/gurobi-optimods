@@ -22,7 +22,14 @@ from .grbformulator_iv import (
 
 
 def construct_and_solve_model(alldata):
-    """Construct OPF model and solve it"""
+    """
+    Construct OPF model and solve it
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    """
 
     logger = logging.getLogger("OpfLogger")
     opftype = None
@@ -104,7 +111,18 @@ def construct_and_solve_model(alldata):
 
 
 def lpformulator_body(alldata, model, opftype):
-    """Call the corresponding model construction method"""
+    """
+    Call the corresponding model construction method
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    opftype : OpfType
+        Type of OPF formulation
+    """
     if opftype == OpfType.AC:
         lpformulator_ac_body(alldata, model)
     elif opftype == OpfType.DC:
@@ -116,6 +134,23 @@ def lpformulator_body(alldata, model, opftype):
 
 
 def lpformulator_strictchecker(alldata, model, spitoutvector, opftype):
+    """
+    Call the corresponding strictchecker function
+
+    TODO-Dan How do we use this function? It says "check input solution against formulation".
+             Which input solution? Where does the user provide the input solution? Is it in the voltage file?
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    spitoutvector: boolean
+        # TODO-Dan What does it do?
+    opftype : OpfType
+        Type of OPF formulation
+    """
     if opftype == OpfType.AC:
         lpformulator_ac_strictchecker(alldata, model, spitoutvector)
     elif opftype == OpfType.DC:
@@ -128,7 +163,20 @@ def lpformulator_strictchecker(alldata, model, spitoutvector, opftype):
 
 
 def lpformulator_examine_solution(alldata, model, opftype):
-    """Call the corresponding model construction method"""
+    """
+    Call the corresponding solution examination function
+
+    # TODO-Dan I added a comment in grbformulator_ac.py:lpformulator_ac_examine_solution
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Constructed Gurobi model
+    opftype : OpfType
+        Type of OPF formulation
+    """
     if opftype == OpfType.AC:
         lpformulator_ac_examine_solution(alldata, model)
     elif opftype == OpfType.DC:
@@ -140,7 +188,22 @@ def lpformulator_examine_solution(alldata, model, opftype):
 
 
 def lpformulator_optimize(alldata, model, opftype):
-    """Optimize constructed model"""
+    """
+    Optimize constructed model
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Constructed Gurobi model
+    opftype : OpfType
+        Type of OPF formulation
+
+    Returns
+    -------
+    Number of found solutions
+    """
 
     logger = logging.getLogger("OpfLogger")
     # Disable logging handler to get Gurobi output
@@ -165,10 +228,8 @@ def lpformulator_optimize(alldata, model, opftype):
 
     # model.Params.SolutionLimit = 20  # TODO-Dan This setting was set for DC. Why do we need a solution limit for DC?
 
-    # TODO-Dan To me it looked like only lpformulator_dc_opt had a different if check for no reason. Can you explain?
-    # The check for DC was
-    # if alldata["branchswitching_mip"]:
-    #  The content of the if-clause is the same among DC,AC
+    # TODO-Dan Why is DC handled differently? It looks like the user does not have to set the usemipstart setting but only
+    #          the branchswitching_mip setting if they are solving DC
     if (
         alldata["usemipstart"]
         and (alldata["branchswitching_mip"] or alldata["branchswitching_comp"])
@@ -253,7 +314,16 @@ def lpformulator_optimize(alldata, model, opftype):
 
 
 def lpformulator_setup(alldata, opftype):
-    """Helper function to handle specific settings"""
+    """
+    Helper function to handle specific settings before starting optimization
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    opftype : OpfType
+        Type of OPF formulation
+    """
 
     logger = logging.getLogger("OpfLogger")
     # Additional setup is only meant for AC and IV
@@ -310,13 +380,42 @@ def lpformulator_setup(alldata, opftype):
 
 
 def writempsfile(alldata, model, filename):
-    """Helper function for debugging"""
+    """
+    Helper function for writing Gurobi models.
+    Mainly used for debugging
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Constructed Gurobi model
+    filename : string
+        Name of model file
+
+    Returns
+    -------
+    Number of found solutions
+    """
     logger = logging.getLogger("OpfLogger")
-    logger.info("Writing mpsfile to %s." % (filename))
+    logger.info("Writing model to %s." % (filename))
     model.write(filename)
 
 
 def writemipstart(alldata):
+    """
+    Helper function for writing a mip start to mipstart.mst file.
+    Mainly used for debugging
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+
+    Returns
+    -------
+    Number of found solutions
+    """
 
     logger = logging.getLogger("OpfLogger")
     filename = "mipstart.mst"

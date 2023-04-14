@@ -1,6 +1,6 @@
 from enum import Enum
 import logging
-import sys
+import sys  # TODO remove in final version
 
 
 def break_exit(foo):
@@ -15,6 +15,29 @@ def break_exit(foo):
 
 
 def initialize_logger(loggername, logfile="", usefilehandler=False):
+    """
+    Initializes a logger object from the logging package
+
+
+    Parameters
+    ----------
+    loggername : string
+        Name of logger
+
+    logfile : string, optional
+        Name of log file. Can be empty
+
+    usefilehandler: boolean, optional
+        If set to True, then an aditional filehandler is created and the
+        returned logger will write to a file specified by logfile
+
+
+    Returns
+    -------
+    logging.logger, list
+        Returns the created logger object and a list of associated handler,
+        a StreamHandler and possibly a FileHandler
+    """
     logger = logging.getLogger("OpfLogger")
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter("%(message)s")
@@ -34,19 +57,43 @@ def initialize_logger(loggername, logfile="", usefilehandler=False):
 
 
 def remove_and_close_handlers(logger, handlers):
+    """
+    Removes and closes all handler associated to a given logger object
+
+
+    Parameters
+    ----------
+    logger : logging.logger
+        Logger object
+
+    handlers : list
+        List of handlers associated to the logger object
+    """
+
     for h in handlers:
         logger.removeHandler(h)
         h.close()
 
 
 class OpfType(Enum):
+    """
+    Defines possible OPF formulation types
+    """
+
     AC = "AC"
     DC = "DC"
     IV = "IV"
 
 
 def get_default_optimization_settings():
-    """Returns a dictionary holding all default settings"""
+    """
+    Returns a dictionary holding default settings for an optimization call
+
+    Returns
+    -------
+    dictionary
+        A dictionary holding default setting for an optimization call
+    """
 
     settings = {
         "casefilename": None,
@@ -82,7 +129,14 @@ def get_default_optimization_settings():
 
 
 def get_default_graphics_settings():
-    """Returns a dictionary holding all default settings"""
+    """
+    Returns a dictionary holding default settings for a graphics call
+
+    Returns
+    -------
+    dictionary
+        A dictionary holding default setting for an graphics call
+    """
 
     settings = {
         "casefilename": None,

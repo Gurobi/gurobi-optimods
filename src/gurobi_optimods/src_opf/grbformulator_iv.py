@@ -9,108 +9,17 @@ from .utils import break_exit
 from .grbfile import grbreadvoltsfile
 
 
-def lpformulator_iv_examine_solution(alldata, model):
-    # first version -- crude -- but first, some debugging
-
-    logger = logging.getLogger("OpfLogger")
-    branches = alldata["branches"]
-    numbranches = alldata["numbranches"]
-    IDtoCountmap = alldata["IDtoCountmap"]
-
-    buses = alldata["buses"]
-    Pvar_f = alldata["LP"]["Pvar_f"]
-    Pvar_t = alldata["LP"]["Pvar_t"]
-    Qvar_f = alldata["LP"]["Qvar_f"]
-    Qvar_t = alldata["LP"]["Qvar_t"]
-    minaloss = 100.0
-    minalossind = -1
-    """
-        for j in range(1,1+numbranches):
-            branch     = branches[j]
-            if branch.isacline:
-                f          = branch.f
-                t          = branch.t
-                count_of_f = IDtoCountmap[f]
-                count_of_t = IDtoCountmap[t]
-                busf       = buses[count_of_f]
-                bust       = buses[count_of_t]
-                aLoss = Pvar_f[branch].x + Pvar_t[branch].x
-                rLoss = Qvar_f[branch].x + Qvar_t[branch].x
-
-                Sn2 = (Pvar_f[branch].x)*(Pvar_f[branch].x)  +  (Qvar_f[branch].x)*(Qvar_f[branch].x)
-                impliedI2 = Sn2/cvar[busf].x
-                impliedaLoss = (branch.r)*impliedI2
-                actualI2 = branch.ynorm2*(cvar[busf].x + cvar[bust].x - 2*cvar[branch].x)
-                actualLoss_r = (branch.r)*actualI2
-
-
-                logger.info('j %d f %d Pft %8.4f Qft %8.4f cff %8.4f aL %.2e r %.2e iaL %.3e I2 %.3e aL_r %.3e'%(j,f,Pvar_f[branch].x, Qvar_f[branch].x, cvar[busf].x, aLoss, branch.r, impliedaLoss, actualI2, actualLoss_r))
-                #logger.info('          Qft %8.4f Qtf %8.4f rL %.2e x %.2e\n'%(Qvar_f[branch].x, Qvar_t[branch].x, rLoss, branch.x))
-                if aLoss < minaloss:
-                    minaloss = aLoss
-                    minalossind = j
-
-
-
-        logger.info('minaloss %.3e at %d'%(minaloss,minalossind))
-
-        """
-
-    logger.info("Done examining solution.\n")
-
-
-def computebalbounds(alldata, bus):
-    """Computes active and reactive max and min bus flow balance values"""
-
-    logger = logging.getLogger("OpfLogger")
-    # First let's get max/min generations
-    loud = 0  # See below
-
-    baseMVA = alldata["baseMVA"]
-    gens = alldata["gens"]
-    Pubound = Plbound = 0
-    Qubound = Qlbound = 0
-
-    for gencounter in bus.genidsbycount:
-        if gens[gencounter].status:
-            Pubound += gens[gencounter].Pmax
-            Plbound += gens[gencounter].Pmin
-            Qubound += gens[gencounter].Qmax
-            Qlbound += gens[gencounter].Qmin
-
-        if (
-            loud
-        ):  # it is worth keeping because a user may want to debug the generator limits that they imposed, which could make a problem infeasible
-            # logger.info(" Pubound for %d %f genc %d."%(bus.nodeID, Pubound, gencounter))
-            # logger.info(" Plbound for %d %f genc %d."%(bus.nodeID, Plbound, gencounter))
-            logger.info(
-                " Qubound for %d %f genc %d." % (bus.nodeID, Qubound, gencounter)
-            )
-            logger.info(
-                " Qlbound for %d %f genc %d." % (bus.nodeID, Qlbound, gencounter)
-            )
-
-    Pubound -= bus.Pd
-    Plbound -= bus.Pd
-    Qubound -= bus.Qd
-    Qlbound -= bus.Qd
-
-    if bus.nodetype == 4:
-        Pubound = Plbound = Qubound = Qlbound = 0
-
-    if loud:  # same as above
-        # logger.info(" Pubound for %d final %f."%(bus.nodeID, Pubound))
-        # logger.info(" (Pd was %g)\n"%bus.Pd)
-        # logger.info(" Plbound for %d final %f."%(bus.nodeID, Plbound))
-        logger.info(" Qubound for %d final %f." % (bus.nodeID, Qubound))
-        logger.info(" (Qd was %g)" % bus.Qd)
-        logger.info(" Qlbound for %d final %f." % (bus.nodeID, Qlbound))
-
-    return Pubound, Plbound, Qubound, Qlbound
-
-
 def lpformulator_iv_body(alldata, model):
-    """Helper function for adding variables and constraints to the model"""
+    """
+    Adds variables and constraints for IV formulation to a given Gurobi model
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    """
 
     logger = logging.getLogger("OpfLogger")
     # Create model variables
@@ -134,7 +43,16 @@ def lpformulator_iv_body(alldata, model):
 
 
 def lpformulator_iv_create_vars(alldata, model):
-    """Create model variables for ACOPF"""
+    """
+    Creates and adds variables for IV formulation to a given Gurobi model
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    """
 
     logger = logging.getLogger("OpfLogger")
     logger.info("Creating variables.")
@@ -178,7 +96,7 @@ def lpformulator_iv_create_vars(alldata, model):
     logger.info('Added %d cff variables\n'%(varcount))
     """
 
-    varcount = lpformulator_iv_create_efvars(alldata, model, varcount)
+    lpformulator_iv_create_efvars(alldata, model, varcount)
 
     # Next, generator variables
     GenPvar = {}
@@ -403,7 +321,20 @@ def lpformulator_iv_create_vars(alldata, model):
 
 
 def lpformulator_iv_create_polar_vars(alldata, model, varcount):
-    """Create polar variables for ACOPF"""
+    """
+    Creates and adds variables for polar IV formulation to a given Gurobi model
+    TODO-Dan This is the same function as in grbformulator_ac.py.
+             If this is indeed the same function then please remove 1 of the 2 (or just let me know and I'll do it)
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    varcount : integer
+        Number of variables added to the model so far
+    """
 
     logger = logging.getLogger("OpfLogger")
     vvar = {}
@@ -430,7 +361,6 @@ def lpformulator_iv_create_polar_vars(alldata, model, varcount):
             lbound = max(lbound, candidatelbound)
             ubound = min(ubound, candidateubound)
 
-            # print('------>',j, bus.nodeID, bus.inputV, 'lbound',lbound, 'ubound',ubound)
         vvar[bus] = model.addVar(
             obj=0.0, lb=lbound, ub=ubound, name="v_" + str(bus.nodeID)
         )
@@ -513,7 +443,20 @@ def lpformulator_iv_create_polar_vars(alldata, model, varcount):
 
 
 def lpformulator_iv_create_efvars(alldata, model, varcount):
-    """Create nonconvex vi, f variables for ACOPF"""
+    """
+    Creates and adds e, f variables for bilinear IV formulation to a given Gurobi model
+    TODO-Dan This is the same function as in grbformulator_ac.py.
+             If this is indeed the same function then please remove 1 of the 2 (or just let me know and I'll do it)
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    varcount : integer
+        Number of variables added to the model so far
+    """
 
     logger = logging.getLogger("OpfLogger")
     evar = {}
@@ -563,11 +506,21 @@ def lpformulator_iv_create_efvars(alldata, model, varcount):
 
     varcount += efvarcount
 
-    return varcount
-
 
 def lpformulator_iv_create_constraints(alldata, model):
-    """ "Create constraints for IV-ACOPF"""
+    """
+    Creates and adds constraints for IV formulation to a given Gurobi model
+    TODO-Dan Is this function very different from the one in grbformulator_ac.py?
+             Couldn't we call lpformulator_ac_create_constraints(alldata, model)
+             and then add the missing IV constraints?
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    """
 
     logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
@@ -963,7 +916,18 @@ def lpformulator_iv_create_constraints(alldata, model):
 
 
 def lpformulator_iv_add_polarconstraints(alldata, model):
-    """Create polar representation constraints for ACOPF"""
+    """
+    Creates and adds constraints for polar represenation of IV formulation to a given Gurobi model
+    TODO-Dan This is the same function as in grbformulator_ac.py.
+             If this is indeed the same function then please remove 1 of the 2 (or just let me know and I'll do it)
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    """
 
     logger = logging.getLogger("OpfLogger")
     buses = alldata["buses"]
@@ -981,7 +945,7 @@ def lpformulator_iv_add_polarconstraints(alldata, model):
     svar = alldata["LP"]["svar"]
     count = 0
 
-    logger.info("  Adding polar constraints")
+    logger.info("  Adding polar constraints.")
 
     for j in range(1, 1 + numbuses):
         bus = buses[j]
@@ -1022,11 +986,20 @@ def lpformulator_iv_add_polarconstraints(alldata, model):
 
     logger.info("    %d polar constraints added." % count)
 
-    # break_exit('polarconstrs')
-
 
 def lpformulator_iv_add_nonconvexconstraints(alldata, model):
-    """Create nonconvex e, f constraints"""
+    """
+    Creates and adds nonconvex bilinear e, f constraints for AC formulation to a given Gurobi model
+    TODO-Dan This is the same function as in grbformulator_ac.py.
+             If this is indeed the same function then please remove 1 of the 2 (or just let me know and I'll do it)
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    """
 
     logger = logging.getLogger("OpfLogger")
     buses = alldata["buses"]
@@ -1073,8 +1046,141 @@ def lpformulator_iv_add_nonconvexconstraints(alldata, model):
     logger.info("    %d nonconvex e, f constraints added." % count)
 
 
+def lpformulator_iv_examine_solution(alldata, model):
+    """
+    first version -- crude -- but first, some debugging
+    TODO-Dan What is this function and how should it be used?
+    Currently it does nothing
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Constructed Gurobi model
+    """
+
+    logger = logging.getLogger("OpfLogger")
+    branches = alldata["branches"]
+    numbranches = alldata["numbranches"]
+    IDtoCountmap = alldata["IDtoCountmap"]
+
+    buses = alldata["buses"]
+    Pvar_f = alldata["LP"]["Pvar_f"]
+    Pvar_t = alldata["LP"]["Pvar_t"]
+    Qvar_f = alldata["LP"]["Qvar_f"]
+    Qvar_t = alldata["LP"]["Qvar_t"]
+    minaloss = 100.0
+    minalossind = -1
+    """
+        for j in range(1,1+numbranches):
+            branch     = branches[j]
+            if branch.isacline:
+                f          = branch.f
+                t          = branch.t
+                count_of_f = IDtoCountmap[f]
+                count_of_t = IDtoCountmap[t]
+                busf       = buses[count_of_f]
+                bust       = buses[count_of_t]
+                aLoss = Pvar_f[branch].x + Pvar_t[branch].x
+                rLoss = Qvar_f[branch].x + Qvar_t[branch].x
+
+                Sn2 = (Pvar_f[branch].x)*(Pvar_f[branch].x)  +  (Qvar_f[branch].x)*(Qvar_f[branch].x)
+                impliedI2 = Sn2/cvar[busf].x
+                impliedaLoss = (branch.r)*impliedI2
+                actualI2 = branch.ynorm2*(cvar[busf].x + cvar[bust].x - 2*cvar[branch].x)
+                actualLoss_r = (branch.r)*actualI2
+
+
+                logger.info('j %d f %d Pft %8.4f Qft %8.4f cff %8.4f aL %.2e r %.2e iaL %.3e I2 %.3e aL_r %.3e'%(j,f,Pvar_f[branch].x, Qvar_f[branch].x, cvar[busf].x, aLoss, branch.r, impliedaLoss, actualI2, actualLoss_r))
+                #logger.info('          Qft %8.4f Qtf %8.4f rL %.2e x %.2e\n'%(Qvar_f[branch].x, Qvar_t[branch].x, rLoss, branch.x))
+                if aLoss < minaloss:
+                    minaloss = aLoss
+                    minalossind = j
+
+
+
+        logger.info('minaloss %.3e at %d'%(minaloss,minalossind))
+
+        """
+
+    logger.info("Done examining solution.\n")
+
+
+def computebalbounds(alldata, bus):
+    """
+    Computes active and reactive max and min bus flow balance values
+
+    TODO-Dan There is a function with the same name in grbformulator_iv.
+    It looks like the other function does something slightly different.
+    Can we combine them to 1 function? Or even delete 1 of the 2
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    bus : Bus
+        Input bus
+    """
+
+    logger = logging.getLogger("OpfLogger")
+    # First let's get max/min generations
+    loud = 0  # See below
+
+    baseMVA = alldata["baseMVA"]
+    gens = alldata["gens"]
+    Pubound = Plbound = 0
+    Qubound = Qlbound = 0
+
+    for gencounter in bus.genidsbycount:
+        if gens[gencounter].status:
+            Pubound += gens[gencounter].Pmax
+            Plbound += gens[gencounter].Pmin
+            Qubound += gens[gencounter].Qmax
+            Qlbound += gens[gencounter].Qmin
+
+        if (
+            loud
+        ):  # it is worth keeping because a user may want to debug the generator limits that they imposed, which could make a problem infeasible
+            # logger.info(" Pubound for %d %f genc %d."%(bus.nodeID, Pubound, gencounter))
+            # logger.info(" Plbound for %d %f genc %d."%(bus.nodeID, Plbound, gencounter))
+            logger.info(
+                " Qubound for %d %f genc %d." % (bus.nodeID, Qubound, gencounter)
+            )
+            logger.info(
+                " Qlbound for %d %f genc %d." % (bus.nodeID, Qlbound, gencounter)
+            )
+
+    Pubound -= bus.Pd
+    Plbound -= bus.Pd
+    Qubound -= bus.Qd
+    Qlbound -= bus.Qd
+
+    if bus.nodetype == 4:
+        Pubound = Plbound = Qubound = Qlbound = 0
+
+    if loud:  # same as above
+        # logger.info(" Pubound for %d final %f."%(bus.nodeID, Pubound))
+        # logger.info(" (Pd was %g)\n"%bus.Pd)
+        # logger.info(" Plbound for %d final %f."%(bus.nodeID, Plbound))
+        logger.info(" Qubound for %d final %f." % (bus.nodeID, Qubound))
+        logger.info(" (Qd was %g)" % bus.Qd)
+        logger.info(" Qlbound for %d final %f." % (bus.nodeID, Qlbound))
+
+    return Pubound, Plbound, Qubound, Qlbound
+
+
 def grbderive_xtra_sol_values_fromvoltages(alldata):
-    """Generates complete solution vectors from input voltages."""
+    """
+    Generates complete solution vectors from input voltages
+    TODO-Dan This is the same function as in grbformulator_ac.py.
+             If this is indeed the same function then please remove 1 of the 2 (or just let me know and I'll do it)
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    """
 
     logger = logging.getLogger("OpfLogger")
     model = alldata["model"]
@@ -1359,7 +1465,22 @@ def grbderive_xtra_sol_values_fromvoltages(alldata):
 
 
 def lpformulator_iv_strictchecker(alldata, model, spitoutvector):
-    """Checks feasibility of input solution -- reports infeasibilities"""
+    """
+    Check feasibility of input solution -- report infeasibilities
+    TODO-Dan How do we use this function? It says "check input solution against formulation".
+             Which input solution? Where does the user provide the input solution? Is it in the voltage file?
+    TODO-Dan This is the same function as in grbformulator_ac.py.
+             If this is indeed the same function then please remove 1 of the 2 (or just let me know and I'll do it)
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    spitoutvector: boolean
+        # TODO-Dan What does it do?
+    """
 
     logger = logging.getLogger("OpfLogger")
     logger.info("Strict feasibility check for input voltage solution.\n")
@@ -1687,7 +1808,6 @@ def lpformulator_iv_strictchecker(alldata, model, spitoutvector):
         # Pinjvar variable bounds should accommodate computed injection
         # get bounds for P and Q injection variables
         Pubound, Plbound, Qubound, Qlbound = computebalbounds(alldata, bus)
-        # print(Plbound, Pubound)
 
         # but also, construct min/max injection at the bus by looking at available generators and load
         myPubound = myPlbound = 0
@@ -1753,7 +1873,6 @@ def lpformulator_iv_strictchecker(alldata, model, spitoutvector):
         # Qinjvar variable bounds should accommodate computed injection
         # get bounds for P and Q injection variables
         Pubound, Plbound, Qubound, Qlbound = computebalbounds(alldata, bus)
-        # print(Plbound, Pubound)
 
         # but also, construct min/max injection at the bus by looking at available generators and load
         myQubound = myQlbound = 0
@@ -1789,8 +1908,6 @@ def lpformulator_iv_strictchecker(alldata, model, spitoutvector):
     #    textlist = []
     #    grbgraphical(alldata, "violation", textlist)
 
-    # break_exit("strictgraphical")
-
 
 def lpformulator_checkviol_simple(
     alldata,
@@ -1803,11 +1920,37 @@ def lpformulator_checkviol_simple(
     badubvar,
     max_violation_value,
     max_violation_string,
-    loud,
+    loud,  # TODO-Dan Remove loud?
 ):
     """
-    Returns bounds infeasibility if setting grbvariable to value value
+    Return bounds infeasibility if setting grbvariable to some value
     maxlbviol, maxubviol, badlb, ubvar are updated if the infeasibility is larger
+    TODO-Dan This function definitely looks the same as in grbformulator_ac
+             Are these the same function? If yes, please remove 1 of the 2.
+             Wouldn't it be enough to use Gurobi attributes BoundVio?
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model to be constructed
+    grbvariable : gurobipy.Var
+        Gurobi variable of interest
+    value : double
+        Value of optimization variable of interest
+    maxlbviol : double
+        Current max lower bound violation over all variables
+    maxubviol : double
+        Current max upper bound violation over all variables
+    badlbvar : gurobipy.Var
+        Variable with the biggest lower bound violation
+    badubvar : gurobipy.Var
+        Variable with the biggest upper bound violation
+    max_violation_value : double
+        Max overall bound violation # TODO-Dan We can get this via model.BoundVio, see https://www.gurobi.com/documentation/current/refman/attributes.html
+    max_violation_string : string
+        Name of variable with largest overall bound violation # TODO-Dan We can get this via model.BoundVioIndex, see https://www.gurobi.com/documentation/current/refman/attributes.html
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -1862,6 +2005,20 @@ def lpformulator_checkviol_simple(
 
 
 def worstboundviol_report(badvar, maxviol, boundtype):
+    """
+    Report the variable with largest bound violation
+    TODO-Dan This function definitely looks the same as in grbformulator_ac
+             Are these the same function? If yes, please remove 1 of the 2.
+
+    Parameters
+    ----------
+    badvar : gurobipy.Var
+        Gurobi variable with largest bound violation
+    maxviol : double
+        Value of violation
+    boundtype : string
+        States whether it's a lower or an upper bound
+    """
 
     logger = logging.getLogger("OpfLogger")
     if badvar != None:

@@ -10,8 +10,7 @@ from .utils import initialize_logger, remove_and_close_handlers
 
 class Bus:
     """
-    Bus class
-    This is a class that describes a bus in a power system, including loads,
+    Describes a bus in a power system, including loads,
     voltage limits, type of bus (generator, reference, etc.), ID and count.
     The data structure also keeps track of branches incident with the bus
     """
@@ -22,7 +21,7 @@ class Bus:
         self.genidsbycount = []  # array of generator IDs at this bus
         self.frombranchids = {}  # branches where this bus is the 'from' bus
         self.tobranchids = {}  # branches where this bus is the 'to' bus
-        self.count = count  # bus count
+        self.count = count  # bus count # TODO-Dan Why do we need the count?
         self.nodeID = nodeID  # ID of bus
         self.nodetype = nodetype
         self.Pd = Pd  # active load
@@ -32,7 +31,7 @@ class Bus:
         self.Vbase = Vbase  # voltage base
         self.Vmax = Vmax
         self.Vmin = Vmin
-        self.busline0 = busline0  # line location of bus within input file
+        self.busline0 = busline0  # line location of bus within input file # TODO-Dan why do we need this?
         self.inputvoltage = False
         self.cffvarind = -1  # the following four fields are variable indices
         self.Pinjvarind = -1
@@ -48,17 +47,17 @@ class Bus:
         self.lat = -1
         self.lon = -1
 
-    def getbusline0(self):
+    def getbusline0(self):  # TODO-Dan This is used nowhere
         return self.busline0
 
-    def addgenerator(self, generatorcount1, generator):
+    def addgenerator(self, generatorcount, generator):
         logger = logging.getLogger("OpfLogger")
-        self.genidsbycount.append(generatorcount1)
+        self.genidsbycount.append(generatorcount)
         loud = False
         if loud:
             logger.info(
                 " added generator # "
-                + str(generatorcount1)
+                + str(generatorcount)
                 + " to bus ID "
                 + str(self.nodeID)
             )
@@ -80,7 +79,7 @@ class Bus:
 class Branch:
     """
     Branch class
-    TODO-Dan Please add more description if needed
+    TODO-Dan Please add more description similar to the Bus class
     """
 
     def __init__(
@@ -112,8 +111,8 @@ class Branch:
         self.r = r  # resistance
         self.x = x  # reactance
         self.bc = bc  # branch charging admittance
-        self.count = count
-        self.branchline0 = branchline0
+        self.count = count  # TODO-Dan Why do we need the count?
+        self.branchline0 = branchline0  # TODO-Dan Why do we need the line?
         self.rateAmva = rateAmva  # the following three parameters
         self.rateBmva = rateBmva  # describe branch limits
         self.limit = rateAmva
@@ -211,10 +210,10 @@ class Branch:
                 + str(Ytt)
             )
 
-    def getbranchline0(self):
+    def getbranchline0(self):  # TODO-Dan This is used nowhere
         return self.branchline0
 
-    def show(self):
+    def show(self):  # TODO-Dan This is used nowhere
         logger = logging.getLogger("OpfLogger")
         logger.info(" < " + str(self.f) + " , " + str(self.t) + " > ")
         logger.info(" r " + str(self.r) + " x " + str(self.x) + " bc " + str(self.bc))
@@ -223,13 +222,16 @@ class Branch:
 
 class Gen:
     """
-    Generator class
+    A generator models a complex power injection at a specific bus
+
     See Matpower manual for more details
-    TODO-Dan Could you please add a link
+    TODO-Dan Could you please at least add a link
+    https://matpower.org/docs/MATPOWER-manual.pdf # TODO-Dan is it this one?
+    TODO-Dan Please add more description similar to the Bus class if you think it's needed
     """
 
     def __init__(self, count, nodeID, Pg, Qg, status, Pmax, Pmin, Qmax, Qmin, line0):
-        self.count = count
+        self.count = count  # TODO-Dan Why do we need the count?
         self.nodeID = nodeID  # ID of bus holding gen
         self.Pg = Pg  # active power generation in existing solution
         self.Qg = Qg  # reactive power generation in existing solution
@@ -238,8 +240,10 @@ class Gen:
         self.Pmin = Pmin
         self.Qmax = Qmax
         self.Qmin = Qmin
-        self.line0 = line0
-        self.costlinenum = -1
+        self.line0 = line0  # TODO-Dan This is used nowhere. Do we need the line number?
+        self.costlinenum = (
+            -1
+        )  # TODO-Dan This is used nowhere. Do we need the cost line number?
         self.Pvarind = -1
         self.Qvarind = -1
 
@@ -253,19 +257,26 @@ class Gen:
         self.costdegree = len(costvector) - 1
         self.costlinenum = -1
 
-    def showcostvector(self):
+    def showcostvector(self):  # TODO-Dan This is used nowhere
         logger = logging.getLogger("OpfLogger")
         logger.info(self.costvector)
         for i in range(0, self.costdegree + 1):
             logger.info(i, self.costvector[i], " ", end="")
 
-    def getline0(self):
+    def getline0(self):  # TODO-Dan This is used nowhere
         return self.line0
 
 
 def read_case(alldata, case_dict):
     """
-    Fills alldata dictionary out of a given casefile dictionary
+    Fills alldata dictionary out of a user-given case dictionary
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    case_dict : dictionary
+        Dictionary holding all case relevant data
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -484,7 +495,18 @@ def read_case(alldata, case_dict):
 
 def read_case_file(casefile):
     """
-    Read case file and fill data dictionary
+    Reads casa data from an .m file following MATPOWER standards and
+    returns an OptiMod compatible dictionary holding all relevant case data
+
+    Parameters
+    ----------
+    casefile : string
+        Path to .m file holding all case relevant information
+
+    Returns
+    -------
+    dictionary
+        Dictionary holding all case relevant data
     """
 
     logger, handlers = initialize_logger("CaseReadingLogger")
@@ -509,7 +531,18 @@ def read_case_file(casefile):
 
 def read_case_file_mat(casefile):
     """
-    Read case .mat file and create a compatible data dictionary out of it
+    Reads casa data from an .mat file following MATPOWER standards and
+    returns an OptiMod compatible dictionary holding all relevant case data
+
+    Parameters
+    ----------
+    casefile : string
+        Path to .mat file holding all case relevant information
+
+    Returns
+    -------
+    dictionary
+        A dictionary holding all case relevant data
     """
 
     logger, handlers = initialize_logger("CaseReadingLogger")
@@ -645,6 +678,16 @@ def loadmat(filename):
     as it cures the problem of not properly recovering Python dictionaries
     from mat files. It calls the function check keys to cure all entries
     which are still mat-objects
+
+    Parameters
+    ----------
+    filename : string
+        Path to .mat file holding all case relevant information
+
+    Returns
+    -------
+    dictionary
+        Dictionary holding all case relevant data read from the given .mat file
     """
     data = scipy.io.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
@@ -654,6 +697,17 @@ def _check_keys(dict):
     """
     Checks if entries in dictionary are mat-objects. If yes
     todict is called to change them to nested dictionaries
+
+    Parameters
+    ----------
+    dict : dictionary
+        Dictionary holding all case data read from a .mat file by the
+        scipy.io.loadmat function
+
+    Returns
+    -------
+    dictionary
+        Dictionary holding all case relevant data read from the given .mat file
     """
     for key in dict:
         if isinstance(dict[key], scipy.io.matlab.mat_struct):
@@ -664,6 +718,16 @@ def _check_keys(dict):
 def _todict(matobj):
     """
     A recursive function which constructs from matobjects nested dictionaries
+
+    Parameters
+    ----------
+    matobj : scipy.io.matlab.mat_struct
+        Placeholder for holding read data from structs
+
+    Returns
+    -------
+    dictionary
+        A possibly nested dictionary with all case relevant data
     """
     dict = {}
     for strg in matobj._fieldnames:
@@ -677,8 +741,19 @@ def _todict(matobj):
 
 def read_case_build_dict(lines):
     """
-    Read thru all lines of case file and fill data dictionary.
-    This is a helper function for translating casefiles into dict format.
+    Reads thru all lines of a previously read-in case file in .m format and
+    returns an OptiMod compatible dictionary holding all relevant case data
+    This is a helper function for translating casefiles into dict format
+
+    Parameters
+    ----------
+    lines : list
+        List holding all lines of a previously read-in case file
+
+    Returns
+    -------
+    dictionary
+        Dictionary holding all case relevant data
     """
 
     logger = logging.getLogger("CaseReadingLogger")
@@ -990,7 +1065,17 @@ def read_case_build_dict(lines):
 
 
 def readvoltsfile(alldata):
-    """Read volts file and fill data dictionary"""
+    """
+    Reads thru all lines of a voltage file provided by the setting
+    voltsfilename and saves relevant data in the alldata dictionary
+
+    #TODO-Dan we need an example for this
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    """
 
     logger = logging.getLogger("OpfLogger")
     if alldata["voltsfilename"] == None:
@@ -1032,7 +1117,17 @@ def readvoltsfile(alldata):
 
 
 def readflowsfile(alldata):
-    """Read flows file and fill data dictionary"""
+    """
+    Reads thru all lines of a flows file provided by the setting
+    flowsfilename and saves relevant data in the alldata dictionary
+
+    #TODO-Dan we need an example for this
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    """
 
     logger = logging.getLogger("OpfLogger")
     flowsfilename = alldata["flowsfilename"]
@@ -1081,7 +1176,18 @@ def readflowsfile(alldata):
 
 
 def writegv(alldata, gvfilename):
-    """Write gv file needed for graphical image"""
+    """
+    Writes a gv file needed for graphics
+
+    #TODO-Dan we need an example for this if we want to keep this
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    gvfilename: string
+        Name of gv file
+    """
 
     logger = logging.getLogger("OpfLogger")
     f = open(gvfilename, "w")
@@ -1101,7 +1207,15 @@ def writegv(alldata, gvfilename):
 
 def generateinputcs(alldata):
     """
-    Generates values for the Jabr c and s variables from input voltages
+    Generates values for the Jabr c and s variables from previously
+    read-in input voltages
+
+    #TODO-Dan This is used nowhere. We need an example for this or can we remove it?
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -1139,6 +1253,16 @@ def generateinputcs(alldata):
 def generateinputeandf(alldata):
     """
     Generates rectangular coordinates for voltages from input solution (given in polar coordinates)
+    from previously read-in input voltages
+    Generates values for the Jabr c and s variables from previously
+    read-in input voltages
+
+    #TODO-Dan This is used nowhere. We need an example for this or can we remove it?
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
     """
 
     logger = logging.getLogger("OpfLogger")
