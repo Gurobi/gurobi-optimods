@@ -82,11 +82,11 @@ easy access by users.
 .. testcode:: mod
 
     from gurobi_optimods.opf import solve_opf_model, read_settings_from_file, read_case_from_file
-    from gurobi_optimods.datasets import load_dcopfsettings, load_caseopf
+    from gurobi_optimods.datasets import load_opfsettings, load_caseopf
 
 
     # load path to settings file
-    settingsfile = load_dcopfsettings()
+    settingsfile = load_opfsettings()
     # read settings file and return a settings dictionary
     settings = read_settings_from_file(settingsfile)
     # load path to case file
@@ -104,9 +104,9 @@ easy access by users.
     :hide:
 
     ...
-    Optimize a model with 65 rows, 50 columns and 160 nonzeros
+    Optimize a model with 218 rows, 134 columns and 541 nonzeros
     ...
-    Optimal solution found (tolerance 1.00e-04)
+    Optimal solution found (tolerance 1.00e-03)
     ...
 
 The model is solved as an LP/MIP/QP by Gurobi.

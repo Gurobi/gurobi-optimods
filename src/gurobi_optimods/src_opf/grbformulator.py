@@ -220,6 +220,18 @@ def lpformulator_optimize(alldata, model, opftype):
         logger.info("\nIIS computed, writing IIS to file acopfmodel.ilp.")
         model.write("acopfmodel_iis.ilp")
 
+    if model.status == GRB.NUMERIC:
+        logger.info("\nModel Status: Numerically difficult model.\n")
+        logger.info(
+            "Re-optimizing with settings focused on improving numerical stability.\n"
+        )
+        logging.disable(logging.INFO)
+        model.Params.NumericFocus = 2
+        model.Params.BarHomogeneous = 1
+        model.reset()
+        model.optimize()
+        logging.disable(logging.NOTSET)
+
     elif model.status == GRB.UNBOUNDED:
         logger.info("\nModel Status: unbounded.\n")
 
@@ -261,6 +273,10 @@ def lpformulator_setup(alldata, opftype):
 
     if alldata["voltsfilename"] != None:
         grbreadvoltsfile(alldata)
+
+    if alldata["doiv"] and not alldata["use_ef"]:
+        alldata["use_ef"] = True
+        logger.info("  IV formulation requires use_ef. Turning it on.")
 
     # The following settings are only for AC
     if opftype != OpfType.AC:

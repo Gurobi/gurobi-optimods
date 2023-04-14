@@ -74,12 +74,9 @@ easy access by users.
 .. testcode:: mod
 
     from gurobi_optimods.opf import solve_opf_model, read_settings_from_file, read_case_from_file
-    from gurobi_optimods.datasets import load_acopfsettings, load_caseopf
+    from gurobi_optimods.datasets import load_caseopf
 
-    # load path to settings file
-    settingsfile = load_acopfsettings()
-    # read settings file and return a settings dictionary
-    settings = read_settings_from_file(settingsfile)
+    settings = {"doac": True, "use_ef": True}
     # load path to case file
     casefile = load_caseopf("9")
     # read case file and return a case dictionary
@@ -95,7 +92,7 @@ easy access by users.
     :hide:
 
     ...
-    Optimize a model with 218 rows, 134 columns and 541 nonzeros
+    Optimize a model with 73 rows, 107 columns and 208 nonzeros
     ...
     Optimal solution found (tolerance 1.00e-03)
     ...

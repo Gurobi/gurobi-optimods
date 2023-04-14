@@ -34,23 +34,8 @@ def load_workforce():
     )
 
 
-def load_simpleopfsettings():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_simpleopf.conf"
-    return conf
-
-
-def load_acopfsettings():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_acopf.conf"
-    return conf
-
-
-def load_dcopfsettings():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_dcopf.conf"
-    return conf
-
-
-def load_ivopfsettings():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_ivopf.conf"
+def load_opfsettings():
+    conf = str(DATA_FILE_DIR) + "/opf/opfsettings.txt"
     return conf
 
 
@@ -81,7 +66,7 @@ def load_opfdictgraphicssettings():
 
 
 def load_opfgraphicssettings():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_graphics.conf"
+    conf = str(DATA_FILE_DIR) + "/opf/graphicssettings.txt"
     return conf
 
 
