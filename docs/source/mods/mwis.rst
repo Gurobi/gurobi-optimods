@@ -1,12 +1,25 @@
 Maximum Weighted Independent Set
 ================================
 The maximum independent set problem is one of the fundamental problems
-in graph theory which was among the first batch of the 21 problems proved to
-be NP-hard.
+in combinatorial optimization with ubiquitous applications and connections to
+other problems. Maximum clique, minimum vertex cover, and maximum matching are
+example problems that can be reduced to a maximum independent set problem.
 
 In this mod, we consider the more general problem of the maximum weighted
-independent set (MWIS) which has applications in various fields such as molecular
-structure matching, social network analysis, and genome data mapping.
+independent set (MWIS) which has applications in various fields such as computer
+vision, pattern recognition, molecular structure matching, social network analysis,
+and genome data mapping. To better understand how a theoretical graph theory
+problem can be used to address a real-world challenge, let us review one
+application area in detail.
+
+To measure the structural similarity between two molecules, the
+molecules are first represented as labeled graphs where the vertices and the edges
+correspond to the atoms of the molecule and its chemical bonds, respectively. To
+find the largest substructure (subgraph) that appears in both molecular
+graphs, it suffices to find the maximum weighted independent set of a third graph,
+known as conflict graph. The vertices and the edges of the conflict
+graph, in respective terms, represent the possible mappings and conflicts
+between two molecules.
 
 
 Problem Specification
