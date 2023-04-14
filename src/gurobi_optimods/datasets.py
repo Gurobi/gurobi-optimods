@@ -55,16 +55,6 @@ def load_caseNYopf():  # real world data case
     return case, casemat
 
 
-def load_opfdictsettings():
-    conf = {"branchswitching_mip": True, "doac": True}
-    return conf
-
-
-def load_opfdictgraphicssettings():
-    conf = {"branchswitching_mip": True}
-    return conf
-
-
 def load_opfgraphicssettings():
     conf = str(DATA_FILE_DIR) + "/opf/graphicssettings.txt"
     return conf

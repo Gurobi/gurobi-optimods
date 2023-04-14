@@ -12,8 +12,6 @@ from gurobi_optimods.datasets import (
     load_caseopfmat,
     load_caseNYopf,
     load_opfdictcase,
-    load_opfdictsettings,
-    load_opfdictgraphicssettings,
     load_opfgraphicssettings,
     load_opfsettings,
     load_case9solution,
@@ -233,8 +231,8 @@ class TestOpf(unittest.TestCase):
         self.assertLess(abs(solution["P_9_4_9"] - 0.543771), 1e-4)
 
     def test_graphics(self):
-        # load settings dictionary
-        settings_graphics_dict = load_opfdictgraphicssettings()
+        # settings dictionary
+        settings_graphics_dict = {"branchswitching_mip": True}
         # load case dictionary
         case = load_opfdictcase()
         # load a precomputed solution and objective value
@@ -244,13 +242,13 @@ class TestOpf(unittest.TestCase):
 
     def test_graphics_after_solving(self):
         # load settings dictionary
-        settings_optimization_dict = load_opfdictsettings()
+        settings_optimization_dict = {"branchswitching_mip": True, "doac": True}
         # load case dictionary
         case = load_opfdictcase()
         # solve opf model and return a solution and the final objective value
         solution, objval = solve_opf_model(settings_optimization_dict, case)
         # plot the computed solution
-        settings_graphics_dict = load_opfdictgraphicssettings()
+        settings_graphics_dict = {"branchswitching_mip": True}
         plot_opf_solution(settings_graphics_dict, case, solution, objval)
 
     def test_graphics_settings_file(self):
