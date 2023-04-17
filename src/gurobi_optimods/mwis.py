@@ -7,13 +7,12 @@ from gurobipy import GRB
 def maximum_weighted_independent_set(adjacency_matrix, weights):
     """Find a set of mutually non-adjacent vertices with maximum weighted sum.
 
-    Args:
-        adjacency_matrix (sp.csr_matrix): The upper triangular adjacency
-            matrix in sparse CSR format.
-        weights (np.array): Vertex weight array.
-
-    Returns:
-        np.array: The maximum weighted independent set array.
+    :param adjacency_matrix: The upper triangular adjacency matrix.
+    :type adjacency_matrix: :class:`sp.spmatrix`
+    :param weights: Vertex weight array.
+    :type weights: :class:`np.array`
+    :return: The maximum weighted independent set array.
+    :rtype: :class:`np.array`
     """
     with gp.Env() as env, gp.Model("mwis", env=env) as model:
         # x_i: 1 if vertex i is in the independent set and 0 otherwise
