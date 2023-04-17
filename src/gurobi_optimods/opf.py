@@ -9,12 +9,15 @@ from .src_opf.grbfile import (
     initialize_data_dict,
     read_settings_file,
     read_optimization_settings,
+    read_coordsettings_file,
     read_graphics_settings,
+    read_coords_build_dict,
+    grbmap_coords_from_dict,
     grbread_coords,
     grbread_graphattrs,
 )
 from .src_opf.grbformulator import construct_and_solve_model
-from .src_opf.grbgraphical import plot_solution
+from .src_opf.grbgraphical_givencoords import plot_solution_givencoords
 from .src_opf.utils import initialize_logger, remove_and_close_handlers
 
 
@@ -54,7 +57,14 @@ def solve_opf_model(settings, case, logfile=""):
     # Read case file/dict and populate the alldata dictionary
     read_case(alldata, case)
 
+    if settings["coords_dict"] != None:
+        print("    COORDS_DICT", settings["coords_dict"])
+        grbmap_coords_from_dict(alldata, settings["coords_dict"])
+
     solution, objval = construct_and_solve_model(alldata)
+
+    if settings["coords_dict"] != None:
+        plot_solution_givencoords(alldata, solution, objval)
 
     remove_and_close_handlers(logger, handlers)
 
@@ -182,3 +192,24 @@ def read_case_from_mat_file(casefile):
     case_dict = read_case_file_mat(casefile)
 
     return case_dict
+
+
+def read_coordsettings_from_file(coordsettings):
+    """
+    coordssettings is a file containing the various coordinate parameters
+    currently just a file name
+    """
+
+    print("READ coordsettings at %s\n" % (coordsettings))
+
+    coordsettings_dict = read_coordsettings_file(coordsettings)
+
+    return coordsettings_dict
+
+
+def read_coords_from_file(coordsettings_dict, datadir):
+    coord_dict = read_coords_build_dict(
+        datadir / "opf" / coordsettings_dict["coordsfilename"]
+    )
+
+    return coord_dict

@@ -4,6 +4,8 @@ from gurobi_optimods.opf import (
     solve_opf_model,
     plot_opf_solution,
     read_settings_from_file,
+    read_coordsettings_from_file,
+    read_coords_from_file,
     read_case_from_file,
     read_case_from_mat_file,
 )
@@ -12,9 +14,11 @@ from gurobi_optimods.datasets import (
     load_caseopfmat,
     load_caseNYopf,
     load_opfdictcase,
+    load_coordssettings,
     load_opfgraphicssettings,
     load_opfsettings,
     load_case9solution,
+    load_datadir,
 )
 
 
@@ -46,6 +50,42 @@ class TestOpf(unittest.TestCase):
         casefile = load_caseopf("9")
         # read case file and return a case dictionary
         case = read_case_from_file(casefile)
+        # solve opf model and return a solution and the final objective value
+        solution, objval = solve_opf_model(settings, case, "OPF.log")
+        # check whether the solution points looks correct
+        self.assertTrue(solution is not None)
+        self.assertTrue(objval is not None)
+
+    def test_case9dc_plot(self):
+        # read settings file and return a settings dictionary
+        settings = {"branchswitching_mip": True, "dodc": True}
+
+        coordsettingsfile = load_coordssettings()
+
+        coordsettings = read_coordsettings_from_file(coordsettingsfile)
+
+        datadir = load_datadir()
+
+        coords_dict = read_coords_from_file(coordsettings, datadir)
+
+        settings["coords_dict"] = coords_dict
+        # print(coords_dict)
+
+        ##### incomplete: needs to be extended so as to include the name
+        ##### of the coordinates file, which should be in the data directory
+        ##### grbread_coords needs to be updated so as to include the
+        ##### path to the data directory
+
+        # load path to case file
+        casefile = load_caseopf("9")
+
+        # casefile = load_case9opf()
+        print("casefile is", casefile)
+        # read case file and return a case dictionary
+        case = read_case_from_file(casefile)
+
+        # map coordinates from dictionary
+
         # solve opf model and return a solution and the final objective value
         solution, objval = solve_opf_model(settings, case, "OPF.log")
         # check whether the solution points looks correct

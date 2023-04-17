@@ -96,6 +96,7 @@ def get_default_optimization_settings():
     """
 
     settings = {
+        "coords_dict": None,
         "casefilename": None,
         "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this? I will.  It is a plain text file that has, for each bus, a line of the form "bus 8 M 1.099999e+00 A 9.051238e-01" (bus numbers 1 through N) plus a final "END" line
         "lpfilename": "grbopf.lp",  # TODO default should be None

@@ -11,6 +11,7 @@ from .utils import (
     get_default_graphics_settings,
     initialize_logger,
     remove_and_close_handlers,
+    break_exit,
 )
 
 
@@ -89,6 +90,10 @@ def read_graphics_settings(alldata, settings):
     """
 
     # TODO revisit default settings
+    # DB this may be the wrong paradigm because we need the graphics
+    # dict *before* alldata has been created, so as to pass it to the
+    # function that creates alldata
+
     defaults = get_default_graphics_settings()
     read_settings_dict(alldata, settings, defaults)
 
@@ -165,6 +170,76 @@ def read_settings_file(filename, graphics=False):
     remove_and_close_handlers(logger, handlers)
 
     return settings_dict
+
+
+def read_coordsettings_file(filename):
+    coordsettings = {}
+    f = open(filename, "r")
+    lines = f.readlines()
+    f.close()
+
+    linenum = 0
+    # Read lines of configuration file and save options
+    while linenum < len(lines):
+        thisline = lines[linenum].split()
+
+        if len(thisline) <= 0:
+            linenum += 1
+            continue
+        if thisline[0][0] == "#":
+            linenum += 1
+            continue
+
+        if thisline[0] == "END":
+            break
+
+        if thisline[0] == "coordsfilename":
+            coordsettings["coordsfilename"] = thisline[1]
+            print("COORDS at %s\n" % coordsettings["coordsfilename"])
+            linenum += 1
+            continue
+        else:
+            raise ValueError("Illegal option string %s." % thisline[0])
+
+    # break_exit('poooooo')
+    return coordsettings
+
+
+def read_coords_build_dict(filename):
+    """Reads csv file with bus coordinates, puts it into dict"""
+
+    logger = logging.getLogger("OpfLogger")
+    logger.info("Reading csv coordinates file %s and build dictionary." % filename)
+
+    f = open(filename, "r")
+    csvf = csv.reader(f)
+    thelist = list(csvf)
+    f.close()
+
+    coords_dict = {}
+
+    for line in range(1, len(thelist)):
+        # print(thelist[line][0], float(thelist[line][3]), float(thelist[line][4]))
+        coords_dict[line] = (float(thelist[line][3]), float(thelist[line][4]))
+
+    print("Done reading coordinates\n")
+
+    return coords_dict
+
+
+def grbmap_coords_from_dict(alldata, coords_dict):
+    """Maps with bus coordinates"""
+
+    logger = logging.getLogger("OpfLogger")
+    numbuses = alldata["numbuses"]
+    buses = alldata["buses"]
+
+    for bnum in range(1, numbuses + 1):
+        # print(thelist[line][0], float(thelist[line][3]), float(thelist[line][4]))
+        buses[bnum].lat = coords_dict[bnum][0]
+        buses[bnum].lon = coords_dict[bnum][1]
+
+    break_exit("mapped coords")
 
 
 def read_settings_build_dict(settings, lines):
@@ -269,6 +344,11 @@ def read_settings_build_dict(settings, lines):
             settings_dict["dographics"] = True
             if len(thisline) > 1:
                 settings_dict["graphattrsfilename"] = thisline[1]
+
+        elif thisline[0] == "coordsfilename":
+            settings_dict["coordsfilename"] = True
+            if len(thisline) > 1:
+                settings_dict["coordsfilename"] = thisline[1]
 
         linenum += 1
 

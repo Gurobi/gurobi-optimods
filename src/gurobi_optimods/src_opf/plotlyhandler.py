@@ -139,6 +139,7 @@ class plotlyhandler:
             )
 
             traces += [go.Scatter(**params)]
+        # print('>>>>','pos',self.pos)
 
         return traces
 
