@@ -19,12 +19,22 @@ cp _templates/mod.py src/gurobi_optimods/<mod>.py
 cp _templates/test_mod.py tests/test_<mod>.py
 cp _templates/mod.rst docs/source/mods/<mod>.rst
 ```
-5. Include your mod in the toctree at `docs/source/mods/index.rst`
+5. Include your mod in the toctree at `docs/source/mods/index.rst` (maintain lexicographic order)
 6. Create a new branch, commit the scaffolding files
 7. Push the branch to your fork
 8. Create a *draft* PR for your branch into gurobi-optimods/main
 9. Follow the checklist in the PR
 10. When complete, take the PR out of draft and assign a reviewer
+
+## Implementation notes
+
+- Data files should live under `src/gurobi_optimods/data/<mod-name>` to reduce clutter
+- Mods should be stateless (see the template example). This means gurobipy environments and models are created within a mod function, and closed before the function returns.
+- We use `sphinxcontrib-bibtex` for citations/referencing. To add references for a mod:
+  - Add a new `.bib` file under `docs/source/refs`
+  - Use `:footcite:t:` or `:footcite:p:` to cite references within your documentation
+  - Add the `.. footbibliography::` directive at the bottom of your documentation page to show references as footnotes (example in the L1 regression mod)
+  - For more info, see [the docs](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/index.html) for `sphinxcontrib-bibtex`
 
 ### Development environment
 

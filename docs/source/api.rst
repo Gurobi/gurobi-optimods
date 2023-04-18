@@ -12,3 +12,6 @@ API
 
 .. automodule:: gurobi_optimods.network_flow
    :members: network_flow, min_cost_flow, shortest_path, max_flow, min_cut
+
+.. automodule:: gurobi_optimods.mwis
+   :members: maximum_weighted_independent_set

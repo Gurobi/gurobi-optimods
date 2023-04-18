@@ -5,8 +5,9 @@ The Opti Mods
    :maxdepth: 1
 
    bipartite-matching
-   weighted-matching
    card-regression
    l1-regression
    network-flow
+   mwis
+   weighted-matching
    workforce

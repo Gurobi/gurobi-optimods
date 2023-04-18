@@ -8,7 +8,13 @@ import scipy.sparse as sp
 
 def maximum_bipartite_matching(G):
     """Return a subgraph which is the maximum cardinality matching of
-    the bipartite graph G."""
+    the bipartite graph G.
+
+    :param G: Adjacency matrix of an unweighted bipartite graph.
+    :type G: :class:`sp.spmatrix`
+    :return: Adjacency matrix of the maximum bipartite matching subgraph
+    :rtype: :class:`sp.spmatrix`
+    """
 
     with gp.Env() as env, gp.Model(env=env) as m:
 
@@ -40,7 +46,13 @@ def maximum_bipartite_matching(G):
 
 
 def maximum_weighted_matching(G):
-    """Return a subgraph which is the maximum weighted matching of G."""
+    """Return a subgraph which is the maximum weighted matching of G.
+
+    :param G: Adjacency matrix of a unweighted graph.
+    :type G: :class:`sp.spmatrix`
+    :return: Adjacency matrix of the maximum weighted matching subgraph
+    :rtype: :class:`sp.spmatrix`
+    """
 
     with gp.Env() as env, gp.Model(env=env) as m:
 
