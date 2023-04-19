@@ -9,7 +9,6 @@ from .src_opf.grbfile import (
     initialize_data_dict,
     read_settings_file,
     read_optimization_settings,
-    read_coordsettings_file,
     read_graphics_settings,
     read_coords_build_dict,
     grbmap_coords_from_dict,
@@ -30,10 +29,8 @@ def solve_opf_model(settings, case, logfile=""):
     ----------
     settings : dictionary
         Dictionary holding settings
-
     case : dictionary
         Dictionary holding case data
-
     logfile: string
         Name of log file. Can be empty
 
@@ -57,21 +54,16 @@ def solve_opf_model(settings, case, logfile=""):
     # Read case file/dict and populate the alldata dictionary
     read_case(alldata, case)
 
-    if settings["coords_dict"] != None:
-        print("    COORDS_DICT", settings["coords_dict"])
-        grbmap_coords_from_dict(alldata, settings["coords_dict"])
-
+    # Construct and solve model using given case data and user settings
     solution, objval = construct_and_solve_model(alldata)
 
-    if settings["coords_dict"] != None:
-        plot_solution_givencoords(alldata, solution, objval)
-
+    # Remove and close all logging handlers
     remove_and_close_handlers(logger, handlers)
 
     return solution, objval
 
 
-def plot_opf_solution(settings, case, solution, objval):
+def plot_opf_solution(settings, case, coords, solution, objval):
     """
     Read the given case and plot a given solution.
     In best case the solution has been computed by the solve_opf_model function
@@ -83,13 +75,12 @@ def plot_opf_solution(settings, case, solution, objval):
     ----------
     settings : dictionary
         Dictionary holding settings
-
     case : dictionary
         Dictionary holding case data
-
+    coords : dictionary
+        Dictionary holding bus coordinates
     solution : OrderedDict
         OrderedDictionary holding solution data
-
     objval : float
         Objective value
     """
@@ -110,10 +101,10 @@ def plot_opf_solution(settings, case, solution, objval):
     alldata["graphical"]["numfeatures"] = 0
     if alldata["graphattrsfilename"] != None:
         grbread_graphattrs(alldata, alldata["graphattrsfilename"])
-    if alldata["coordsfilename"] != None:
-        grbread_coords(alldata)
 
-    plot_solution(alldata, solution, objval)
+    grbmap_coords_from_dict(alldata, coords)
+
+    plot_solution_givencoords(alldata, solution, objval)
 
     remove_and_close_handlers(logger, handlers)
 
@@ -128,7 +119,6 @@ def read_settings_from_file(settingsfile, graphics=False):
     ----------
     settingsfile : string
         Name of and possibly full path to settings file
-
     graphics : boolean, optional
         If set to true, then the function expects a settings file
         with special graphics settings
@@ -150,7 +140,7 @@ def read_case_from_file(casefile):
     """
     Helper function for users
     Used to construct a case dictionary which can be used as input
-    for all other API functions
+    for other API functions
 
     Parameters
     ----------
@@ -174,7 +164,7 @@ def read_case_from_mat_file(casefile):
     """
     Helper function for users
     Used to construct a case dictionary which can be used as input
-    for all other API functions
+    for other API functions
 
     Parameters
     ----------
@@ -194,22 +184,24 @@ def read_case_from_mat_file(casefile):
     return case_dict
 
 
-def read_coordsettings_from_file(coordsettings):
+def read_coords_from_csv_file(coordsfile):
     """
-    coordssettings is a file containing the various coordinate parameters
-    currently just a file name
+    Helper function for users
+    Used to construct a coordinate dictionary which can be used as input
+    for other API functions
+
+    Parameters
+    ----------
+    coordsfile :
+        Name of and possibly full path to case file given as .csv file
+
+    Returns
+    -------
+    dictionary
+        Dictionary object of the given coordinates which is to be used in
+        other API functions
     """
 
-    print("READ coordsettings at %s\n" % (coordsettings))
-
-    coordsettings_dict = read_coordsettings_file(coordsettings)
-
-    return coordsettings_dict
-
-
-def read_coords_from_file(coordsettings_dict, datadir):
-    coord_dict = read_coords_build_dict(
-        datadir / "opf" / coordsettings_dict["coordsfilename"]
-    )
+    coord_dict = read_coords_build_dict(coordsfile)
 
     return coord_dict

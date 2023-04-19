@@ -44,34 +44,9 @@ def load_caseopf(number):
     return case
 
 
-def load_datadir():
-    return DATA_FILE_DIR
-
-
-def load_acopfsettings():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_acopf.conf"
-    return conf
-
-
-# def load_dcopfsettings():
-#    conf = str(DATA_FILE_DIR) + "/opf/kit_dcopf.conf"
-#    return conf
-
-
-def load_coordssettings():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_coords.conf"
-    print("COORDS loaded from %s\n" % conf)
-    return conf
-
-
-def load_ivopfsettings():
-    conf = str(DATA_FILE_DIR) + "/opf/kit_ivopf.conf"
-    return conf
-
-
-# def load_case9opf():
-#    case = str(DATA_FILE_DIR) + "/opf/case9.m"
-#    return case
+def load_coordsfilepath(filename):
+    file = str(DATA_FILE_DIR) + "/opf/" + filename
+    return file
 
 
 def load_caseopfmat(number):
@@ -83,11 +58,6 @@ def load_caseNYopf():  # real world data case
     case = str(DATA_FILE_DIR) + "/opf/caseNY.m"
     casemat = str(DATA_FILE_DIR) + "/opf/caseNY.mat"
     return case, casemat
-
-
-def load_opfdictgraphicssettings_case9_coords():
-    conf = {"coordsfilename": "case9coords.csv"}
-    return conf
 
 
 def load_opfgraphicssettings():

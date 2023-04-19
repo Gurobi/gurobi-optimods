@@ -97,46 +97,6 @@ The objective to optimize is the following:
 .. math::
    \min \sum_{\text{generators} \, i} F_i(P^g_i).
 
-.. testsetup:: mod
-    # Set pandas options for displaying dataframes, if needed
-    import pandas as pd
-    pd.options.display.max_rows = 10
-
-.. tabs::
-
-    .. tab:: ``availability``
-
-        Give interpretation of input data.
-
-        .. doctest:: mod
-            :options: +NORMALIZE_WHITESPACE
-
-            >>> from gurobi_optimods import datasets
-            >>> data = datasets.load_workforce()
-            >>> data.availability
-               Worker      Shift
-            0     Amy 2022-07-02
-            1     Amy 2022-07-03
-            2     Amy 2022-07-05
-            3     Amy 2022-07-07
-            4     Amy 2022-07-09
-            ..    ...        ...
-            67     Gu 2022-07-10
-            68     Gu 2022-07-11
-            69     Gu 2022-07-12
-            70     Gu 2022-07-13
-            71     Gu 2022-07-14
-            <BLANKLINE>
-            [72 rows x 2 columns]
-
-        In the model, this corresponds to ...
-
-    .. tab:: ``shift_requirements``
-
-        Another bit of input data (perhaps a secondary table)
-
-|
-
 Code
 ----
 
@@ -146,14 +106,14 @@ easy access by users.
 
 .. testcode:: mod
 
-    from gurobi_optimods.opf import solve_opf_model, read_settings_from_file, read_case_from_file
-    from gurobi_optimods.datasets import load_caseopf
+    from gurobi_optimods.opf import solve_opf_model, read_case_from_mat_file
+    from gurobi_optimods.datasets import load_caseopfmat
 
     settings = {"doac": True, "use_ef": True}
     # load path to case file
-    casefile = load_caseopf("9")
+    casefile = load_caseopfmat("9")
     # read case file and return a case dictionary
-    case = read_case_from_file(casefile)
+    case = read_case_from_mat_file(casefile)
     # solve opf model and return a solution and the final objective value
     solution, objval = solve_opf_model(settings, case)
 

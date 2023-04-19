@@ -4,8 +4,7 @@ from gurobi_optimods.opf import (
     solve_opf_model,
     plot_opf_solution,
     read_settings_from_file,
-    read_coordsettings_from_file,
-    read_coords_from_file,
+    read_coords_from_csv_file,
     read_case_from_file,
     read_case_from_mat_file,
 )
@@ -14,11 +13,10 @@ from gurobi_optimods.datasets import (
     load_caseopfmat,
     load_caseNYopf,
     load_opfdictcase,
-    load_coordssettings,
+    load_coordsfilepath,
     load_opfgraphicssettings,
     load_opfsettings,
     load_case9solution,
-    load_datadir,
 )
 
 
@@ -56,42 +54,6 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
 
-    def test_case9dc_plot(self):
-        # read settings file and return a settings dictionary
-        settings = {"branchswitching_mip": True, "dodc": True}
-
-        coordsettingsfile = load_coordssettings()
-
-        coordsettings = read_coordsettings_from_file(coordsettingsfile)
-
-        datadir = load_datadir()
-
-        coords_dict = read_coords_from_file(coordsettings, datadir)
-
-        settings["coords_dict"] = coords_dict
-        # print(coords_dict)
-
-        ##### incomplete: needs to be extended so as to include the name
-        ##### of the coordinates file, which should be in the data directory
-        ##### grbread_coords needs to be updated so as to include the
-        ##### path to the data directory
-
-        # load path to case file
-        casefile = load_caseopf("9")
-
-        # casefile = load_case9opf()
-        print("casefile is", casefile)
-        # read case file and return a case dictionary
-        case = read_case_from_file(casefile)
-
-        # map coordinates from dictionary
-
-        # solve opf model and return a solution and the final objective value
-        solution, objval = solve_opf_model(settings, case, "OPF.log")
-        # check whether the solution points looks correct
-        self.assertTrue(solution is not None)
-        self.assertTrue(objval is not None)
-
     # test a real data set for New York
     def test_NY(self):
         settings = {"dodc": True}
@@ -112,6 +74,12 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(objval == objvalmat)
         for s in solution:
             self.assertTrue(solution[s] == solutionmat[s])
+
+        # get path to csv file holding the coordinates for NY
+        coordsfile = load_coordsfilepath("nybuses.csv")
+        coords_dict = read_coords_from_csv_file(coordsfile)
+        # plot the given solution
+        plot_opf_solution({}, case, coords_dict, solution, objval)
 
     # test reading settings and case file from dicts
     def test_opfdicts(self):
@@ -269,33 +237,43 @@ class TestOpf(unittest.TestCase):
         self.assertTrue("P_9_4_9" in solution.keys())
         self.assertLess(abs(solution["P_9_4_9"] - 0.543771), 1e-4)
 
+    # test plotting a solution from pre-loaded data
     def test_graphics(self):
         # settings dictionary
-        settings_graphics_dict = {"branchswitching_mip": True}
+        graphics_settings = {"branchswitching_mip": True}
+        # get path to csv file holding the coordinates for case 9
+        coordsfile = load_coordsfilepath("case9coords.csv")
+        coords_dict = read_coords_from_csv_file(coordsfile)
         # load case dictionary
         case = load_opfdictcase()
         # load a precomputed solution and objective value
         solution, objval = load_case9solution()
         # plot the given solution
-        plot_opf_solution(settings_graphics_dict, case, solution, objval)
+        plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)
 
+    # test plotting a solution after optimization is performed
     def test_graphics_after_solving(self):
         # load settings dictionary
-        settings_optimization_dict = {"branchswitching_mip": True, "doac": True}
+        optimization_settings = {"branchswitching_mip": True, "doac": True}
         # load case dictionary
         case = load_opfdictcase()
         # solve opf model and return a solution and the final objective value
-        solution, objval = solve_opf_model(settings_optimization_dict, case)
+        solution, objval = solve_opf_model(optimization_settings, case)
         # plot the computed solution
-        settings_graphics_dict = {"branchswitching_mip": True}
-        plot_opf_solution(settings_graphics_dict, case, solution, objval)
+        graphics_settings = {"branchswitching_mip": True}
+        coordsfile = load_coordsfilepath("case9coords.csv")
+        coords_dict = read_coords_from_csv_file(coordsfile)
+        plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)
 
+    # test plotting a solution while reading graphics settings from a file
     def test_graphics_settings_file(self):
         # load path to settings file
         settingsfile = load_opfgraphicssettings()
         # read settings file and return a settings dictionary
         # set second argument to True because it's a graphics settings file
-        settings_graphics_dict = read_settings_from_file(settingsfile, True)
+        graphics_settings = read_settings_from_file(settingsfile, True)
+        coordsfile = load_coordsfilepath("case9coords.csv")
+        coords_dict = read_coords_from_csv_file(coordsfile)
         # load path to case file
         casefile = load_caseopf("9")
         # read case file and return a case dictionary
@@ -303,4 +281,4 @@ class TestOpf(unittest.TestCase):
         # load a precomputed solution and objective value
         solution, objval = load_case9solution()
         # plot the computed solution
-        plot_opf_solution(settings_graphics_dict, case, solution, objval)
+        plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)

@@ -172,74 +172,59 @@ def read_settings_file(filename, graphics=False):
     return settings_dict
 
 
-def read_coordsettings_file(filename):
-    coordsettings = {}
-    f = open(filename, "r")
-    lines = f.readlines()
-    f.close()
-
-    linenum = 0
-    # Read lines of configuration file and save options
-    while linenum < len(lines):
-        thisline = lines[linenum].split()
-
-        if len(thisline) <= 0:
-            linenum += 1
-            continue
-        if thisline[0][0] == "#":
-            linenum += 1
-            continue
-
-        if thisline[0] == "END":
-            break
-
-        if thisline[0] == "coordsfilename":
-            coordsettings["coordsfilename"] = thisline[1]
-            print("COORDS at %s\n" % coordsettings["coordsfilename"])
-            linenum += 1
-            continue
-        else:
-            raise ValueError("Illegal option string %s." % thisline[0])
-
-    # break_exit('poooooo')
-    return coordsettings
-
-
 def read_coords_build_dict(filename):
-    """Reads csv file with bus coordinates, puts it into dict"""
+    """
+    Function to read bus coordinates from a csv file
+
+    Parameters
+    ----------
+    filename : string
+        Path to text based file holding bus coordinates
+
+    Returns
+    -------
+    dictionary
+        A dictionary holding the respective coordinates
+    """
 
     logger = logging.getLogger("OpfLogger")
-    logger.info("Reading csv coordinates file %s and build dictionary." % filename)
+    logger.info("Reading csv coordinates file %s and building dictionary." % filename)
 
-    f = open(filename, "r")
-    csvf = csv.reader(f)
-    thelist = list(csvf)
-    f.close()
+    with open(filename, mode="r") as infile:
+        reader = csv.reader(infile)
+        coords_dict = {
+            int(rows[1]): (
+                rows[3],
+                rows[4],
+            )
+            for rows in reader
+            if rows[0] != "index"
+        }
 
-    coords_dict = {}
-
-    for line in range(1, len(thelist)):
-        # print(thelist[line][0], float(thelist[line][3]), float(thelist[line][4]))
-        coords_dict[line] = (float(thelist[line][3]), float(thelist[line][4]))
-
-    print("Done reading coordinates\n")
+    logger.info("Done reading coordinates\n")
 
     return coords_dict
 
 
 def grbmap_coords_from_dict(alldata, coords_dict):
-    """Maps with bus coordinates"""
+    """
+    Maps given case data with given bus coordinates
 
-    logger = logging.getLogger("OpfLogger")
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    coords_dict : dictionary
+        Dictionary holding a mapping of bus index to a given coordinate
+    """
+
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
 
     for bnum in range(1, numbuses + 1):
-        # print(thelist[line][0], float(thelist[line][3]), float(thelist[line][4]))
-        buses[bnum].lat = coords_dict[bnum][0]
-        buses[bnum].lon = coords_dict[bnum][1]
-
-    break_exit("mapped coords")
+        index = buses[bnum].nodeID
+        buses[bnum].lat = coords_dict[index][0]
+        buses[bnum].lon = coords_dict[index][1]
 
 
 def read_settings_build_dict(settings, lines):

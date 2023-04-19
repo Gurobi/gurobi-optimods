@@ -82,7 +82,6 @@ def grbgraphical_givencoords(alldata, plottype, textlist):
     myedge_color = {}
 
     # default actions
-    GenPvar = alldata["LP"]["GenPvar"]
     for j in range(1, numbuses + 1):
         bus = buses[j]
         mynode_size[j - 1] = 1
@@ -170,7 +169,6 @@ def grbgraphical_givencoords(alldata, plottype, textlist):
 
         # break_exit('bus examination')
 
-        zvar = alldata["LP"]["zvar"]
         zholder = alldata["MIP"]["zholder"]
         for j in range(1, 1 + numbranches):
             branch = branches[j]
@@ -179,7 +177,6 @@ def grbgraphical_givencoords(alldata, plottype, textlist):
             count_of_f = IDtoCountmap[f]
             count_of_t = IDtoCountmap[t]
 
-            # if zvar[branch].x < 0.5:  #turned off
             if zholder[j - 1] < 0.5:  # turned off
                 if loud:
                     logger.info(
