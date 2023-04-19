@@ -10,7 +10,7 @@ from .src_opf.grbfile import (
     read_settings_file,
     read_optimization_settings,
     read_graphics_settings,
-    read_coords_build_dict,
+    read_coords_file_csv,
     grbmap_coords_from_dict,
     grbread_coords,
     grbread_graphattrs,
@@ -202,6 +202,6 @@ def read_coords_from_csv_file(coordsfile):
         other API functions
     """
 
-    coord_dict = read_coords_build_dict(coordsfile)
+    coord_dict = read_coords_file_csv(coordsfile)
 
     return coord_dict

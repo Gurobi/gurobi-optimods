@@ -172,7 +172,7 @@ def read_settings_file(filename, graphics=False):
     return settings_dict
 
 
-def read_coords_build_dict(filename):
+def read_coords_file_csv(filename):
     """
     Function to read bus coordinates from a csv file
 
@@ -187,7 +187,7 @@ def read_coords_build_dict(filename):
         A dictionary holding the respective coordinates
     """
 
-    logger = logging.getLogger("OpfLogger")
+    logger, handlers = initialize_logger("CoordsReadingLogger")
     logger.info("Reading csv coordinates file %s and building dictionary." % filename)
 
     with open(filename, mode="r") as infile:
@@ -201,7 +201,8 @@ def read_coords_build_dict(filename):
             if rows[0] != "index"
         }
 
-    logger.info("Done reading coordinates\n")
+    logger.info("Done reading coordinates.\n")
+    remove_and_close_handlers(logger, handlers)
 
     return coords_dict
 

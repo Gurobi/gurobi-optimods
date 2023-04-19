@@ -17,7 +17,6 @@ from .grbformulator_dc import lpformulator_dc_body, lpformulator_dc_examine_solu
 from .grbformulator_iv import (
     lpformulator_iv_body,
     lpformulator_iv_examine_solution,
-    lpformulator_iv_strictchecker,
 )
 
 
@@ -63,6 +62,7 @@ def construct_and_solve_model(alldata):
         # Add model variables and constraints
         lpformulator_body(alldata, model, opftype)
 
+        # TODO This will be an own API function
         if alldata["strictcheckvoltagesolution"]:
             # check input solution against formulation
             spitoutvector = True
@@ -151,13 +151,11 @@ def lpformulator_strictchecker(alldata, model, spitoutvector, opftype):
     opftype : OpfType
         Type of OPF formulation
     """
-    if opftype == OpfType.AC:
-        lpformulator_ac_strictchecker(alldata, model, spitoutvector)
-    elif opftype == OpfType.DC:
+    if opftype == OpfType.DC:
         # lpformulator_dc_strictchecker(alldata, model, spitoutvector)
         pass  # TODO-Dan Is there a reason why there is no strict checker for DC (except that it's linear)
-    elif opftype == OpfType.IV:
-        lpformulator_iv_strictchecker(alldata, model, spitoutvector)
+    elif opftype == OpfType.AC or opftype == OpfType.IV:
+        lpformulator_ac_strictchecker(alldata, model, spitoutvector)
     else:
         raise ValueError("Unknown OPF type.")
 
