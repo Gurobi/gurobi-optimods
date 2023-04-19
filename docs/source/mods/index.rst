@@ -8,5 +8,6 @@ The Opti Mods
    card-regression
    l1-regression
    opf/index
+   mwis
    weighted-matching
    workforce
