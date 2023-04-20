@@ -1,7 +1,6 @@
 import unittest
-from itertools import product
-from random import Random
 
+import networkx as nx
 import numpy as np
 import scipy.sparse as sp
 from numpy.testing import assert_array_equal
@@ -12,23 +11,23 @@ from gurobi_optimods.matching import (
 )
 
 
-def random_bipartite(n1, n2, m, seed):
-    rng = Random(seed)
-    edges = rng.sample(list(product(range(n1), range(n1, n1 + n2))), m)
-    i, j = zip(*edges)
-    data = np.ones(len(i))
-    return sp.coo_array((data, (i, j)), shape=(n1 + n2, n1 + n2))
+def random_bipartite(n1, n2, p, seed):
+    nodes1 = np.arange(n1)
+    nodes2 = np.arange(n1, n1 + n2)
+    graph = nx.bipartite.random_graph(n1, n2, p, seed, directed=False)
+    adjacency = nx.to_scipy_sparse_array(graph)
+    return adjacency, nodes1, nodes2
 
 
 class TestBipartiteMatching(unittest.TestCase):
     def test_coo_array(self):
-        G = random_bipartite(5, 5, 20, 0)
+        G, *_ = random_bipartite(5, 5, 0.5, 0)
         matching = maximum_bipartite_matching(G)
         self.assertEqual(len(matching.data), 5)
 
     def test_csr_array(self):
-        G = random_bipartite(5, 5, 20, 0).tocsr()
-        matching = maximum_bipartite_matching(G)
+        G, *_ = random_bipartite(5, 5, 0.5, 0)
+        matching = maximum_bipartite_matching(G.tocsr())
         self.assertEqual(len(matching.data), 5)
 
     def test_not_bipartite(self):
@@ -44,13 +43,13 @@ class TestBipartiteMatching(unittest.TestCase):
 
 class TestWeightedMatching(unittest.TestCase):
     def test_coo_array(self):
-        G = random_bipartite(5, 5, 20, 0)
+        G, *_ = random_bipartite(5, 5, 20, 0)
         matching = maximum_weighted_matching(G)
         self.assertEqual(len(matching.data), 5)
 
     def test_csr_array(self):
-        G = random_bipartite(5, 5, 20, 0).tocsr()
-        matching = maximum_weighted_matching(G)
+        G, *_ = random_bipartite(5, 5, 20, 0)
+        matching = maximum_weighted_matching(G.tocsr())
         self.assertEqual(len(matching.data), 5)
 
     def test_not_bipartite(self):
