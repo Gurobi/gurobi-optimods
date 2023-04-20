@@ -14,15 +14,14 @@ def solve_qubo(coeff_matrix) -> np.array:
     """
 
     if coeff_matrix is None:
-        return None
+        return None, None
 
-    # TODO return useful error
     if coeff_matrix.ndim != 2:
-        return None
+        raise ValueError("Matrix is not 2-dimensional.")
 
     shape = coeff_matrix.shape
     if shape[0] != shape[1]:
-        return None
+        raise ValueError("Matrix is not quadratic.")
 
     n = shape[0]
 
@@ -33,4 +32,4 @@ def solve_qubo(coeff_matrix) -> np.array:
 
         model.optimize()
 
-        return x.X.round()
+        return model.ObjVal, x.X.round()
