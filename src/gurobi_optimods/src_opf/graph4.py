@@ -12,7 +12,7 @@ from .scantextgraphplus import *
 from .utils import break_exit
 
 
-def graphplot_givencoords(
+def graphplot(
     alldata,
     graphfilename,
     myvertex_text,

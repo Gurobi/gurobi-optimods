@@ -45,9 +45,9 @@ class TestOpf(unittest.TestCase):
     def test_simple(self):
         settings = {"doac": True, "skipjabr": False, "use_ef": True}
         # load path to case file
-        casefile = load_caseopf("9")
+        casefile = load_caseopfmat("9")
         # read case file and return a case dictionary
-        case = read_case_from_file(casefile)
+        case = read_case_from_mat_file(casefile)
         # solve opf model and return a solution and the final objective value
         solution, objval = solve_opf_model(settings, case, "OPF.log")
         # check whether the solution points looks correct
@@ -254,13 +254,14 @@ class TestOpf(unittest.TestCase):
     # test plotting a solution after optimization is performed
     def test_graphics_after_solving(self):
         # load settings dictionary
-        optimization_settings = {"branchswitching_mip": True, "doac": True}
+        optimization_settings = {"doac": True, "use_ef": True}
         # load case dictionary
         case = load_opfdictcase()
         # solve opf model and return a solution and the final objective value
         solution, objval = solve_opf_model(optimization_settings, case)
         # plot the computed solution
-        graphics_settings = {"branchswitching_mip": True}
+        # graphics_settings = {"branchswitching_mip": True}
+        graphics_settings = {}
         coordsfile = load_coordsfilepath("case9coords.csv")
         coords_dict = read_coords_from_csv_file(coordsfile)
         plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)

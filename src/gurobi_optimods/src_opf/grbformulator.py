@@ -100,6 +100,8 @@ def construct_and_solve_model(alldata):
                     solution[v.VarName] = 0.0
                 index += 1
 
+            turn_solution_into_mpc_dict(alldata, model)
+
     return solution, objval
 
     """
@@ -375,6 +377,118 @@ def lpformulator_setup(alldata, opftype):
                 branch.minangle_rad = -maxrad
 
         logger.info("Updated %d maxangle constraints." % (count))
+
+
+def turn_solution_into_mpc_dict(alldata, model):
+
+    mpc = {}
+    mpc["baseMVA"] = alldata["baseMVA"]
+    baseMVA = mpc["baseMVA"]
+    mpc["bus"] = {}
+    mpc["gen"] = {}
+    mpc["branch"] = {}
+    mpc["gencost"] = {}
+    vars = model.getVars()
+
+    # buses
+    buses = alldata["buses"]
+    index = 1
+    for b in buses.values():
+        # bus_i type    Pd  Qd  Gs  Bs  area    Vm  Va  baseKV  zone    Vmax    Vmin
+        # we don't use area, Vm, Va, zone but we save them for consistency with MATPOWER
+        matbus = {
+            "bus_i": b.nodeID,
+            "type": b.nodetype,
+            "Pd": b.Pd * baseMVA,
+            "Qd": b.Qd * baseMVA,
+            "Gs": b.Gs * baseMVA,
+            "Bs": b.Bs * baseMVA,
+            "area": b.area,
+            "Vm": b.Vm,
+            "Va": b.Va,
+            "baseKV": b.Vbase,
+            "zone": b.zone,
+            "Vmax": b.Vmax,
+            "Vmin": b.Vmin,
+        }
+        print("bus %d P var value: %f" % (b.nodeID, b.Pinjvarind))
+        mpc["bus"][index] = matbus
+        index += 1
+
+    # generators and gen costs
+    gens = alldata["gens"]
+    index = 1
+    for g in gens.values():
+        # generator data
+        # bus   Pg  Qg  Qmax    Qmin    Vg  mBase   status  Pmax    Pmin    Pc1 Pc2 Qc1min  Qc1max  Qc2min  Qc2max  ramp_agc    ramp_10 ramp_30 ramp_q  apf
+        # we don't use Vg, mBase, and everything after Pmin but we save them for consistency with MATPOWER
+        matgen = {
+            "bus": g.nodeID,
+            "Pg": g.Pg,
+            "Qg": g.Qg,
+            "Qmax": g.Qmax * baseMVA,
+            "Qmin": g.Qmin * baseMVA,
+            "Vg": g.Vg,
+            "mBase": g.mBase,
+            "status": g.status,
+            "Pmax": g.Pmax * baseMVA,
+            "Pmin": g.Pmin * baseMVA,
+            "Pc1": g.Pc1,
+            "Pc2": g.Pc2,
+            "Qc1min": g.Qc1min,
+            "Qc1max": g.Qc1max,
+            "Qc2min": g.Qc2min,
+            "Qc2max": g.Qc2max,
+            "ramp_agc": g.ramp_agc,
+            "ramp_10": g.ramp_10,
+            "ramp_30": g.ramp_30,
+            "ramp_q": g.ramp_q,
+            "apf": g.apf,
+        }
+        mpc["gen"][index] = matgen
+        print("gen %d P var value: %f" % (g.nodeID, g.Pvarind))
+        gencost = g.costvector
+        for j in range(len(gencost)):  # scale cost back to MATPOWER format
+            gencost[j] /= baseMVA ** (g.costdegree - j)
+
+        # generator cost data
+        #   1   startup shutdown    n   x1  y1  ... xn  yn
+        #   2   startup shutdown    n   c(n-1)  ... c0
+        # we don't use startup and shutdown but we save them for consistency with MATPOWER
+        matgencost = {
+            "costtype": g.costtype,
+            "startup": g.startup,
+            "shutdown": g.shutdown,
+            "n": g.costdegree + 1,
+            "costvector": gencost,
+        }
+        mpc["gencost"][index] = matgencost
+        index += 1
+
+    # branches
+    branches = alldata["branches"]
+    index = 1
+    for b in branches.values():
+        # fbus  tbus    r   x   b   rateA   rateB   rateC   ratio   angle   status  angmin  angmax
+        matbranch = {
+            "fbus": b.f,
+            "tbus": b.t,
+            "r": b.r,
+            "x": b.x,
+            "b": b.bc,
+            "rateA": b.rateAmva * baseMVA,
+            "rateB": b.rateBmva * baseMVA,
+            "rateC": b.rateCmva * baseMVA,
+            "ratio": b.ratio,
+            "angle": b.angle,
+            "status": b.status,
+            "angmin": b.minangle,
+            "angmax": b.maxangle,
+        }
+        mpc["branch"][index] = matbranch
+        index += 1
+
+    # print(mpc)
 
 
 def writempsfile(alldata, model, filename):

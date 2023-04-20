@@ -16,7 +16,7 @@ from .src_opf.grbfile import (
     grbread_graphattrs,
 )
 from .src_opf.grbformulator import construct_and_solve_model
-from .src_opf.grbgraphical_givencoords import plot_solution_givencoords
+from .src_opf.grbgraphical import plot_solution
 from .src_opf.utils import initialize_logger, remove_and_close_handlers
 
 
@@ -104,7 +104,7 @@ def plot_opf_solution(settings, case, coords, solution, objval):
 
     grbmap_coords_from_dict(alldata, coords)
 
-    plot_solution_givencoords(alldata, solution, objval)
+    plot_solution(alldata, solution, objval)
 
     remove_and_close_handlers(logger, handlers)
 

@@ -2,12 +2,12 @@ import sys
 import math
 import time
 import logging
-from .graph4_givencoords import *
+from .graph4 import *
 from gurobipy import *
 from .utils import break_exit
 
 
-def plot_solution_givencoords(alldata, solution, objval):
+def plot_solution(alldata, solution, objval):
     """Plot feasible solution"""
 
     logger = logging.getLogger("OpfLogger")
@@ -47,10 +47,10 @@ def plot_solution_givencoords(alldata, solution, objval):
     textlist = []
     textlist.append("OBJ: %10.2f" % (objval))
     textlist.append("Lines off: %d" % (numzeros))
-    grbgraphical_givencoords(alldata, "branchswitching", textlist)
+    grbgraphical(alldata, "branchswitching", textlist)
 
 
-def grbgraphical_givencoords(alldata, plottype, textlist):
+def grbgraphical(alldata, plottype, textlist):
     logger = logging.getLogger("OpfLogger")
     buses = alldata["buses"]
     numbuses = alldata["numbuses"]
@@ -61,11 +61,8 @@ def grbgraphical_givencoords(alldata, plottype, textlist):
     txtfilename = "newgraph.txt"
     logger.info("Graphical layout, coordinates given.\n")
 
-    try:
-        g = open(txtfilename, "w")
-        logger.info("Writing to txt file %s\n" % txtfilename)
-    except:
-        log.raise_exception("Error: Cannot open txt file %s\n" % txtfilename)
+    g = open(txtfilename, "w")
+    logger.info("Writing to txt file %s\n" % txtfilename)
 
     g.write("N " + str(numbuses) + " M " + str(numbranches) + "\n")
     for branch in alldata["branches"].values():
@@ -237,7 +234,7 @@ def grbgraphical_givencoords(alldata, plottype, textlist):
                     mynode_color[j - 1],
                 )
 
-    graphplot_givencoords(
+    graphplot(
         alldata,
         txtfilename,
         node_text,

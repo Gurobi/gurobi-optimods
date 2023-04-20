@@ -5,7 +5,7 @@ import time
 import logging
 import scipy
 
-from .utils import initialize_logger, remove_and_close_handlers
+from .utils import initialize_logger, remove_and_close_handlers, break_exit
 
 
 class Bus:
@@ -16,7 +16,22 @@ class Bus:
     """
 
     def __init__(
-        self, count, nodeID, nodetype, Pd, Qd, Gs, Bs, Vbase, Vmax, Vmin, busline0
+        self,
+        count,
+        nodeID,
+        nodetype,
+        Pd,
+        Qd,
+        Gs,
+        Bs,
+        area,
+        Vm,
+        Va,
+        Vbase,
+        zone,
+        Vmax,
+        Vmin,
+        busline0,
     ):
         self.genidsbycount = []  # array of generator IDs at this bus
         self.frombranchids = {}  # branches where this bus is the 'from' bus
@@ -28,16 +43,20 @@ class Bus:
         self.Qd = Qd  # reactive load
         self.Gs = Gs  # shunt admittance parameter
         self.Bs = Bs  # shunt admittance parameter
+        self.area = area  # we don't use it but keep for consistency with MATPOWER
+        self.Vm = Vm  # we don't use it but keep for consistency with MATPOWER
+        self.Va = Va  # we don't use it but keep for consistency with MATPOWER
         self.Vbase = Vbase  # voltage base
+        self.zone = zone  # we don't use it but keep for consistency with MATPOWER
         self.Vmax = Vmax
         self.Vmin = Vmin
         self.busline0 = busline0  # line location of bus within input file # TODO-Dan why do we need this?
         self.inputvoltage = False
         self.cffvarind = -1  # the following four fields are variable indices
-        self.Pinjvarind = -1
-        self.Qinjvarind = -1
-        self.vvarind = -1
-        self.thetavarind = -1
+        self.Pinjvarind = -1  # index of Pd solution variable for buses
+        self.Qinjvarind = -1  # index of Qd solution variable for buses
+        self.vvarind = -1  # index of bus voltage magnitude variable for buses
+        self.thetavarind = -1  # index of bus volate angle variable for buses
         self.Pbalance = 0
         self.inputV = 0  # input voltage
         self.inpute = 0  # e-value (input or derived from input voltage solution)
@@ -115,6 +134,7 @@ class Branch:
         self.branchline0 = branchline0  # TODO-Dan Why do we need the line?
         self.rateAmva = rateAmva  # the following three parameters
         self.rateBmva = rateBmva  # describe branch limits
+        self.rateCmva = rateCmva
         self.limit = rateAmva
         self.unboundedlimit = False
         self.constrainedflow = 1
@@ -230,31 +250,77 @@ class Gen:
     TODO-Dan Please add more description similar to the Bus class if you think it's needed
     """
 
-    def __init__(self, count, nodeID, Pg, Qg, status, Pmax, Pmin, Qmax, Qmin, line0):
+    def __init__(
+        self,
+        count,
+        nodeID,
+        Pg,
+        Qg,
+        Qmax,
+        Qmin,
+        Vg,
+        mBase,
+        status,
+        Pmax,
+        Pmin,
+        Pc1,
+        Pc2,
+        Qc1min,
+        Qc1max,
+        Qc2min,
+        Qc2max,
+        ramp_agc,
+        ramp_10,
+        ramp_30,
+        ramp_q,
+        apf,
+        line0,
+    ):
         self.count = count  # TODO-Dan Why do we need the count?
         self.nodeID = nodeID  # ID of bus holding gen
         self.Pg = Pg  # active power generation in existing solution
         self.Qg = Qg  # reactive power generation in existing solution
+        self.Qmax = Qmax
+        self.Qmin = Qmin
+        self.Vg = Vg  # not used but kept for completeness
+        self.mBase = mBase  # not used but kept for completeness
         self.status = status  # on or off
         self.Pmax = Pmax  # max, min active and reactive power limits
         self.Pmin = Pmin
-        self.Qmax = Qmax
-        self.Qmin = Qmin
+        self.Pc1 = Pc1  # not used but kept for completeness
+        self.Pc2 = Pc2  # not used but kept for completeness
+        self.Qc1min = Qc1min  # not used but kept for completeness
+        self.Qc1max = Qc1max  # not used but kept for completeness
+        self.Qc2min = Qc2min  # not used but kept for completeness
+        self.Qc2max = Qc2max  # not used but kept for completeness
+        self.ramp_agc = ramp_agc  # not used but kept for completeness
+        self.ramp_10 = ramp_10  # not used but kept for completeness
+        self.ramp_30 = ramp_30  # not used but kept for completeness
+        self.ramp_q = ramp_q  # not used but kept for completeness
+        self.apf = apf  # not used but kept for completeness
         self.line0 = line0  # TODO-Dan This is used nowhere. Do we need the line number?
         self.costlinenum = (
             -1
         )  # TODO-Dan This is used nowhere. Do we need the cost line number?
-        self.Pvarind = -1
+        self.Pvarind = -1  #
         self.Qvarind = -1
 
-    def addcost(self, costvector, linenum):
+    def addcost(
+        self, costvector, linenum
+    ):  # TODO-Dan This is not used anywhere. Do we need it?
         self.costvector = costvector
         self.costdegree = len(costvector) - 1
         self.costlinenum = linenum
 
-    def addcost_plain(self, costvector):
-        self.costvector = costvector
+    def addcost_plain(self, costvector, costtype, startup, shutdown, baseMVA):
         self.costdegree = len(costvector) - 1
+        # Re-scale costs
+        for j in range(self.costdegree + 1):
+            costvector[j] *= baseMVA ** (self.costdegree - j)
+        self.costvector = costvector
+        self.costtype = costtype
+        self.startup = startup
+        self.shutdown = shutdown
         self.costlinenum = -1
 
     def showcostvector(self):  # TODO-Dan This is used nowhere
@@ -290,7 +356,7 @@ def read_case(alldata, case_dict):
 
     logger.info("Building case data structures from dictionary.")
 
-    dict_buses = case_dict["buses"]
+    dict_buses = case_dict["bus"]
     baseMVA = alldata["baseMVA"] = case_dict["baseMVA"]
 
     logger.info("Buses.")
@@ -298,8 +364,8 @@ def read_case(alldata, case_dict):
     for dbus in dict_buses.values():
         numbuses += 1
         count = dbus["count"]
-        nodeID = dbus["nodeID"]
-        nodetype = dbus["nodetype"]
+        nodeID = dbus["bus_i"]
+        nodetype = dbus["type"]
 
         if nodetype != 1 and nodetype != 2 and nodetype != 3 and nodetype != 4:
             raise ValueError("Bad bus %s has type %s." % (count, nodetype))
@@ -312,12 +378,15 @@ def read_case(alldata, case_dict):
         if nodetype == 4:
             numisolated += 1
 
-        Vmin = dbus["Vmin"]
         Pd = dbus["Pd"]
         Qd = dbus["Qd"]
         Gs = dbus["Gs"]
         Bs = dbus["Bs"]
-        Vbase = dbus["Vbase"]
+        area = dbus["area"]
+        Vm = dbus["Vm"]
+        Va = dbus["Va"]
+        Vbase = dbus["baseKV"]
+        zone = dbus["zone"]
         Vmax = dbus["Vmax"]
         Vmin = dbus["Vmin"]
         lnum = dbus["lnum"]
@@ -330,7 +399,11 @@ def read_case(alldata, case_dict):
             Qd / baseMVA,
             Gs / baseMVA,
             Bs / baseMVA,
+            area,
+            Vm,
+            Va,
             Vbase,
+            zone,
             Vmax,
             Vmin,
             lnum,
@@ -367,18 +440,18 @@ def read_case(alldata, case_dict):
     activebranches = 0
     zerolimit = 0
 
-    dict_branches = case_dict["branches"]
+    dict_branches = case_dict["branch"]
     branches = {}
 
     for dbranch in dict_branches.values():
         # print(dbranch)
         numbranches += 1
         brcnt1 = dbranch["branchcount1"]
-        f = dbranch["f"]
-        t = dbranch["t"]
+        f = dbranch["fbus"]
+        t = dbranch["tbus"]
         r = dbranch["r"]
         x = dbranch["x"]
-        bc = dbranch["bc"]
+        bc = dbranch["b"]
         rateA = dbranch["rateA"]
         rateB = dbranch["rateB"]
         rateC = dbranch["rateC"]
@@ -387,8 +460,8 @@ def read_case(alldata, case_dict):
             ratio = 1.0  # to be sure
         angle = dbranch["angle"]
         status = dbranch["status"]
-        minangle = dbranch["minangle"]
-        maxangle = dbranch["maxangle"]
+        minangle = dbranch["angmin"]
+        maxangle = dbranch["angmax"]
         if maxangle < minangle:
             raise ValueError("Branch # %d has illegal angle constraints." % numbranches)
 
@@ -428,19 +501,32 @@ def read_case(alldata, case_dict):
 
     logger.info("Generators.")
     gens = {}
-    dict_gens = case_dict["generators"]
+    dict_gens = case_dict["gen"]
     summaxgenP = summaxgenQ = 0
 
     for dgen in dict_gens.values():
         gencount1 = dgen["gencount1"]
-        nodeID = dgen["nodeID"]
+        nodeID = dgen["bus"]
         Pg = dgen["Pg"]
         Qg = dgen["Qg"]
+        Qmax = dgen["Qmax"]
+        Qmin = dgen["Qmin"]
+        Vg = dgen["Vg"]
+        mBase = dgen["mBase"]
         status = dgen["status"]
         Pmax = dgen["Pmax"]
         Pmin = dgen["Pmin"]
-        Qmax = dgen["Qmax"]
-        Qmin = dgen["Qmin"]
+        Pc1 = dgen["Pc1"]
+        Pc2 = dgen["Pc2"]
+        Qc1min = dgen["Qc1min"]
+        Qc1max = dgen["Qc1max"]
+        Qc2min = dgen["Qc2min"]
+        Qc2max = dgen["Qc2max"]
+        ramp_agc = dgen["ramp_agc"]
+        ramp_10 = dgen["ramp_10"]
+        ramp_30 = dgen["ramp_30"]
+        ramp_q = dgen["ramp_q"]
+        apf = dgen["apf"]
         lnum = dgen["lnum"]
 
         idgencount1 = -1
@@ -451,11 +537,24 @@ def read_case(alldata, case_dict):
                 nodeID,
                 Pg,
                 Qg,
+                Qmax / baseMVA,
+                Qmin / baseMVA,
+                Vg,
+                mBase,
                 status,
                 Pmax / baseMVA,
                 Pmin / baseMVA,
-                Qmax / baseMVA,
-                Qmin / baseMVA,
+                Pc1,
+                Pc2,
+                Qc1min,
+                Qc1max,
+                Qc2min,
+                Qc2max,
+                ramp_agc,
+                ramp_10,
+                ramp_30,
+                ramp_q,
+                apf,
                 lnum,
             )
 
@@ -487,10 +586,16 @@ def read_case(alldata, case_dict):
     logger.info("    summaxPg %f summaxQg %f" % (summaxgenP, summaxgenQ))
 
     logger.info("Generator cost vectors.")
-    gencoststruct = case_dict["generator_cost_structure"]
+    gencoststruct = case_dict["gencost"]
 
     for count in range(1, alldata["numgens"] + 1):
-        gens[count].addcost_plain(gencoststruct[count]["costvector"])
+        gens[count].addcost_plain(
+            gencoststruct[count]["costvector"],
+            gencoststruct[count]["costtype"],
+            gencoststruct[count]["startup"],
+            gencoststruct[count]["shutdown"],
+            baseMVA,
+        )
 
 
 def read_case_file(casefile):
@@ -568,36 +673,37 @@ def read_case_file_mat(casefile):
     mpcbranch = mpc["branch"]
     mpcgencost = mpc["gencost"]
 
-    slackbus = -1
-    refbus = -1
+    print(mat)
     numbuses = 0
     buses = {}
     for b in mpcbuses:
         numbuses += 1
         buses[numbuses] = {}
         buses[numbuses]["count"] = numbuses
-        buses[numbuses]["nodeID"] = int(b[0])
-        buses[numbuses]["nodetype"] = int(b[1])
+        buses[numbuses]["bus_i"] = int(b[0])
+        buses[numbuses]["type"] = int(b[1])
         buses[numbuses]["Pd"] = b[2]
         buses[numbuses]["Qd"] = b[3]
         buses[numbuses]["Gs"] = b[4]
         buses[numbuses]["Bs"] = b[5]
-        buses[numbuses]["Vbase"] = b[9]
+        buses[numbuses]["area"] = b[6]
+        buses[numbuses]["Vm"] = b[7]
+        buses[numbuses]["Va"] = b[8]
+        buses[numbuses]["baseKV"] = b[9]
+        buses[numbuses]["zone"] = b[10]
         buses[numbuses]["Vmax"] = b[11]
         buses[numbuses]["Vmin"] = b[12]
         buses[numbuses]["lnum"] = -1
-        if buses[numbuses]["nodetype"] == 3:
-            slackbus = buses[numbuses]["nodeID"]
+        if buses[numbuses]["type"] == 3:
+            slackbus = buses[numbuses]["bus_i"]
             refbus = numbuses
             logger.info("    Slack bus: %d" % slackbus)
             logger.info(
                 "    Bus %d ID %d is the reference bus."
-                % (numbuses, buses[numbuses]["nodeID"])
+                % (numbuses, buses[numbuses]["bus_i"])
             )
 
-    case_dict["slackbus"] = slackbus
-    case_dict["refbus"] = refbus
-    case_dict["buses"] = buses
+    case_dict["bus"] = buses
 
     numgens = 0
     gens = {}
@@ -605,17 +711,30 @@ def read_case_file_mat(casefile):
         numgens += 1
         gens[numgens] = {}
         gens[numgens]["gencount1"] = numgens
-        gens[numgens]["nodeID"] = int(g[0])
+        gens[numgens]["bus"] = int(g[0])
         gens[numgens]["Pg"] = g[1]
         gens[numgens]["Qg"] = g[2]
         gens[numgens]["Qmax"] = g[3]
         gens[numgens]["Qmin"] = g[4]
+        gens[numgens]["Vg"] = g[5]
+        gens[numgens]["mBase"] = g[6]
         gens[numgens]["status"] = 0 if g[7] <= 0 else 1
         gens[numgens]["Pmax"] = g[8]
         gens[numgens]["Pmin"] = g[9]
+        gens[numgens]["Pc1"] = g[10]
+        gens[numgens]["Pc2"] = g[11]
+        gens[numgens]["Qc1min"] = g[12]
+        gens[numgens]["Qc1max"] = g[13]
+        gens[numgens]["Qc2min"] = g[14]
+        gens[numgens]["Qc2max"] = g[15]
+        gens[numgens]["ramp_agc"] = g[16]
+        gens[numgens]["ramp_10"] = g[17]
+        gens[numgens]["ramp_30"] = g[18]
+        gens[numgens]["ramp_q"] = g[19]
+        gens[numgens]["apf"] = g[20]
         gens[numgens]["lnum"] = -1
 
-    case_dict["generators"] = gens
+    case_dict["gen"] = gens
 
     numbranches = 0
     branches = {}
@@ -623,22 +742,22 @@ def read_case_file_mat(casefile):
         numbranches += 1
         branches[numbranches] = {}
         branches[numbranches]["branchcount1"] = numbranches
-        branches[numbranches]["f"] = b[0]
-        branches[numbranches]["t"] = b[1]
+        branches[numbranches]["fbus"] = b[0]
+        branches[numbranches]["tbus"] = b[1]
         branches[numbranches]["r"] = b[2]
         branches[numbranches]["x"] = b[3]
-        branches[numbranches]["bc"] = b[4]
+        branches[numbranches]["b"] = b[4]
         branches[numbranches]["rateA"] = b[5]
         branches[numbranches]["rateB"] = b[6]
         branches[numbranches]["rateC"] = b[7]
         branches[numbranches]["ratio"] = 1.0 if b[8] == 0.0 else b[8]
         branches[numbranches]["angle"] = b[9]
         branches[numbranches]["status"] = b[10]
-        branches[numbranches]["minangle"] = b[11]
-        branches[numbranches]["maxangle"] = b[12]
+        branches[numbranches]["angmin"] = b[11]
+        branches[numbranches]["angmax"] = b[12]
         branches[numbranches]["lnum"] = -1
 
-    case_dict["branches"] = branches
+    case_dict["branch"] = branches
 
     numgencosts = 0
     gencosts = {}
@@ -646,15 +765,11 @@ def read_case_file_mat(casefile):
         numgencosts += 1
         gencosts[numgencosts] = {}
         gencosts[numgencosts]["costtype"] = g[0]
+        gencosts[numgencosts]["startup"] = g[1]
+        gencosts[numgencosts]["shutdown"] = g[2]
         degree = int(g[3])
-        gencosts[numgencosts]["degree"] = degree - 1
-        costvector = [0 for j in range(degree)]
-
-        for j in range(degree):
-            tmp = g[4 + j]
-            costvector[j] = tmp
-            costvector[j] *= mpc["baseMVA"] ** (degree - j - 1)
-
+        gencosts[numgencosts]["n"] = degree
+        costvector = [g[j] for j in range(4, 4 + degree)]
         gencosts[numgencosts]["costvector"] = costvector
 
     if numgencosts > numgens:
@@ -662,7 +777,7 @@ def read_case_file_mat(casefile):
             "Read %d gen costs but only %d generators." % (numgencosts, numgens)
         )
 
-    case_dict["generator_cost_structure"] = gencosts
+    case_dict["gencost"] = gencosts
 
     endtime = time.time()
     logger.info("Reading and building time: %f s." % (endtime - starttime))
@@ -763,7 +878,6 @@ def read_case_build_dict(lines):
     baseMVA = 0.0
 
     case_dict = {}
-    case_dict["refbus"] = -1
 
     # Read file line by line
     while linenum <= numlines:
@@ -793,7 +907,7 @@ def read_case_build_dict(lines):
 
         elif theword == "mpc.bus":
             buses = {}
-            case_dict["buses"] = buses
+            case_dict["bus"] = buses
             lookingforendofbus = 1
             slackbus = -1
             numbuses = 0
@@ -819,38 +933,28 @@ def read_case_build_dict(lines):
                     nodeID = int(thisline[0])
                     nodetype = int(thisline[1])
 
-                    # Trim ; if present
-                    Vmin = thisline[12]
-                    if Vmin[len(Vmin) - 1] == ";":
-                        Vmin = Vmin[: len(Vmin) - 1]
-
-                    Vmin = float(Vmin)
                     Pd = float(thisline[2])
                     Qd = float(thisline[3])
                     Gs = float(thisline[4])
                     Bs = float(thisline[5])
+                    area = float(thisline[6])
+                    Vm = float(thisline[7])
+                    Va = float(thisline[8])
                     Vbase = float(thisline[9])
+                    zone = float(thisline[10])
                     Vmax = float(thisline[11])
-
-                    buses[numbuses] = {}
-                    buses[numbuses]["count"] = numbuses
-                    buses[numbuses]["nodeID"] = nodeID
-                    buses[numbuses]["nodetype"] = nodetype
-                    buses[numbuses]["Pd"] = Pd
-                    buses[numbuses]["Qd"] = Qd
-                    buses[numbuses]["Gs"] = Gs
-                    buses[numbuses]["Bs"] = Bs
-                    buses[numbuses]["Vbase"] = Vbase
-                    buses[numbuses]["Vmax"] = Vmax
-                    buses[numbuses]["Vmin"] = Vmin
-                    buses[numbuses]["lnum"] = linenum - 1
+                    # Trim ; if present
+                    Vmin = thisline[12]
+                    if Vmin[len(Vmin) - 1] == ";":
+                        Vmin = Vmin[: len(Vmin) - 1]
+                    Vmin = float(Vmin)
+                    lnum = linenum - 1
 
                     if nodetype == 3:
                         logger.info(
                             "    Bus %d ID %d is the reference bus."
                             % (numbuses, nodeID)
                         )
-                        case_dict["refbus"] = numbuses
 
                 else:
                     nodeID = int(thisline[1])
@@ -862,36 +966,35 @@ def read_case_build_dict(lines):
                     logger.info("   setting it to type 4.")
                     nodetype = 4
 
-                    # Trim ; if present
-                    Vmin = 0
-                    Pd = 0
-                    Qd = 0
-                    Gs = 0
-                    Bs = 0
+                    Pd = Qd = Gs = Bs = area = Vm = Va = 0
                     Vbase = float(thisline[10])
-                    Vmax = Vmin = 0
+                    zone = Vmax = Vmin = 0
+                    lnum = -1
 
-                    buses[numbuses] = {}
-                    buses[numbuses]["count"] = numbuses
-                    buses[numbuses]["nodeID"] = nodeID
-                    buses[numbuses]["nodetype"] = nodetype
-                    buses[numbuses]["Pd"] = Pd
-                    buses[numbuses]["Qd"] = Qd
-                    buses[numbuses]["Gs"] = Gs
-                    buses[numbuses]["Bs"] = Bs
-                    buses[numbuses]["Vbase"] = Vbase
-                    buses[numbuses]["Vmax"] = Vmax
-                    buses[numbuses]["Vmin"] = Vmin
+                buses[numbuses] = {}
+                buses[numbuses]["count"] = numbuses
+                buses[numbuses]["bus_i"] = nodeID
+                buses[numbuses]["type"] = nodetype
+                buses[numbuses]["Pd"] = Pd
+                buses[numbuses]["Qd"] = Qd
+                buses[numbuses]["Gs"] = Gs
+                buses[numbuses]["Bs"] = Bs
+                buses[numbuses]["area"] = area
+                buses[numbuses]["Vm"] = Vm
+                buses[numbuses]["Va"] = Va
+                buses[numbuses]["baseKV"] = Vbase
+                buses[numbuses]["zone"] = zone
+                buses[numbuses]["Vmax"] = Vmax
+                buses[numbuses]["Vmin"] = Vmin
+                buses[numbuses]["lnum"] = lnum
 
                 linenum += 1
-            # Finished reading bus section
-            case_dict["slackbus"] = slackbus
 
             if lookingforendofbus:
                 raise ValueError("Could not find bus data section.")
 
         elif theword == "mpc.gen":
-            case_dict["generators"] = gens = {}
+            case_dict["gen"] = gens = {}
             lookingforendofgen = 1
             gencount1 = 0
             linenum += 1
@@ -912,11 +1015,28 @@ def read_case_build_dict(lines):
                 nodeID = int(thisline[0])
                 Pg = float(thisline[1])
                 Qg = float(thisline[2])
+                Qmax = float(thisline[3])
+                Qmin = float(thisline[4])
+                Vg = float(thisline[5])
+                mBase = float(thisline[6])
                 status = int(thisline[7])
                 Pmax = float(thisline[8])
                 Pmin = float(thisline[9])
-                Qmax = float(thisline[3])
-                Qmin = float(thisline[4])
+                Pc1 = float(thisline[10])
+                Pc2 = float(thisline[11])
+                Qc1min = float(thisline[12])
+                Qc1max = float(thisline[13])
+                Qc2min = float(thisline[14])
+                Qc2max = float(thisline[15])
+                ramp_agc = float(thisline[16])
+                ramp_10 = float(thisline[17])
+                ramp_30 = float(thisline[18])
+                ramp_q = float(thisline[19])
+                # Trim ; if present
+                apf = thisline[20]
+                if apf[len(apf) - 1] == ";":
+                    apf = apf[: len(apf) - 1]
+                apf = float(apf)
 
                 if status <= 0:
                     status = 0
@@ -925,14 +1045,27 @@ def read_case_build_dict(lines):
 
                 gens[gencount1] = {}
                 gens[gencount1]["gencount1"] = gencount1
-                gens[gencount1]["nodeID"] = nodeID
+                gens[gencount1]["bus"] = nodeID
                 gens[gencount1]["Pg"] = Pg
                 gens[gencount1]["Qg"] = Qg
+                gens[gencount1]["Qmax"] = Qmax
+                gens[gencount1]["Qmin"] = Qmin
+                gens[gencount1]["Vg"] = Vg
+                gens[gencount1]["mBase"] = mBase
                 gens[gencount1]["status"] = status
                 gens[gencount1]["Pmax"] = Pmax
                 gens[gencount1]["Pmin"] = Pmin
-                gens[gencount1]["Qmax"] = Qmax
-                gens[gencount1]["Qmin"] = Qmin
+                gens[gencount1]["Pc1"] = Pc1
+                gens[gencount1]["Pc2"] = Pc2
+                gens[gencount1]["Qc1min"] = Qc1min
+                gens[gencount1]["Qc1max"] = Qc1max
+                gens[gencount1]["Qc2min"] = Qc2min
+                gens[gencount1]["Qc2max"] = Qc2max
+                gens[gencount1]["ramp_agc"] = ramp_agc
+                gens[gencount1]["ramp_10"] = ramp_10
+                gens[gencount1]["ramp_30"] = ramp_30
+                gens[gencount1]["ramp_q"] = ramp_q
+                gens[gencount1]["apf"] = apf
                 gens[gencount1]["lnum"] = linenum - 1
 
                 linenum += 1
@@ -941,7 +1074,7 @@ def read_case_build_dict(lines):
                 raise ValueError("Could not find end of generator section.")
 
         elif theword == "mpc.branch":
-            case_dict["branches"] = branches = {}
+            case_dict["branch"] = branches = {}
             lookingforendofbranch = 1
             numbranches = 0
             linenum += 1
@@ -980,19 +1113,19 @@ def read_case_build_dict(lines):
 
                 branches[numbranches] = {}
                 branches[numbranches]["branchcount1"] = numbranches
-                branches[numbranches]["f"] = f
-                branches[numbranches]["t"] = t
+                branches[numbranches]["fbus"] = f
+                branches[numbranches]["tbus"] = t
                 branches[numbranches]["r"] = r
                 branches[numbranches]["x"] = x
-                branches[numbranches]["bc"] = bc
+                branches[numbranches]["b"] = bc
                 branches[numbranches]["rateA"] = rateA
                 branches[numbranches]["rateB"] = rateB
                 branches[numbranches]["rateC"] = rateC
                 branches[numbranches]["ratio"] = ratio
                 branches[numbranches]["angle"] = angle
                 branches[numbranches]["status"] = status
-                branches[numbranches]["minangle"] = minangle
-                branches[numbranches]["maxangle"] = maxangle
+                branches[numbranches]["angmin"] = minangle
+                branches[numbranches]["angmax"] = maxangle
                 branches[numbranches]["lnum"] = linenum - 1
 
                 linenum += 1
@@ -1002,7 +1135,7 @@ def read_case_build_dict(lines):
                 raise ValueError("Could not find end of branch section.")
 
         elif theword == "mpc.gencost":
-            case_dict["generator_cost_structure"] = gencoststruct = {}
+            case_dict["gencost"] = gencoststruct = {}
 
             lookingforendofgencost = 1
             gencostcount = 1
@@ -1024,23 +1157,22 @@ def read_case_build_dict(lines):
                 if gencostcount <= gencount1:
                     gencoststruct[gencostcount] = {}
                     costtype = int(thisline[0])
-                    degree = int(thisline[3]) - 1
+                    startup = thisline[1]
+                    shutdown = thisline[2]
+                    degree = int(thisline[3])
 
                     gencoststruct[gencostcount]["costtype"] = costtype
-                    gencoststruct[gencostcount]["degree"] = degree
+                    gencoststruct[gencostcount]["n"] = degree
+                    gencoststruct[gencostcount]["startup"] = startup
+                    gencoststruct[gencostcount]["shutdown"] = shutdown
 
-                    costvector = [0 for j in range(degree + 1)]
-
-                    for j in range(degree + 1):
-                        tmp = thisline[4 + j]
-                        # print(j, tmp)
-
-                        if tmp[len(tmp) - 1] == ";":
-                            tmp = tmp[: len(tmp) - 1]
-
-                        costvector[j] = float(tmp)
-                        costvector[j] *= (baseMVA) ** (degree - j)
-
+                    costvector = [float(thisline[j]) for j in range(4, 4 + degree - 1)]
+                    # Trim ; at the end of line
+                    lastcost = thisline[-1]
+                    if lastcost[len(lastcost) - 1] == ";":
+                        lastcost = lastcost[: len(lastcost) - 1]
+                    lastcost = float(lastcost)
+                    costvector.append(lastcost)
                     gencoststruct[gencostcount]["costvector"] = costvector
 
                 else:
