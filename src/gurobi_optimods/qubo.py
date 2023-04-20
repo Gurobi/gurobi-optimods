@@ -3,7 +3,7 @@ from gurobipy import GRB
 import numpy as np
 
 
-def solve_qubo(coeff_matrix) -> np.array:
+def solve_qubo(coeff_matrix) -> tuple[float, np.array]:
     """
     Solve a quadratic unconstrained binary optimization (QUBO) problem,
     i.e., minimize a quadratic function defined by a coefficient matrix

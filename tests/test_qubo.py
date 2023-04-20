@@ -52,3 +52,12 @@ class TestQubo(unittest.TestCase):
         val, solution = solve_qubo(coeff_matrix=Q)
         self.assertEqual(val, -3)
         assert_array_equal(solution, np.array([0, 1]))
+
+    def test_sp(self):
+        data = [-1, -2, 3]
+        row = [0, 0, 1]
+        col = [1, 2, 2]
+        Q = sp.coo_matrix((data, (row, col)), shape=(3, 3))
+        val, solution = solve_qubo(coeff_matrix=Q)
+        self.assertEqual(val, -2)
+        assert_array_equal(solution, np.array([1, 0, 1]))
