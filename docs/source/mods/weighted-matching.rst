@@ -105,7 +105,7 @@ Show the solution. Use doctests if possible (i.e. the solution must be stable en
     :options: +NORMALIZE_WHITESPACE
 
     >>> matching
-    <6x6 sparse matrix of type '<class 'numpy.float64'>'
+    <6x6 sparse array of type '<class 'numpy.float64'>'
         with 2 stored elements in COOrdinate format>
 
 .. doctest:: weighted_matching

@@ -100,7 +100,7 @@ Show the solution. Use doctests if possible (i.e. the solution must be stable en
     :options: +NORMALIZE_WHITESPACE
 
     >>> matching
-    <8x8 sparse matrix of type '<class 'numpy.float64'>'
+    <8x8 sparse array of type '<class 'numpy.float64'>'
         with 3 stored elements in COOrdinate format>
 
 .. doctest:: bipartite_matching
