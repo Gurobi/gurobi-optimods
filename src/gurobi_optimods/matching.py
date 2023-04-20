@@ -84,7 +84,8 @@ def solve_min_cost_flow(env, from_arc, to_arc, capacity, cost):
         return x.X
 
 
-def maximum_bipartite_matching_flow(adjacency, nodes1, nodes2):
+@optimod(mod_logger=logger)
+def maximum_bipartite_matching_flow(adjacency, nodes1, nodes2, *, create_env):
     G_nodes = adjacency.shape[0]
     source, sink = G_nodes, G_nodes + 1
     N_nodes = G_nodes + 2
@@ -112,7 +113,7 @@ def maximum_bipartite_matching_flow(adjacency, nodes1, nodes2):
     )
 
     # Solve min-cost flow problem
-    with gp.Env() as env:
+    with create_env() as env:
         flows = solve_min_cost_flow(env, from_arc, to_arc, capacity, cost)
 
     # Choose the arcs corresponding to the original graph with non-zero
