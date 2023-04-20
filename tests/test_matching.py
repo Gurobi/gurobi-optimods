@@ -1,7 +1,7 @@
+import random
 import unittest
 from itertools import chain, product
 
-import networkx as nx
 import numpy as np
 import scipy.sparse as sp
 from numpy.testing import assert_allclose, assert_array_equal
@@ -16,9 +16,13 @@ from gurobi_optimods.matching import (
 def random_bipartite(n1, n2, p, seed):
     nodes1 = np.arange(n1)
     nodes2 = np.arange(n1, n1 + n2)
-    graph = nx.bipartite.random_graph(n1, n2, p, seed, directed=False)
-    adjacency = nx.to_scipy_sparse_array(graph)
-    return adjacency, nodes1, nodes2
+    rng = random.Random(seed)
+    m = int(round(n1 * n2 * p))
+    edges = rng.sample(list(product(nodes1, nodes2)), m)
+    i, j = zip(*edges)
+    data = np.ones(len(i))
+    triu = sp.coo_array((data, (i, j)), shape=(n1 + n2, n1 + n2))
+    return triu + triu.T, nodes1, nodes2
 
 
 class TestBipartiteMatching(unittest.TestCase):
@@ -104,12 +108,8 @@ class TestBipartiteMatchingFlow(unittest.TestCase):
         self.assert_is_unweighted_matching(matching)
         self.assertEqual(matching.nnz, expect_matching_size * 2)  # symmetric
 
-    def test_networkx_random(self):
-        n1, n2, p, seed = 6, 8, 0.5, 2394
-        nodes1 = np.arange(n1)
-        nodes2 = np.arange(n1, n1 + n2)
-        graph = nx.bipartite.random_graph(n1, n2, p, seed, directed=False)
-        adjacency = nx.to_scipy_sparse_array(graph)
+    def test_random(self):
+        adjacency, nodes1, nodes2 = random_bipartite(n1=6, n2=8, p=0.5, seed=2394)
 
         matching = maximum_bipartite_matching_flow(adjacency, nodes1, nodes2)
 
@@ -121,18 +121,17 @@ class TestBipartiteMatchingFlow(unittest.TestCase):
 
 class TestWeightedMatching(unittest.TestCase):
     def test_coo_array(self):
-        G, *_ = random_bipartite(5, 5, 20, 0)
+        G, *_ = random_bipartite(5, 5, 0.8, 0)
         matching = maximum_weighted_matching(G)
         self.assertEqual(len(matching.data), 5)
 
     def test_csr_array(self):
-        G, *_ = random_bipartite(5, 5, 20, 0)
+        G, *_ = random_bipartite(5, 5, 0.8, 0)
         matching = maximum_weighted_matching(G.tocsr())
         self.assertEqual(len(matching.data), 5)
 
     def test_not_bipartite(self):
-        # Complete graph not bipartite, can recognise this by
-        # fractional result
+        # Complete graph not bipartite, general matching handles this
         data = [1, 2, 3]
         row = [0, 0, 1]
         col = [1, 2, 2]
