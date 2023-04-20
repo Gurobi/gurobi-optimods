@@ -11,9 +11,9 @@ def maximum_bipartite_matching(G):
     the bipartite graph G.
 
     :param G: Adjacency matrix of an unweighted bipartite graph.
-    :type G: :class:`sp.spmatrix`
+    :type G: :class:`sp.sparray`
     :return: Adjacency matrix of the maximum bipartite matching subgraph
-    :rtype: :class:`sp.spmatrix`
+    :rtype: :class:`sp.sparray`
     """
 
     with gp.Env() as env, gp.Model(env=env) as m:
@@ -42,16 +42,16 @@ def maximum_bipartite_matching(G):
         i, j = zip(*selected)
         data = np.ones(len(i))
 
-        return sp.coo_matrix((data, (i, j)), shape=G.shape)
+        return sp.coo_array((data, (i, j)), shape=G.shape)
 
 
 def maximum_weighted_matching(G):
     """Return a subgraph which is the maximum weighted matching of G.
 
     :param G: Adjacency matrix of a unweighted graph.
-    :type G: :class:`sp.spmatrix`
+    :type G: :class:`sp.sparray`
     :return: Adjacency matrix of the maximum weighted matching subgraph
-    :rtype: :class:`sp.spmatrix`
+    :rtype: :class:`sp.sparray`
     """
 
     with gp.Env() as env, gp.Model(env=env) as m:
@@ -78,4 +78,4 @@ def maximum_weighted_matching(G):
 
         row, col, data = zip(*[(i, j, v.Obj) for (i, j), v in x.items() if v.X > 0.5])
 
-        return sp.coo_matrix((data, (row, col)), shape=G.shape)
+        return sp.coo_array((data, (row, col)), shape=G.shape)

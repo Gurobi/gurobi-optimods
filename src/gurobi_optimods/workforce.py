@@ -14,7 +14,7 @@ def workforce_mconstr(m, availability, shift_req, pay):
     row = categorical.cat.codes
     col = availability.index
     data = np.ones(availability.index.size)
-    A = sp.coo_matrix((data, (row, col)))
+    A = sp.coo_array((data, (row, col)))
     b = shift_req.loc[categorical.cat.categories].values
     m.addMConstr(A, x, gp.GRB.EQUAL, b)
 

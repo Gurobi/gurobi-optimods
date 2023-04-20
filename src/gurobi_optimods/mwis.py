@@ -8,7 +8,7 @@ def maximum_weighted_independent_set(adjacency_matrix, weights):
     """Find a set of mutually non-adjacent vertices with maximum weighted sum.
 
     :param adjacency_matrix: The upper triangular adjacency matrix.
-    :type adjacency_matrix: :class:`sp.spmatrix`
+    :type adjacency_matrix: :class:`sp.sparray`
     :param weights: Vertex weight array.
     :type weights: :class:`np.array`
     :return: The maximum weighted independent set array.

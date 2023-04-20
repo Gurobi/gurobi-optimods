@@ -18,18 +18,18 @@ def get_adjacency_matrix(num_vertices, density, seed):
         seed (int): Random seed value.
 
     Returns:
-        csr_matrix: The adjacency matrix in CSR format.
+        csr_array: The adjacency matrix in CSR format.
     """
     rng = np.random.default_rng(seed=seed)
     num_edges = int(0.5 * density * num_vertices * (num_vertices - 1))
     if num_edges == 0:
-        return sp.csr_matrix((num_vertices, num_vertices))
+        return sp.csr_array((num_vertices, num_vertices))
     edges = rng.choice(
         list(combinations(range(num_vertices), 2)), num_edges, replace=False
     )
     rows, cols = zip(*edges)
     data = np.ones(num_edges)
-    return sp.csr_matrix((data, (rows, cols)), shape=(num_vertices, num_vertices))
+    return sp.csr_array((data, (rows, cols)), shape=(num_vertices, num_vertices))
 
 
 class TestMWIS(unittest.TestCase):
@@ -62,7 +62,7 @@ class TestMWIS(unittest.TestCase):
         rows = [0, 0, 0, 1, 1, 2, 2, 3, 4, 4, 5, 6]
         cols = [1, 3, 4, 3, 5, 3, 6, 7, 5, 7, 6, 7]
         data = [1 for _ in range(12)]
-        adjacency_matrix = sp.csr_matrix((data, (rows, cols)), shape=(8, 8))
+        adjacency_matrix = sp.csr_array((data, (rows, cols)), shape=(8, 8))
         weights = np.array([2**i for i in range(8)])
         mwis = maximum_weighted_independent_set(adjacency_matrix, weights)
         assert_array_equal(mwis, np.array([0, 2, 5, 7]))
