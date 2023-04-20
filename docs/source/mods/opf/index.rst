@@ -1,20 +1,38 @@
 Optimal Power Flow
 ==================
 
+
+Problem Specification
+---------------------
+
+The operation of power systems relies on a number of optimization tasks, known as 'optimal power flow' of OPF problems.  Here we assume basic familiarity with concepts such as 'voltage' (potential energy), 'current' (charge flow) and 'power' (instantaneous energy generation or consumption).  The engineering community also
+uses the term 'bus' (nodes in a network, with some simplification) and 'branch' (a connection between two buses, typically a line or a transformer).
+
+As input data for an OPF problem we have a power system ('power grid' for non-engineers) consisting of a network of buses and branches. Each branch is given as
+an ordered pair :math:`km`, where :math:`k` is the "from" bus and :math:`m` is the "to" bus.
+
+1. For each branch :math:`km` we have a complex :math:`2\times 2` matrix :math:`Y_{km}`, the admittance-matrix.  We also have a value :math:`L_{km}` (the branch limit).
+
+2. For every bus :math:`k` we have two positive values, :math:`L_k \, \text{and} \, U_k`, the voltage limits.
+
+3. For every bus :math:`k` we have two values, :math:`P^{d}_k \, \text{and} \, Q^{d}_k`, the active and reactive loads (demands).
+
+4. For every generator :math:`i` we have the active and reactive generation limits, :math:`P^{\min}_i, \, P^{\max}_i, \, Q^{\min}_i, \, \text{and} \, Q^{\max}_i`, as well as a (convex) function :math:`F(i)`.
+
+5. At a bus :math:`k` we have a set :math:`G(k)`, the set of generators located at the bus.
+6. For a bus :math:`k`, denote by :math:`\delta^+(k) \, \text{and} \, \delta^-(k)` the set of branches of the form :math:`km \, \text{and} \, mk`, respectively.
+
+7. Other noteworthy details: there may be multiple parallel branches :math:`km` but in this writeup, for the sake of simplicity, this is being ignored (the mathematical description is easily adapted).  There may be multiple generators at a given bus (we account for this explicitly).  The same bus may generators and nonzero load.  In this simple description we ignore bus shunts -- the mathematical description is also easily modified to account for these.
+
+8. In modern versions described below, network devices (FACTS, phase-shifters, impedance corrections are also incorporated into the model.
+
 .. toctree::
    :maxdepth: 1
 
    acopf
    dcopf
 
-blablabla A little background on the proud history of mathprog in this field.
 
-test test test
-
-Also data science.
-
-Problem Specification
----------------------
 
 Give a brief overview of the problem being solved.
 
