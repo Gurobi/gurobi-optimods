@@ -12,27 +12,14 @@ joins only between, not within, the sets. A matching on this graph is any
 subset of edges such that no vertex is incident to more than one edge. A
 maximum matching is the largest possible matching on :math:`G`.
 
-The bipartite matching problem can be reduced to a maximum flow problem
+The bipartite matching problem can be reduced to a maximum flow problem by
+introducing a source vertex as a predecessor to all vertices in :math:`U`,
+and a sink vertex as a successor to all vertices in :math:`V`. Giving every
+edge unit capacity, a maximum matching is found by maximizing flow from the
+source to the sink. All edges with non-zero flow in the max flow solution
+are part of the matching.
 
-You are given a bipartite graph :math:`G` containing :math:`n` vertices and
-:math:`m` edges. Find the maximum matching, i.e. select as many edges as
-possible so that no selected edge shares a vertex with any other selected edge.
-
-.. tabs::
-
-    .. tab:: Domain-Specific Description
-
-        A matching is a set of pairwise non-adjacent edges ...
-
-    .. tab:: Optimization Model
-
-        Use a network max-flow model ...
-
-        Note that for the bipartite case, simplex is sufficient, we do not
-        need to use binary variables, just :math:`[0, 1]` bounds. Gurobi uses
-        a network simplex algorithm to solve such models.
-
-|
+Note that we need a basic solution! TU and all that.
 
 Code
 ----
