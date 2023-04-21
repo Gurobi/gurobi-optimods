@@ -19,13 +19,6 @@ Justify why this Mod is a useful addition. Criteria:
 - Clear purpose / single focus
   - There may be natural parameters to switch on/off various side-constraints, but these should be kept to a minimum
 
-**Does it fall under an existing category?**
-
-- Machine Learning
-- Workforce Management?
-- Graphs
-- Other (please specify)
-
 **What will the API be?**
 Add a code snippet for the proposed API. Does this link cleanly to:
 
