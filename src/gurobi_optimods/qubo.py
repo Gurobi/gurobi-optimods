@@ -1,9 +1,16 @@
 import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
+from dataclasses import dataclass
 
 
-def solve_qubo(coeff_matrix) -> tuple[float, np.array]:
+@dataclass
+class QuboResult:
+    solution: np.array
+    objective_value: float
+
+
+def solve_qubo(coeff_matrix) -> QuboResult:
     """
     Solve a quadratic unconstrained binary optimization (QUBO) problem,
     i.e., minimize a quadratic function defined by a coefficient matrix
@@ -14,7 +21,7 @@ def solve_qubo(coeff_matrix) -> tuple[float, np.array]:
     """
 
     if coeff_matrix is None:
-        return None, None
+        return None
 
     if coeff_matrix.ndim != 2:
         raise ValueError("Matrix is not 2-dimensional.")
@@ -32,4 +39,4 @@ def solve_qubo(coeff_matrix) -> tuple[float, np.array]:
 
         model.optimize()
 
-        return model.ObjVal, x.X.round()
+        return QuboResult(objective_value=model.ObjVal, solution=x.X.round())

@@ -15,9 +15,8 @@ class TestQubo(unittest.TestCase):
 
     def test_none(self):
         Q = None
-        val, solution = solve_qubo(coeff_matrix=Q)
-        self.assertTrue(val is None)
-        self.assertTrue(solution is None)
+        result = solve_qubo(coeff_matrix=Q)
+        self.assertTrue(result is None)
 
     def test_nonquadratic(self):
         Q = np.ones((2, 3))
@@ -31,33 +30,33 @@ class TestQubo(unittest.TestCase):
 
     def test_positive(self):
         Q = np.array([[2, 5], [3, 6]])
-        val, solution = solve_qubo(coeff_matrix=Q)
-        self.assertEqual(val, 0)
-        assert_array_equal(solution, np.array([0, 0]))
+        result = solve_qubo(coeff_matrix=Q)
+        self.assertEqual(result.objective_value, 0)
+        assert_array_equal(result.solution, np.array([0, 0]))
 
     def test_negative(self):
         Q = np.array([[-2, -5], [-3, -6]])
-        val, solution = solve_qubo(coeff_matrix=Q)
-        self.assertEqual(val, -16)
-        assert_array_equal(solution, np.array([1, 1]))
+        result = solve_qubo(coeff_matrix=Q)
+        self.assertEqual(result.objective_value, -16)
+        assert_array_equal(result.solution, np.array([1, 1]))
 
     def test_Q1(self):
         Q = np.array([[2, -5], [-3, 4]])
-        val, solution = solve_qubo(coeff_matrix=Q)
-        self.assertEqual(val, -2)
-        assert_array_equal(solution, np.array([1, 1]))
+        result = solve_qubo(coeff_matrix=Q)
+        self.assertEqual(result.objective_value, -2)
+        assert_array_equal(result.solution, np.array([1, 1]))
 
     def test_Q2(self):
         Q = np.array([[1, -2], [2, -3]])
-        val, solution = solve_qubo(coeff_matrix=Q)
-        self.assertEqual(val, -3)
-        assert_array_equal(solution, np.array([0, 1]))
+        result = solve_qubo(coeff_matrix=Q)
+        self.assertEqual(result.objective_value, -3)
+        assert_array_equal(result.solution, np.array([0, 1]))
 
     def test_sp(self):
         data = [-1, -2, 3]
         row = [0, 0, 1]
         col = [1, 2, 2]
         Q = sp.coo_matrix((data, (row, col)), shape=(3, 3))
-        val, solution = solve_qubo(coeff_matrix=Q)
-        self.assertEqual(val, -2)
-        assert_array_equal(solution, np.array([1, 0, 1]))
+        result = solve_qubo(coeff_matrix=Q)
+        self.assertEqual(result.objective_value, -2)
+        assert_array_equal(result.solution, np.array([1, 0, 1]))
