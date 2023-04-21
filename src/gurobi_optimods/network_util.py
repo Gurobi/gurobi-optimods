@@ -1,7 +1,11 @@
+import logging
+
 import gurobipy as gp
 import numpy as np
 import scipy.sparse as sp
 from gurobipy import GRB
+
+logger = logging.getLogger(__name__)
 
 
 def solve_min_cost_flow(
@@ -55,6 +59,8 @@ def solve_min_cost_flow(
     assert demand.shape == (nodes,)
     assert capacity.shape == (edges,)
     assert cost.shape == (edges,)
+
+    logger.info(f"Solving min-cost flow with {nodes} and {edges} edges")
 
     # Add names if exporting for debugging
     dump_model = False

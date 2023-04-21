@@ -12,7 +12,7 @@ from gurobi_optimods.utils import optimod
 logger = logging.getLogger(__name__)
 
 
-@optimod(mod_logger=logger)
+@optimod()
 def maximum_bipartite_matching(adjacency, nodes1, nodes2, *, create_env):
     G_nodes = adjacency.shape[0]
     source, sink = G_nodes, G_nodes + 1
@@ -58,7 +58,7 @@ def maximum_bipartite_matching(adjacency, nodes1, nodes2, *, create_env):
     return matching + matching.T
 
 
-@optimod(mod_logger=logger)
+@optimod()
 def maximum_weighted_matching(G, *, create_env):
     """Return a subgraph which is the maximum weighted matching of G.
 
