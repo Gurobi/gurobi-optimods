@@ -8,7 +8,6 @@ from numpy.testing import assert_allclose, assert_array_equal
 
 from gurobi_optimods.matching import (
     maximum_bipartite_matching,
-    maximum_bipartite_matching_flow,
     maximum_weighted_matching,
 )
 
@@ -25,29 +24,19 @@ def random_bipartite(n1, n2, p, seed):
     return triu + triu.T, nodes1, nodes2
 
 
+# class TestBipartiteMatching(unittest.TestCase):
+#     def test_coo_array(self):
+#         G, *_ = random_bipartite(5, 5, 0.5, 0)
+#         matching = maximum_bipartite_matching(G)
+#         self.assertEqual(len(matching.data), 5)
+
+#     def test_csr_array(self):
+#         G, *_ = random_bipartite(5, 5, 0.5, 0)
+#         matching = maximum_bipartite_matching(G.tocsr())
+#         self.assertEqual(len(matching.data), 5)
+
+
 class TestBipartiteMatching(unittest.TestCase):
-    def test_coo_array(self):
-        G, *_ = random_bipartite(5, 5, 0.5, 0)
-        matching = maximum_bipartite_matching(G)
-        self.assertEqual(len(matching.data), 5)
-
-    def test_csr_array(self):
-        G, *_ = random_bipartite(5, 5, 0.5, 0)
-        matching = maximum_bipartite_matching(G.tocsr())
-        self.assertEqual(len(matching.data), 5)
-
-    def test_not_bipartite(self):
-        # Complete graph not bipartite, can recognise this by
-        # fractional result
-        data = [1, 1, 1]
-        row = [0, 0, 1]
-        col = [1, 2, 2]
-        G = sp.coo_array((data, (row, col)), shape=(3, 3))
-        with self.assertRaises(ValueError):
-            maximum_bipartite_matching(G)
-
-
-class TestBipartiteMatchingFlow(unittest.TestCase):
     def assert_is_unweighted_matching(self, matching):
         assert_allclose(matching.data, np.ones(matching.data.shape))
         adj = matching.todense()
@@ -61,7 +50,7 @@ class TestBipartiteMatchingFlow(unittest.TestCase):
         degree = nodes1.shape[0] + nodes2.shape[0]
         adjacency = sp.coo_matrix(([], ([], [])), shape=(degree, degree))
 
-        matching = maximum_bipartite_matching_flow(adjacency, nodes1, nodes2)
+        matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
 
         self.assertIsInstance(matching, sp.spmatrix)
         self.assertIsNot(matching, adjacency)
@@ -81,7 +70,7 @@ class TestBipartiteMatchingFlow(unittest.TestCase):
         adjacency = sp.coo_matrix((data, (i, j)), shape=(degree, degree))
         expect_matching_size = min(n1, n2)
 
-        matching = maximum_bipartite_matching_flow(adjacency, nodes1, nodes2)
+        matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
 
         self.assertIsInstance(matching, sp.spmatrix)
         self.assertIsNot(matching, adjacency)
@@ -100,7 +89,7 @@ class TestBipartiteMatchingFlow(unittest.TestCase):
         adjacency = triu + triu.T
         expect_matching_size = 2
 
-        matching = maximum_bipartite_matching_flow(adjacency, nodes1, nodes2)
+        matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
 
         self.assertIsInstance(matching, sp.spmatrix)
         self.assertIsNot(matching, adjacency)
@@ -111,7 +100,7 @@ class TestBipartiteMatchingFlow(unittest.TestCase):
     def test_random(self):
         adjacency, nodes1, nodes2 = random_bipartite(n1=2, n2=3, p=0.5, seed=2394)
 
-        matching = maximum_bipartite_matching_flow(adjacency, nodes1, nodes2)
+        matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
 
         self.assertIsInstance(matching, sp.spmatrix)
         self.assertIsNot(matching, adjacency)
