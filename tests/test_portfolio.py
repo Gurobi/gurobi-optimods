@@ -45,3 +45,15 @@ class TestMod(unittest.TestCase):
 
         x_3 = mvp.efficient_portfolio(gamma, max_trades=3)
         self.assertLessEqual((x_3 > 1e-4).sum(), 3)
+
+    def test_transaction_fees(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        fees_buy = 1e-4
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x = mvp.efficient_portfolio(gamma, fees_buy=fees_buy)
+        n_trades = (x > 1e-4).sum()
+        self.assertLessEqual(x.sum(), 1 - n_trades * fees_buy)
