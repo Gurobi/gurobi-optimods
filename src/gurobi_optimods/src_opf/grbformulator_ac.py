@@ -384,7 +384,7 @@ def lpformulator_ac_create_vars(alldata, model):
             )
             branch.switchvarind = varcount
             varcount += 1
-    alldata["LP"]["zvar"] = zvar
+    alldata["MIP"]["zvar"] = zvar
 
     lincostvar = model.addVar(
         obj=1.0, lb=-GRB.INFINITY, ub=GRB.INFINITY, name="lincost"
@@ -418,18 +418,26 @@ def lpformulator_ac_create_vars(alldata, model):
     # Save variable data
     alldata["LP"]["cvar"] = cvar
     alldata["LP"]["svar"] = svar
-    alldata["LP"]["Pvar_f"] = Pvar_f
-    alldata["LP"]["Pvar_t"] = Pvar_t
-    alldata["LP"]["Qvar_f"] = Qvar_f
-    alldata["LP"]["Qvar_t"] = Qvar_t
+    alldata["LP"][
+        "Pvar_f"
+    ] = Pvar_f  # AC branch real power injected into "from" end of branch
+    alldata["LP"][
+        "Pvar_t"
+    ] = Pvar_t  # AC branch real power injected into "to" end of branch
+    alldata["LP"][
+        "Qvar_f"
+    ] = Qvar_f  # AC branch reactive power injected into "from" end of branch
+    alldata["LP"][
+        "Qvar_t"
+    ] = Qvar_t  # AC branch reactive power injected into "to" end of branch
     if alldata["branchswitching_mip"]:
         alldata["LP"]["twinPvar_f"] = twinPvar_f
         alldata["LP"]["twinPvar_t"] = twinPvar_t
         alldata["LP"]["twinQvar_f"] = twinQvar_f
         alldata["LP"]["twinQvar_t"] = twinQvar_t
 
-    alldata["LP"]["GenPvar"] = GenPvar
-    alldata["LP"]["GenQvar"] = GenQvar
+    alldata["LP"]["GenPvar"] = GenPvar  # AC generator real power injections
+    alldata["LP"]["GenQvar"] = GenQvar  # AC generator reactive power injections
     alldata["LP"]["Pinjvar"] = Pinjvar
     alldata["LP"]["Qinjvar"] = Qinjvar
 
@@ -542,8 +550,8 @@ def lpformulator_ac_create_polar_vars(alldata, model, varcount):
         newvarcount += 4
 
     # Save polar variables data
-    alldata["LP"]["vvar"] = vvar
-    alldata["LP"]["thetavar"] = thetavar
+    alldata["LP"]["vvar"] = vvar  # voltage magnitude of bus for polar case
+    alldata["LP"]["thetavar"] = thetavar  # voltage angle of bus for polar case
     alldata["LP"]["cosvar"] = cosvar
     alldata["LP"]["sinvar"] = sinvar
     alldata["LP"]["thetaftvar"] = thetaftvar
@@ -610,7 +618,7 @@ def lpformulator_ac_create_efvars(alldata, model, varcount):
 
     # Save e, f variables data
     alldata["LP"]["evar"] = evar
-    alldata["LP"]["fvar"] = fvar
+    alldata["LP"]["fvar"] = fvar  # e^2 + f^2 = voltage magnitude
 
     logger.info("  Added %d e, f variables." % efvarcount)
 
@@ -652,7 +660,7 @@ def lpformulator_ac_create_constraints(alldata, model):
     GenPvar = alldata["LP"]["GenPvar"]
     GenQvar = alldata["LP"]["GenQvar"]
     lincostvar = alldata["LP"]["lincostvar"]
-    zvar = alldata["LP"]["zvar"]
+    zvar = alldata["MIP"]["zvar"]
 
     logger.info("Creating constraints.")
     logger.info("  Adding cost definition.")
@@ -1215,8 +1223,12 @@ def lpformulator_ac_add_nonconvexconstraints(alldata, model):
     branches = alldata["branches"]
     numbranches = alldata["numbranches"]
     evar = alldata["LP"]["evar"]
-    fvar = alldata["LP"]["fvar"]
-    cvar = alldata["LP"]["cvar"]
+    fvar = alldata["LP"]["fvar"]  #
+    # cvar[km] = (voltage mag at k) * (voltage mag at m) * cos(thetak - thetam)
+    # compute voltage magnitudes for k and m
+    # take arccos to get thetak - thetam = some value
+    # set arbitrarily theta1 = 0 and solve all others
+    cvar = alldata["LP"]["cvar"]  # square of the voltage magnitude e^2 + f^2
     svar = alldata["LP"]["svar"]
     IDtoCountmap = alldata["IDtoCountmap"]
     count = 0

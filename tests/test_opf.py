@@ -25,25 +25,29 @@ class TestOpf(unittest.TestCase):
     numcases = 5
     cases = ["9", "14", "57", "118", "300"]
     # DC test values
-    numvars_dc = [50, 95, 363, 850, 1904]
     objvals_dc = [5216.026607, 7642.591776, 41006.736942, 125947.881417, 706240.290695]
-    lincost_dc = [688.133508, 5179.999999, 29931.879752, 84840, 470847.849469]
-    theta_9_dc = [6.083, 6.008502, 6.177336, 6.12929, -5.579928]
+    Va_dc = [6.177764, 6.283185, 6.171413, 5.817455, -5.520424]
+    Pg_dc = [134.377585, 38.032305, 81.931329, 0, 1.2724979]
+    Pt_dc = [-0.562622, 0.699608, -0.1809715, -1.0295381, 0.2483]
     # AC test values
-    numvars_ac = [107, 202]
     objvals_ac = [5296.686204, 8081.187603]
-    lincost_ac = [704.365640, 6108.954838]
-    e_1_ac = [1.0999999, -1.0599999]
+    Vm_ac = [1.08662, 1.018801]
+    Qg_ac = [0.031844, 32.114784]
+    Qf_ac = [0.129656, -0.1267811]
     # AC relaxation test values
-    numvars_acconv = [89, 174, 667, 1580, 3506]
     objvals_acconv = [5296.66532, 8074.9102, 41710.3065, 129338.093, 718613.607]
-    lincost_acconv = [704.38492, 6095.638486, 30498.743097, 93490.138573, 485687.552521]
-    IQ_1_acconv = [0.129955, -0.0564129, 0.319624, -0.1200001, -0.49]
+    Pg_acconv = [89.803524, 194.796114, 142.58252, 24.518669, 0.030902]
+    Pt_acconv = [-0.341774, -0.7123414, -0.299637, 0.2379936, 0.562152]
 
     # test simple is on purpose the same as test_acopf for now
     # will be removed in final version
     def test_simple(self):
-        settings = {"doac": True, "skipjabr": False, "use_ef": True}
+        settings = {
+            "doac": True,
+            "skipjabr": False,
+            "use_ef": True,
+            "branchswitching_mip": True,
+        }
         # load path to case file
         casefile = load_caseopfmat("9")
         # read case file and return a case dictionary
@@ -70,10 +74,8 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(solutionmat is not None)
         self.assertTrue(objvalmat is not None)
 
-        # solutions should be the same because it's the same data
+        # objective values should be the same because it's the same data
         self.assertTrue(objval == objvalmat)
-        for s in solution:
-            self.assertTrue(solution[s] == solutionmat[s])
 
         # get path to csv file holding the coordinates for NY
         coordsfile = load_coordsfilepath("nybuses.csv")
@@ -89,14 +91,10 @@ class TestOpf(unittest.TestCase):
         # check whether the solution point looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
-        self.assertTrue(len(solution) == 134)
-        self.assertLess(abs(objval - 5296.665647261), 1e-4)
-        self.assertTrue("lincost" in solution.keys())
-        self.assertLess(abs(solution["lincost"] - 704.399018), 1e-4)
-        self.assertTrue("twinP_1_1_4" in solution.keys())
-        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-4)
-        self.assertTrue("Q_9_4_9" in solution.keys())
-        self.assertLess(abs(solution["Q_9_4_9"] - 0.127732), 1e-4)
+        self.assertLess(abs(solution["f"] - 5296.665647261), 1e-4)
+        self.assertLess(abs(solution["bus"][1]["Va"] - 1), 1e-4)
+        self.assertLess(abs(solution["gen"][2]["Qg"] - 3.14366), 1e-4)
+        self.assertLess(abs(solution["branch"][3]["Pt"] - 0.568647), 1e-4)
 
     # test reading settings and case file
     def test_settingsfromfile(self):
@@ -107,14 +105,10 @@ class TestOpf(unittest.TestCase):
         # check whether the solution point looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
-        self.assertTrue(len(solution) == 134)
-        self.assertLess(abs(objval - 5296.665647261), 1e-4)
-        self.assertTrue("lincost" in solution.keys())
-        self.assertLess(abs(solution["lincost"] - 704.399018), 1e-4)
-        self.assertTrue("twinP_1_1_4" in solution.keys())
-        self.assertLess(abs(solution["twinP_1_1_4"]), 1e-4)
-        self.assertTrue("Q_9_4_9" in solution.keys())
-        self.assertLess(abs(solution["Q_9_4_9"] - 0.127732), 1e-4)
+        self.assertLess(abs(solution["f"] - 5296.665647261), 1e-4)
+        self.assertLess(abs(solution["bus"][1]["Va"] - 1), 1e-4)
+        self.assertLess(abs(solution["gen"][2]["Qg"] - 3.14366), 1e-4)
+        self.assertLess(abs(solution["branch"][3]["Pt"] - 0.568647), 1e-4)
 
     # test DC formulation
     def test_dcopf(self):
@@ -136,18 +130,17 @@ class TestOpf(unittest.TestCase):
             self.assertTrue(objval is not None)
             self.assertTrue(solutionmat is not None)
             self.assertTrue(objvalmat is not None)
-            self.assertTrue(len(solution) == self.numvars_dc[i])
-            self.assertLess(abs(objval - self.objvals_dc[i]), 1e-4)
-            self.assertTrue("lincost" in solution.keys())
-            self.assertLess(abs(solution["lincost"] - self.lincost_dc[i]), 1e-4)
-            self.assertTrue("theta_9" in solution.keys())
-            self.assertLess(abs(solution["theta_9"] - self.theta_9_dc[i]), 1e-4)
-
-            # solutions should be the same because it's the same data and the model is linear
+            self.assertLess(abs(solution["f"] - self.objvals_dc[i]), 1e-4)
+            self.assertLess(abs(solutionmat["f"] - self.objvals_dc[i]), 1e-4)
+            self.assertLess(abs(solution["bus"][1]["Va"] - self.Va_dc[i]), 1e-4)
+            self.assertLess(abs(solutionmat["bus"][1]["Va"] - self.Va_dc[i]), 1e-4)
+            self.assertLess(abs(solution["gen"][2]["Pg"] - self.Pg_dc[i]), 1e-4)
+            self.assertLess(abs(solutionmat["gen"][2]["Pg"] - self.Pg_dc[i]), 1e-4)
+            self.assertLess(abs(solution["branch"][3]["Pt"] - self.Pt_dc[i]), 1e-4)
+            self.assertLess(abs(solutionmat["branch"][3]["Pt"] - self.Pt_dc[i]), 1e-4)
+            # objective values should be the same because it's the same data and the model is linear
             # without (too much) symmetry
             self.assertLess(abs(objval - objvalmat), 1e-2)
-            for s in solution:
-                self.assertLess(abs(solution[s] - solutionmat[s]), 1e-2)
 
     # test AC formulation
     def test_acopf(self):
@@ -168,12 +161,14 @@ class TestOpf(unittest.TestCase):
             self.assertTrue(objval is not None)
             self.assertTrue(solutionmat is not None)
             self.assertTrue(objvalmat is not None)
-            self.assertTrue(len(solution) == self.numvars_ac[i])
-            self.assertLess(abs(objval - self.objvals_ac[i]), 1)
-            self.assertTrue("lincost" in solution.keys())
-            self.assertLess(abs(solution["lincost"] - self.lincost_ac[i]), 1e-4)
-            self.assertTrue("e_1" in solution.keys())
-            self.assertLess(abs(solution["e_1"] - self.e_1_ac[i]), 1e-4)
+            self.assertLess(abs(solution["f"] - self.objvals_ac[i]), 1e-4)
+            self.assertLess(abs(solutionmat["f"] - self.objvals_ac[i]), 1e-4)
+            self.assertLess(abs(solution["bus"][3]["Vm"] - self.Vm_ac[i]), 1e-4)
+            self.assertLess(abs(solutionmat["bus"][3]["Vm"] - self.Vm_ac[i]), 1e-4)
+            self.assertLess(abs(solution["gen"][2]["Qg"] - self.Qg_ac[i]), 1e-4)
+            self.assertLess(abs(solutionmat["gen"][2]["Qg"] - self.Qg_ac[i]), 1e-4)
+            self.assertLess(abs(solution["branch"][1]["Qf"] - self.Qf_ac[i]), 1e-4)
+            self.assertLess(abs(solutionmat["branch"][1]["Qf"] - self.Qf_ac[i]), 1e-4)
 
             # objective value should be the same because it's the same data
             self.assertLess(abs(objval - objvalmat), 1e-2)
@@ -198,12 +193,11 @@ class TestOpf(unittest.TestCase):
             self.assertTrue(objval is not None)
             self.assertTrue(solutionmat is not None)
             self.assertTrue(objvalmat is not None)
-            self.assertTrue(len(solution) == self.numvars_acconv[i])
             self.assertLess(abs(objval - self.objvals_acconv[i]), 1)
-            self.assertTrue("lincost" in solution.keys())
-            self.assertLess(abs(solution["lincost"] - self.lincost_acconv[i]), 1e-4)
-            self.assertTrue("IQ_1" in solution.keys())
-            self.assertLess(abs(solution["IQ_1"] - self.IQ_1_acconv[i]), 1e-4)
+            self.assertLess(abs(solution["gen"][1]["Pg"] - self.Pg_acconv[i]), 1)
+            self.assertLess(abs(solutionmat["gen"][1]["Pg"] - self.Pg_acconv[i]), 1)
+            self.assertLess(abs(solution["branch"][2]["Pt"] - self.Pt_acconv[i]), 1)
+            self.assertLess(abs(solutionmat["branch"][2]["Pt"] - self.Pt_acconv[i]), 1)
 
             # objective value should be the same because it's the same data
             # the bigger cases are numerically difficult with large obj vals and we are running Barrier
@@ -228,19 +222,16 @@ class TestOpf(unittest.TestCase):
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
-        self.assertTrue(len(solution) == 62)
-        self.assertLess(abs(objval - 5296.716652), 1e-4)
-        self.assertTrue("lincost" in solution.keys())
-        self.assertLess(abs(solution["lincost"] - 703.019340), 1e-4)
-        self.assertTrue("f_9" in solution.keys())
-        self.assertLess(abs(solution["f_9"] + 0.085954), 1e-4)
-        self.assertTrue("P_9_4_9" in solution.keys())
-        self.assertLess(abs(solution["P_9_4_9"] - 0.543771), 1e-4)
+        self.assertLess(abs(solution["f"] - 5296.716652), 1e-4)
+        # TODO finish test for IV
+        # print(solution["bus"][3]["Vm"])
+        # print(solution["gen"][2]["Qg"])
+        # print(solution["branch"][1]["Qf"])
 
     # test plotting a solution from pre-loaded data
     def test_graphics(self):
         # settings dictionary
-        graphics_settings = {"branchswitching_mip": True}
+        graphics_settings = {}
         # get path to csv file holding the coordinates for case 9
         coordsfile = load_coordsfilepath("case9coords.csv")
         coords_dict = read_coords_from_csv_file(coordsfile)
@@ -254,7 +245,11 @@ class TestOpf(unittest.TestCase):
     # test plotting a solution after optimization is performed
     def test_graphics_after_solving(self):
         # load settings dictionary
-        optimization_settings = {"doac": True, "use_ef": True}
+        optimization_settings = {
+            "doac": True,
+            "use_ef": True,
+            "branchswitching_mip": True,
+        }
         # load case dictionary
         case = load_opfdictcase()
         # solve opf model and return a solution and the final objective value

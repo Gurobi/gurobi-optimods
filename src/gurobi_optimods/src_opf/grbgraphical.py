@@ -12,7 +12,6 @@ def plot_solution(alldata, solution, objval):
 
     logger = logging.getLogger("OpfLogger")
     logger.info("Plotting solution with value %.3e. Coordinates given." % objval)
-    x = list(solution.values())
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     numbranches = alldata["numbranches"]
@@ -33,17 +32,15 @@ def plot_solution(alldata, solution, objval):
 
     numzeros = 0
     for j in range(1, 1 + numbranches):
-        branch = branches[j]
-        zholder[j - 1] = x[branch.switchvarind]
-        if x[branch.switchvarind] < 0.5:
+        branch = solution["branch"][j]
+        zholder[j - 1] = branch["switching"]
+        if branch["switching"] < 0.5:
             numzeros += 1
 
-    for j1 in range(1, 1 + alldata["numgens"]):
-        gen = alldata["gens"][j1]
-        gholder[j1 - 1] = (
-            alldata["baseMVA"] * x[gen.Pvarind]
-        )  # print('gen',gen.count,x[gen.Pvarind])
-        # break_exit('printed')  #functionality to be added # TODO-Dan What functionality is that?
+    for j in range(1, 1 + alldata["numgens"]):
+        gen = solution["gen"][j]
+        gholder[j - 1] = gen["Pg"]
+
     textlist = []
     textlist.append("OBJ: %10.2f" % (objval))
     textlist.append("Lines off: %d" % (numzeros))
@@ -158,7 +155,11 @@ def grbgraphical(alldata, plottype, textlist):
             )
 
             Pload = alldata["baseMVA"] * bus.Pd
-            node_text[j - 1] = "Bus %d   Gen %7.2f  Load %7.2f" % (j, sumPgen, Pload)
+            node_text[j - 1] = "Bus %d   Gen %7.2f  Load %7.2f" % (
+                bus.nodeID,
+                sumPgen,
+                Pload,
+            )
 
             if Pload > 50 and largegen == False:
                 mynode_size[j - 1] = 8

@@ -90,9 +90,6 @@ def read_graphics_settings(alldata, settings):
     """
 
     # TODO revisit default settings
-    # DB this may be the wrong paradigm because we need the graphics
-    # dict *before* alldata has been created, so as to pass it to the
-    # function that creates alldata
 
     defaults = get_default_graphics_settings()
     read_settings_dict(alldata, settings, defaults)
@@ -147,7 +144,6 @@ def read_settings_file(filename, graphics=False):
     settings = {}
     if graphics:
         settings = get_default_graphics_settings()
-        # Jarek, if we want to allow plotting via coordinates, we need to restructure this
     else:
         settings = get_default_optimization_settings()
 

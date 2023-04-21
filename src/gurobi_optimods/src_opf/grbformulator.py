@@ -83,24 +83,12 @@ def construct_and_solve_model(alldata):
         )
         logger.info("Solution count: %d." % (sol_count))
 
-        if sol_count > 0:
-            lpformulator_examine_solution(alldata, model, opftype)
-            objval = model.ObjVal
-            # we are using an ordered dict to maintain the index of variables so we can access them by index when plotting solution
-            solution = OrderedDict()
-            index = 0
-            for v in model.getVars():
-                if math.fabs(v.X) > 1e-09:
-                    if (
-                        model.NumVars < 60
-                    ):  # Only print the solution if it's not too big
-                        logger.info(v.varname + " = " + str(v.X))
-                    solution[v.VarName] = v.X
-                else:
-                    solution[v.VarName] = 0.0
-                index += 1
+        solution = turn_solution_into_result_dict(alldata, model, opftype)
 
-            turn_solution_into_mpc_dict(alldata, model)
+        if solution["success"] == 1:
+            objval = solution["f"]
+        else:
+            objval = GRB.INFINITY
 
     return solution, objval
 
@@ -238,7 +226,7 @@ def lpformulator_optimize(alldata, model, opftype):
         # logging level needs to be critical because INFO is disabled
         logger.critical("Using mip start with all branches kept on.")
         # mip start
-        zvar = alldata["LP"]["zvar"]
+        zvar = alldata["MIP"]["zvar"]
         branches = alldata["branches"]
         numbranches = alldata["numbranches"]
         for j in range(1, 1 + numbranches):
@@ -249,14 +237,6 @@ def lpformulator_optimize(alldata, model, opftype):
             # TODO-Dan What strange behavior?
 
         # writemipstart(alldata)
-
-        zholder = np.zeros(numbranches)
-        alldata["MIP"]["zholder"] = zholder
-        alldata["MIP"]["solutionfound"] = False
-        alldata["MIP"]["bestsolval"] = 1e50
-        alldata["MIP"]["solcount"] = 0
-        gholder = np.zeros(alldata["numgens"])
-        alldata["MIP"]["gholder"] = gholder
 
     model.optimize()
 
@@ -379,16 +359,28 @@ def lpformulator_setup(alldata, opftype):
         logger.info("Updated %d maxangle constraints." % (count))
 
 
-def turn_solution_into_mpc_dict(alldata, model):
+def turn_solution_into_result_dict(alldata, model, opftype):
+    """
+    Function to turn a Gurobi solution into an OPF dictionary.
+    If no solution is present, the result dictionary "success" value is
+    0.
 
-    mpc = {}
-    mpc["baseMVA"] = alldata["baseMVA"]
-    baseMVA = mpc["baseMVA"]
-    mpc["bus"] = {}
-    mpc["gen"] = {}
-    mpc["branch"] = {}
-    mpc["gencost"] = {}
-    vars = model.getVars()
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    model : gurobipy.Model
+        Gurobi model which was recently optimized
+    """
+
+    # Reconstruct case data from our data
+    result = {}
+    result["baseMVA"] = alldata["baseMVA"]
+    baseMVA = result["baseMVA"]
+    result["bus"] = {}
+    result["gen"] = {}
+    result["branch"] = {}
+    result["gencost"] = {}
 
     # buses
     buses = alldata["buses"]
@@ -410,9 +402,9 @@ def turn_solution_into_mpc_dict(alldata, model):
             "zone": b.zone,
             "Vmax": b.Vmax,
             "Vmin": b.Vmin,
+            # "mu": # balance constraints
         }
-        print("bus %d P var value: %f" % (b.nodeID, b.Pinjvarind))
-        mpc["bus"][index] = matbus
+        result["bus"][index] = matbus
         index += 1
 
     # generators and gen costs
@@ -445,8 +437,7 @@ def turn_solution_into_mpc_dict(alldata, model):
             "ramp_q": g.ramp_q,
             "apf": g.apf,
         }
-        mpc["gen"][index] = matgen
-        print("gen %d P var value: %f" % (g.nodeID, g.Pvarind))
+        result["gen"][index] = matgen
         gencost = g.costvector
         for j in range(len(gencost)):  # scale cost back to MATPOWER format
             gencost[j] /= baseMVA ** (g.costdegree - j)
@@ -462,7 +453,7 @@ def turn_solution_into_mpc_dict(alldata, model):
             "n": g.costdegree + 1,
             "costvector": gencost,
         }
-        mpc["gencost"][index] = matgencost
+        result["gencost"][index] = matgencost
         index += 1
 
     # branches
@@ -484,11 +475,189 @@ def turn_solution_into_mpc_dict(alldata, model):
             "status": b.status,
             "angmin": b.minangle,
             "angmax": b.maxangle,
+            # "switching": 1 alldata["MIP"]["zholder"] index is number of branch
         }
-        mpc["branch"][index] = matbranch
+        result["branch"][index] = matbranch
         index += 1
 
-    # print(mpc)
+    # Now extend the result dictionary by additional information derived from Gurobi solution
+    # See MATPOWER-manual for more details https://matpower.org/docs/MATPOWER-manual.pdf
+    result["et"] = model.Runtime
+    if model.SolCount == 0:
+        # We did not find any feasible solution
+        result["success"] = 0
+        return result
+
+    # We have at least one feasible solution
+    result["success"] = 1
+    result["f"] = model.ObjVal
+    # Set DC solution data
+    if opftype == OpfType.DC:
+        # Bus solution data
+        for busindex in result["bus"]:
+            resbus = result["bus"][busindex]
+            databus = alldata["buses"][busindex]
+            # Override old values
+            resbus["Va"] = alldata["LP"]["thetavar"][databus].X  # Voltage angle
+            resbus["Vm"] = 1  # Voltage magnitude is always 1 for DC
+            if not alldata["branchswitching_mip"]:
+                resbus["mu"] = alldata["LP"]["balancecons"][
+                    databus
+                ].Pi  # shadow prices of balance constraints
+
+        # Generator solution data
+        for genindex in result["gen"]:
+            resgen = result["gen"][genindex]
+            datagen = alldata["gens"][genindex]
+            # Override old values
+            resgen["Pg"] = (
+                alldata["LP"]["GenPvar"][datagen].X * baseMVA
+            )  # Generator real power injection
+            resgen["Qg"] = 0  # Generator reactive power injection is always 0 for DC
+
+        # Branch solution data
+        for branchindex in result["branch"]:
+            resbranch = result["branch"][branchindex]
+            databranch = alldata["branches"][branchindex]
+            # Generate new values
+            # Real power injected into "from" end of branch and "to" end of branch are the same for DC
+            resbranch["Pf"] = resbranch["Pt"] = alldata["LP"]["Pvar_f"][databranch].X
+            resbranch["switching"] = 1
+
+    # Set AC solution data
+    if opftype in [OpfType.AC, OpfType.IV]:
+        # Bus solution data only available if we have rectangular formulation or polar
+        if (
+            alldata["use_ef"]
+            and not alldata["useconvexformulation"]
+            and not alldata["doiv"]
+        ):  # TODO check how to compute voltage magnitude and angle values for IV
+            for busindex in result["bus"]:
+                resbus = result["bus"][busindex]
+                databus = alldata["buses"][busindex]
+                # Override old values
+                # Voltage magnitude is root of cvar because cvar = square of voltage magnitude given as e^2 + f^2
+                resbus["Vm"] = math.sqrt(alldata["LP"]["cvar"][databus].X)
+
+            compute_voltage_angles(alldata, result)
+
+        if alldata["dopolar"]:
+            for busindex in result["bus"]:
+                resbus = result["bus"][busindex]
+                databus = alldata["buses"][busindex]
+                # Override old values
+                resbus["Vm"] = alldata["LP"]["vvar"][databus].X  # Voltage magnitude
+                resbus["Va"] = alldata["LP"]["thetavar"][databus].X  # Voltage angle
+
+        # Generator solution data
+        for genindex in result["gen"]:
+            resgen = result["gen"][genindex]
+            datagen = alldata["gens"][genindex]
+            # Override old values
+            resgen["Pg"] = (
+                alldata["LP"]["GenPvar"][datagen].X * baseMVA
+            )  # Generator real power injection
+            resgen["Qg"] = (
+                alldata["LP"]["GenQvar"][datagen].X * baseMVA
+            )  # Generator reactive power injection
+
+        # Branch solution data
+        for branchindex in result["branch"]:
+            resbranch = result["branch"][branchindex]
+            databranch = alldata["branches"][branchindex]
+            # Generate new values
+            # Real power injected into "from" end of branch and "to" end of branch are the same for DC
+            resbranch["Pf"] = alldata["LP"]["Pvar_f"][
+                databranch
+            ].X  # AC branch real power injected into "from" end of branch
+            resbranch["Pt"] = alldata["LP"]["Pvar_t"][
+                databranch
+            ].X  # AC branch real power injected into "to" end of branch
+            resbranch["Qf"] = alldata["LP"]["Qvar_f"][
+                databranch
+            ].X  # AC branch reactive power injected into "from" end of branch
+            resbranch["Qt"] = alldata["LP"]["Qvar_t"][
+                databranch
+            ].X  # AC branch reactive power injected into "to" end of branch
+            resbranch["switching"] = 1
+
+    # Set MIP fields
+    if alldata["branchswitching_mip"]:
+        for branchindex in result["branch"]:
+            resbranch = result["branch"][branchindex]
+            databranch = alldata["branches"][branchindex]
+            resbranch["switching"] = (
+                1 if alldata["MIP"]["zvar"][databranch].X > 0.5 else 0
+            )
+
+    return result
+
+
+def compute_voltage_angles(alldata, result):
+    """
+    Helper function to compute voltage angles out of previously computed
+    voltage magnitudes for a given AC OPF solution
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    result : dictionary
+        Result dictionary which is constructed for the user
+    """
+
+    # After setting all voltage magnitudes, we can compute the voltage angle
+    # Set voltage angle of reference bus to 0 (this is arbitrary)
+    buses = alldata["buses"]
+    branches = alldata["branches"]
+    busindex = alldata["refbus"]
+    result["bus"][busindex]["Va"] = 0
+    # Next, compute the angle of all other buses starting from the reference bus
+    # k = "from" m = "to"
+    # cvar[km] = (voltage mag at k) * (voltage mag at m) * cos(thetak - thetam)
+    busesdone = {busindex}
+    busesnext = set()
+    for branchindex in buses[busindex].frombranchids.values():
+        b = branches[branchindex]
+        # already computed angle is always at first place of tuple
+        busesnext.add((b.f, b.t, branchindex, "f"))
+    for branchindex in buses[busindex].tobranchids.values():
+        b = branches[branchindex]
+        # already computed angle is always at first place of tuple
+        busesnext.add((b.t, b.f, branchindex, "t"))
+
+    while len(busesdone) != alldata["numbuses"]:
+        # Get a new bus
+        next = busesnext.pop()
+        while next[1] in busesdone:
+            next = busesnext.pop()
+        nextbusindex = next[1]
+        nextbus = buses[nextbusindex]
+        knownbusindex = next[0]
+        knownbus = buses[knownbusindex]
+        cvarval = alldata["LP"]["cvar"][branches[next[2]]].X
+        res = math.acos(
+            cvarval
+            / (result["bus"][nextbusindex]["Vm"] * result["bus"][knownbusindex]["Vm"])
+        )
+        if next[3] == "f":
+            res -= result["bus"][knownbusindex]["Va"]
+            res *= -1
+        else:
+            res += result["bus"][knownbusindex]["Va"]
+        result["bus"][nextbusindex]["Va"] = res
+        # print("setting voltage angle of bus %d to value %f"%(nextbusindex,res))
+        busesdone.add(nextbusindex)
+
+        for branchindex in nextbus.frombranchids.values():
+            b = branches[branchindex]
+            # Only add if bus is not done already
+            if b.t not in busesdone:
+                busesnext.add((b.f, b.t, branchindex, "f"))
+        for branchindex in nextbus.tobranchids.values():
+            b = branches[branchindex]
+            if b.f not in busesdone:
+                busesnext.add((b.t, b.f, branchindex, "t"))
 
 
 def writempsfile(alldata, model, filename):
@@ -534,7 +703,7 @@ def writemipstart(alldata):
     f = open(filename, "w")
     logger.info("Writing mipstart in file %s." % filename)
 
-    zvar = alldata["LP"]["zvar"]
+    zvar = alldata["MIP"]["zvar"]
     branches = alldata["branches"]
     numbranches = alldata["numbranches"]
     for j in range(1, 1 + numbranches):

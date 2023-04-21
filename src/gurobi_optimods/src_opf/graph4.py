@@ -34,12 +34,9 @@ def graphplot(
     # The figure is then rendered in a browser window.
     #
     # graphfilename = 'grbgraph.txt'
-    try:
-        f = open(graphfilename, "r")
-        lines = f.readlines()
-        f.close()
-    except:
-        sys.exit("failure")
+    f = open(graphfilename, "r")
+    lines = f.readlines()
+    f.close()
 
     logger = logging.getLogger("OpfLogger")
 
@@ -82,17 +79,19 @@ def graphplot(
             "Error. Number of branches in graph file = %d, whereas number of branches in problem = %d\n"
             % (trueM, numbranches)
         )
-        break_exit(
-            "error"
-        )  # <--- Jarek, I suppose we have to throw an exception here.  Should this happen it indicates a bug.
+        raise ValueError(
+            "Error. Number of branches in graph file = %d, whereas number of branches in problem = %d\n"
+            % (trueM, numbranches)
+        )
     if trueM != truelinect:
         logger.info(
             "Error. Number of branches in graph file = %d, whereas number of branches line file = %d\n"
             % (trueM, truelinect)
         )
-        break_exit(
-            "error"
-        )  # <--- Jarek, I suppose we have to throw an exception here.  Should this happen it indicates a bug.
+        raise ValueError(
+            "Error. Number of branches in graph file = %d, whereas number of branches line file = %d\n"
+            % (trueM, truelinect)
+        )
 
     loud = False
     local_reordered_width = {}
@@ -106,18 +105,22 @@ def graphplot(
                 "Error. Ordered pair %d -> (%d,%d) not in consolidated list\n"
                 % (j, scannedordpair[0], scannedordpair[1])
             )
-            break_exit("error")
+            raise ValueError(
+                "Error. Ordered pair %d -> (%d,%d) not in consolidated list\n"
+                % (j, scannedordpair[0], scannedordpair[1])
+            )
         degmine = myedge_degrees_consolidated[scannedordpair]
         if degscanned != degmine:
             logger.info(
                 "Error. Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists\n"
-                % (j, scannedordpair[0], scannedordpair[1]),
-                degscanned,
-                degmine,
+                % (j, scannedordpair[0], scannedordpair[1], degscanned, degmine)
             )
-            break_exit("error")
+            raise ValueError(
+                "Error. Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists\n"
+                % (j, scannedordpair[0], scannedordpair[1], degscanned, degmine)
+            )
 
-        if False:
+        if False:  # TODO-Dan Remove?
             logger.info(
                 "scanned ordered pair %d -> (%d,%d) of deg %d\n"
                 % (j, scannedordpair[0], scannedordpair[1], degscanned)
@@ -143,7 +146,9 @@ def graphplot(
 
     # break_exit('scanned2')
 
-    if True:  # alldata['coordsfilename'] != None:  #should change this
+    if (
+        True
+    ):  # alldata['coordsfilename'] != None:  #should change this #TODO-Dan change to what?
         vertexx -= np.min(vertexx)
         vertexy -= np.min(vertexy)
 
@@ -200,6 +205,9 @@ def graphplot(
             logger.info(
                 "Could not add edge (%d, %d) to graph object.\n" % (small, large)
             )
+            raise ValueError(
+                "Could not add edge (%d, %d) to graph object.\n" % (small, large)
+            )
             break_exit("error")
         fbus = small + 1
         tbus = large + 1
@@ -225,7 +233,7 @@ def graphplot(
 
     gG.getmetrics()
     # break_exit('poo')
-    print("Creating visualization object.\n")
+    logger.info("Creating visualization object.\n")
     # print(vertex_text)
 
     PH = plotlyhandler(
@@ -255,7 +263,7 @@ def graphplot(
     myheight = 800
     mywidth = int(math.ceil(xgap / ygap * myheight))
 
-    print("xgap", xgap, "ygap", ygap, "height", myheight, "width", mywidth)
+    logger.info("xgap %f ygap %f height %f width %f" % (xgap, ygap, myheight, mywidth))
 
     fig = PH.create_figure(height=myheight, width=mywidth, showlabel=False)
     # fig.write_image('one.png')

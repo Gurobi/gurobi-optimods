@@ -9,8 +9,6 @@ from .utils import break_exit
 from .grbfile import grbreadvoltsfile
 from .grbformulator_ac import computebalbounds
 
-# from .grbgraphical_givencoords import grbgraphical_givencoords
-
 
 def lpformulator_dc_body(alldata, model):
     """
@@ -72,7 +70,7 @@ def lpformulator_dc_create_vars(alldata, model):
     Pinjvar = {}
     Pvar_f = {}  # DC, so f-flow = - t-flow
     twinPvar_f = {}  # auxiliary variable in case branch-switching is being used
-    GenPvar = {}
+    GenPvar = {}  # DC, generator real power injections variables
 
     for j in range(1, numbuses + 1):
         bus = buses[j]
@@ -116,9 +114,11 @@ def lpformulator_dc_create_vars(alldata, model):
             gen.Pvarind = varcount
             varcount += 1
 
-    alldata["LP"]["thetavar"] = thetavar
+    alldata["LP"][
+        "thetavar"
+    ] = thetavar  # for DC this is the voltage angle - voltage magnitude is always 1 for DC
     alldata["LP"]["Pinjvar"] = Pinjvar
-    alldata["LP"]["GenPvar"] = GenPvar
+    alldata["LP"]["GenPvar"] = GenPvar  # DC, generator real power injections variables
 
     # Branch related variables
     branches = alldata["branches"]
@@ -157,7 +157,10 @@ def lpformulator_dc_create_vars(alldata, model):
             branch.twinPftvarind = varcount
             varcount += 1
 
-    alldata["LP"]["Pvar_f"] = Pvar_f
+    alldata["LP"][
+        "Pvar_f"
+    ] = Pvar_f  # DC branch real power injected into "from" end of branch
+    # DC branch real power injected into "to" end of branch is the same as Pvar_f
     alldata["LP"]["twinPvar_f"] = twinPvar_f
 
     zvar = {}
@@ -167,18 +170,14 @@ def lpformulator_dc_create_vars(alldata, model):
             branch = branches[j]
             f = branch.f
             t = branch.t
-            lbound = 0
-            ubound = 1
             zvar[branch] = model.addVar(
-                lb=lbound,
-                ub=ubound,
                 obj=0.0,
-                vtype=GRB.INTEGER,
+                vtype=GRB.BINARY,
                 name="z_%d_%d_%d" % (j, f, t),
             )
             branch.switchvarind = varcount
             varcount += 1
-    alldata["LP"]["zvar"] = zvar
+    alldata["MIP"]["zvar"] = zvar
 
     lincostvar = model.addVar(
         obj=1.0, lb=-GRB.INFINITY, ub=GRB.INFINITY, name="lincost"
@@ -226,7 +225,7 @@ def lpformulator_dc_create_constraints(alldata, model):
     thetavar = alldata["LP"]["thetavar"]
     Pvar_f = alldata["LP"]["Pvar_f"]
     twinPvar_f = alldata["LP"]["twinPvar_f"]
-    zvar = alldata["LP"]["zvar"]
+    zvar = alldata["MIP"]["zvar"]
     Pinjvar = alldata["LP"]["Pinjvar"]
     GenPvar = alldata["LP"]["GenPvar"]
     lincostvar = alldata["LP"]["lincostvar"]
@@ -331,6 +330,7 @@ def lpformulator_dc_create_constraints(alldata, model):
         "  Adding constraints stating bus injection = total outgoing power flow."
     )
     count = 0
+    balancecons = {}
     for j in range(1, 1 + numbuses):
         bus = buses[j]
         expr = gp.LinExpr()
@@ -339,10 +339,13 @@ def lpformulator_dc_create_constraints(alldata, model):
 
         for branchid in bus.tobranchids.values():
             expr.add(-Pvar_f[branches[branchid]])
-
-        model.addConstr(expr == Pinjvar[bus], name="PBaldef%d_%d" % (j, bus.nodeID))
+        # Create dictionary accessed by bus holding these constraints to access their duals afterwards
+        balancecons[bus] = model.addConstr(
+            expr == Pinjvar[bus], name="PBaldef%d_%d" % (j, bus.nodeID)
+        )
 
         count += 1
+    alldata["LP"]["balancecons"] = balancecons
     logger.info("    %d constraints added." % count)
 
     # Injection defs
@@ -401,7 +404,7 @@ def lpformulator_dc_examine_solution(alldata, model):
     thetavar = alldata["LP"]["thetavar"]
     Pvar_f = alldata["LP"]["Pvar_f"]
     twinPvar_f = alldata["LP"]["twinPvar_f"]
-    zvar = alldata["LP"]["zvar"]
+    zvar = alldata["MIP"]["zvar"]
     Pinjvar = alldata["LP"]["Pinjvar"]
     GenPvar = alldata["LP"]["GenPvar"]
     lincostvar = alldata["LP"]["lincostvar"]
