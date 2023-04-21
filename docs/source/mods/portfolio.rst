@@ -90,7 +90,7 @@ The columns of this dataframe represent the individual assets ("AA", "BB", ..., 
     data = load_portfolio()
     Sigma = data.cov()
     mu = data.mean()
-    gamma = 0.5
+    gamma = 100.0
 
     mvp = MeanVariancePortfolio(Sigma, mu)
     x = mvp.efficient_portfolio(gamma)
@@ -139,39 +139,42 @@ The columns of this dataframe represent the individual assets ("AA", "BB", ..., 
         Factor Ops : 3.850e+02 (less than 1 second per iteration)
         Threads    : 1
 
-                        Objective                Residual
+                          Objective                Residual
         Iter       Primal          Dual         Primal    Dual     Compl     Time
-        0  -2.66782663e+05  2.67351515e+05  1.00e+04 2.29e-01  1.00e+06     0s
-        1   3.57093000e-01  3.15501994e+01  1.10e+01 5.56e-10  1.10e+03     0s
-        2   1.85936197e-03  3.10704279e+01  1.10e-05 5.57e-16  3.11e+00     0s
-        3   1.86314441e-03  4.49144994e-02  4.25e-09 1.73e-18  4.31e-03     0s
-        4   5.23399148e-03  1.37520789e-02  3.66e-10 8.67e-19  8.52e-04     0s
-        5   1.18389706e-02  1.47201835e-02  3.89e-16 5.55e-17  2.88e-04     0s
-        6   1.34663854e-02  1.34787942e-02  5.20e-18 7.29e-17  1.24e-06     0s
-        7   1.34773294e-02  1.34773419e-02  3.47e-18 1.67e-16  1.24e-09     0s
-        8   1.34773404e-02  1.34773404e-02  3.47e-18 1.67e-16  1.24e-12     0s
+           0  -2.08348238e+05  2.08383773e+05  1.00e+04 1.43e-02  1.00e+06     0s
+           1  -1.91482256e-01  4.99463850e+02  1.08e+01 9.88e-09  1.12e+03     0s
+           2  -1.94725618e-02  4.56374984e+02  1.08e-05 9.88e-15  4.56e+01     0s
+           3  -1.94685319e-02  4.71448851e-01  8.14e-10 1.39e-17  4.91e-02     0s
+           4  -1.63767350e-02  1.14105476e-02  2.04e-11 6.94e-18  2.78e-03     0s
+           5  -7.58352892e-03  1.59186002e-04  3.89e-16 2.08e-17  7.74e-04     0s
+           6  -5.59221914e-03 -4.72740622e-03  1.67e-16 6.94e-18  8.65e-05     0s
+           7  -5.18009820e-03 -5.10195350e-03  9.30e-16 1.04e-17  7.81e-06     0s
+           8  -5.12692872e-03 -5.12414839e-03  6.11e-16 3.47e-18  2.78e-07     0s
+           9  -5.12425311e-03 -5.12424841e-03  4.84e-15 6.94e-18  4.70e-10     0s
 
-        Barrier solved model in 8 iterations and 0.01 seconds (0.00 work units)
-        Optimal objective 1.34773404e-02
+        Barrier solved model in 9 iterations and 0.00 seconds (0.00 work units)
+        Optimal objective -5.12425311e-03
 
 
 Solution
 --------
 
-The returned Series contains the relative investment for each asset; here for example we would invest all our wealth into asset "BB".
+The returned Series contains the relative investment for each asset;
+here the solution suggests to spread the investments over five positions
+(AA, DD, GG, HH, II).  The other allocations are negligible.
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
     >>> x
-    AA    8.825530e-11
-    BB    1.000000e+00
-    CC    1.032950e-11
-    DD    5.861020e-10
-    EE    6.996134e-11
-    FF    1.436142e-11
-    GG    1.126548e-10
-    HH    3.002247e-10
-    II    4.167954e-11
-    JJ    1.221226e-10
+    AA    4.236507e-01
+    BB    6.345069e-07
+    CC    5.350841e-09
+    DD    2.430097e-01
+    EE    6.955653e-07
+    FF    2.208698e-08
+    GG    2.937248e-02
+    HH    2.350835e-01
+    II    6.888219e-02
+    JJ    7.657627e-08
     dtype: float64
