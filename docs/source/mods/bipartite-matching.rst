@@ -6,7 +6,9 @@ Something about specific graph algorithms vs mathprog formulations?
 Problem Specification
 ---------------------
 
-You are given a bipartite graph :math:`G` containing :math:`n` vertices and :math:`m` edges. Find the maximum matching, i.e. select as many edges as possible so that no selected edge shares a vertex with any other selected edge.
+You are given a bipartite graph :math:`G` containing :math:`n` vertices and
+:math:`m` edges. Find the maximum matching, i.e. select as many edges as
+possible so that no selected edge shares a vertex with any other selected edge.
 
 .. tabs::
 
@@ -16,99 +18,100 @@ You are given a bipartite graph :math:`G` containing :math:`n` vertices and :mat
 
     .. tab:: Optimization Model
 
-        For each edge :math:`(i,j)` in graph :math:`G = (V, E)`, we should select a subset. So define variables as follows
+        Use a network max-flow model ...
 
-        .. math::
-
-            x_{ij} = \begin{cases}
-                1 & \text{if edge}\,(i,j)\,\text{is selected in the matching} \\
-                0 & \text{otherwise.} \\
-            \end{cases}
-
-        and the mathematical model as (check undirected terminology/notation here)
-
-        .. math::
-
-            \begin{alignat}{2}
-            \max \quad        & \sum_{(i, j) \in E} x_{ij} \\
-            \mbox{s.t.} \quad & \sum_{j \in N(i)} x_{ij} \le 1 & \forall i \in V \\
-                              & 0 \le x_{ij} \le 1 & \forall (i, j) \in E \\
-            \end{alignat}
-
-        Note that for the bipartite case, simplex is sufficient, we do not need to use binary variables, just bounded ones.
+        Note that for the bipartite case, simplex is sufficient, we do not
+        need to use binary variables, just :math:`[0, 1]` bounds. Gurobi uses
+        a network simplex algorithm to solve such models.
 
 |
 
 Code
 ----
 
-Show the code required to run the model from the store vs how to implement directly in gurobipy. All the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output.
-
 .. testcode:: bipartite_matching
 
+    import numpy as np
     import scipy.sparse as sp
 
     from gurobi_optimods.matching import maximum_bipartite_matching
 
     # Bipartite graph as a sparse matrix.
+    nodes1 = np.array([0, 1, 2, 3, 4])
+    nodes2 = np.array([5, 6, 7])
     row = [0, 3, 4, 0, 1, 3]
     col = [7, 5, 5, 6, 6, 7]
     data = [1, 1, 1, 1, 1, 1]
-    G = sp.coo_array((data, (row, col)), shape=(8, 8))
+    adjacency = sp.coo_array((data, (row, col)), shape=(8, 8))
 
     # Compute max matching.
-    matching = maximum_bipartite_matching(G)
+    matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
 
 .. testoutput:: bipartite_matching
     :hide:
 
     ...
-    Optimal objective  3.000000000e+00
+    Optimal objective -3.000000000e+00
 
-Both codes construct the same model and give the same result. The model is solved as a LP/MIP/QP/etc by Gurobi.
+Both codes construct the same model and give the same result. The model is
+solved as a LP/MIP/QP/etc by Gurobi.
 
 .. collapse:: View Gurobi logs
 
     .. code-block:: text
 
-        Gurobi Optimizer version 9.5.2 build v9.5.2rc0 (mac64[x86])
-        Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
-        Optimize a model with 7 rows, 6 columns and 12 nonzeros
-        Model fingerprint: 0x66da6fea
-        Coefficient statistics:
-        Matrix range     [1e+00, 1e+00]
-        Objective range  [1e+00, 1e+00]
-        Bounds range     [0e+00, 0e+00]
-        RHS range        [1e+00, 1e+00]
-        Presolve removed 7 rows and 6 columns
-        Presolve time: 0.01s
-        Presolve: All rows and columns removed
-        Iteration    Objective       Primal Inf.    Dual Inf.      Time
-            0    3.0000000e+00   0.000000e+00   0.000000e+00      0s
+        Solving maximum matching n1=5 n2=3 |E|=6
+        Maximum matching formulated as min-cost flow with 10 nodes and 15 arcs
+        Restricted license - for non-production use only - expires 2024-10-28
+        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
 
-        Solved in 0 iterations and 0.01 seconds (0.00 work units)
-        Optimal objective  3.000000000e+00
+        CPU model: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
+        Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
+
+        Optimize a model with 10 rows, 15 columns and 30 nonzeros
+        Model fingerprint: 0xb08809c2
+        Coefficient statistics:
+          Matrix range     [1e+00, 1e+00]
+          Objective range  [1e+00, 1e+00]
+          Bounds range     [1e+00, 1e+00]
+          RHS range        [0e+00, 0e+00]
+        Presolve removed 4 rows and 4 columns
+        Presolve time: 0.00s
+        Presolved: 6 rows, 11 columns, 22 nonzeros
+
+        Iteration    Objective       Primal Inf.    Dual Inf.      Time
+               0   -3.0000000e+00   1.000000e+00   0.000000e+00      0s
+               1   -3.0000000e+00   0.000000e+00   0.000000e+00      0s
+
+        Solved in 1 iterations and 0.00 seconds (0.00 work units)
+        Optimal objective -3.000000000e+00
+        Done: max bipartite matching has 3 edges
 
 |
 
 Solution
 --------
 
-Show the solution. Use doctests if possible (i.e. the solution must be stable enough). Otherwise, just display it somehow.
+Show the solution. Use doctests if possible (i.e. the solution must be stable
+enough). Otherwise, just display it somehow.
 
 .. doctest:: bipartite_matching
     :options: +NORMALIZE_WHITESPACE
 
-    >>> matching
-    <8x8 sparse array of type '<class 'numpy.float64'>'
-        with 3 stored elements in COOrdinate format>
+    >>> print(matching)
+      (0, 7)        1.0
+      (1, 6)        1.0
+      (3, 5)        1.0
+      (5, 3)        1.0
+      (6, 1)        1.0
+      (7, 0)        1.0
 
 .. doctest:: bipartite_matching
     :options: +NORMALIZE_WHITESPACE
 
     >>> import networkx as nx
     >>> import matplotlib.pyplot as plt
-    >>> g = nx.from_scipy_sparse_array(G)
+    >>> g = nx.from_scipy_sparse_array(adjacency)
     >>> layout = nx.bipartite_layout(g, [0, 1, 2, 3, 4])
     >>> fig, (ax1, ax2) = plt.subplots(1, 2)
     >>> nx.draw(g, layout, ax=ax1)

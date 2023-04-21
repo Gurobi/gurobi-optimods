@@ -7,7 +7,7 @@ The Opti Mods
    bipartite-matching
    card-regression
    l1-regression
-   network-flow
    mwis
+   network-flow
    weighted-matching
    workforce

@@ -23,6 +23,7 @@ from typing import Optional
 
 import gurobipy as gp
 
+global_mod_logger = logging.getLogger("gurobi_optimods")
 grb_logger = logging.getLogger("gurobipy")
 re_module_base_name = re.compile("gurobipy\.|gurobi_optimods\.")
 
@@ -87,7 +88,10 @@ def _mod_context(
             grb_logger.removeHandler(fh)
 
 
-def optimod(mod_logger):
+def optimod(mod_logger=None):
+    if mod_logger is None:
+        mod_logger = global_mod_logger
+
     def optimod_decorator(func):
         @functools.wraps(func)
         def optimod_decorated(*args, silent=False, logfile=None, **kwargs):

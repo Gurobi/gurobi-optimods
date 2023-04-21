@@ -14,9 +14,11 @@ print("=== Input graph ===")
 print(sp.triu(adjacency).tocoo())
 
 print("=== Loud mod ===")
-matching = maximum_bipartite_matching(adjacency, silent=False, logfile="matching.log")
+matching = maximum_bipartite_matching(
+    adjacency, nodes1, nodes2, silent=False, logfile="matching.log"
+)
 print(sp.triu(matching).tocoo())
 
 print("=== Quiet mod ===")
-matching = maximum_bipartite_matching(adjacency, silent=True)
+matching = maximum_bipartite_matching(adjacency, nodes1, nodes2, silent=True)
 print(sp.triu(matching).tocoo())
