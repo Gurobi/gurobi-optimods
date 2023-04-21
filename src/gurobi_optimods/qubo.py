@@ -13,11 +13,11 @@ class QuboResult:
 def solve_qubo(coeff_matrix) -> QuboResult:
     """
     Solve a quadratic unconstrained binary optimization (QUBO) problem,
-    i.e., minimize a quadratic function defined by a coefficient matrix
-    over a binary decision variable vector
+    i.e., minimize quadratic function x'Qx defined by coefficient matrix Q
+    over a binary decision variable vector x
 
     :param coeff_matrix: quadratic coefficient matrix
-    :type coeff_matrix: np.array
+    :type coeff_matrix: np.array or scipy.sparse
     """
 
     if coeff_matrix is None:
