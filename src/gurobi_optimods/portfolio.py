@@ -92,18 +92,25 @@ class MeanVariancePortfolio:
                 return self._convert_result(x.X)
 
     # trade-off between minimizing risk and maximizing return for a given risk-aversion coefficient gamma
-    def efficient_portfolio(self, gamma, max_trades=None):
+    def efficient_portfolio(self, gamma, max_trades=None, fees_buy=None):
         with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
             x = m.addMVar(shape=self.mu.shape, name="x")
-            m.addConstr(x.sum() == 1, name="fully_invested")
             m.setObjective(
                 self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)), GRB.MAXIMIZE
             )
 
+            investment = x.sum()
+
+            b = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_x")
+            m.addConstr(x <= b)
+
             if max_trades is not None:
-                b = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_x")
-                m.addConstr(x <= b)
                 m.addConstr(b.sum() <= max_trades)
+
+            if fees_buy is not None:
+                investment += b.sum() * fees_buy
+
+            m.addConstr(investment == 1, name="fully_invested")
 
             m.optimize()
             if m.Status == GRB.OPTIMAL:
