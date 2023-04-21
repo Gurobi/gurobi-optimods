@@ -32,3 +32,16 @@ class TestMod(unittest.TestCase):
         mvp = MeanVariancePortfolio(Sigma, mu)
         x = mvp.efficient_portfolio(0.5)
         assert_allclose(x, [0.925, 0.075], atol=1e-6)
+
+    def test_number_of_trades(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x_unconstrained = mvp.efficient_portfolio(gamma)
+        self.assertGreater((x_unconstrained > 1e-4).sum(), 3)
+
+        x_3 = mvp.efficient_portfolio(gamma, max_trades=3)
+        self.assertLessEqual((x_3 > 1e-4).sum(), 3)
