@@ -70,7 +70,7 @@ def lpformulator_dc_create_vars(alldata, model):
     varcount = 0
     thetavar = {}
     Pinjvar = {}
-    Pvar_f = {}  # DC, so f-flow = t-flow
+    Pvar_f = {}  # DC, so f-flow = - t-flow
     twinPvar_f = {}  # auxiliary variable in case branch-switching is being used
     GenPvar = {}
 

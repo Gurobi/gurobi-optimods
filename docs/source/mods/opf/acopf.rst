@@ -55,7 +55,7 @@ Problem Specification
 
        .. math::
 
-       P^{\min}_i \, \le \, P^{g}_i \, \le \, P^{\max}_i \quad \text{and} \quad  Q^{\min}_i \, \le \, Q^{g}_i \, \le \, Q^{\max}_i, \ \text{for each generator} \, i,
+	  P^{\min}_i \, \le \, P^{g}_i \, \le \, P^{\max}_i \quad \text{and} \quad  Q^{\min}_i \, \le \, Q^{g}_i \, \le \, Q^{\max}_i, \ \text{for each generator} \, i,
 
        and
 
@@ -68,6 +68,34 @@ Problem Specification
 
        .. math::
 	  \min \sum_{\text{generators} \, i} F_i(P^g_i).
+
+
+       Above we provided an expression defining the complex power flow :math:`S_{km}`in terms of the admittance matrix math::`Y`.  Denoting
+
+       .. math::
+	  \theta_{km} = \theta_k - \theta_m - \phi_{km},
+
+       The real and imaginary components of :math:`S_{km}`
+
+       .. math::
+	  P_{km} \ = \ G_{kk} |V_k|^2 + G_{km}|V_k||V_m| \cos(\theta_{km}) + B_{km}|V_k||V_m| \sin(\theta_{km})
+
+       and
+
+       .. math::
+	  Q_{km} \ = \ -B_{kk} |V_k|^2 - B_{km}|V_k||V_m| \cos(\theta_{km}) + G_{km}|V_k||V_m| \sin(\theta_{km})
+
+
+       Likewise, in terms of :math:`S_{mk}` we have
+
+       .. math::
+	  P_{mk} \ = \ G_{mm} |V_m|^2 + G_{mk}|V_k||V_m| \cos(\theta_{km}) - B_{mk}|V_k||V_m| \sin(\theta_{km})
+
+       and
+
+       .. math::
+	  Q_{mk} \ = \ -B_{mm} |V_m|^2 - B_{mk}|V_k||V_m| \cos(\theta_{km}) - G_{mk}|V_k||V_m| \sin(\theta_{km})
+
 
 Code
 ----

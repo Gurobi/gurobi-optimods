@@ -11,7 +11,16 @@ uses the term 'bus' (nodes in a network, with some simplification) and 'branch' 
 As input data for an OPF problem we have a power system ('power grid' for non-engineers) consisting of a network of buses and branches. Each branch is given as
 an ordered pair :math:`km`, where :math:`k` is the "from" bus and :math:`m` is the "to" bus.
 
-1. For each branch :math:`km` we have a complex :math:`2\times 2` matrix :math:`Y_{km}`, the admittance-matrix.  We also have a value :math:`L_{km}` (the branch limit).
+1. For each branch :math:`km` we have a complex :math:`2\times 2` matrix :math:`Y_{km}`, the admittance-matrix. The following notation will be used below
+
+       .. math::
+
+           Y _{km} =  \left( \begin{array}{c c}
+	   G_{kk} +j B_{kk} & G_{km} +j B_{km}\\
+	   G_{mk} +j B_{mk} & G_{mm} +j B_{mm}
+	   \end{array} \right).
+
+   We also have a value :math:`L_{km}` (the branch limit).
 
 2. For every bus :math:`k` we have two positive values, :math:`L_k \, \text{and} \, U_k`, the voltage limits.
 
@@ -24,7 +33,9 @@ an ordered pair :math:`km`, where :math:`k` is the "from" bus and :math:`m` is t
 
 7. Other noteworthy details: there may be multiple parallel branches :math:`km` but in this writeup, for the sake of simplicity, this is being ignored (the mathematical description is easily adapted).  There may be multiple generators at a given bus (we account for this explicitly).  The same bus may generators and nonzero load.  In this simple description we ignore bus shunts -- the mathematical description is also easily modified to account for these.
 
-8. In modern versions described below, network devices (FACTS, phase-shifters, impedance corrections are also incorporated into the model.
+8. Associated with each branch :math:`km` there are values :math:`\tau_{km} > 0` and :math:`\phi_{km}`.  These are meaningful in the case of transformers; for a non-transformer branch we write :math:`\tau_{km} = 1` and :math:`\phi_{km} = 0`.
+
+9. In modern versions described below, network devices (FACTS, phase-shifters, impedance corrections are also incorporated into the model.
 
 .. toctree::
    :maxdepth: 1
