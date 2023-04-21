@@ -1,19 +1,20 @@
-.. This template should be copied to docs/source/mods/<mod_name>.rst
-
 Stigler Diet Problem
 ====================
 
-Thanks `Wikipedia <https://en.wikipedia.org/wiki/Stigler_diet>`_!
+Thanks `Wikipedia <https://en.wikipedia.org/wiki/Stigler_diet>`_:
 
-For a moderately active man weighing 154 pounds, how much of each of 77 foods
-should be eaten on a daily basis so that the man’s intake of nine nutrients
-will be at least equal to the recommended dietary allowances (RDAs) suggested
-by the National Research Council in 1943, with the cost of the diet being minimal?
+    For a moderately active man weighing 154 pounds, how much of each of 77 foods
+    should be eaten on a daily basis so that the man’s intake of nine nutrients
+    will be at least equal to the recommended dietary allowances (RDAs) suggested
+    by the National Research Council in 1943, with the cost of the diet being minimal?
 
 Problem Specification
 ---------------------
 
-Give a brief overview of the problem being solved.
+The classic diet problem involves a set of foods, each of which contain
+varying amounts of each of several nutrients. Each food has a per-volume
+cost. The problem requires us to minimize the total cost of a diet which
+meets minimum requirements specified for each nutrient.
 
 .. tabs::
 
@@ -40,8 +41,9 @@ Give a brief overview of the problem being solved.
             \mbox{s.t.} \quad & l_{j} \le \sum_{i \in F} n_{ij} x_{i} \le u_{j} \,\, & \forall j \in N \\
             \end{alignat}
 
-Give examples of the various input data structures. These inputs should be fixed,
-so use doctests where possible.
+The API uses pandas dataframes for each data table. Separate tables are needed
+for foods and nutrients. We also need a linking table which specifies the nutrient
+content of each food (not yet shown).
 
 .. testsetup:: diet
 
@@ -94,9 +96,7 @@ so use doctests where possible.
 Code
 ----
 
-Self contained code example to run the mod from an example dataset. Example
-datasets should bd included in the ``gurobi_optimods.datasets`` module for
-easy access by users.
+Using the example data above, solve for the optimal diet.
 
 .. testcode:: diet
 
@@ -113,10 +113,6 @@ easy access by users.
         values=data.nutrition_values,
     )
 
-..  A snippet of the Gurobi log output here won't show in the rendered page,
-    but serves as a doctest to make sure the code example runs. The ... lines
-    are meaningful here, they will match anything in the output test.
-
 .. testoutput:: diet
     :hide:
 
@@ -124,10 +120,9 @@ easy access by users.
     Optimize a model with 8 rows, 9 columns and 72 nonzeros
     ...
 
-The model is solved as an LP/MIP/QP by Gurobi.
-
-..  You can include the full Gurobi log output here for the curious reader.
-    It will be visible as a collapsible section.
+Gurobi solves this now-simple linear programming model with ease and poise. But
+think back to the days of Dantzig where hundreds of engineers performed simplex
+iterations using slide rules and sextants.
 
 .. collapse:: View Gurobi Logs
 
@@ -161,10 +156,8 @@ The model is solved as an LP/MIP/QP by Gurobi.
 Solution
 --------
 
-Show the solution. One way is to use doctests to display simple shell outputs
-(see the workforce example). This can be done simply by pasting outputs
-directly from a python shell. Another option is to include and display figures
-(see the graph matching examples).
+Here's the result! We display as a simple pandas series for now. The result
+object also contains the total cost of the menu as an attribute.
 
 .. doctest:: diet
     :options: +NORMALIZE_WHITESPACE
