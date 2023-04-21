@@ -48,7 +48,7 @@ Code
     ...
     Optimal objective -3.000000000e+00
 
-The `maximum_bipartite_matching` function formulates a linear program for the
+The ``maximum_bipartite_matching`` function formulates a linear program for the
 the network flow model corresponding to the given bipartite graph. Gurobi
 solves this model using a network primal simplex algorithm.
 
