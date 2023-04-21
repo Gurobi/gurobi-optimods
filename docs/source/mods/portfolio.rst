@@ -99,7 +99,7 @@ The columns of this dataframe represent the individual assets ("AA", "BB", ..., 
     :hide:
 
     ...
-    Optimize a model with 1 rows, 10 columns and 10 nonzeros
+    Optimize a model with 11 rows, 20 columns and 30 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -168,15 +168,15 @@ here the solution suggests to spread the investments over five positions
 
     >>> x
     AA    4.236507e-01
-    BB    6.345069e-07
-    CC    5.350841e-09
-    DD    2.430097e-01
-    EE    6.955653e-07
-    FF    2.208698e-08
-    GG    2.937248e-02
-    HH    2.350835e-01
-    II    6.888219e-02
-    JJ    7.657627e-08
+    BB    1.743570e-07
+    CC    7.573610e-10
+    DD    2.430104e-01
+    EE    1.017732e-07
+    FF    2.760531e-09
+    GG    2.937307e-02
+    HH    2.350833e-01
+    II    6.888222e-02
+    JJ    1.248442e-08
     dtype: float64
 
 
