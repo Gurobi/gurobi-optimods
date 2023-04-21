@@ -24,7 +24,18 @@ def workforce_mconstr(m, availability, shift_req, pay):
 def solve_workforce_scheduling(
     availability: pd.DataFrame, shift_requirements: pd.Series, pay_rates: pd.Series
 ) -> pd.DataFrame:
-    """Solve a workforce scheduling model"""
+    """Solve a workforce scheduling model.
+
+    :param availability: Dataframe with columns 'Worker' and 'Shift' defining
+        all allowable worker-shift combinations
+    :type availability: :class:`pd.DataFrame`
+    :param shift_requirements: Dataframe with columns 'Shift' and 'Required'
+        specifying the number of staff required for every shift
+    :type shift_requirements: :class:`pd.DataFrame`
+    :param pay_rates: Dataframe with columns 'Worker' and 'PayRate' specifying
+        the per-shift pay rate of every worker
+    :type pay_rates: :class:`pd.DataFrame`
+    """
     with gp.Env() as env, gp.Model(env=env) as m:
         x = workforce_mconstr(
             m,
