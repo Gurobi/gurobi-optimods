@@ -45,40 +45,20 @@ def solve_min_cost_flow(
     """
 
     # Create incidence matrix from edge lists.
-    # FIXME: feels like a long way round to CSR?
-    s = edge_source.shape[0]
-    i = np.concatenate([edge_source, edge_target])
-    j = np.concatenate([np.arange(s), np.arange(s)])
-    data = np.ones(s * 2, dtype=float)
-    data[:s] *= -1.0
-    A = sp.coo_array((data, (i, j))).tocsr()
+    indices = np.column_stack((edge_source, edge_target)).reshape(-1, order="C")
+    indptr = np.arange(0, 2 * edge_source.shape[0] + 2, 2)
+    ones = np.ones(edge_source.shape)
+    data = np.column_stack((ones * -1.0, ones)).reshape(-1, order="C")
+    A = sp.csc_array((data, indices, indptr))
 
-    # Balance, capacities and costs are given, just check shape
-    # FIXME: throw informative errors
-    nodes, edges = A.shape
-    assert demand.shape == (nodes,)
-    assert capacity.shape == (edges,)
-    assert cost.shape == (edges,)
-
-    logger.info(f"Solving min-cost flow with {nodes} and {edges} edges")
-
-    # Add names if exporting for debugging
-    dump_model = False
-    if dump_model:
-        names = np.array([f"x[{i},{j}]" for i, j in zip(edge_source, edge_target)])
-    else:
-        names = None
+    logger.info("Solving min-cost flow with {0} nodes and {1} edges".format(*A.shape))
 
     # Solve model with gurobi, return cost and flows
     with gp.Model(env=env) as m:
         m.ModelSense = GRB.MINIMIZE
-        x = m.addMVar(edges, lb=0, ub=capacity, obj=cost, name=names)
+        x = m.addMVar(A.shape[1], lb=0, ub=capacity, obj=cost)
         m.addMConstr(A, x, GRB.EQUAL, demand)
-        if dump_model:
-            m.write("netflow.lp")
         m.optimize()
         if m.Status == GRB.INFEASIBLE:
             raise ValueError("Unsatisfiable flows")
-        if dump_model:
-            m.write("netflow.sol")
         return m.ObjVal, x.X

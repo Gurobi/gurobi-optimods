@@ -14,22 +14,25 @@ logger = logging.getLogger(__name__)
 
 @optimod()
 def maximum_bipartite_matching(adjacency, nodes1, nodes2, *, create_env):
-    G_nodes = adjacency.shape[0]
-    source, sink = G_nodes, G_nodes + 1
-    G = sp.triu(adjacency.tocoo())
 
     logger.info(
         f"Solving maximum matching n1={nodes1.shape[0]} "
-        f"n2={nodes2.shape[0]} |E|={G.data.shape[0]}"
+        f"n2={nodes2.shape[0]} |E|={adjacency.data.shape[0]}"
     )
+
+    # Add a source and sink node for max flow formulation
+    # Assume G is symmetric (or upper triangular)
+    G = sp.triu(adjacency.tocoo())
+    G_nodes = adjacency.shape[0]
+    source, sink = G_nodes, G_nodes + 1
 
     # Build network:
     #   source -> nodes1 (complete)
     #   nodes1 -> nodes2 (adjacency)
     #   nodes2 -> sink (complete)
     #   sink -> source
-    from_arc = np.concatenate([[source] * nodes1.shape[0], G.row, nodes2, [sink]])
-    to_arc = np.concatenate([nodes1, G.col, [sink] * nodes2.shape[0], [source]])
+    from_arc = np.concatenate([np.repeat(source, nodes1.shape), G.row, nodes2, [sink]])
+    to_arc = np.concatenate([nodes1, G.col, np.repeat(sink, nodes2.shape), [source]])
     capacity = np.ones(from_arc.shape, dtype=float)
     capacity[-1] = GRB.INFINITY
     cost = np.zeros(from_arc.shape, dtype=float)
