@@ -6,6 +6,7 @@ import gurobipy as gp
 from gurobipy import GRB
 import scipy.sparse as sp
 
+from gurobi_optimods.network_util import solve_min_cost_flow
 from gurobi_optimods.utils import optimod
 
 logger = logging.getLogger(__name__)
@@ -57,38 +58,10 @@ def maximum_bipartite_matching(G, *, create_env):
         return sp.coo_array((data, (i, j)), shape=G.shape)
 
 
-def solve_min_cost_flow(env, from_arc, to_arc, capacity, cost):
-    # Formulate as min-cost flow (A, b, c, u)
-    #
-    #   min  c^T x
-    #  s.t.  A x = b
-    #        0 <= x <= u
-    #
-    s = from_arc.shape[0]
-    i = np.concatenate([from_arc, to_arc])
-    j = np.concatenate([np.arange(s), np.arange(s)])
-    data = np.ones(s * 2, dtype=float)
-    data[s:] *= -1.0
-    A = sp.coo_matrix((data, (i, j))).tocsr()
-    b = np.zeros(A.shape[0])
-    u = capacity
-    c = cost
-    names = np.array([f"x[{i},{j}]" for i, j in zip(from_arc, to_arc)])
-
-    # Solve model with gurobi, return flows
-    with gp.Model(env=env) as m:
-        m.ModelSense = GRB.MINIMIZE
-        x = m.addMVar(s, lb=0, ub=u, obj=c, name=names)
-        m.addMConstr(A, x, GRB.EQUAL, b)
-        m.optimize()
-        return x.X
-
-
 @optimod(mod_logger=logger)
 def maximum_bipartite_matching_flow(adjacency, nodes1, nodes2, *, create_env):
     G_nodes = adjacency.shape[0]
     source, sink = G_nodes, G_nodes + 1
-    N_nodes = G_nodes + 2
     G = sp.triu(adjacency.tocoo())
 
     logger.info(
@@ -107,14 +80,15 @@ def maximum_bipartite_matching_flow(adjacency, nodes1, nodes2, *, create_env):
     capacity[-1] = GRB.INFINITY
     cost = np.zeros(from_arc.shape, dtype=float)
     cost[-1] = -1.0
+    balance = np.zeros(G_nodes + 2)
     logger.info(
-        "Maximum matching formulated as min-cost flow "
-        f"with {N_nodes} nodes and {from_arc.shape[0]} arcs"
+        "Maximum matching formulated as min-cost flow with "
+        f"{balance.shape[0]} nodes and {from_arc.shape[0]} arcs"
     )
 
     # Solve min-cost flow problem
     with create_env() as env:
-        flows = solve_min_cost_flow(env, from_arc, to_arc, capacity, cost)
+        _, flows = solve_min_cost_flow(env, from_arc, to_arc, capacity, cost, balance)
 
     # Choose the arcs corresponding to the original graph with non-zero
     # flow. Note that the last var is the sink->source connection (drop it).

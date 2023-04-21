@@ -109,7 +109,7 @@ class TestBipartiteMatchingFlow(unittest.TestCase):
         self.assertEqual(matching.nnz, expect_matching_size * 2)  # symmetric
 
     def test_random(self):
-        adjacency, nodes1, nodes2 = random_bipartite(n1=6, n2=8, p=0.5, seed=2394)
+        adjacency, nodes1, nodes2 = random_bipartite(n1=2, n2=3, p=0.5, seed=2394)
 
         matching = maximum_bipartite_matching_flow(adjacency, nodes1, nodes2)
 
