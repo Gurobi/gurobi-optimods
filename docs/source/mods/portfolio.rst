@@ -178,3 +178,54 @@ here the solution suggests to spread the investments over five positions
     II    6.888219e-02
     JJ    7.657627e-08
     dtype: float64
+
+
+Restricting the number of trades
+--------------------------------
+
+It is possible to compute an optimal portfolio under the additional restriction
+that only a limited number of positions can be traded.  This can be set through
+the `max_trades` keyword parameter.  For the example above, restricting the
+total number of trades to three we get the following optimal portfolio.
+
+.. testcode:: mod
+
+    import pandas as pd
+
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+
+    data = load_portfolio()
+    Sigma = data.cov()
+    mu = data.mean()
+    gamma = 100.0
+
+    mvp = MeanVariancePortfolio(Sigma, mu)
+    x = mvp.efficient_portfolio(gamma, max_trades=3)
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 12 rows, 20 columns and 40 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+
+The returned solution now suggests to trade only the assets AA, DD, HH.
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> x
+	AA    0.482084
+	BB    0.000000
+	CC    0.000000
+	DD    0.282683
+	EE    0.000000
+	FF    0.000000
+	GG    0.000000
+	HH    0.235233
+	II    0.000000
+	JJ    0.000000
+    dtype: float64
