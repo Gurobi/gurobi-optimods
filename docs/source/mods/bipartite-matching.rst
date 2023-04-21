@@ -1,12 +1,22 @@
-Maximum Cardinality Bipartite Matching
-======================================
+Maximum Bipartite Matching
+==========================
 
 Something about specific graph algorithms vs mathprog formulations?
 
 Problem Specification
 ---------------------
 
-You are given a bipartite graph G containing n vertices and m edges. Find the maximum matching, i.e. select as many edges as possible so that no selected edge shares a vertex with any other selected edge.
+Consider a bipartite graph :math:`G(U, V, E)`, where :math:`U` and :math:`V`
+are disjoint vertex sets, and the edge set :math:`E \subseteq U \times V`
+joins only between, not within, the sets. A matching on this graph is any
+subset of edges such that no vertex is incident to more than one edge. A
+maximum matching is the largest possible matching on :math:`G`.
+
+The bipartite matching problem can be reduced to a maximum flow problem
+
+You are given a bipartite graph :math:`G` containing :math:`n` vertices and
+:math:`m` edges. Find the maximum matching, i.e. select as many edges as
+possible so that no selected edge shares a vertex with any other selected edge.
 
 .. tabs::
 
@@ -16,101 +26,106 @@ You are given a bipartite graph G containing n vertices and m edges. Find the ma
 
     .. tab:: Optimization Model
 
-        For each edge :math:`(i,j)` in graph :math:`G = (V, E)`, we should select a subset. So define variables as follows
+        Use a network max-flow model ...
 
-        .. math::
-
-            x_{ij} = \begin{cases}
-                1 & \text{if edge}\,(i,j)\,\text{is selected in the matching} \\
-                0 & \text{otherwise.} \\
-            \end{cases}
-
-        and the mathematical model as (check undirected terminology/notation here)
-
-        .. math::
-
-            \begin{alignat}{2}
-            \max \quad        & \sum_{(i, j) \in E} x_{ij} \\
-            \mbox{s.t.} \quad & \sum_{j \in N(i)} x_{ij} \le 1 & \forall i \in V \\
-                              & 0 \le x_{ij} \le 1 & \forall (i, j) \in E \\
-            \end{alignat}
-
-        Note that for the bipartite case, simplex is sufficient, we do not need to use binary variables, just bounded ones.
+        Note that for the bipartite case, simplex is sufficient, we do not
+        need to use binary variables, just :math:`[0, 1]` bounds. Gurobi uses
+        a network simplex algorithm to solve such models.
 
 |
 
 Code
 ----
 
-Show the code required to run the model from the store vs how to implement directly in gurobipy. All the gurobi internals are handled for you; users interact with the 'solver' by passing dataframes to a given spec and receiving a dataframe as output.
-
 .. testcode:: bipartite_matching
 
+    import numpy as np
     import scipy.sparse as sp
 
     from gurobi_optimods.matching import maximum_bipartite_matching
 
-    # Bipartite graph as a sparse matrix.
+    # Create a simple bipartite graph as a sparse matrix
+    nodes1 = np.array([0, 1, 2, 3, 4])
+    nodes2 = np.array([5, 6, 7])
     row = [0, 3, 4, 0, 1, 3]
     col = [7, 5, 5, 6, 6, 7]
     data = [1, 1, 1, 1, 1, 1]
-    G = sp.coo_matrix((data, (row, col)), shape=(8, 8))
+    adjacency = sp.coo_array((data, (row, col)), shape=(8, 8))
 
-    # Compute max matching.
-    matching = maximum_bipartite_matching(G)
+    # Compute the maximum matching
+    matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
 
 .. testoutput:: bipartite_matching
     :hide:
 
     ...
-    Optimal objective  3.000000000e+00
+    Optimal objective -3.000000000e+00
 
-Both codes construct the same model and give the same result. The model is solved as a LP/MIP/QP/etc by Gurobi.
+The `maximum_bipartite_matching` function formulates a linear program for the
+the network flow model corresponding to the given bipartite graph. Gurobi
+solves this model using a network primal simplex algorithm.
 
 .. collapse:: View Gurobi logs
 
     .. code-block:: text
 
-        Gurobi Optimizer version 9.5.2 build v9.5.2rc0 (mac64[x86])
-        Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
-        Optimize a model with 7 rows, 6 columns and 12 nonzeros
-        Model fingerprint: 0x66da6fea
-        Coefficient statistics:
-        Matrix range     [1e+00, 1e+00]
-        Objective range  [1e+00, 1e+00]
-        Bounds range     [0e+00, 0e+00]
-        RHS range        [1e+00, 1e+00]
-        Presolve removed 7 rows and 6 columns
-        Presolve time: 0.01s
-        Presolve: All rows and columns removed
-        Iteration    Objective       Primal Inf.    Dual Inf.      Time
-            0    3.0000000e+00   0.000000e+00   0.000000e+00      0s
+        Solving maximum matching n1=5 n2=3 |E|=6
+        Maximum matching formulated as min-cost flow with 10 nodes and 15 arcs
+        Restricted license - for non-production use only - expires 2024-10-28
+        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
 
-        Solved in 0 iterations and 0.01 seconds (0.00 work units)
-        Optimal objective  3.000000000e+00
+        CPU model: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
+        Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
+
+        Optimize a model with 10 rows, 15 columns and 30 nonzeros
+        Model fingerprint: 0xb08809c2
+        Coefficient statistics:
+          Matrix range     [1e+00, 1e+00]
+          Objective range  [1e+00, 1e+00]
+          Bounds range     [1e+00, 1e+00]
+          RHS range        [0e+00, 0e+00]
+        Presolve removed 4 rows and 4 columns
+        Presolve time: 0.00s
+        Presolved: 6 rows, 11 columns, 22 nonzeros
+
+        Iteration    Objective       Primal Inf.    Dual Inf.      Time
+               0   -3.0000000e+00   1.000000e+00   0.000000e+00      0s
+               1   -3.0000000e+00   0.000000e+00   0.000000e+00      0s
+
+        Solved in 1 iterations and 0.00 seconds (0.00 work units)
+        Optimal objective -3.000000000e+00
+        Done: max bipartite matching has 3 edges
 
 |
 
 Solution
 --------
 
-Show the solution. Use doctests if possible (i.e. the solution must be stable enough). Otherwise, just display it somehow.
+The maximum matching is returned as a subgraph of the original bipartite
+graph, as a ``scipy.sparse`` array. Inspecting the result, it is clear that
+this is a maximum matching, since no two edges share a node in common, and
+all nodes in the second set are incident to an edge in the matching.
 
 .. doctest:: bipartite_matching
     :options: +NORMALIZE_WHITESPACE
 
-    >>> matching
-    <8x8 sparse matrix of type '<class 'numpy.float64'>'
-        with 3 stored elements in COOrdinate format>
+    >>> print(sp.triu(matching))
+      (0, 7)        1.0
+      (1, 6)        1.0
+      (3, 5)        1.0
+
+We can also inspect the result by plotting the graph and the edges selected
+in the matching using networkx.
 
 .. doctest:: bipartite_matching
     :options: +NORMALIZE_WHITESPACE
 
     >>> import networkx as nx
     >>> import matplotlib.pyplot as plt
-    >>> g = nx.from_scipy_sparse_array(G)
-    >>> layout = nx.bipartite_layout(g, [0, 1, 2, 3, 4])
+    >>>
     >>> fig, (ax1, ax2) = plt.subplots(1, 2)
+    >>> g = nx.from_scipy_sparse_array(adjacency)
+    >>> layout = nx.bipartite_layout(g, nodes1)
     >>> nx.draw(g, layout, ax=ax1)
     >>> g = nx.from_scipy_sparse_array(matching)
     >>> nx.draw(g, layout, ax=ax2)
