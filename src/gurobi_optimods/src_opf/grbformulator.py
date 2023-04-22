@@ -10,13 +10,11 @@ from .utils import OpfType
 from .grbfile import grbreadvoltsfile
 from .grbformulator_ac import (
     lpformulator_ac_body,
-    lpformulator_ac_examine_solution,
     lpformulator_ac_strictchecker,
 )
-from .grbformulator_dc import lpformulator_dc_body, lpformulator_dc_examine_solution
+from .grbformulator_dc import lpformulator_dc_body
 from .grbformulator_iv import (
     lpformulator_iv_body,
-    lpformulator_iv_examine_solution,
 )
 
 
@@ -146,31 +144,6 @@ def lpformulator_strictchecker(alldata, model, spitoutvector, opftype):
         pass  # TODO-Dan Is there a reason why there is no strict checker for DC (except that it's linear)
     elif opftype == OpfType.AC or opftype == OpfType.IV:
         lpformulator_ac_strictchecker(alldata, model, spitoutvector)
-    else:
-        raise ValueError("Unknown OPF type.")
-
-
-def lpformulator_examine_solution(alldata, model, opftype):
-    """
-    Call the corresponding solution examination function
-
-    # TODO-Dan I added a comment in grbformulator_ac.py:lpformulator_ac_examine_solution
-
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Constructed Gurobi model
-    opftype : OpfType
-        Type of OPF formulation
-    """
-    if opftype == OpfType.AC:
-        lpformulator_ac_examine_solution(alldata, model)
-    elif opftype == OpfType.DC:
-        lpformulator_dc_examine_solution(alldata, model)
-    elif opftype == OpfType.IV:
-        lpformulator_iv_examine_solution(alldata, model)
     else:
         raise ValueError("Unknown OPF type.")
 

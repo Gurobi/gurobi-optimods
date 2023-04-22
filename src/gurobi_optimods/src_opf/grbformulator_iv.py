@@ -727,67 +727,6 @@ def lpformulator_iv_create_constraints(alldata, model):
     # break_exit("after linelimits")
 
 
-def lpformulator_iv_examine_solution(alldata, model):
-    """
-    first version -- crude -- but first, some debugging
-    TODO-Dan What is this function and how should it be used?
-    Currently it does nothing
-
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Constructed Gurobi model
-    """
-
-    logger = logging.getLogger("OpfLogger")
-    branches = alldata["branches"]
-    numbranches = alldata["numbranches"]
-    IDtoCountmap = alldata["IDtoCountmap"]
-
-    buses = alldata["buses"]
-    Pvar_f = alldata["LP"]["Pvar_f"]
-    Pvar_t = alldata["LP"]["Pvar_t"]
-    Qvar_f = alldata["LP"]["Qvar_f"]
-    Qvar_t = alldata["LP"]["Qvar_t"]
-    minaloss = 100.0
-    minalossind = -1
-    """
-        for j in range(1,1+numbranches):
-            branch     = branches[j]
-            if branch.isacline:
-                f          = branch.f
-                t          = branch.t
-                count_of_f = IDtoCountmap[f]
-                count_of_t = IDtoCountmap[t]
-                busf       = buses[count_of_f]
-                bust       = buses[count_of_t]
-                aLoss = Pvar_f[branch].x + Pvar_t[branch].x
-                rLoss = Qvar_f[branch].x + Qvar_t[branch].x
-
-                Sn2 = (Pvar_f[branch].x)*(Pvar_f[branch].x)  +  (Qvar_f[branch].x)*(Qvar_f[branch].x)
-                impliedI2 = Sn2/cvar[busf].x
-                impliedaLoss = (branch.r)*impliedI2
-                actualI2 = branch.ynorm2*(cvar[busf].x + cvar[bust].x - 2*cvar[branch].x)
-                actualLoss_r = (branch.r)*actualI2
-
-
-                logger.info('j %d f %d Pft %8.4f Qft %8.4f cff %8.4f aL %.2e r %.2e iaL %.3e I2 %.3e aL_r %.3e'%(j,f,Pvar_f[branch].x, Qvar_f[branch].x, cvar[busf].x, aLoss, branch.r, impliedaLoss, actualI2, actualLoss_r))
-                #logger.info('          Qft %8.4f Qtf %8.4f rL %.2e x %.2e\n'%(Qvar_f[branch].x, Qvar_t[branch].x, rLoss, branch.x))
-                if aLoss < minaloss:
-                    minaloss = aLoss
-                    minalossind = j
-
-
-
-        logger.info('minaloss %.3e at %d'%(minaloss,minalossind))
-
-        """
-
-    logger.info("Done examining solution.\n")
-
-
 def computebalbounds(alldata, bus):
     """
     Computes active and reactive max and min bus flow balance values
