@@ -210,10 +210,6 @@ def lpformulator_optimize(alldata, model, opftype):
         model.Params.MIPGap = 1.0e-4
         model.Params.OptimalityTol = 1.0e-4
 
-    model.Params.FeasibilityTol = (
-        1.0e-6  # TODO-Dan it's Gurobi's default setting, we can remove this
-    )
-
     # model.Params.SolutionLimit = 20  # TODO-Dan This setting was set for DC. Why do we need a solution limit for DC?
 
     # TODO-Dan Why is DC handled differently? It looks like the user does not have to set the usemipstart setting but only
@@ -521,7 +517,9 @@ def turn_solution_into_result_dict(alldata, model, opftype):
             databranch = alldata["branches"][branchindex]
             # Generate new values
             # Real power injected into "from" end of branch and "to" end of branch are the same for DC
-            resbranch["Pf"] = resbranch["Pt"] = alldata["LP"]["Pvar_f"][databranch].X
+            resbranch["Pf"] = resbranch["Pt"] = (
+                alldata["LP"]["Pvar_f"][databranch].X * baseMVA
+            )
             resbranch["switching"] = 1
 
     # Set AC solution data
@@ -567,18 +565,18 @@ def turn_solution_into_result_dict(alldata, model, opftype):
             databranch = alldata["branches"][branchindex]
             # Generate new values
             # Real power injected into "from" end of branch and "to" end of branch are the same for DC
-            resbranch["Pf"] = alldata["LP"]["Pvar_f"][
-                databranch
-            ].X  # AC branch real power injected into "from" end of branch
-            resbranch["Pt"] = alldata["LP"]["Pvar_t"][
-                databranch
-            ].X  # AC branch real power injected into "to" end of branch
-            resbranch["Qf"] = alldata["LP"]["Qvar_f"][
-                databranch
-            ].X  # AC branch reactive power injected into "from" end of branch
-            resbranch["Qt"] = alldata["LP"]["Qvar_t"][
-                databranch
-            ].X  # AC branch reactive power injected into "to" end of branch
+            resbranch["Pf"] = (
+                alldata["LP"]["Pvar_f"][databranch].X * baseMVA
+            )  # AC branch real power injected into "from" end of branch
+            resbranch["Pt"] = (
+                alldata["LP"]["Pvar_t"][databranch].X * baseMVA
+            )  # AC branch real power injected into "to" end of branch
+            resbranch["Qf"] = (
+                alldata["LP"]["Qvar_f"][databranch].X * baseMVA
+            )  # AC branch reactive power injected into "from" end of branch
+            resbranch["Qt"] = (
+                alldata["LP"]["Qvar_t"][databranch].X * baseMVA
+            )  # AC branch reactive power injected into "to" end of branch
             resbranch["switching"] = 1
 
     # Set MIP fields

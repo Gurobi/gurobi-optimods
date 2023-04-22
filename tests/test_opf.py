@@ -28,22 +28,22 @@ class TestOpf(unittest.TestCase):
     objvals_dc = [5216.026607, 7642.591776, 41006.736942, 125947.881417, 706240.290695]
     Va_dc = [6.177764, 6.283185, 6.171413, 5.817455, -5.520424]
     Pg_dc = [134.377585, 38.032305, 81.931329, 0, 1.2724979]
-    Pt_dc = [-0.562622, 0.699608, -0.1809715, -1.0295381, 0.2483]
+    Pt_dc = [-56.2622, 69.9608, -18.09715, -102.95381, 24.83]
     # AC test values
     objvals_ac = [5296.686204, 8081.187603]
     Vm_ac = [1.08662, 1.018801]
     Qg_ac = [0.031844, 32.114784]
-    Qf_ac = [0.129656, -0.1267811]
+    Qf_ac = [12.9656, -12.67811]
     # AC relaxation test values
     objvals_acconv = [5296.66532, 8074.9102, 41710.3065, 129338.093, 718613.607]
     Pg_acconv = [89.803524, 194.796114, 142.58252, 24.518669, 0.030902]
-    Pt_acconv = [-0.341774, -0.7123414, -0.299637, 0.2379936, 0.562152]
+    Pt_acconv = [-34.1774, -71.23414, -29.9637, 23.79936, 56.2152]
 
     # test simple is on purpose the same as test_acopf for now
     # will be removed in final version
     def test_simple(self):
         settings = {
-            "doac": True,
+            "dodc": True,
             "skipjabr": False,
             "use_ef": True,
             "branchswitching_mip": True,
@@ -94,7 +94,7 @@ class TestOpf(unittest.TestCase):
         self.assertLess(abs(solution["f"] - 5296.665647261), 1e-4)
         self.assertLess(abs(solution["bus"][1]["Va"] - 1), 1e-4)
         self.assertLess(abs(solution["gen"][2]["Qg"] - 3.14366), 1e-4)
-        self.assertLess(abs(solution["branch"][3]["Pt"] - 0.568647), 1e-4)
+        self.assertLess(abs(solution["branch"][3]["Pt"] - 56.8647), 1e-4)
 
     # test reading settings and case file
     def test_settingsfromfile(self):
@@ -108,7 +108,7 @@ class TestOpf(unittest.TestCase):
         self.assertLess(abs(solution["f"] - 5296.665647261), 1e-4)
         self.assertLess(abs(solution["bus"][1]["Va"] - 1), 1e-4)
         self.assertLess(abs(solution["gen"][2]["Qg"] - 3.14366), 1e-4)
-        self.assertLess(abs(solution["branch"][3]["Pt"] - 0.568647), 1e-4)
+        self.assertLess(abs(solution["branch"][3]["Pt"] - 56.8647), 1e-4)
 
     # test DC formulation
     def test_dcopf(self):
