@@ -97,6 +97,62 @@ Problem Specification
 	  Q_{mk} \ = \ -B_{mm} |V_m|^2 - B_{mk}|V_k||V_m| \cos(\theta_{km}) - G_{mk}|V_k||V_m| \sin(\theta_{km})
 
 
+
+       By introducing the auxiliary variables
+
+       .. math::
+	  v_{k}^{(2)} \ = \ |V_k|^2 \ \text{for every bus} \, k
+
+       and
+
+       .. math::
+	  c_{km} \ = \ |V_k||V_m| \cos(\theta_{km}), \quad s_{km} \ = \ |V_k||V_m| \sin(\theta_{km}) \ \text{for every branch} \, km
+
+       the power flow quantities can be rewritten as
+
+       .. math::
+	  P_{km} \ = \ G_{kk} v_k^{(2)} + G_{km} c_{km} + B_{km} s_{km}
+
+       and
+
+       .. math::
+	  Q_{km} \ = \ -B_{kk} v_k^{(2)}  - B_{km} c_{km} + G_{km} s_{km}.
+
+       respectively.
+
+    .. tab:: Jabr relaxation
+
+       We can obtain a SOC (second-order cone) relaxation of the ACOPF formulation
+       by introducing the :math:`v^{(2)}_k, \ c_{km} \ \text{and} \ s_{km}` auxiliary variables, removing the nonconvex definitions of such variables (which involve cosines and sines) and adding the rotated cone constraints
+
+       .. math::
+	  c_{km}^2 \ + \ s_{km}^2 \ \le \ v_k^{(2)} v_m^{(2)} \ \text{for every branch} \, km.
+
+
+       The resulting relaxation can prove very tight, though challenging in large cases.
+
+    .. tab:: QCQP
+
+       ACOPF can be reformulated as a QCQP (quadratically-constrained quadratic program) by performing two reformulation steps.
+
+       1. For each bus :math:`k`, introduce the real variables :math:`e_k \, \text{and} \, f_k` and set :math:`v^{(2)}_k \, = \, e_k^2 + f_k^2`.
+
+       2. For each branch :math:`km`, set :math:`c_{km} = e_k e_m + f_k f_m` and :math:`s_{km} = -e_k f_m + f_k e_m`.
+
+       These constraints render an exact reformulation rendering the problem as a QCQP, i.e., one that removes the sines and cosines from the formulation.  We remind the reader that, for example, we are writing the active power flow injected at bus :math:`k` on branch :math:`km` through the constraints
+
+       .. math::
+	  P_{km} \ = \ G_{kk} v_k^{(2)} + G_{km} c_{km} + B_{km} s_{km},
+
+       (and similarly with :math:`Q_{km}, \, P_{mk}, \,\text{and} \,Q_{mk}`).
+
+
+
+
+
+
+
+
 Code
 ----
 
