@@ -84,6 +84,7 @@ def construct_and_solve_model(alldata):
         # if alldata["doslp_polar"]: # TODO-Dan Is this work in progress?
         #    break_exit("slp_polar formulation")  # TODO-Dan why the break_exit?
 
+        # Solve the OPF model
         sol_count = lpformulator_optimize(alldata, model, opftype)
 
         endtime = time.time()
@@ -195,6 +196,9 @@ def lpformulator_optimize(alldata, model, opftype):
     else:
         model.Params.MIPGap = 1.0e-4
         model.Params.OptimalityTol = 1.0e-4
+
+    if alldata["gurobiparamfile"] != None:
+        model.read(alldata["gurobiparamfile"])
 
     # model.Params.SolutionLimit = 20  # TODO-Dan This setting was set for DC. Why do we need a solution limit for DC?
 
@@ -343,9 +347,8 @@ def lpformulator_setup(alldata, opftype):
 
 def turn_solution_into_result_dict(alldata, model, opftype):
     """
-    Function to turn a Gurobi solution into an OPF dictionary.
-    If no solution is present, the result dictionary "success" value is
-    0.
+    Function to turn a Gurobi solution into an OPF dictionary in MATPOWER notation.
+    If no solution is present, the result dictionary "success" value is 0.
 
     Parameters
     ----------
