@@ -1,126 +1,70 @@
-.. This template should be copied to docs/source/mods/<mod_name>.rst
+QUBO: Quadratic Unconstrained Binary Optimization
+=================================================
 
-My New Mod
-==========
+A quadratic unconstrained binary optimization (QUBO) problem is a combinatorial
+optimization problem with a wide range of applications from finance and economics
+to machine learning (:footcite:t:`kochenberger2014ubqp`).
+A QUBO model is a special case of a mixed-integer quadratic program (MIQP) that has
+only binary decision variables and no constraints.
 
-A little background on the proud history of mathprog in this field.
+QUBO is :math:`\mathcal{NP}`-hard and for many classical problems such as
+maximum cut, graph coloring, and the partition problem,
+embeddings into QUBO have been formulated (:footcite:t:`glover2018tutorial`).
 
-Also data science.
+QUBO models are also related to Ising models and therefore used in adiabatic
+quantum computation, where a physical process called quantum annealing solves them.
+As a consequence, there is a trend to convert arbitrary combinatorial
+optimization problems to QUBO models (which is a non-trivial procedure) to solve them
+finally with a quantum annealer.
+However, in many cases it is more efficient to directly solve the original problem
+with classical optimization methods and avoid the translation to QUBO.
+
 
 Problem Specification
 ---------------------
-
-Give a brief overview of the problem being solved.
 
 .. tabs::
 
     .. tab:: Domain-Specific Description
 
-        Give a definition of the problem in the language of the domain expert.
+        We are given a set :math:`I` of :math:`n` items,
+        weights :math:`q_i \in \mathbb{R}`
+        for each single item :math:`i \in I`,
+        and weights :math:`q_{ij} \in \mathbb{R}` for each pair of distinct items
+        :math:`i,j \in I,~ i \neq j`.
+
+        The objective is to find a subset :math:`S \subseteq I` of items such that the sum of weights
+        of all single items in :math:`S` and all pairs of distinct items in :math:`S` is
+        minimal, i.e.,
+
+        .. math::
+            S = \arg \min_{S' \subseteq I} \sum_{i \in S'} q_i + \sum_{i,j \in S',~ i \neq j} q_{ij}
+
+        We arrange the weights in an upper triangular matrix :math:`Q \in \mathbb{R}^{n \times n}`
+        where entry :math:`q_{ij}` with :math:`i < j` is the weight for item pair :math:`i,j`, and
+        entry :math:`q_{ii} = q_i` is the weight for single item :math:`i`.
+
+        Note that the input matrix does not necessarily need to be in upper triangular format.
+        We accept matrices :math:`Q'` that are populated in an arbitrary way and accumulate symmetric entries,
+        i.e., :math:`q_{ij} = q'_{ij} + q'_{ji}` for all items :math:`i < j`.
 
     .. tab:: Optimization Model
 
-        Give the mathematical programming formulation of the problem here.
+        We define a binary decision vector :math:`x \in \{0,1\}^n` with variables
 
-Give examples of the various input data structures. These inputs should be fixed,
-so use doctests where possible.
+        .. math::
+            x_i = \begin{cases}
+                1 & \text{if item}\,i \in S\\
+                0 & \text{otherwise.} \\
+            \end{cases}
 
-.. testsetup:: mod
+        The QUBO model is then given as:
 
-    # Set pandas options for displaying dataframes, if needed
-    import pandas as pd
-    pd.options.display.max_rows = 10
-
-.. tabs::
-
-    .. tab:: ``availability``
-
-        Give interpretation of input data.
-
-        .. doctest:: mod
-            :options: +NORMALIZE_WHITESPACE
-
-            >>> from gurobi_optimods import datasets
-            >>> data = datasets.load_workforce()
-            >>> data.availability
-               Worker      Shift
-            0     Amy 2022-07-02
-            1     Amy 2022-07-03
-            2     Amy 2022-07-05
-            3     Amy 2022-07-07
-            4     Amy 2022-07-09
-            ..    ...        ...
-            67     Gu 2022-07-10
-            68     Gu 2022-07-11
-            69     Gu 2022-07-12
-            70     Gu 2022-07-13
-            71     Gu 2022-07-14
-            <BLANKLINE>
-            [72 rows x 2 columns]
-
-        In the model, this corresponds to ...
-
-    .. tab:: ``shift_requirements``
-
-        Another bit of input data (perhaps a secondary table)
-
-|
-
-Code
-----
-
-Self contained code example to run the mod from an example dataset. Example
-datasets should bd included in the ``gurobi_optimods.datasets`` module for
-easy access by users.
-
-.. testcode:: mod
-
-    import pandas as pd
-
-    from gurobi_optimods.datasets import load_mod_data
-    from gurobi_optimods.mod import solve_mod
+        .. math::
+            \begin{align}
+            \max \quad        & x' Q x = \sum_{i \in I} \sum_{j \in I} q_{ij} x_i x_j & \\
+            \mbox{s.t.} \quad & x \in \{0, 1\}^n &
+            \end{align}
 
 
-    data = load_mod_data()
-    solution = solve_mod(data.table1, data.table2)
-
-..  A snippet of the Gurobi log output here won't show in the rendered page,
-    but serves as a doctest to make sure the code example runs. The ... lines
-    are meaningful here, they will match anything in the output test.
-
-.. testoutput:: mod
-    :hide:
-
-    ...
-    Optimize a model with 14 rows, 72 columns, and 72 nonzeros
-    ...
-    Optimal objective
-    ...
-
-The model is solved as an LP/MIP/QP by Gurobi.
-
-..  You can include the full Gurobi log output here for the curious reader.
-    It will be visible as a collapsible section.
-
-.. collapse:: View Gurobi Logs
-
-    .. code-block:: text
-
-        Gurobi Optimizer version 9.5.1 build v9.5.1rc2 (mac64[x86])
-        Optimize a model with ...
-        Best obj ... Best bound ...
-
-|
-
-Solution
---------
-
-Show the solution. One way is to use doctests to display simple shell outputs
-(see the workforce example). This can be done simply by pasting outputs
-directly from a python shell. Another option is to include and display figures
-(see the graph matching examples).
-
-.. doctest:: mod
-    :options: +NORMALIZE_WHITESPACE
-
-    >>>
+.. footbibliography::
