@@ -1,6 +1,8 @@
 API
 ===
 
+.. automodule:: gurobi_optimods.diet
+   :members: solve_diet_problem
 
 .. automodule:: gurobi_optimods.matching
    :members: maximum_bipartite_matching, maximum_weighted_matching

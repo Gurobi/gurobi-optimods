@@ -104,3 +104,11 @@ def _create_network_flow1():
     fig.savefig("graph.png")
 
     nx.write_gml(G, "network_flow.gml")
+
+
+def load_diet():
+    return AttrDict(
+        categories=pd.read_csv(DATA_FILE_DIR / "diet-categories.csv"),
+        foods=pd.read_csv(DATA_FILE_DIR / "diet-foods.csv"),
+        nutrition_values=pd.read_csv(DATA_FILE_DIR / "diet-values.csv"),
+    )

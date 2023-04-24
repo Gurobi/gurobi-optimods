@@ -7,7 +7,13 @@ class L1Regression:
     """L1-norm regressor with Lasso regularization"""
 
     def fit(self, X_train, y_train):
-        """Fit the model to training data."""
+        """Fit the model to training data.
+
+        :param X_train: Training set feature values
+        :type X_train: :class:`np.array`
+        :param y_train: Training set output values
+        :type y_train: :class:`np.array`
+        """
 
         # Metadata about the input data
         records, self.n_features_in_ = X_train.shape
@@ -46,5 +52,11 @@ class L1Regression:
             self.coef_ = np.array([coeff.X for coeff in coeffs])
 
     def predict(self, X_test):
-        """Predict target value from test data"""
+        """Predict target value from test data
+
+        :param X_test: Feature data for a new unseen dataset
+        :type X_test: :class:`np.array`
+        :return: Outputs predicted by the model for the feature data
+        :rtype: :class:`np.array`
+        """
         return (X_test * self.coef_).sum(axis=1) + self.intercept_

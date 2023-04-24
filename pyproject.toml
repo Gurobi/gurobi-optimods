@@ -25,12 +25,16 @@ classifiers = [
 ]
 dependencies = [
     "gurobipy",
+    "gurobipy-pandas",
     "numpy",
     "pandas",
     "scipy",
     "networkx",
 ]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+networkx = ["networkx"]
 
 [tool.hatch.version]
 path = "src/gurobi_optimods/__init__.py"

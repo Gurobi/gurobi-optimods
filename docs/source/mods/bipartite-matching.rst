@@ -1,30 +1,25 @@
-Maximum Cardinality Bipartite Matching
-======================================
+Maximum Bipartite Matching
+==========================
 
 Something about specific graph algorithms vs mathprog formulations?
 
 Problem Specification
 ---------------------
 
-You are given a bipartite graph :math:`G` containing :math:`n` vertices and
-:math:`m` edges. Find the maximum matching, i.e. select as many edges as
-possible so that no selected edge shares a vertex with any other selected edge.
+Consider a bipartite graph :math:`G(U, V, E)`, where :math:`U` and :math:`V`
+are disjoint vertex sets, and the edge set :math:`E \subseteq U \times V`
+joins only between, not within, the sets. A matching on this graph is any
+subset of edges such that no vertex is incident to more than one edge. A
+maximum matching is the largest possible matching on :math:`G`.
 
-.. tabs::
+The bipartite matching problem can be reduced to a maximum flow problem by
+introducing a source vertex as a predecessor to all vertices in :math:`U`,
+and a sink vertex as a successor to all vertices in :math:`V`. Giving every
+edge unit capacity, a maximum matching is found by maximizing flow from the
+source to the sink. All edges with non-zero flow in the max flow solution
+are part of the matching.
 
-    .. tab:: Domain-Specific Description
-
-        A matching is a set of pairwise non-adjacent edges ...
-
-    .. tab:: Optimization Model
-
-        Use a network max-flow model ...
-
-        Note that for the bipartite case, simplex is sufficient, we do not
-        need to use binary variables, just :math:`[0, 1]` bounds. Gurobi uses
-        a network simplex algorithm to solve such models.
-
-|
+Note that we need a basic solution! TU and all that.
 
 Code
 ----
@@ -36,7 +31,7 @@ Code
 
     from gurobi_optimods.matching import maximum_bipartite_matching
 
-    # Bipartite graph as a sparse matrix.
+    # Create a simple bipartite graph as a sparse matrix
     nodes1 = np.array([0, 1, 2, 3, 4])
     nodes2 = np.array([5, 6, 7])
     row = [0, 3, 4, 0, 1, 3]
@@ -44,7 +39,7 @@ Code
     data = [1, 1, 1, 1, 1, 1]
     adjacency = sp.coo_array((data, (row, col)), shape=(8, 8))
 
-    # Compute max matching.
+    # Compute the maximum matching
     matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
 
 .. testoutput:: bipartite_matching
@@ -53,8 +48,9 @@ Code
     ...
     Optimal objective -3.000000000e+00
 
-Both codes construct the same model and give the same result. The model is
-solved as a LP/MIP/QP/etc by Gurobi.
+The ``maximum_bipartite_matching`` function formulates a linear program for the
+the network flow model corresponding to the given bipartite graph. Gurobi
+solves this model using a network primal simplex algorithm.
 
 .. collapse:: View Gurobi logs
 
@@ -92,28 +88,31 @@ solved as a LP/MIP/QP/etc by Gurobi.
 Solution
 --------
 
-Show the solution. Use doctests if possible (i.e. the solution must be stable
-enough). Otherwise, just display it somehow.
+The maximum matching is returned as a subgraph of the original bipartite
+graph, as a ``scipy.sparse`` array. Inspecting the result, it is clear that
+this is a maximum matching, since no two edges share a node in common, and
+all nodes in the second set are incident to an edge in the matching.
 
 .. doctest:: bipartite_matching
     :options: +NORMALIZE_WHITESPACE
 
-    >>> print(matching)
+    >>> print(sp.triu(matching))
       (0, 7)        1.0
       (1, 6)        1.0
       (3, 5)        1.0
-      (5, 3)        1.0
-      (6, 1)        1.0
-      (7, 0)        1.0
+
+We can also inspect the result by plotting the graph and the edges selected
+in the matching using networkx.
 
 .. doctest:: bipartite_matching
     :options: +NORMALIZE_WHITESPACE
 
     >>> import networkx as nx
     >>> import matplotlib.pyplot as plt
-    >>> g = nx.from_scipy_sparse_array(adjacency)
-    >>> layout = nx.bipartite_layout(g, [0, 1, 2, 3, 4])
+    >>>
     >>> fig, (ax1, ax2) = plt.subplots(1, 2)
+    >>> g = nx.from_scipy_sparse_array(adjacency)
+    >>> layout = nx.bipartite_layout(g, nodes1)
     >>> nx.draw(g, layout, ax=ax1)
     >>> g = nx.from_scipy_sparse_array(matching)
     >>> nx.draw(g, layout, ax=ax2)

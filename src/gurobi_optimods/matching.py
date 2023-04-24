@@ -6,6 +6,11 @@ import gurobipy as gp
 from gurobipy import GRB
 import scipy.sparse as sp
 
+try:
+    import networkx as nx
+except ImportError:
+    nx = None
+
 from gurobi_optimods.network_util import solve_min_cost_flow
 from gurobi_optimods.utils import optimod
 
@@ -13,8 +18,20 @@ logger = logging.getLogger(__name__)
 
 
 @optimod()
-def maximum_bipartite_matching(adjacency, nodes1, nodes2, *, create_env):
+def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
+    if isinstance(graph, sp.spmatrix):
+        return _maximum_bipartite_matching_scipy(graph, nodes1, nodes2, create_env)
+    elif nx is not None and isinstance(graph, nx.Graph):
+        return _maximum_bipartite_matching_networkx(graph, nodes1, nodes2, create_env)
 
+
+def _maximum_bipartite_matching_networkx(graph, nodes1, nodes2, create_env):
+    adjacency = nx.convert_matrix.to_scipy_sparse_array(graph)
+    matching = _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env)
+    return nx.convert_matrix.from_scipy_sparse_array(matching)
+
+
+def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
     logger.info(
         f"Solving maximum matching n1={nodes1.shape[0]} "
         f"n2={nodes2.shape[0]} |E|={adjacency.data.shape[0]}"
