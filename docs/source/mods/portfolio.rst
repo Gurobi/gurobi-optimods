@@ -180,8 +180,14 @@ here the solution suggests to spread the investments over five positions
     dtype: float64
 
 
+Enforcing more portfolio features
+---------------------------------
+
+A number of additional restrictions can be placed on the returned optimal
+portfolio, such as transaction fees or limiting the number of trades.
+
 Restricting the number of trades
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible to compute an optimal portfolio under the additional restriction
 that only a limited number of positions can be traded.  This can be set through
@@ -229,3 +235,47 @@ The returned solution now suggests to trade only the assets AA, DD, HH.
 	II    0.000000
 	JJ    0.000000
     dtype: float64
+
+Transaction fees
+~~~~~~~~~~~~~~~~
+
+In order to define fixed costs per transaction suggested by the optimal
+portfolio :math:`x`, you can use the `fees_buy` keyword parameter:
+
+.. testcode:: mod
+
+    import pandas as pd
+
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+
+    data = load_portfolio()
+    Sigma = data.cov()
+    mu = data.mean()
+    gamma = 100.0
+
+    mvp = MeanVariancePortfolio(Sigma, mu)
+    x = mvp.efficient_portfolio(gamma, fees_buy=0.005)
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 11 rows, 20 columns and 40 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+
+Note that the `fees_buy` parameter designates the transaction cost
+*relative* to the total portfolio value.  In the above example we used
+the value 0.005, meaning that each trasaction has a fixed-cost of 0.5%
+of the total portfolio value.
+
+All transaction fees are assumed to be covered by the portfolio itself,
+thus reducing the total sum of the returned optimal portfolio:
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> x.sum()
+    0.9499999999999998
