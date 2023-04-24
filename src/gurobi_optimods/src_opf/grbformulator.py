@@ -3,7 +3,6 @@ import time
 import logging
 import numpy as np
 import gurobipy as gp
-from collections import OrderedDict
 from gurobipy import GRB
 
 from .utils import OpfType

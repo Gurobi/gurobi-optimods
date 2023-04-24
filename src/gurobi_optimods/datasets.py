@@ -7,8 +7,6 @@ import pathlib
 
 import pandas as pd
 
-from collections import OrderedDict
-
 DATA_FILE_DIR = pathlib.Path(__file__).parent / "data"
 
 

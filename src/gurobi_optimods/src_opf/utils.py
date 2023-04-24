@@ -1,6 +1,6 @@
-from enum import Enum
 import logging
-import sys  # TODO remove in final version
+import sys
+from enum import Enum
 
 
 def break_exit(foo):

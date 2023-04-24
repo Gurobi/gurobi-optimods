@@ -1,7 +1,7 @@
 import logging
 
 
-class grbGraph:
+class Grbgraph:
     def __init__(self):
         self.vertices = {}
         self.edges = {}

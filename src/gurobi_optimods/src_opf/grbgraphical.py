@@ -1,10 +1,6 @@
-import sys
-import math
-import time
 import logging
-from .graph4 import *
-from gurobipy import *
-from .utils import break_exit
+import numpy as np
+from .graph4 import graphplot
 
 
 def plot_solution(alldata, solution, objval):
@@ -311,9 +307,5 @@ def grbgetgraphattr(alldata, value):
             size = 10
             color = "purple"
             caughtit = True
-
-    if False:  # caughtit:
-        print(value, caughtit, size, color)
-        break_exit("caughtit")
 
     return caughtit, size, color

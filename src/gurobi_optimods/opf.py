@@ -1,4 +1,3 @@
-import sys
 import logging
 
 import gurobipy as gp
@@ -17,7 +16,6 @@ from .src_opf.grbfile import (
     read_graphics_settings,
     read_coords_file_csv,
     grbmap_coords_from_dict,
-    grbread_coords,
     grbread_graphattrs,
 )
 from .src_opf.grbformulator import construct_and_solve_model

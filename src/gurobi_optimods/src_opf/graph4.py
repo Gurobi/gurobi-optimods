@@ -1,15 +1,11 @@
-import plotly.graph_objects as go
-import plotutils as pu
-import psutil
 import math
-import numpy as np
 import logging
+import numpy as np
 
-from .grbgraph import *
+from .grbgraph import Grbgraph
 
-from .plotlyhandler import *
-from .scantextgraphplus import *
-from .utils import break_exit
+from .plotlyhandler import Plotlyhandler
+from .scantextgraphplus import scantextgraph
 
 
 def graphplot(
@@ -65,8 +61,6 @@ def graphplot(
         scanned_unique_ordered_pairs,
         scanned_num_unique,
     ) = scantextgraph(alldata, graphfilename)
-
-    # break_exit('scanned1')
 
     # endbus is a list of end buses for network branches as ordered in graphfilename
     # revendbus is the reverse index
@@ -144,8 +138,6 @@ def graphplot(
                     % (width, scannedordpair[0], scannedordpair[1], j, jprime, color)
                 )
 
-    # break_exit('scanned2')
-
     if (
         True
     ):  # alldata['coordsfilename'] != None:  #should change this #TODO-Dan change to what?
@@ -166,17 +158,11 @@ def graphplot(
         vertexx *= scalex
         vertexy *= scaley
 
-        if False:
-            print("vertexx", vertexx)
-            print("vertexy", vertexy)
-
-            break_exit("printedvertices")
-
     pos = {}
     for j in range(n):
         pos[j] = [vertexx[j], vertexy[j]]
 
-    gG = grbGraph()
+    gG = Grbgraph()
 
     for j in range(n):
         gG.addvertex(j)
@@ -208,7 +194,6 @@ def graphplot(
             raise ValueError(
                 "Could not add edge (%d, %d) to graph object.\n" % (small, large)
             )
-            break_exit("error")
         fbus = small + 1
         tbus = large + 1
         # print(j+1, 'f,t', fbus, tbus)
@@ -232,11 +217,10 @@ def graphplot(
         reordered_position[(fbus, tbus, deg)] = j
 
     gG.getmetrics()
-    # break_exit('poo')
     logger.info("Creating visualization object.\n")
     # print(vertex_text)
 
-    PH = plotlyhandler(
+    PH = Plotlyhandler(
         gG,
         pos,
         annotation_list=textlist,
@@ -253,7 +237,6 @@ def graphplot(
 
     # for edge in gG.edges.values():
     #    print(edge[0], edge[1])
-    # break_exit('showed')
 
     logger.info("Rendering figure.\n")
 
@@ -269,4 +252,3 @@ def graphplot(
     # fig.write_image('one.png')
     logger.info("Showing figure.\n")
     fig.show()
-    # break_exit('showed')

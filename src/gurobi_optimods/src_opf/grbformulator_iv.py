@@ -1,12 +1,7 @@
-import math
-import time
 import logging
-import numpy as np
 import gurobipy as gp
 from gurobipy import GRB
 
-from .utils import break_exit
-from .grbfile import grbreadvoltsfile
 from .grbformulator_ac import lpformulator_ac_create_efvars
 
 
@@ -713,5 +708,3 @@ def lpformulator_iv_create_constraints(alldata, model):
                 count += 1
 
         logger.info("    %d active loss inequalities added." % count)
-
-    # break_exit("after linelimits")

@@ -1,4 +1,3 @@
-import sys
 import math
 import cmath
 import time
@@ -6,7 +5,7 @@ import logging
 import scipy
 import numpy as np
 
-from .utils import initialize_logger, remove_and_close_handlers, break_exit
+from .utils import initialize_logger, remove_and_close_handlers
 
 
 class Bus:

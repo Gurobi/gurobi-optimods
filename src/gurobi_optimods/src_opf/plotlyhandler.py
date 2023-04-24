@@ -1,21 +1,12 @@
-import plotly.graph_objects as go
-import plotutils as pu
-import psutil
 import logging
-import numpy as np
-from collections import defaultdict
 import plotly.graph_objects as go
-from typing import Any, List, Dict, Tuple, Union, Callable
+from typing import Union
+from collections import defaultdict
 
-from .grbgraph import *
-from .utils import break_exit
-
-Vertex = Any
-Edge = Tuple[Vertex, Vertex]
-Num = Union[int, float]
+from .grbgraph import Grbgraph
 
 
-class plotlyhandler:
+class Plotlyhandler:
     """
     Creates a plotly graph to be rendered
     Input is a graph given by coordinates
@@ -23,7 +14,7 @@ class plotlyhandler:
 
     def __init__(
         self,
-        gG: grbGraph,
+        gG: Grbgraph,
         pos,
         annotation_list,
         vertex_size=None,
@@ -243,7 +234,6 @@ class plotlyhandler:
             logger = logging.getLogger("OpfLogger")
             logger.info([self.vertex_size[v] for v in self.gG.vertices.values()])
             logger.info([self.vertex_color[v] for v in self.gG.vertices.values()])
-            break_exit("prefig")
 
         # create figure and add traces
         fig = go.Figure(layout=go.Layout(**layout_params))

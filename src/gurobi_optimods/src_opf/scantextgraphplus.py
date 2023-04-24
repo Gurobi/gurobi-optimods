@@ -1,9 +1,5 @@
-import sys
-import os
-import numpy as np
-import re
 import logging
-from .utils import break_exit
+import numpy as np
 
 
 def scantextgraph(alldata, textfilename):
@@ -25,8 +21,6 @@ def scantextgraph(alldata, textfilename):
 
     N = int(lines[0].split()[1])
     M = int(lines[0].split()[3])
-    # print('N',N, 'M',M)
-    # break_exit('scantext')
     buses = alldata["buses"]
 
     trueM = 0
@@ -68,7 +62,6 @@ def scantextgraph(alldata, textfilename):
         revendbus[(busto, busfrom)] = trueM + 1
         trueM += 1
     logger.info("After scanning, number of edges is %d.\n" % trueM)
-    # break_exit('scanned')
     return (
         trueM,
         nodex,

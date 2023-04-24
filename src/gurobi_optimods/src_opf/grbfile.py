@@ -1,17 +1,13 @@
-import sys
-import os
 import time
 import math
 import csv
 import logging
-import numpy as np
 
 from .utils import (
     get_default_optimization_settings,
     get_default_graphics_settings,
     initialize_logger,
     remove_and_close_handlers,
-    break_exit,
 )
 
 
