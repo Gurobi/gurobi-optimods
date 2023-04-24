@@ -99,7 +99,7 @@ def grbgraphical(alldata, plottype, textlist):
         mynode_border_width[j - 1] = 1
 
     for j in range(1, numbranches + 1):
-        branch = alldata["branches"][j]
+        branch = branches[j]
         myedge_width[j] = 1
         myedge_color[j] = "black"
 

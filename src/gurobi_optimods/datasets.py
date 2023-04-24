@@ -76,7 +76,6 @@ def load_opfdictcase():
         "baseMVA": 100.0,
         "bus": {
             1: {
-                "count": 1,  # TODO-Dan Do we need the count? If yes, why?
                 "bus_i": 1,
                 "type": 3,
                 "Pd": 0.0,
@@ -90,10 +89,8 @@ def load_opfdictcase():
                 "zone": 1.0,
                 "Vmax": 1.1,
                 "Vmin": 0.9,
-                "lnum": 18,  # TODO-Dan Do we need the line number? If yes, why?
             },
             2: {
-                "count": 2,
                 "bus_i": 2,
                 "type": 2,
                 "Pd": 0.0,
@@ -107,10 +104,8 @@ def load_opfdictcase():
                 "zone": 1.0,
                 "Vmax": 1.1,
                 "Vmin": 0.9,
-                "lnum": 19,
             },
             3: {
-                "count": 3,
                 "bus_i": 3,
                 "type": 2,
                 "Pd": 0.0,
@@ -124,10 +119,8 @@ def load_opfdictcase():
                 "zone": 1.0,
                 "Vmax": 1.1,
                 "Vmin": 0.9,
-                "lnum": 20,
             },
             4: {
-                "count": 4,
                 "bus_i": 4,
                 "type": 1,
                 "Pd": 0.0,
@@ -141,10 +134,8 @@ def load_opfdictcase():
                 "zone": 1.0,
                 "Vmax": 1.1,
                 "Vmin": 0.9,
-                "lnum": 21,
             },
             5: {
-                "count": 5,
                 "bus_i": 5,
                 "type": 1,
                 "Pd": 90.0,
@@ -158,10 +149,8 @@ def load_opfdictcase():
                 "zone": 1.0,
                 "Vmax": 1.1,
                 "Vmin": 0.9,
-                "lnum": 22,
             },
             6: {
-                "count": 6,
                 "bus_i": 6,
                 "type": 1,
                 "Pd": 0.0,
@@ -175,10 +164,8 @@ def load_opfdictcase():
                 "zone": 1.0,
                 "Vmax": 1.1,
                 "Vmin": 0.9,
-                "lnum": 23,
             },
             7: {
-                "count": 7,
                 "bus_i": 7,
                 "type": 1,
                 "Pd": 100.0,
@@ -192,10 +179,8 @@ def load_opfdictcase():
                 "zone": 1.0,
                 "Vmax": 1.1,
                 "Vmin": 0.9,
-                "lnum": 24,
             },
             8: {
-                "count": 8,
                 "bus_i": 8,
                 "type": 1,
                 "Pd": 0.0,
@@ -209,10 +194,8 @@ def load_opfdictcase():
                 "zone": 1.0,
                 "Vmax": 1.1,
                 "Vmin": 0.9,
-                "lnum": 25,
             },
             9: {
-                "count": 9,
                 "bus_i": 9,
                 "type": 1,
                 "Pd": 125.0,
@@ -226,12 +209,10 @@ def load_opfdictcase():
                 "zone": 1.0,
                 "Vmax": 1.1,
                 "Vmin": 0.9,
-                "lnum": 26,
             },
         },
         "gen": {
             1: {
-                "gencount1": 1,  # TODO-Dan Do we need the gencount1 value? If yes, why?
                 "bus": 1,
                 "Pg": 0.0,
                 "Qg": 0.0,
@@ -253,10 +234,8 @@ def load_opfdictcase():
                 "ramp_30": 0,
                 "ramp_q": 0,
                 "apf": 0,
-                "lnum": 32,  # TODO-Dan Do we need the line number? If yes, why?
             },
             2: {
-                "gencount1": 2,
                 "bus": 2,
                 "Pg": 163.0,
                 "Qg": 0.0,
@@ -278,10 +257,8 @@ def load_opfdictcase():
                 "ramp_30": 0,
                 "ramp_q": 0,
                 "apf": 0,
-                "lnum": 33,
             },
             3: {
-                "gencount1": 3,
                 "bus": 3,
                 "Pg": 85.0,
                 "Qg": 0.0,
@@ -303,12 +280,10 @@ def load_opfdictcase():
                 "ramp_30": 0,
                 "ramp_q": 0,
                 "apf": 0,
-                "lnum": 34,
             },
         },
         "branch": {
             1: {
-                "branchcount1": 1,  # TODO-Dan Do we need the branchcount? If yes, why?
                 "fbus": 1,
                 "tbus": 4,
                 "r": 0.0,
@@ -322,10 +297,8 @@ def load_opfdictcase():
                 "status": 1,
                 "angmin": -360.0,
                 "angmax": 360.0,
-                "lnum": 40,  # TODO-Dan Do we need the line number? If yes, why?
             },
             2: {
-                "branchcount1": 2,
                 "fbus": 4,
                 "tbus": 5,
                 "r": 0.017,
@@ -339,10 +312,8 @@ def load_opfdictcase():
                 "status": 1,
                 "angmin": -360.0,
                 "angmax": 360.0,
-                "lnum": 41,
             },
             3: {
-                "branchcount1": 3,
                 "fbus": 5,
                 "tbus": 6,
                 "r": 0.039,
@@ -356,10 +327,8 @@ def load_opfdictcase():
                 "status": 1,
                 "angmin": -360.0,
                 "angmax": 360.0,
-                "lnum": 42,
             },
             4: {
-                "branchcount1": 4,
                 "fbus": 3,
                 "tbus": 6,
                 "r": 0.0,
@@ -373,10 +342,8 @@ def load_opfdictcase():
                 "status": 1,
                 "angmin": -360.0,
                 "angmax": 360.0,
-                "lnum": 43,
             },
             5: {
-                "branchcount1": 5,
                 "fbus": 6,
                 "tbus": 7,
                 "r": 0.0119,
@@ -390,10 +357,8 @@ def load_opfdictcase():
                 "status": 1,
                 "angmin": -360.0,
                 "angmax": 360.0,
-                "lnum": 44,
             },
             6: {
-                "branchcount1": 6,
                 "fbus": 7,
                 "tbus": 8,
                 "r": 0.0085,
@@ -407,10 +372,8 @@ def load_opfdictcase():
                 "status": 1,
                 "angmin": -360.0,
                 "angmax": 360.0,
-                "lnum": 45,
             },
             7: {
-                "branchcount1": 7,
                 "fbus": 8,
                 "tbus": 2,
                 "r": 0.0,
@@ -424,10 +387,8 @@ def load_opfdictcase():
                 "status": 1,
                 "angmin": -360.0,
                 "angmax": 360.0,
-                "lnum": 46,
             },
             8: {
-                "branchcount1": 8,
                 "fbus": 8,
                 "tbus": 9,
                 "r": 0.032,
@@ -441,10 +402,8 @@ def load_opfdictcase():
                 "status": 1,
                 "angmin": -360.0,
                 "angmax": 360.0,
-                "lnum": 47,
             },
             9: {
-                "branchcount1": 9,
                 "fbus": 9,
                 "tbus": 4,
                 "r": 0.01,
@@ -458,7 +417,6 @@ def load_opfdictcase():
                 "status": 1,
                 "angmin": -360.0,
                 "angmax": 360.0,
-                "lnum": 48,
             },
         },
         "gencost": {
