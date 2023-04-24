@@ -6,6 +6,7 @@ The Opti Mods
 
    bipartite-matching
    card-regression
+   diet
    l1-regression
    opf/index
    mwis
