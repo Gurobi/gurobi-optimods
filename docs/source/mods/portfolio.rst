@@ -279,3 +279,52 @@ thus reducing the total sum of the returned optimal portfolio:
 
     >>> x.sum()
     0.9499999999999998
+
+Minimum buy-in
+~~~~~~~~~~~~~~
+
+A minimum fraction of investment can be enforced upon each individual
+position, preventing trades at negligible volume.  Use the keyword
+parameter `min_buy_in` to set a relative amount of minimum investment for
+each traded asset.  For example, here we enforce that at least 3% of the
+wealth are allocated to each traded position:
+
+.. testcode:: mod
+
+    import pandas as pd
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+    data = load_portfolio()
+    Sigma = data.cov()
+    mu = data.mean()
+    gamma = 100.0
+    mvp = MeanVariancePortfolio(Sigma, mu)
+    x = mvp.efficient_portfolio(gamma, min_buy_in=0.03)
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 21 rows, 20 columns and 50 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+
+The resulting portfolio designates five positions, with "GG" being the
+only one sitting on the minimum-buy-in threshold:
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> x
+        AA    0.423322
+        BB    0.000000
+        CC    0.000000
+        DD    0.242873
+        EE    0.000000
+        FF    0.000000
+        GG    0.030000
+        HH    0.235021
+        II    0.068784
+        JJ    0.000000
+    dtype: float64
