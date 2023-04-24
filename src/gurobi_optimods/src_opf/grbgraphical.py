@@ -8,21 +8,28 @@ from .utils import break_exit
 
 
 def plot_solution(alldata, solution, objval):
-    """Plot feasible solution"""
+    """
+    Plots a given OPF solution.
+    Saves necessary data from solution to alldata dictionary
+    and calls the main plotting function.
+
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    solution : dictionary
+        Dictionary holding an OPF solution
+    objval: float
+        Objective solution value of a previously solved OPF
+    """
 
     logger = logging.getLogger("OpfLogger")
     logger.info("Plotting solution with value %.3e. Coordinates given." % objval)
-    numbuses = alldata["numbuses"]
-    buses = alldata["buses"]
     numbranches = alldata["numbranches"]
-    branches = alldata["branches"]
-    gens = alldata["gens"]
-    IDtoCountmap = alldata["IDtoCountmap"]
+    numgens = alldata["numgens"]
 
-    # thetavar = alldata["LP"]["thetavar"]
-    # Pvar_f = alldata["LP"]["Pvar_f"]
-    # twinPvar_f = alldata["LP"]["twinPvar_f"]
-
+    # Save branch and generator values
     zholder = np.zeros(numbranches)
     alldata["MIP"]["zholder"] = zholder
     gholder = np.zeros(alldata["numgens"])
@@ -37,7 +44,7 @@ def plot_solution(alldata, solution, objval):
         if branch["switching"] < 0.5:
             numzeros += 1
 
-    for j in range(1, 1 + alldata["numgens"]):
+    for j in range(1, 1 + numgens):
         gen = solution["gen"][j]
         gholder[j - 1] = gen["Pg"]
 
@@ -48,6 +55,19 @@ def plot_solution(alldata, solution, objval):
 
 
 def grbgraphical(alldata, plottype, textlist):
+    """
+    Plots a given OPF solution.
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    plottype : string
+        Type of plot to show
+    textlist: list
+        List of additional strings printed on the plot
+    """
+
     logger = logging.getLogger("OpfLogger")
     buses = alldata["buses"]
     numbuses = alldata["numbuses"]

@@ -10,12 +10,9 @@ def scantextgraph(alldata, textfilename):
     logger = logging.getLogger("OpfLogger")
     logger.info("Scanning graph in text file %s\n." % (textfilename))
 
-    try:
-        f = open(textfilename, "r")
-        lines = f.readlines()
-        f.close()
-    except:
-        return 0, None, None
+    f = open(textfilename, "r")
+    lines = f.readlines()
+    f.close()
 
     logger.info("Using given lat, lon coordinates.\n")
     N = alldata["numbuses"]

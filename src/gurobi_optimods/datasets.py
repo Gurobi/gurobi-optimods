@@ -34,6 +34,14 @@ def load_workforce():
     )
 
 
+def load_diet():
+    return AttrDict(
+        categories=pd.read_csv(DATA_FILE_DIR / "diet-categories.csv"),
+        foods=pd.read_csv(DATA_FILE_DIR / "diet-foods.csv"),
+        nutrition_values=pd.read_csv(DATA_FILE_DIR / "diet-values.csv"),
+    )
+
+
 def load_opfsettings():
     conf = str(DATA_FILE_DIR) + "/opf/opfsettings.txt"
     return conf
