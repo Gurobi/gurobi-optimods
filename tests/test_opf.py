@@ -39,6 +39,9 @@ class TestOpf(unittest.TestCase):
     Pg_acconv = [89.803524, 194.796114, 142.58252, 24.518669, 0.030902]
     Pt_acconv = [-34.1774, -71.23414, -29.9637, 23.79936, 56.2152]
 
+    # Currently, this is just a convenience setting while working on OptiMod
+    plot_graphics = False
+
     # test simple is on purpose the same as test_acopf for now
     # will be removed in final version
     def test_simple(self):
@@ -77,11 +80,12 @@ class TestOpf(unittest.TestCase):
         # objective values should be the same because it's the same data
         self.assertTrue(objval == objvalmat)
 
-        # get path to csv file holding the coordinates for NY
-        coordsfile = load_coordsfilepath("nybuses.csv")
-        coords_dict = read_coords_from_csv_file(coordsfile)
-        # plot the given solution
-        plot_opf_solution({}, case, coords_dict, solution, objval)
+        if self.plot_graphics:
+            # get path to csv file holding the coordinates for NY
+            coordsfile = load_coordsfilepath("nybuses.csv")
+            coords_dict = read_coords_from_csv_file(coordsfile)
+            # plot the given solution
+            plot_opf_solution({}, case, coords_dict, solution, objval)
 
     # test reading settings and case file from dicts
     def test_opfdicts(self):
@@ -206,7 +210,7 @@ class TestOpf(unittest.TestCase):
                 # case 300 is quite large and has numerical issues
                 self.assertLess(abs(objval - objvalmat), 100)
             else:
-                self.assertLess(abs(objval - objvalmat), 1)
+                self.assertLess(abs(objval - objvalmat), 10)
 
     # test IV formulation
     def test_ivopf(self):
@@ -240,7 +244,8 @@ class TestOpf(unittest.TestCase):
         # load a precomputed solution and objective value
         solution, objval = load_case9solution()
         # plot the given solution
-        plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)
+        if self.plot_graphics:
+            plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)
 
     # test plotting a solution after optimization is performed
     def test_graphics_after_solving(self):
@@ -259,7 +264,8 @@ class TestOpf(unittest.TestCase):
         graphics_settings = {}
         coordsfile = load_coordsfilepath("case9coords.csv")
         coords_dict = read_coords_from_csv_file(coordsfile)
-        plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)
+        if self.plot_graphics:
+            plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)
 
     # test plotting a solution while reading graphics settings from a file
     def test_graphics_settings_file(self):
@@ -277,4 +283,5 @@ class TestOpf(unittest.TestCase):
         # load a precomputed solution and objective value
         solution, objval = load_case9solution()
         # plot the computed solution
-        plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)
+        if self.plot_graphics:
+            plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)

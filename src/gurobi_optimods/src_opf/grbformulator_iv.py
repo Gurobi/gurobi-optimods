@@ -28,16 +28,6 @@ def lpformulator_iv_body(alldata, model):
     # Create model constraints
     lpformulator_iv_create_constraints(alldata, model)
 
-    model.update()  # Update to get correct model stats
-    logger.info(
-        "Constructed IVOPF model with %d variables and %d constraints.\n"
-        % (model.NumVars, model.NumConstrs)
-    )
-
-    if alldata["lpfilename"] != None:
-        model.write(alldata["lpfilename"])
-        logger.info("Wrote LP to " + alldata["lpfilename"])
-
     alldata["model"] = model
 
 
@@ -725,66 +715,3 @@ def lpformulator_iv_create_constraints(alldata, model):
         logger.info("    %d active loss inequalities added." % count)
 
     # break_exit("after linelimits")
-
-
-def computebalbounds(alldata, bus):
-    """
-    Computes active and reactive max and min bus flow balance values
-
-    TODO-Dan There is a function with the same name in grbformulator_ic.
-    It looks like the other function does something slightly different.
-    Can we combine them to 1 function? Or even delete 1 of the 2
-
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    bus : Bus
-        Input bus
-    """
-
-    logger = logging.getLogger("OpfLogger")
-    # First let's get max/min generations
-    loud = 0  # See below
-
-    baseMVA = alldata["baseMVA"]
-    gens = alldata["gens"]
-    Pubound = Plbound = 0
-    Qubound = Qlbound = 0
-
-    for gencounter in bus.genidsbycount:
-        if gens[gencounter].status:
-            Pubound += gens[gencounter].Pmax
-            Plbound += gens[gencounter].Pmin
-            Qubound += gens[gencounter].Qmax
-            Qlbound += gens[gencounter].Qmin
-
-        if (
-            loud
-        ):  # it is worth keeping because a user may want to debug the generator limits that they imposed, which could make a problem infeasible
-            # logger.info(" Pubound for %d %f genc %d."%(bus.nodeID, Pubound, gencounter))
-            # logger.info(" Plbound for %d %f genc %d."%(bus.nodeID, Plbound, gencounter))
-            logger.info(
-                " Qubound for %d %f genc %d." % (bus.nodeID, Qubound, gencounter)
-            )
-            logger.info(
-                " Qlbound for %d %f genc %d." % (bus.nodeID, Qlbound, gencounter)
-            )
-
-    Pubound -= bus.Pd
-    Plbound -= bus.Pd
-    Qubound -= bus.Qd
-    Qlbound -= bus.Qd
-
-    if bus.nodetype == 4:
-        Pubound = Plbound = Qubound = Qlbound = 0
-
-    if loud:  # same as above
-        # logger.info(" Pubound for %d final %f."%(bus.nodeID, Pubound))
-        # logger.info(" (Pd was %g)\n"%bus.Pd)
-        # logger.info(" Plbound for %d final %f."%(bus.nodeID, Plbound))
-        logger.info(" Qubound for %d final %f." % (bus.nodeID, Qubound))
-        logger.info(" (Qd was %g)" % bus.Qd)
-        logger.info(" Qlbound for %d final %f." % (bus.nodeID, Qlbound))
-
-    return Pubound, Plbound, Qubound, Qlbound

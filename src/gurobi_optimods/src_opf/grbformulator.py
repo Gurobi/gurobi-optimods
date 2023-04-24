@@ -60,6 +60,18 @@ def construct_and_solve_model(alldata):
         # Add model variables and constraints
         lpformulator_body(alldata, model, opftype)
 
+        # Update to get correct model stats
+        model.update()
+        logger.info(
+            "Constructed %sOPF model with %d variables and %d constraints.\n"
+            % (opftype.value, model.NumVars, model.NumConstrs)
+        )
+
+        # Write model to file if requested by user
+        if alldata["lpfilename"] != None:
+            model.write(alldata["lpfilename"])
+            logger.info("Wrote LP to " + alldata["lpfilename"])
+
         # TODO This will be an own API function
         if alldata["strictcheckvoltagesolution"]:
             # check input solution against formulation
@@ -69,7 +81,7 @@ def construct_and_solve_model(alldata):
                 alldata, model, spitoutvector, opftype
             )
 
-        # if alldata["doslp_polar"]:
+        # if alldata["doslp_polar"]: # TODO-Dan Is this work in progress?
         #    break_exit("slp_polar formulation")  # TODO-Dan why the break_exit?
 
         sol_count = lpformulator_optimize(alldata, model, opftype)
@@ -81,6 +93,7 @@ def construct_and_solve_model(alldata):
         )
         logger.info("Solution count: %d." % (sol_count))
 
+        # Need to turn Gurobi solution into a dictionary following MATPOWER notation
         solution = turn_solution_into_result_dict(alldata, model, opftype)
 
         if solution["success"] == 1:
@@ -631,33 +644,10 @@ def compute_voltage_angles(alldata, result):
                 busesnext.add((b.t, b.f, branchindex, "t"))
 
 
-def writempsfile(alldata, model, filename):
-    """
-    Helper function for writing Gurobi models.
-    Mainly used for debugging
-
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Constructed Gurobi model
-    filename : string
-        Name of model file
-
-    Returns
-    -------
-    Number of found solutions
-    """
-    logger = logging.getLogger("OpfLogger")
-    logger.info("Writing model to %s." % (filename))
-    model.write(filename)
-
-
 def writemipstart(alldata):
     """
     Helper function for writing a mip start to mipstart.mst file.
-    Mainly used for debugging
+    Mainly used for debugging numerically difficult cases
 
     Parameters
     ----------

@@ -27,16 +27,6 @@ def lpformulator_ac_body(alldata, model):
     # Create model constraints
     lpformulator_ac_create_constraints(alldata, model)
 
-    model.update()  # Update to get correct model stats
-    logger.info(
-        "Constructed ACOPF model with %d variables and %d constraints.\n"
-        % (model.NumVars, model.NumConstrs)
-    )
-
-    if alldata["lpfilename"] != None:
-        model.write(alldata["lpfilename"])
-        logger.info("Wrote LP to " + alldata["lpfilename"])
-
     alldata["model"] = model
 
 
