@@ -57,3 +57,21 @@ class TestMod(unittest.TestCase):
         x = mvp.efficient_portfolio(gamma, fees_buy=fees_buy)
         n_trades = (x > 1e-4).sum()
         self.assertLessEqual(x.sum(), 1 - n_trades * fees_buy)
+
+    def test_minimum_buy_in(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+
+        # Ensure that we _have_ a small trade w/o minimum buy in
+        x = mvp.efficient_portfolio(gamma, min_buy_in=0.0)
+        small_trades = (x > 1e-6) & (x < (0.03 - 1e-6))
+        self.assertGreater(small_trades.sum(), 0)
+
+        # Ensure that we _don't_ have a small trade w minimum buy in
+        x = mvp.efficient_portfolio(gamma, min_buy_in=0.03)
+        small_trades = (x > 1e-6) & (x < (0.03 - 1e-6))
+        self.assertEqual(small_trades.sum(), 0)
