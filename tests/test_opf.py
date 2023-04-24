@@ -7,6 +7,7 @@ from gurobi_optimods.opf import (
     read_coords_from_csv_file,
     read_case_from_file,
     read_case_from_mat_file,
+    turn_solution_into_mat_file,
 )
 from gurobi_optimods.datasets import (
     load_caseopf,
@@ -46,7 +47,7 @@ class TestOpf(unittest.TestCase):
     # will be removed in final version
     def test_simple(self):
         settings = {
-            "dodc": True,
+            "doac": True,
             "skipjabr": False,
             "use_ef": True,
             "branchswitching_mip": True,

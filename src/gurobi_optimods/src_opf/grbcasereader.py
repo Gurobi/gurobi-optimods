@@ -4,6 +4,7 @@ import cmath
 import time
 import logging
 import scipy
+import numpy as np
 
 from .utils import initialize_logger, remove_and_close_handlers, break_exit
 
@@ -600,7 +601,7 @@ def read_case(alldata, case_dict):
 
 def read_case_file(casefile):
     """
-    Reads casa data from an .m file following MATPOWER standards and
+    Reads case data from an .m file following MATPOWER standards and
     returns an OptiMod compatible dictionary holding all relevant case data
 
     Parameters
@@ -636,7 +637,7 @@ def read_case_file(casefile):
 
 def read_case_file_mat(casefile):
     """
-    Reads casa data from an .mat file following MATPOWER standards and
+    Reads case data from an .mat file following MATPOWER standards and
     returns an OptiMod compatible dictionary holding all relevant case data
 
     Parameters
@@ -852,6 +853,57 @@ def _todict(matobj):
         else:
             dict[strg] = elem
     return dict
+
+
+def turn_opf_dict_into_mat_file(solution, filename):
+    """
+    Writes a .mat file out of and OPF solution dictionary
+
+    Parameters
+    ----------
+    solution : dictionary
+        OPF solution dictionary
+    filename : string
+        Name of .mat file where to write the solution data
+    """
+
+    # Buses
+    buses = solution["bus"]
+    matrix = []
+    for bus in buses.values():
+        matrix.append(list(bus.values()))
+
+    solution["bus"] = np.array(matrix)
+    # Generators
+    gens = solution["gen"]
+    matrix = []
+    for gen in gens.values():
+        matrix.append(list(gen.values()))
+
+    solution["gen"] = np.array(matrix)
+    # Branches
+    branches = solution["branch"]
+    matrix = []
+    for branch in branches.values():
+        matrix.append(list(branch.values()))
+
+    solution["branch"] = np.array(matrix)
+    # Generator costs
+    gencosts = solution["gencost"]
+    matrix = []
+    # For generator costs, the last dictionary entry is a list of values
+    for genc in gencosts.values():
+        l = list(genc.values())
+        costvector = l[-1]
+        l.pop()
+        for item in costvector:
+            l.append(item)
+
+        matrix.append(l)
+
+    solution["gencost"] = np.array(matrix)
+    # Write mat file
+    scipy.io.savemat(filename, {"result": solution})
 
 
 def read_case_build_dict(lines):

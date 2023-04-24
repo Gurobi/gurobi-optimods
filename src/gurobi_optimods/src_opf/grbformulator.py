@@ -509,7 +509,7 @@ def turn_solution_into_result_dict(alldata, model, opftype):
             resbranch["Pf"] = resbranch["Pt"] = (
                 alldata["LP"]["Pvar_f"][databranch].X * baseMVA
             )
-            resbranch["switching"] = 1
+            resbranch["switching"] = 1  # Default value for switching
 
     # Set AC solution data
     if opftype in [OpfType.AC, OpfType.IV]:
@@ -566,7 +566,7 @@ def turn_solution_into_result_dict(alldata, model, opftype):
             resbranch["Qt"] = (
                 alldata["LP"]["Qvar_t"][databranch].X * baseMVA
             )  # AC branch reactive power injected into "to" end of branch
-            resbranch["switching"] = 1
+            resbranch["switching"] = 1  # Default value for switching
 
     # Set MIP fields
     if alldata["branchswitching_mip"]:

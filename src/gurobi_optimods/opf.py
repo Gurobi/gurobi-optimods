@@ -3,7 +3,12 @@ import logging
 
 import gurobipy as gp
 
-from .src_opf.grbcasereader import read_case, read_case_file, read_case_file_mat
+from .src_opf.grbcasereader import (
+    read_case,
+    read_case_file,
+    read_case_file_mat,
+    turn_opf_dict_into_mat_file,
+)
 
 from .src_opf.grbfile import (
     initialize_data_dict,
@@ -182,6 +187,35 @@ def read_case_from_mat_file(casefile):
     case_dict = read_case_file_mat(casefile)
 
     return case_dict
+
+
+def turn_solution_into_mat_file(solution, matfilename=""):
+    """
+    Writes a .mat file out of and OPF solution dictionary
+
+    Parameters
+    ----------
+    solution : dictionary
+        OPF solution dictionary
+    matfilename : string, optional
+        Name of .mat file where to write the solution data
+    """
+
+    # Initialize output and file handler and start logging
+    logger, handlers = initialize_logger("OpfLogger")
+
+    if matfilename == "":
+        matfilename = "result.mat"
+
+    if not matfilename[-4:] == ".mat":
+        matfilename += ".mat"
+    logger.info(
+        "Generating .mat file %s out of given OPF solution dictionary." % matfilename
+    )
+
+    turn_opf_dict_into_mat_file(solution, matfilename)
+
+    remove_and_close_handlers(logger, handlers)
 
 
 def read_coords_from_csv_file(coordsfile):
