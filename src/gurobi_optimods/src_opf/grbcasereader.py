@@ -1324,36 +1324,6 @@ def readflowsfile(alldata):
     alldata["inputQt"] = inputQt
 
 
-def writegv(alldata, gvfilename):
-    """
-    Writes a gv file needed for graphics
-
-    #TODO-Dan we need an example for this if we want to keep this
-
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    gvfilename: string
-        Name of gv file
-    """
-
-    logger = logging.getLogger("OpfLogger")
-    f = open(gvfilename, "w")
-    logger.info("Writing to gv file %s." % gvfilename)
-
-    f.write("graph {\n")
-
-    for bus in alldata["buses"].values():
-        f.write("     " + str(bus.nodeID) + ";\n")
-
-    for branch in alldata["branches"].values():
-        f.write("     " + str(branch.f) + " -- " + str(branch.t) + ";\n")
-
-    f.write("}\n")
-    f.close()
-
-
 def generateinputcs(alldata):
     """
     Generates values for the Jabr c and s variables from previously

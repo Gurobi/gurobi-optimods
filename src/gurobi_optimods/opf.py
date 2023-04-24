@@ -19,7 +19,7 @@ from .src_opf.grbfile import (
     grbread_graphattrs,
 )
 from .src_opf.grbformulator import construct_and_solve_model
-from .src_opf.grbgraphical import plot_solution
+from .src_opf.grbgraphical import generate_solution_figure
 from .src_opf.utils import initialize_logger, remove_and_close_handlers
 
 
@@ -66,7 +66,7 @@ def solve_opf_model(settings, case, logfile=""):
     return solution, objval
 
 
-def plot_opf_solution(settings, case, coords, solution, objval):
+def generate_opf_solution_figure(settings, case, coords, solution, objval):
     """
     Read the given case and plot a given solution.
     In best case the solution has been computed by the solve_opf_model function
@@ -86,6 +86,12 @@ def plot_opf_solution(settings, case, coords, solution, objval):
         OrderedDictionary holding solution data
     objval : float
         Objective value
+
+    Returns
+    -------
+    plotly.graph_objects.Figure
+        A plotly figure objects which can be displayed via the show() function,
+        see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
     """
 
     # Initialize output and file handler and start logging
@@ -107,9 +113,11 @@ def plot_opf_solution(settings, case, coords, solution, objval):
 
     grbmap_coords_from_dict(alldata, coords)
 
-    plot_solution(alldata, solution, objval)
+    fig = generate_solution_figure(alldata, solution, objval)
 
     remove_and_close_handlers(logger, handlers)
+
+    return fig
 
 
 def read_settings_from_file(settingsfile, graphics=False):

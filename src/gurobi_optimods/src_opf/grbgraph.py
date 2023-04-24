@@ -2,13 +2,17 @@ import logging
 
 
 class Grbgraph:
+    """
+    Simple network graph class to hold necessary edge and vertex information.
+    """
+
     def __init__(self):
         self.vertices = {}
         self.edges = {}
         self.n = 0  # number of vertices
         self.m = 0  # number of edges
         logger = logging.getLogger("OpfLogger")
-        logger.info("Created grbGraph object.")
+        logger.info("Created Grbgraph object.")
 
     def addvertex(self, i):
         self.vertices[self.n] = i

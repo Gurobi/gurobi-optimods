@@ -2,7 +2,7 @@ import unittest
 
 from gurobi_optimods.opf import (
     solve_opf_model,
-    plot_opf_solution,
+    generate_opf_solution_figure,
     read_settings_from_file,
     read_coords_from_csv_file,
     read_case_from_file,
@@ -39,6 +39,19 @@ class TestOpf(unittest.TestCase):
     objvals_acconv = [5296.66532, 8074.9102, 41710.3065, 129338.093, 718613.607]
     Pg_acconv = [89.803524, 194.796114, 142.58252, 24.518669, 0.030902]
     Pt_acconv = [-34.1774, -71.23414, -29.9637, 23.79936, 56.2152]
+    # graphics test values
+    graphics_9_x = [1129.2, 980.2, 977.6, 1182.8, 480.6, 85.4, 1079.6, 528.0, 0.0]
+    graphics_9_y = [
+        1066.62,
+        132.53,
+        220.4,
+        0.0,
+        777.49,
+        569.85,
+        1130.71,
+        653.08,
+        647.86,
+    ]
 
     # Currently, this is just a convenience setting while working on OptiMod
     plot_graphics = False
@@ -57,7 +70,7 @@ class TestOpf(unittest.TestCase):
         # read case file and return a case dictionary
         case = read_case_from_mat_file(casefile)
         # solve opf model and return a solution and the final objective value
-        solution, objval = solve_opf_model(settings, case, "OPF.log")
+        solution, objval = solve_opf_model(settings, case, "")
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
@@ -71,8 +84,8 @@ class TestOpf(unittest.TestCase):
         case = read_case_from_file(casefile)
         casemat = read_case_from_mat_file(casemat)
         # solve opf model and return a solution and the final objective value
-        solution, objval = solve_opf_model(settings, case, "OPF.log")
-        solutionmat, objvalmat = solve_opf_model(settings, casemat, "OPF.log")
+        solution, objval = solve_opf_model(settings, case)
+        solutionmat, objvalmat = solve_opf_model(settings, casemat)
         self.assertTrue(solution is not None)
         self.assertTrue(objval is not None)
         self.assertTrue(solutionmat is not None)
@@ -81,12 +94,18 @@ class TestOpf(unittest.TestCase):
         # objective values should be the same because it's the same data
         self.assertTrue(objval == objvalmat)
 
+        # get path to csv file holding the coordinates for NY
+        coordsfile = load_coordsfilepath("nybuses.csv")
+        coords_dict = read_coords_from_csv_file(coordsfile)
+        # plot the given solution
+        fig = generate_opf_solution_figure({}, case, coords_dict, solution, objval)
+        # test a few coordinates
+        self.assertLess(abs(fig.data[1].x[0] - 1381.2), 1e-9)
+        self.assertLess(abs(fig.data[1].y[0] - 1203.5), 1e-9)
+        self.assertLess(abs(fig.data[1].x[-1] - 837.2), 1e-9)
+        self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
         if self.plot_graphics:
-            # get path to csv file holding the coordinates for NY
-            coordsfile = load_coordsfilepath("nybuses.csv")
-            coords_dict = read_coords_from_csv_file(coordsfile)
-            # plot the given solution
-            plot_opf_solution({}, case, coords_dict, solution, objval)
+            fig.show()
 
     # test reading settings and case file from dicts
     def test_opfdicts(self):
@@ -245,8 +264,15 @@ class TestOpf(unittest.TestCase):
         # load a precomputed solution and objective value
         solution, objval = load_case9solution()
         # plot the given solution
+        fig = generate_opf_solution_figure(
+            graphics_settings, case, coords_dict, solution, objval
+        )
+        # check whether figure coordinates and scaled input coordinates are the same
+        for i in range(9):
+            self.assertLess(abs(fig.data[1].x[i] - self.graphics_9_x[i]), 1e-9)
+            self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
         if self.plot_graphics:
-            plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)
+            fig.show()
 
     # test plotting a solution after optimization is performed
     def test_graphics_after_solving(self):
@@ -265,8 +291,15 @@ class TestOpf(unittest.TestCase):
         graphics_settings = {}
         coordsfile = load_coordsfilepath("case9coords.csv")
         coords_dict = read_coords_from_csv_file(coordsfile)
+        fig = generate_opf_solution_figure(
+            graphics_settings, case, coords_dict, solution, objval
+        )
+        # check whether figure coordinates and scaled input coordinates are the same
+        for i in range(9):
+            self.assertLess(abs(fig.data[1].x[i] - self.graphics_9_x[i]), 1e-9)
+            self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
         if self.plot_graphics:
-            plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)
+            fig.show()
 
     # test plotting a solution while reading graphics settings from a file
     def test_graphics_settings_file(self):
@@ -284,5 +317,12 @@ class TestOpf(unittest.TestCase):
         # load a precomputed solution and objective value
         solution, objval = load_case9solution()
         # plot the computed solution
+        fig = generate_opf_solution_figure(
+            graphics_settings, case, coords_dict, solution, objval
+        )
+        # check whether figure coordinates and scaled input coordinates are the same
+        for i in range(9):
+            self.assertLess(abs(fig.data[1].x[i] - self.graphics_9_x[i]), 1e-9)
+            self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
         if self.plot_graphics:
-            plot_opf_solution(graphics_settings, case, coords_dict, solution, objval)
+            fig.show()
