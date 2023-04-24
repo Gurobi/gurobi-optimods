@@ -32,5 +32,8 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+networkx = ["networkx"]
+
 [tool.hatch.version]
 path = "src/gurobi_optimods/__init__.py"
