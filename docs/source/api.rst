@@ -27,3 +27,6 @@ API Reference
 
 .. automodule:: gurobi_optimods.workforce
    :members: solve_workforce_scheduling
+
+.. automodule:: gurobi_optimods.portfolio
+   :members: MeanVariancePortfolio

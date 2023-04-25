@@ -32,8 +32,21 @@ class Portfolio:
         self.leverage = leverage  # Maximum 10% short selling
 
 
-# very simple Markowitz type mean-variance portfolio
 class MeanVariancePortfolio:
+    """Optimal mean-variance portfolio solver.
+
+    Instantiate an object of :class:`MeanVariancePortfolio` for given
+    covariance matrix and return vector.  Use
+    :meth:`MeanVariancePortfolio.efficient_portfolio` to solve for efficient
+    portfolios with given parameters.
+
+    :param Sigma: Covariance matrix
+    :type Sigma: 2-d :class:`np.ndarray`
+    :param mu: Return vector
+    :type mu: 1-d :class:`np.ndarray`
+
+    """
+
     def __init__(
         self,
         Sigma,
@@ -91,10 +104,25 @@ class MeanVariancePortfolio:
             if m.Status == GRB.OPTIMAL:
                 return self._convert_result(x.X)
 
-    # trade-off between minimizing risk and maximizing return for a given risk-aversion coefficient gamma
     def efficient_portfolio(
         self, gamma, max_trades=None, fees_buy=None, min_buy_in=None
     ):
+        """
+        Compute efficient portfolio for given paramters
+
+        :param gamma: Risk aversion cofficient for balancing risk and return;
+            the resulting objective functions is
+            :math:`\mu^T x - 0.5 \gamma x^T \Sigma x`
+        :type gamma: :class:`float` >= 0
+        :param max_trades: Upper limit on the number of trades
+        :type max_trades: :class:`int` >= 0
+        :param fees_buys: Fixed-charge cost for each traded position, relative
+            to total portfolio value
+        :type fees_buys: :class:`float` >= 0
+        :param min_buy_in: Lower bound on the volume on a traded long position,
+            relative to total portfolio value
+        :type min_buy_in: :class:`float` >= 0
+        """
         with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
             x = m.addMVar(shape=self.mu.shape, name="x")
             m.setObjective(
