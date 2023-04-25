@@ -51,7 +51,7 @@ def solve_opf_model(settings, case, logfile=""):
     # Initilize data dictionary
     alldata = initialize_data_dict(logfile)
 
-    # Read settings file/dict
+    # Read settings file/dict and save them into the alldata dict
     read_optimization_settings(alldata, settings)
 
     # Read case file/dict and populate the alldata dictionary
@@ -100,21 +100,25 @@ def generate_opf_solution_figure(settings, case, coords, solution, objval):
     # Initilize data dictionary
     alldata = initialize_data_dict()
 
-    # Read settings file/dict
+    # Read settings file/dict and save them into the alldata dict
     read_graphics_settings(alldata, settings)
 
     # Read case file/dict and populate the alldata dictionary
     read_case(alldata, case)
 
+    # Special settings for graphics
     alldata["graphical"] = {}
     alldata["graphical"]["numfeatures"] = 0
     if alldata["graphattrsfilename"] != None:
         grbread_graphattrs(alldata, alldata["graphattrsfilename"])
 
+    # Map given coordinate data to network data
     grbmap_coords_from_dict(alldata, coords)
 
+    # Generate a plotly figure object representing the given solution for the network
     fig = generate_solution_figure(alldata, solution, objval)
 
+    # Remove and close all logging handlers
     remove_and_close_handlers(logger, handlers)
 
     return fig
@@ -197,7 +201,7 @@ def read_case_from_mat_file(casefile):
 
 def turn_solution_into_mat_file(solution, matfilename=""):
     """
-    Writes a .mat file out of and OPF solution dictionary
+    Writes a .mat file out of an OPF solution dictionary
 
     Parameters
     ----------
@@ -210,17 +214,21 @@ def turn_solution_into_mat_file(solution, matfilename=""):
     # Initialize output and file handler and start logging
     logger, handlers = initialize_logger("OpfLogger")
 
+    # Set a default output file name
     if matfilename == "":
         matfilename = "result.mat"
 
+    # Check for .mat suffix
     if not matfilename[-4:] == ".mat":
         matfilename += ".mat"
     logger.info(
         "Generating .mat file %s out of given OPF solution dictionary." % matfilename
     )
 
+    # Generate .mat file out of solution
     turn_opf_dict_into_mat_file(solution, matfilename)
 
+    # Remove and close all logging handlers
     remove_and_close_handlers(logger, handlers)
 
 

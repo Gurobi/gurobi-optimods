@@ -987,7 +987,7 @@ def read_case_file_mat(casefile):
     mpcbranch = mpc["branch"]
     mpcgencost = mpc["gencost"]
 
-    print(mat)
+    # print(mat)
     numbuses = 0
     buses = {}
     for b in mpcbuses:

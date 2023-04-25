@@ -136,8 +136,77 @@ def get_default_graphics_settings():
 
     settings = {
         "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this? Will do
-        # "gvfilename": None,  # TODO-Dan where is this used?  It may only get used if we are using sfdp
         "graphattrsfilename": None,  # TODO-Dan where is this used? These are color choices for rendering graphics
     }
 
     return settings
+
+
+def check_settings_for_correct_type(settings):
+    """
+    Checks whether the provided settings have correct types
+
+    Parameters
+    ----------
+    settings : dictionary
+        Settings dictionary to be checked for correct data types
+    """
+
+    wrongsetting = None
+    settingtype = ""
+    for settingname in settings:
+        settingval = settings[settingname]
+        # Check string settings
+        if (
+            settingname
+            in [
+                "voltsfilename",
+                "lpfilename",
+                "gurobiparamfile",
+                "ivtype" "graphattrsfilename",
+            ]
+            and settingval != None
+            and not isinstance(settingval, str)
+        ):
+            wrongsetting = settingname
+            settingtype = "String"
+            break
+        # Check boolean settings
+        if settingname in [
+            "strictcheckvoltagesolution",
+            "fixcs",
+            "skipjabr",
+            "usemipstart",
+            "useactivelossineqs",
+            "useconvexformulation",
+            "usemaxdispersion",
+            "usemaxphasediff",
+            "use_ef",
+            "dopolar",
+            "doac",
+            "dodc",
+            "doiv",
+            "branchswitching_mip",
+            "branchswitching_comp",
+        ] and not isinstance(settingval, bool):
+            # Accept 1 or 0
+            if (isinstance(settingval, int) or isinstance(settingval, float)) and (
+                settingval == 1 or settingval == 0
+            ):
+                settings[settingname] = True if settingval == 1 else False
+            else:
+                wrongsetting = settingname
+                settingtype = "Boolean"
+                break
+        # Check numeric settings
+        if (
+            settingname in ["maxdispersion_deg", "maxphasediff_deg", "fixtolerance"]
+            and not isinstance(settingval, int)
+            and not isinstance(settingval, float)
+        ):
+            wrongsetting = settingname
+            settingtype = "Int or Float"
+            break
+
+    if wrongsetting != None:
+        raise ValueError("Setting %s is not of type %s." % (wrongsetting, settingtype))
