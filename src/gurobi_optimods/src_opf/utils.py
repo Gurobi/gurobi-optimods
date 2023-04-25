@@ -100,25 +100,22 @@ def get_default_optimization_settings():
         "lpfilename": None,
         "gurobiparamfile": None,
         "strictcheckvoltagesolution": False,
-        "usevoltsolution": False,
-        "fixcs": False,
+        "fixcs": False,  # (approximately) fix c, s variables if a voltage solution was read in
         "skipjabr": False,
-        "cutplane": False,
         "usemipstart": False,
         "useactivelossineqs": False,
         "useconvexformulation": False,
         "usemaxdispersion": False,
         "usemaxphasediff": False,
         "use_ef": False,
-        "substitute_nonconv": False,
         "dopolar": False,
-        "doslp_polar": False,
+        # "doslp_polar": False, # Not used yet, this is for future work
         "doac": False,
         "dodc": False,
         "doiv": False,
         "ivtype": None,
         "branchswitching_mip": False,
-        "branchswitching_comp": False,
+        "branchswitching_comp": False,  # formulation for branch-switching where the binary variables simply multiply the continuous variables.  Sometimes it works better.
         "maxdispersion_deg": 0.0,
         "maxphasediff_deg": 360.0,
         "fixtolerance": 0.0,
@@ -139,7 +136,7 @@ def get_default_graphics_settings():
 
     settings = {
         "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this? Will do
-        "gvfilename": None,  # TODO-Dan where is this used?  It may only get used if we are using sfdp
+        # "gvfilename": None,  # TODO-Dan where is this used?  It may only get used if we are using sfdp
         "graphattrsfilename": None,  # TODO-Dan where is this used? These are color choices for rendering graphics
     }
 

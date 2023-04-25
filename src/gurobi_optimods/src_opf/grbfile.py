@@ -56,9 +56,6 @@ def read_optimization_settings(alldata, settings):
     defaults = get_default_optimization_settings()
     read_settings_dict(alldata, settings, defaults)
 
-    if alldata["doslp_polar"] and (int(alldata["dodc"]) + int(alldata["doiv"]) == 0):
-        alldata["doac"] = True
-
     if int(alldata["doac"]) + int(alldata["dodc"]) + int(alldata["doiv"]) != 1:
         raise ValueError(
             "Illegal option combination. Have to use exactly 1 of options [doac, dodc, doiv]."
@@ -260,7 +257,6 @@ def read_settings_build_dict(settings, lines):
 
         if len(thisline) > 2 and thisline[0] not in [
             "voltsfilename",
-            "usevoltsolution",
         ]:
             raise ValueError("Illegal option string %s." % thisline[3])
 
@@ -292,21 +288,8 @@ def read_settings_build_dict(settings, lines):
                     "Voltsfilename option requires filename and tolerance."
                 )
 
-            if settings_dict["usevoltsolution"]:
-                raise ValueError(
-                    "Illegal option combination. Cannot use both options voltsfilename and voltsolution."
-                )
-
             settings_dict["voltsfilename"] = thisline[1]
             settings_dict["fixtolerance"] = float(thisline[2])
-
-        elif thisline[0] == "usevoltsolution":
-            if settings_dict["voltsfilename"] != None:
-                raise ValueError(
-                    "Illegal option combination. Cannot use both voltsfilename and voltsolution."
-                )
-
-            settings_dict["usevoltsolution"] = True  # forcing solution in casefile
 
         elif thisline[0] == "useconvexformulation":
             settings_dict["useconvexformulation"] = True

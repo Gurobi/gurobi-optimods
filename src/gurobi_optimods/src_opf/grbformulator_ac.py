@@ -699,87 +699,86 @@ def lpformulator_ac_create_constraints(alldata, model):
         branch.Pfcname = "Pdef_%d_%d_%d" % (j, f, t)
         branch.Ptcname = "Pdef_%d_%d_%d" % (j, t, f)
         if branch.status:
-            if alldata["substitute_nonconv"] == False or alldata["use_ef"] == False:
-                # Gff cff + Gft cft + Bft sft
-                expr = gp.LinExpr(
-                    [branch.Gff, branch.Gft, branch.Bft],
-                    [cvar[busf], cvar[branch], svar[branch]],
+            # Gff cff + Gft cft + Bft sft
+            expr = gp.LinExpr(
+                [branch.Gff, branch.Gft, branch.Bft],
+                [cvar[busf], cvar[branch], svar[branch]],
+            )
+            expP = Pvar_f[branch]
+            if alldata["branchswitching_mip"]:
+                expP += twinPvar_f[branch]
+            branch.Pdeffconstr = model.addConstr(expr == expP, name=branch.Pfcname)
+
+            if alldata["branchswitching_mip"]:
+                if branch.constrainedflow:
+                    coeff = branch.limit
+                else:
+                    coeff = (
+                        2 * alldata["sumPd"]
+                    )  # the 2 is gratuitous but is an assumption nonetheless
+
+                model.addConstr(
+                    Pvar_f[branch] <= coeff * zvar[branch],
+                    name="upmip_P_%d_%d_%d" % (j, f, t),
                 )
-                expP = Pvar_f[branch]
-                if alldata["branchswitching_mip"]:
-                    expP += twinPvar_f[branch]
-                branch.Pdeffconstr = model.addConstr(expr == expP, name=branch.Pfcname)
-
-                if alldata["branchswitching_mip"]:
-                    if branch.constrainedflow:
-                        coeff = branch.limit
-                    else:
-                        coeff = (
-                            2 * alldata["sumPd"]
-                        )  # the 2 is gratuitous but is an assumption nonetheless
-
-                    model.addConstr(
-                        Pvar_f[branch] <= coeff * zvar[branch],
-                        name="upmip_P_%d_%d_%d" % (j, f, t),
-                    )
-                    model.addConstr(
-                        Pvar_f[branch] >= -coeff * zvar[branch],
-                        name="dnmip_P_%d_%d_%d" % (j, f, t),
-                    )
-                    model.addConstr(
-                        twinPvar_f[branch] <= coeff * (1 - zvar[branch]),
-                        name="upmip_twin_P_%d_%d_%d" % (j, f, t),
-                    )
-                    model.addConstr(
-                        twinPvar_f[branch] >= -coeff * (1 - zvar[branch]),
-                        name="dnmip_twin_P_%d_%d_%d" % (j, f, t),
-                    )
-
-                    count += 4
-
-                # Gtt ctt + Gtf cft + Btf stf = Gtt ctt + Gtf cft - Btf sft
-                expr = gp.LinExpr(
-                    [
-                        branch.Gtt,
-                        branch.Gtf,
-                        -branch.Btf,
-                    ],  # minus because svarft = -svartf
-                    [cvar[bust], cvar[branch], svar[branch]],
+                model.addConstr(
+                    Pvar_f[branch] >= -coeff * zvar[branch],
+                    name="dnmip_P_%d_%d_%d" % (j, f, t),
+                )
+                model.addConstr(
+                    twinPvar_f[branch] <= coeff * (1 - zvar[branch]),
+                    name="upmip_twin_P_%d_%d_%d" % (j, f, t),
+                )
+                model.addConstr(
+                    twinPvar_f[branch] >= -coeff * (1 - zvar[branch]),
+                    name="dnmip_twin_P_%d_%d_%d" % (j, f, t),
                 )
 
-                expP = Pvar_t[branch]
-                if alldata["branchswitching_mip"]:
-                    expP += twinPvar_t[branch]
+                count += 4
 
-                branch.Pdeftconstr = model.addConstr(expr == expP, name=branch.Ptcname)
-                if alldata["branchswitching_mip"]:
-                    if branch.constrainedflow:
-                        coeff = branch.limit
-                    else:
-                        coeff = (
-                            2 * alldata["sumPd"]
-                        )  # the 2 is gratuitous but is an assumption nonetheless
+            # Gtt ctt + Gtf cft + Btf stf = Gtt ctt + Gtf cft - Btf sft
+            expr = gp.LinExpr(
+                [
+                    branch.Gtt,
+                    branch.Gtf,
+                    -branch.Btf,
+                ],  # minus because svarft = -svartf
+                [cvar[bust], cvar[branch], svar[branch]],
+            )
 
-                    model.addConstr(
-                        Pvar_t[branch] <= coeff * zvar[branch],
-                        name="upmip_P_%d_%d_%d" % (j, t, f),
-                    )
-                    model.addConstr(
-                        Pvar_t[branch] >= -coeff * zvar[branch],
-                        name="dnmip_P_%d_%d_%d" % (j, t, f),
-                    )
-                    model.addConstr(
-                        twinPvar_t[branch] <= coeff * (1 - zvar[branch]),
-                        name="upmip_twin_P_%d_%d_%d" % (j, t, f),
-                    )
-                    model.addConstr(
-                        twinPvar_t[branch] >= -coeff * (1 - zvar[branch]),
-                        name="dnmip_twin_P_%d_%d_%d" % (j, t, f),
-                    )
+            expP = Pvar_t[branch]
+            if alldata["branchswitching_mip"]:
+                expP += twinPvar_t[branch]
 
-                    count += 4
+            branch.Pdeftconstr = model.addConstr(expr == expP, name=branch.Ptcname)
+            if alldata["branchswitching_mip"]:
+                if branch.constrainedflow:
+                    coeff = branch.limit
+                else:
+                    coeff = (
+                        2 * alldata["sumPd"]
+                    )  # the 2 is gratuitous but is an assumption nonetheless
 
-                count += 2
+                model.addConstr(
+                    Pvar_t[branch] <= coeff * zvar[branch],
+                    name="upmip_P_%d_%d_%d" % (j, t, f),
+                )
+                model.addConstr(
+                    Pvar_t[branch] >= -coeff * zvar[branch],
+                    name="dnmip_P_%d_%d_%d" % (j, t, f),
+                )
+                model.addConstr(
+                    twinPvar_t[branch] <= coeff * (1 - zvar[branch]),
+                    name="upmip_twin_P_%d_%d_%d" % (j, t, f),
+                )
+                model.addConstr(
+                    twinPvar_t[branch] >= -coeff * (1 - zvar[branch]),
+                    name="dnmip_twin_P_%d_%d_%d" % (j, t, f),
+                )
+
+                count += 4
+
+            count += 2
         else:
             branch.Pdeffconstr = model.addConstr(
                 Pvar_f[branch] == 0, name=branch.Pfcname
@@ -805,84 +804,83 @@ def lpformulator_ac_create_constraints(alldata, model):
         branch.Qtcname = "Qdef_%d_%d_%d" % (j, t, f)
 
         if branch.status:
-            if alldata["substitute_nonconv"] == False or alldata["use_ef"] == False:
-                # -Bff cff - Bft cft + Gft sft
-                expr = gp.LinExpr(
-                    [-branch.Bff, -branch.Bft, branch.Gft],
-                    [cvar[busf], cvar[branch], svar[branch]],
+            # -Bff cff - Bft cft + Gft sft
+            expr = gp.LinExpr(
+                [-branch.Bff, -branch.Bft, branch.Gft],
+                [cvar[busf], cvar[branch], svar[branch]],
+            )
+
+            expQ = Qvar_f[branch]
+            if alldata["branchswitching_mip"]:
+                expQ += twinQvar_f[branch]
+            branch.Qdeffconstr = model.addConstr(expr == expQ, name=branch.Qfcname)
+
+            if alldata["branchswitching_mip"]:
+                if branch.constrainedflow:
+                    coeff = branch.limit
+                else:
+                    coeff = (
+                        2 * alldata["sumQd"]
+                    )  # the 2 is gratuitous but is an assumption nonetheless
+
+                model.addConstr(
+                    Qvar_f[branch] <= coeff * zvar[branch],
+                    name="upmip_Q_%d_%d_%d" % (j, f, t),
+                )
+                model.addConstr(
+                    Qvar_f[branch] >= -coeff * zvar[branch],
+                    name="dnmip_Q_%d_%d_%d" % (j, f, t),
+                )
+                model.addConstr(
+                    twinQvar_f[branch] <= coeff * (1 - zvar[branch]),
+                    name="upmip_twin_Q_%d_%d_%d" % (j, f, t),
+                )
+                model.addConstr(
+                    twinQvar_f[branch] >= -coeff * (1 - zvar[branch]),
+                    name="dnmip_twin_Q_%d_%d_%d" % (j, f, t),
                 )
 
-                expQ = Qvar_f[branch]
-                if alldata["branchswitching_mip"]:
-                    expQ += twinQvar_f[branch]
-                branch.Qdeffconstr = model.addConstr(expr == expQ, name=branch.Qfcname)
+                count += 4
 
-                if alldata["branchswitching_mip"]:
-                    if branch.constrainedflow:
-                        coeff = branch.limit
-                    else:
-                        coeff = (
-                            2 * alldata["sumQd"]
-                        )  # the 2 is gratuitous but is an assumption nonetheless
+            # -Btt ctt - Btf cft + Gtf stf = -Btt ctt - Btf cft - Gtf sft
+            expr = gp.LinExpr(
+                [-branch.Btt, -branch.Btf, -branch.Gtf],  # again, same minus
+                [cvar[bust], cvar[branch], svar[branch]],
+            )
 
-                    model.addConstr(
-                        Qvar_f[branch] <= coeff * zvar[branch],
-                        name="upmip_Q_%d_%d_%d" % (j, f, t),
-                    )
-                    model.addConstr(
-                        Qvar_f[branch] >= -coeff * zvar[branch],
-                        name="dnmip_Q_%d_%d_%d" % (j, f, t),
-                    )
-                    model.addConstr(
-                        twinQvar_f[branch] <= coeff * (1 - zvar[branch]),
-                        name="upmip_twin_Q_%d_%d_%d" % (j, f, t),
-                    )
-                    model.addConstr(
-                        twinQvar_f[branch] >= -coeff * (1 - zvar[branch]),
-                        name="dnmip_twin_Q_%d_%d_%d" % (j, f, t),
-                    )
+            expQ = Qvar_t[branch]
+            if alldata["branchswitching_mip"]:
+                expQ += twinQvar_t[branch]
+            branch.Qdeftconstr = model.addConstr(expr == expQ, name=branch.Qtcname)
 
-                    count += 4
+            if alldata["branchswitching_mip"]:
+                if branch.constrainedflow:
+                    coeff = branch.limit
+                else:
+                    coeff = (
+                        2 * alldata["sumQd"]
+                    )  # the 2 is gratuitous but is an assumption nonetheless
 
-                # -Btt ctt - Btf cft + Gtf stf = -Btt ctt - Btf cft - Gtf sft
-                expr = gp.LinExpr(
-                    [-branch.Btt, -branch.Btf, -branch.Gtf],  # again, same minus
-                    [cvar[bust], cvar[branch], svar[branch]],
+                model.addConstr(
+                    Qvar_t[branch] <= coeff * zvar[branch],
+                    name="upmip_Q_%d_%d_%d" % (j, t, f),
+                )
+                model.addConstr(
+                    Qvar_t[branch] >= -coeff * zvar[branch],
+                    name="dnmip_Q_%d_%d_%d" % (j, t, f),
+                )
+                model.addConstr(
+                    twinQvar_t[branch] <= coeff * (1 - zvar[branch]),
+                    name="upmip_twin_Q_%d_%d_%d" % (j, t, f),
+                )
+                model.addConstr(
+                    twinQvar_t[branch] >= -coeff * (1 - zvar[branch]),
+                    name="dnmip_twin_Q_%d_%d_%d" % (j, t, f),
                 )
 
-                expQ = Qvar_t[branch]
-                if alldata["branchswitching_mip"]:
-                    expQ += twinQvar_t[branch]
-                branch.Qdeftconstr = model.addConstr(expr == expQ, name=branch.Qtcname)
+                count += 4
 
-                if alldata["branchswitching_mip"]:
-                    if branch.constrainedflow:
-                        coeff = branch.limit
-                    else:
-                        coeff = (
-                            2 * alldata["sumQd"]
-                        )  # the 2 is gratuitous but is an assumption nonetheless
-
-                    model.addConstr(
-                        Qvar_t[branch] <= coeff * zvar[branch],
-                        name="upmip_Q_%d_%d_%d" % (j, t, f),
-                    )
-                    model.addConstr(
-                        Qvar_t[branch] >= -coeff * zvar[branch],
-                        name="dnmip_Q_%d_%d_%d" % (j, t, f),
-                    )
-                    model.addConstr(
-                        twinQvar_t[branch] <= coeff * (1 - zvar[branch]),
-                        name="upmip_twin_Q_%d_%d_%d" % (j, t, f),
-                    )
-                    model.addConstr(
-                        twinQvar_t[branch] >= -coeff * (1 - zvar[branch]),
-                        name="dnmip_twin_Q_%d_%d_%d" % (j, t, f),
-                    )
-
-                    count += 4
-
-                count += 2
+            count += 2
         else:  # out of operation
             branch.Qdeffconstr = model.addConstr(
                 Qvar_f[branch] == 0, name=branch.Qfcname

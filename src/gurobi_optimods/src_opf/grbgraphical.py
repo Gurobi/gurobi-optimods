@@ -514,7 +514,7 @@ def graphplot(
     mywidth = int(math.ceil(xgap / ygap * myheight))
 
     fig = PH.create_figure(height=myheight, width=mywidth, showlabel=False)
-    logger.info("Showing figure.\n")
+    logger.info("Created figure.\n")
     return fig
 
 

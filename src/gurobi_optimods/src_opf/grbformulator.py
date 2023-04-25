@@ -80,9 +80,6 @@ def construct_and_solve_model(alldata):
                 alldata, model, spitoutvector, opftype
             )
 
-        # if alldata["doslp_polar"]: # TODO-Dan Is this work in progress?
-        #    break_exit("slp_polar formulation")  # TODO-Dan why the break_exit?
-
         # Solve the OPF model
         sol_count = lpformulator_optimize(alldata, model, opftype)
 
