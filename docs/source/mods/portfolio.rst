@@ -190,6 +190,35 @@ Enforcing more portfolio features
 A number of additional restrictions can be placed on the returned optimal
 portfolio, such as transaction fees or limiting the number of trades.
 
+Working with leverage
+~~~~~~~~~~~~~~~~~~~~~
+
+By default all positions traded will be long positions. You can allow
+allocations in short positions by definining a nonzero limit on the total short
+allcocations.  For example, to allow short selling up to 30% of the
+portfolio value, you can do:
+
+.. testcode:: mod
+
+    import pandas as pd
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+    data = load_portfolio()
+    Sigma = data.cov()
+    mu = data.mean()
+    gamma = 100.0
+    mvp = MeanVariancePortfolio(Sigma, mu)
+    x = mvp.efficient_portfolio(gamma, max_total_short=0.3)
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 32 rows, 50 columns and 90 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+
 Restricting the number of trades
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -332,32 +361,3 @@ only one sitting on the minimum-buy-in threshold:
         II    0.068784
         JJ    0.000000
     dtype: float64
-
-Working with leverage
-~~~~~~~~~~~~~~~~~~~~~
-
-By default all positions traded will be long positions. You can allow
-allocations in short positions by definining a nonzero limit on the total short
-allcocations.  For example, to allow short selling up to 30% of the
-portfolio value, you can do:
-
-.. testcode:: mod
-
-    import pandas as pd
-    from gurobi_optimods.datasets import load_portfolio
-    from gurobi_optimods.portfolio import MeanVariancePortfolio
-    data = load_portfolio()
-    Sigma = data.cov()
-    mu = data.mean()
-    gamma = 100.0
-    mvp = MeanVariancePortfolio(Sigma, mu)
-    x = mvp.efficient_portfolio(gamma, max_total_short=0.3)
-
-.. testoutput:: mod
-    :hide:
-
-    ...
-    Optimize a model with 32 rows, 50 columns and 90 nonzeros
-    ...
-    Model has 55 quadratic objective terms
-    ...
