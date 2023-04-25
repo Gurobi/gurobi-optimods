@@ -108,7 +108,8 @@ class MeanVariancePortfolio:
         gamma,
         max_trades=None,
         fees_buy=None,
-        min_buy_in=None,
+        min_long=None,
+        min_short=None,
         max_total_short=0.0,
     ):
         """
@@ -123,9 +124,12 @@ class MeanVariancePortfolio:
         :param fees_buys: Fixed-charge cost for each traded position, relative
             to total portfolio value
         :type fees_buys: :class:`float` >= 0
-        :param min_buy_in: Lower bound on the volume on a traded long position,
+        :param min_long: Lower bound on the volume on a traded long position,
             relative to total portfolio value
-        :type min_buy_in: :class:`float` >= 0
+        :type min_long: :class:`float` >= 0
+        :param min_short: Lower bound on the volume on a traded short position,
+            relative to total portfolio value
+        :type min_long: :class:`float` >= 0
         :param max_total_short: Maximum total short positions, relative to
             total investment.
         :type max_total_short: :class:`float` >= 0
@@ -142,13 +146,20 @@ class MeanVariancePortfolio:
             m.addConstr(x == x_long - x_short)
 
             # Binaries used to enforce VUB and minimum buy-in
-            b_long = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_x")
-            b_short = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_x")
+            b_long = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_long")
+            b_short = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_short")
 
+            # Going short by alpha means that each long position is upper
+            # bounded by 1 + alpha, and each short position by alpha.
+            # This is implied by the sum(x) == 1 constraint.
             m.addConstr(x_long <= (1.0 + max_total_short) * b_long)
             m.addConstr(x_short <= max_total_short * b_short)
 
-            m.addConstr(x_short.sum() <= max_total_short)
+            # A position can only by short or long, not both
+            m.addConstr(b_long + b_short <= 1, name="long_or_short")
+
+            # Bound total leverage
+            m.addConstr(x_short.sum() <= max_total_short, name="total_short")
 
             investment = x.sum()
 
@@ -158,11 +169,15 @@ class MeanVariancePortfolio:
             if fees_buy is not None:
                 investment += b_long.sum() * fees_buy
 
-            if min_buy_in is not None:
-                m.addConstr(x >= min_buy_in * b_long, name="min_buy_in")
+            if min_long is not None:
+                m.addConstr(x_long >= min_long * b_long, name="min_long")
+
+            if min_short is not None:
+                m.addConstr(x_short >= min_short * b_short, name="min_short")
 
             m.addConstr(investment == 1, name="fully_invested")
 
+            m.write("a.lp")
             m.optimize()
             if m.Status == GRB.OPTIMAL:
                 return self._convert_result(x.X)
