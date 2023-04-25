@@ -18,7 +18,6 @@ class Portfolio:
         min_invest_short=0,
         leverage=0,
     ) -> None:
-
         self.factor_matrix = H  # H.T@H is the covariance matrix
         self.covariance = Sigma  # Sigma is the covariance matrix
         self.mu = mu  # estimated first moments of return function
@@ -105,7 +104,12 @@ class MeanVariancePortfolio:
                 return self._convert_result(x.X)
 
     def efficient_portfolio(
-        self, gamma, max_trades=None, fees_buy=None, min_buy_in=None
+        self,
+        gamma,
+        max_trades=None,
+        fees_buy=None,
+        min_buy_in=None,
+        max_total_short=0.0,
     ):
         """
         Compute efficient portfolio for given paramters
@@ -122,26 +126,40 @@ class MeanVariancePortfolio:
         :param min_buy_in: Lower bound on the volume on a traded long position,
             relative to total portfolio value
         :type min_buy_in: :class:`float` >= 0
+        :param max_total_short: Maximum total short positions, relative to
+            total investment.
+        :type max_total_short: :class:`float` >= 0
         """
         with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
-            x = m.addMVar(shape=self.mu.shape, name="x")
+            x = m.addMVar(shape=self.mu.shape, lb=-float("inf"), name="x")
+            x_long = m.addMVar(shape=self.mu.shape, name="x_long")
+            x_short = m.addMVar(shape=self.mu.shape, name="x_short")
+
             m.setObjective(
                 self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)), GRB.MAXIMIZE
             )
 
+            m.addConstr(x == x_long - x_short)
+
+            # Binaries used to enforce VUB and minimum buy-in
+            b_long = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_x")
+            b_short = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_x")
+
+            m.addConstr(x_long <= (1.0 + max_total_short) * b_long)
+            m.addConstr(x_short <= max_total_short * b_short)
+
+            m.addConstr(x_short.sum() <= max_total_short)
+
             investment = x.sum()
 
-            b = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_x")
-            m.addConstr(x <= b)
-
             if max_trades is not None:
-                m.addConstr(b.sum() <= max_trades)
+                m.addConstr(b_long.sum() + b_short.sum() <= max_trades)
 
             if fees_buy is not None:
-                investment += b.sum() * fees_buy
+                investment += b_long.sum() * fees_buy
 
             if min_buy_in is not None:
-                m.addConstr(x >= min_buy_in * b, name="min_buy_in")
+                m.addConstr(x >= min_buy_in * b_long, name="min_buy_in")
 
             m.addConstr(investment == 1, name="fully_invested")
 
