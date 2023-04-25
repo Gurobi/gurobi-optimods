@@ -37,25 +37,15 @@ an ordered pair :math:`km`, where :math:`k` is the "from" bus and :math:`m` is t
 
 9. In modern versions described below, network devices (FACTS, phase-shifters, impedance corrections are also incorporated into the model.
 
+
+- :footcite:t:`bienstockpower`
+      - Introduction to various power related problems with emphasis on modeling and optimization.
+
 .. toctree::
    :maxdepth: 1
 
    acopf
    dcopf
-
-
-
-Give a brief overview of the problem being solved.
-
-.. tabs::
-
-    .. tab:: Domain-Specific Description
-
-        Give a definition of the problem in the language of the domain expert.
-
-    .. tab:: Optimization Model
-
-        Give the mathematical programming formulation of the problem here.
 
 Give examples of the various input data structures. These inputs should be fixed,
 so use doctests where possible.
@@ -165,3 +155,5 @@ directly from a python shell. Another option is to include and display figures
     :options: +NORMALIZE_WHITESPACE
 
     >>>
+
+.. footbibliography::
