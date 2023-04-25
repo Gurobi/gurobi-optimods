@@ -319,8 +319,8 @@ Minimum position constraints
 A minimum fraction of investment can be enforced upon each individual position,
 preventing trades at negligible volume.  Use the keyword parameters `min_long`
 and `min_short` to set a thresholds for trading long and short positions.  For
-example, here we enforce that at least 3% of the wealth are allocated to each
-traded long position.
+example, here we enforce that at least 5% of the wealth are allocated to each
+trade:
 
 .. testcode:: mod
 
@@ -332,32 +332,38 @@ traded long position.
     mu = data.mean()
     gamma = 100.0
     mvp = MeanVariancePortfolio(Sigma, mu)
-    x = mvp.efficient_portfolio(gamma, min_long=0.03)
+    x_plain = mvp.efficient_portfolio(gamma, max_total_short=0.3)
+    x_minpos = mvp.efficient_portfolio(gamma, max_total_short=0.3, min_long=0.05, min_short=0.05)
 
 .. testoutput:: mod
     :hide:
 
     ...
-    Optimize a model with 52 rows, 50 columns and 120 nonzeros
+    Optimize a model with 42 rows, 50 columns and 110 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+    Optimize a model with 62 rows, 50 columns and 150 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
 
-The resulting portfolio designates five positions, with "GG" being the
-only one sitting on the minimum-buy-in threshold:
+Comparing the two portfolios `x_plain`, which has no minimum position
+constraints set with `x_minpos`, which defines these constraints we see that
+all "tiny" transactions have been removed from the portfolio.
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>> x
-        AA    0.423322
-        BB    0.000000
-        CC    0.000000
-        DD    0.242873
-        EE    0.000000
-        FF    0.000000
-        GG    0.030000
-        HH    0.235021
-        II    0.068784
-        JJ    0.000000
-    dtype: float64
+    >>> pd.concat((x_plain, x_minpos), axis=1)
+               0         1
+    AA  0.437482  0.431366
+    BB  0.020704  0.000000
+    CC -0.080789 -0.070755
+    DD  0.271877  0.284046
+    EE  0.019897  0.000000
+    FF -0.029849 -0.050000
+    GG  0.083466  0.097149
+    HH  0.240992  0.244677
+    II  0.066809  0.063517
+    JJ -0.030588  0.000000
