@@ -58,7 +58,7 @@ class TestMod(unittest.TestCase):
         n_trades = (x > 1e-4).sum()
         self.assertLessEqual(x.sum(), 1 - n_trades * fees_buy)
 
-    def test_minimum_buy_in(self):
+    def test_min_long(self):
         data = load_portfolio()
         Sigma = data.cov()
         mu = data.mean()
@@ -67,12 +67,12 @@ class TestMod(unittest.TestCase):
         mvp = MeanVariancePortfolio(Sigma, mu)
 
         # Ensure that we _have_ a small trade w/o minimum buy in
-        x = mvp.efficient_portfolio(gamma, min_buy_in=0.0)
+        x = mvp.efficient_portfolio(gamma, min_long=0.0)
         small_trades = (x > 1e-6) & (x < (0.03 - 1e-6))
         self.assertGreater(small_trades.sum(), 0)
 
         # Ensure that we _don't_ have a small trade w minimum buy in
-        x = mvp.efficient_portfolio(gamma, min_buy_in=0.03)
+        x = mvp.efficient_portfolio(gamma, min_long=0.03)
         small_trades = (x > 1e-6) & (x < (0.03 - 1e-6))
         self.assertEqual(small_trades.sum(), 0)
 
@@ -94,3 +94,38 @@ class TestMod(unittest.TestCase):
         self.assertLess(x.loc[x < 0].sum(), -1e-3)
         self.assertAlmostEqual(x.sum(), 1.0)
         self.assertAlmostEqual(np.abs(x).sum(), 1.0 + 2 * 0.1)
+
+    def test_min_short_0(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+
+        # Ensure that by default we don't go short
+        x = mvp.efficient_portfolio(gamma)
+        self.assertEqual((x < 0).sum(), 0)
+
+        # Adding a min_short constraint doesn't change a thing
+        x_other = mvp.efficient_portfolio(gamma, min_short=0.01)
+        assert_allclose(x.to_numpy(), x_other.to_numpy())
+
+    def test_min_short_1(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.5)
+
+        # Ensure that we have tiny short positions
+        small_trades = (x < -1e-6) & (x > (-0.05 + 1e-6))
+        self.assertGreater(small_trades.sum(), 0)
+
+        # Ensure that we still have short positions, but beyond the threshold
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.5, min_short=0.05)
+        self.assertGreater((x <= -0.05).sum(), 0)
+        small_trades = (x < -1e-6) & (x > (-0.05 + 1e-6))
+        self.assertEqual(small_trades.sum(), 0)
