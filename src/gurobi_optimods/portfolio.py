@@ -177,7 +177,6 @@ class MeanVariancePortfolio:
 
             m.addConstr(investment == 1, name="fully_invested")
 
-            m.write("a.lp")
             m.optimize()
             if m.Status == GRB.OPTIMAL:
                 return self._convert_result(x.X)
