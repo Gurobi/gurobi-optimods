@@ -103,7 +103,7 @@ The columns of this dataframe represent the individual assets ("AA", "BB", ..., 
     :hide:
 
     ...
-    Optimize a model with 32 rows, 50 columns and 80 nonzeros
+    Optimize a model with 42 rows, 50 columns and 100 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -214,7 +214,7 @@ portfolio value, you can do:
     :hide:
 
     ...
-    Optimize a model with 32 rows, 50 columns and 90 nonzeros
+    Optimize a model with 42 rows, 50 columns and 110 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -246,7 +246,7 @@ total number of trades to three we get the following optimal portfolio.
     :hide:
 
     ...
-    Optimize a model with 33 rows, 50 columns and 100 nonzeros
+    Optimize a model with 43 rows, 50 columns and 120 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -294,7 +294,7 @@ portfolio :math:`x`, you can use the `fees_buy` keyword parameter:
     :hide:
 
     ...
-    Optimize a model with 32 rows, 50 columns and 90 nonzeros
+    Optimize a model with 42 rows, 50 columns and 110 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -313,14 +313,14 @@ thus reducing the total sum of the returned optimal portfolio:
     >>> x.sum()
     0.95
 
-Minimum buy-in
-~~~~~~~~~~~~~~
+Minimum position constraints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A minimum fraction of investment can be enforced upon each individual
-position, preventing trades at negligible volume.  Use the keyword
-parameter `min_buy_in` to set a relative amount of minimum investment for
-each traded asset.  For example, here we enforce that at least 3% of the
-wealth are allocated to each traded position:
+A minimum fraction of investment can be enforced upon each individual position,
+preventing trades at negligible volume.  Use the keyword parameters `min_long`
+and `min_short` to set a thresholds for trading long and short positions.  For
+example, here we enforce that at least 3% of the wealth are allocated to each
+traded long position.
 
 .. testcode:: mod
 
@@ -332,13 +332,13 @@ wealth are allocated to each traded position:
     mu = data.mean()
     gamma = 100.0
     mvp = MeanVariancePortfolio(Sigma, mu)
-    x = mvp.efficient_portfolio(gamma, min_buy_in=0.03)
+    x = mvp.efficient_portfolio(gamma, min_long=0.03)
 
 .. testoutput:: mod
     :hide:
 
     ...
-    Optimize a model with 42 rows, 50 columns and 100 nonzeros
+    Optimize a model with 52 rows, 50 columns and 120 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
