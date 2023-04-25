@@ -99,7 +99,7 @@ The columns of this dataframe represent the individual assets ("AA", "BB", ..., 
     :hide:
 
     ...
-    Optimize a model with 11 rows, 20 columns and 30 nonzeros
+    Optimize a model with 32 rows, 50 columns and 80 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -213,7 +213,7 @@ total number of trades to three we get the following optimal portfolio.
     :hide:
 
     ...
-    Optimize a model with 12 rows, 20 columns and 40 nonzeros
+    Optimize a model with 33 rows, 50 columns and 100 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -261,7 +261,7 @@ portfolio :math:`x`, you can use the `fees_buy` keyword parameter:
     :hide:
 
     ...
-    Optimize a model with 11 rows, 20 columns and 40 nonzeros
+    Optimize a model with 32 rows, 50 columns and 90 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -278,7 +278,7 @@ thus reducing the total sum of the returned optimal portfolio:
     :options: +NORMALIZE_WHITESPACE
 
     >>> x.sum()
-    0.9499999999999998
+    0.95
 
 Minimum buy-in
 ~~~~~~~~~~~~~~
@@ -305,7 +305,7 @@ wealth are allocated to each traded position:
     :hide:
 
     ...
-    Optimize a model with 21 rows, 20 columns and 50 nonzeros
+    Optimize a model with 42 rows, 50 columns and 100 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -328,3 +328,32 @@ only one sitting on the minimum-buy-in threshold:
         II    0.068784
         JJ    0.000000
     dtype: float64
+
+Working with leverage
+~~~~~~~~~~~~~~~~~~~~~
+
+By default all positions traded will be long positions. You can allow
+allocations in short positions by definining a nonzero limit on the total short
+allcocations.  For example, to allow short selling up to 30% of the
+portfolio value, you can do:
+
+.. testcode:: mod
+
+    import pandas as pd
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+    data = load_portfolio()
+    Sigma = data.cov()
+    mu = data.mean()
+    gamma = 100.0
+    mvp = MeanVariancePortfolio(Sigma, mu)
+    x = mvp.efficient_portfolio(gamma, max_total_short=0.3)
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 32 rows, 50 columns and 90 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
