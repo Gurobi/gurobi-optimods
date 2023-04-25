@@ -31,6 +31,10 @@ Our methods use risk and return estimators.
         * :math:`\gamma\geq0` is the risk aversion coefficient.
 
 
+This description refers only to the simple base model.  Further down in Section
+`Enforcing more portfolio features`_ we explain how to enforce additional
+fatures, such as leverage or transaction fees.
+
 
 Data Specification
 ------------------
