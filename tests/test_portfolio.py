@@ -75,3 +75,22 @@ class TestMod(unittest.TestCase):
         x = mvp.efficient_portfolio(gamma, min_buy_in=0.03)
         small_trades = (x > 1e-6) & (x < (0.03 - 1e-6))
         self.assertEqual(small_trades.sum(), 0)
+
+    def test_max_total_short(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+
+        # Ensure that by default we don't go short
+        x = mvp.efficient_portfolio(gamma)
+        self.assertEqual((x < 0).sum(), 0)
+
+        # Ensure that we take advantage of leverage
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.1)
+        self.assertGreaterEqual(x.loc[x < 0].sum(), -0.1)
+        self.assertLess(x.loc[x < 0].sum(), -1e-3)
+        self.assertAlmostEqual(x.sum(), 1.0)
+        self.assertAlmostEqual(np.abs(x).sum(), 1.0 + 2 * 0.1)
