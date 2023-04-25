@@ -1,10 +1,6 @@
 DCOPF
 =====
 
-A little background on the proud history of mathprog in this field.
-
-Also data science.
-
 Problem Specification
 ---------------------
 
@@ -14,55 +10,71 @@ Give a brief overview of the problem being solved.
 
     .. tab:: Domain-Specific Description
 
-        Give a definition of the problem in the language of the domain expert.
+        In the so-called DC approximation to the standard ACOPF problem it is assumed that all voltage magnitudes are equal to :math:`1.0` and that across all branches the phase angle difference is very small.  The active power flow equations are linearized, using these assumptions, and the reactive power flow constraints are ignored.  The objective function is the same as for ACOPF. In summary we obtain a linear approximation (not a relaxation) to standard ACOPF which is very commonly used in energy markets.
+
+	The network data requirements are likewise limited.  For each branch :math:`km` the models require the branch reactance :math:`x_{km}` as well as a ratio :math:`\tau_{km}` and angle :math:`\phi_{km}`; the latter two are relevant only in the case of transformers.  In the non-transformer case we assume :math:`\tau_{km} = 1` and :math:`\phi_{km} = 0`.
+
 
     .. tab:: Optimization Model
+       The following variables are used in the DCOPF problem.
 
-        Give the mathematical programming formulation of the problem here.
+       1. For each bus :math:`k` we have a phase angle :math:`\theta_k`.
 
-Give examples of the various input data structures. These inputs should be fixed,
-so use doctests where possible.
+       2. For each branch :math:`km` we have the real power flow :math:`P_{km}` from :math:`k` to :math:`m`. As we shall see from the model, there is no need for a corresponding variable :math:`P_{km}`.
 
-.. testsetup:: mod
+       3. For each generator :math:`i` there is the (active) generation :math:`P^{g}_i`.
 
-    # Set pandas options for displaying dataframes, if needed
-    import pandas as pd
-    pd.options.display.max_rows = 10
+       There are four classes of constraints: branch power definitions, flow balance, branch limits and generator limits.
 
-.. tabs::
+       The first set of constraints embody DC power flow laws. For each branch :math:`km` we have
 
-    .. tab:: ``availability``
+       .. math::
 
-        Give interpretation of input data.
+           P_{km} = \frac{1}{\tau_{km} \,x_{km}}(\theta_k - \theta_m - \phi_{km}).
 
-        .. doctest:: mod
-            :options: +NORMALIZE_WHITESPACE
+       It is (implicitly) assumed that :math:`P_{mk} = -P_{km}`.
 
-            >>> from gurobi_optimods import datasets
-            >>> data = datasets.load_workforce()
-            >>> data.availability
-               Worker      Shift
-            0     Amy 2022-07-02
-            1     Amy 2022-07-03
-            2     Amy 2022-07-05
-            3     Amy 2022-07-07
-            4     Amy 2022-07-09
-            ..    ...        ...
-            67     Gu 2022-07-10
-            68     Gu 2022-07-11
-            69     Gu 2022-07-12
-            70     Gu 2022-07-13
-            71     Gu 2022-07-14
-            <BLANKLINE>
-            [72 rows x 2 columns]
+       The next set of constraints represent active flow balance at each bus :math:`k`.
 
-        In the model, this corresponds to ...
+       .. math::
 
-    .. tab:: ``shift_requirements``
+	  \sum_{i \in G(k)} P^{g}_i \ - \ P^{d}_k \quad = \quad \sum_{km \in \delta^+(k)} P_{km} \ - \ \sum_{mk \in \delta^-(k)}P_{mk}.
 
-        Another bit of input data (perhaps a secondary table)
 
-|
+       In this expression, the left-hand side is the net excess of generation over load at bus :math:`k`.  The right-hand side is the total power injected into the grid at bus :math:`k`.
+
+       Next we have branch limits.  For each branch :math:`km`,
+
+       .. math::
+
+	  |P_{km}| \ \le \, L_{km}.
+
+       Note: there are alternative versions of this particular constraint.  In a power system under normal (non-stressed) operations this constraint is slack for all but a small number of branches.
+
+       Finally we have generator limits.
+
+       .. math::
+
+	  P^{\min}_i \, \le \, P^{g}_i \, \le \, P^{\max}_i, \ \text{for each generator} \, i.
+
+       The objective to optimize is the same cost expression as for ACOPF:
+
+
+       .. math::
+	  \min \sum_{\text{generators} \, i} F_i(P^g_i).
+
+
+    .. tab:: DCOPF with branch-switching
+
+       An important binary MILP extension of DCOPF is that where a binary variable :math:`z_{km}` is used to decide if a branch :math:`km` is "on" (:math:`z_{km} = 1`) or not.  To achive this goal, we simply reformulate the power flow definition as
+
+       .. math::
+
+           P_{km} = \frac{z_{km}}{\tau_{km} \,x_{km}}(\theta_k - \theta_m - \phi_{km}).
+
+       This constrained is linearized through standard methods.
+
+
 
 Code
 ----
