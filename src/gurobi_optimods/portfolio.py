@@ -138,21 +138,49 @@ class MeanVariancePortfolio:
             total investment.
         :type max_total_short: :class:`float` >= 0
         """
+
+        # max x' * mu + x' * Sigma * x
+        # s.t.
+        #      x = x_long - x_short  (x is split in positive/negative parts)
+        #
+        #      sum(x) + sum(b_long) * fees_buy + sum(b_short) * fees_sell = 1
+        #                             (Fully invested, minus transaction fees)
+        #
+        #      x_long  <= M b_long    (force x_long to zero if not traded long)
+        #                             (M >= 1 + max_total_short)
+        #
+        #      x_short <= M b_long    (force x_long to zero if not traded long)
+        #                             (M >= max_total_short)
+        #
+        #      b_short + b_long <= 1  (Cannot go long and short at the same time)
+        #
+        #      sum(x_short) <= max_total_short   (Bound total leverage)
+        #
+        #      sum(b_short) + sum(b_long) <= max_trades  (Trade limit)
+        #
+        #      x_long >= min_long * b_long (minimum long position)
+        #
+        #      x_short >= min_short * b_short (minimum short position)
+        #
+        #    x free       (relative portfolio holdings)
+        #    x_long  >= 0 (relative long holdings)
+        #    x_short >= 0 (relative short holdings)
+        #    b_long \in {0,1} (indicator variable for x_long)
+        #    b_short \in {0,1} (indicator variable for x_short)
+
         with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
+            # Portfolio vector x is split into long and short positions
             x = m.addMVar(shape=self.mu.shape, lb=-float("inf"), name="x")
             x_long = m.addMVar(shape=self.mu.shape, name="x_long")
             x_short = m.addMVar(shape=self.mu.shape, name="x_short")
-
-            m.setObjective(
-                self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)), GRB.MAXIMIZE
-            )
-
             m.addConstr(x == x_long - x_short)
 
             # Binaries used to enforce VUB and minimum buy-in
             b_long = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_long")
             b_short = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_short")
 
+            # Define VUB constraints for x_long and x_short.
+            #
             # Going short by alpha means that each long position is upper
             # bounded by 1 + alpha, and each short position by alpha.
             # This is implied by the sum(x) == 1 constraint.
@@ -183,6 +211,11 @@ class MeanVariancePortfolio:
                 m.addConstr(x_short >= min_short * b_short, name="min_short")
 
             m.addConstr(investment == 1, name="fully_invested")
+
+            # Basic mean-variance weighted objective
+            m.setObjective(
+                self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)), GRB.MAXIMIZE
+            )
 
             m.optimize()
             if m.Status == GRB.OPTIMAL:
