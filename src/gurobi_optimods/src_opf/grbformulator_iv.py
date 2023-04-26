@@ -72,7 +72,6 @@ def lpformulator_iv_create_vars(alldata, model):
         cffvar[bus] = model.addVar(obj = 0.0, lb = lbound, ub = ubound,
                                  name = "cff_%d"%(bus.nodeID))
 
-        bus.cffvarind = varcount
         varcount += 1
 
         #at this point, minprod is the square of bus min voltage
@@ -102,7 +101,6 @@ def lpformulator_iv_create_vars(alldata, model):
             GenPvar[gen] = model.addVar(
                 obj=0.0, lb=lower, ub=upper, name="GP_%d_%d" % (gen.count, gen.nodeID)
             )
-            gen.Pvarind = varcount
             varcount += 1
 
             lower = gen.Qmin * gen.status
@@ -114,7 +112,6 @@ def lpformulator_iv_create_vars(alldata, model):
             GenQvar[gen] = model.addVar(
                 obj=0.0, lb=lower, ub=upper, name="GQ_%d_%d" % (gen.count, gen.nodeID)
             )
-            gen.Qvarind = varcount
             varcount += 1
 
     logger.info("Added generator variables.")
@@ -210,7 +207,6 @@ def lpformulator_iv_create_vars(alldata, model):
             ub=ubound,
             name="P_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
         )
-        branch.Pftvarind = varcount
         varcount += 1
 
         Pvar_t[branch] = model.addVar(
@@ -228,7 +224,6 @@ def lpformulator_iv_create_vars(alldata, model):
             ub=ubound,
             name="Q_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
         )
-        branch.Qftvarind = varcount
         varcount += 1
 
         Qvar_t[branch] = model.addVar(

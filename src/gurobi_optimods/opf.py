@@ -40,8 +40,8 @@ def solve_opf_model(settings, case, logfile=""):
 
     Returns
     -------
-    OrderedDict, float
-        A feasible solution point if any was found as an OrderedDict and
+    dictionary, float
+        A result dictionary following MATPOWER notation and
         the final objective value
     """
 

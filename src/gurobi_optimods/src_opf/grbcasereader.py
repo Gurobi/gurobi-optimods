@@ -47,24 +47,29 @@ class Bus:
         self.Va = Va  # we don't use it but keep for consistency with MATPOWER
         self.Vbase = Vbase  # voltage base
         self.zone = zone  # we don't use it but keep for consistency with MATPOWER
-        self.Vmax = Vmax
-        self.Vmin = Vmin
+        self.Vmax = Vmax  # max voltage
+        self.Vmin = Vmin  # min voltage
         self.inputvoltage = False
-        self.cffvarind = -1  # the following four fields are variable indices
-        self.Pinjvarind = -1  # index of Pd solution variable for buses
-        self.Qinjvarind = -1  # index of Qd solution variable for buses
-        self.vvarind = -1  # index of bus voltage magnitude variable for buses
-        self.thetavarind = -1  # index of bus volate angle variable for buses
-        self.Pbalance = 0
         self.inputV = 0  # input voltage
         self.inpute = 0  # e-value (input or derived from input voltage solution)
         self.inputf = 0  # e-value (input or derived from input voltage solution)
         self.outdegree = self.indegree = self.degree = 0
-
+        # Coordinates for plotting
         self.lat = -1
         self.lon = -1
 
     def addgenerator(self, generatorcount, generator):
+        """
+        Adds a generator to the bus
+
+
+        Parameters
+        ----------
+        generatorcount : int
+            Number of generator added to the bus
+        generator : Gen
+            generator to be added to the bus
+        """
         logger = logging.getLogger("OpfLogger")
         self.genidsbycount.append(generatorcount)
         loud = False
@@ -78,12 +83,30 @@ class Bus:
             logger.info(" Pmax " + str(generator.Pmax) + " Pmin " + str(generator.Pmin))
 
     def addfrombranch(self, id):
+        """
+        Adds a "from" branch to the bus
+
+
+        Parameters
+        ----------
+        id : int
+            ID of "from" branch
+        """
         quant = len(self.frombranchids)
         self.frombranchids[quant] = id
         self.outdegree += 1
         self.degree += 1
 
     def addtobranch(self, id):
+        """
+        Adds a "to" branch to the bus
+
+
+        Parameters
+        ----------
+        id : int
+            ID of "to" branch
+        """
         quant = len(self.tobranchids)
         self.tobranchids[quant] = id
         self.indegree += 1
@@ -147,17 +170,12 @@ class Branch:
         self.maxangle_rad = math.pi * maxangle / 180.0
         self.minangle = minangle
         self.minangle_rad = math.pi * minangle / 180.0
-        self.upperanglenone = 0
 
         if maxangle == 360 or maxangle == 0:
             self.maxangle_rad = 2 * math.pi
-            self.upperanglenone = 1
-
-        self.loweranglenone = 0
 
         if minangle == -360 or minangle == 0:
             self.minangle_rad = -2 * math.pi
-            self.loweranglenone = 1
 
         self.invratio2 = invratio2 = 1 / ratio**2
         self.multtf = multtf = 1 / (ratio * cmath.exp(1j * self.angle_rad))
@@ -188,14 +206,9 @@ class Branch:
             and (self.Gtt >= -self.Gtf)
         )
 
-        self.inputcs = False
-        self.inputc = 2
-        self.inputs = 2
-        self.cftvarind = -1
-        self.sftvarind = -1
-        self.Pftvarind = -1
-        self.Qftvarind = -1
-        self.switchvarind = -1
+        self.inputcs = False  # Parameter for future work
+        self.inputc = 2  # Parameter for future work
+        self.inputs = 2  # Parameter for future work
 
         loud = False  # TODO-Dan Do we need this?
         if loud:
@@ -223,7 +236,10 @@ class Branch:
                 + str(Ytt)
             )
 
-    def show(self):  # TODO-Dan This is used nowhere
+    def show(self):
+        """
+        Prints a branch. Could be useful for debugging.
+        """
         logger = logging.getLogger("OpfLogger")
         logger.info(" < " + str(self.f) + " , " + str(self.t) + " > ")
         logger.info(" r " + str(self.r) + " x " + str(self.x) + " bc " + str(self.bc))
@@ -269,38 +285,43 @@ class Gen:
         self.nodeID = nodeID  # ID of bus holding gen
         self.Pg = Pg  # active power generation in existing solution
         self.Qg = Qg  # reactive power generation in existing solution
-        self.Qmax = Qmax
+        self.Qmax = Qmax  # max, min reactive power limits
         self.Qmin = Qmin
         self.Vg = Vg  # not used but kept for completeness
         self.mBase = mBase  # not used but kept for completeness
         self.status = status  # on or off
-        self.Pmax = Pmax  # max, min active and reactive power limits
+        self.Pmax = Pmax  # max, min active power limits
         self.Pmin = Pmin
-        self.Pc1 = Pc1  # not used but kept for completeness
-        self.Pc2 = Pc2  # not used but kept for completeness
-        self.Qc1min = Qc1min  # not used but kept for completeness
-        self.Qc1max = Qc1max  # not used but kept for completeness
-        self.Qc2min = Qc2min  # not used but kept for completeness
-        self.Qc2max = Qc2max  # not used but kept for completeness
-        self.ramp_agc = ramp_agc  # not used but kept for completeness
-        self.ramp_10 = ramp_10  # not used but kept for completeness
-        self.ramp_30 = ramp_30  # not used but kept for completeness
-        self.ramp_q = ramp_q  # not used but kept for completeness
-        self.apf = apf  # not used but kept for completeness
-        self.costlinenum = (
-            -1
-        )  # TODO-Dan This is used nowhere. Do we need the cost line number?
-        self.Pvarind = -1  #
-        self.Qvarind = -1
-
-    def addcost(
-        self, costvector, linenum
-    ):  # TODO-Dan This is not used anywhere. Do we need it?
-        self.costvector = costvector
-        self.costdegree = len(costvector) - 1
-        self.costlinenum = linenum
+        self.Pc1 = Pc1  # not used but kept for completeness with MATPOWER
+        self.Pc2 = Pc2  # not used but kept for completeness with MATPOWER
+        self.Qc1min = Qc1min  # not used but kept for completeness with MATPOWER
+        self.Qc1max = Qc1max  # not used but kept for completeness with MATPOWER
+        self.Qc2min = Qc2min  # not used but kept for completeness with MATPOWER
+        self.Qc2max = Qc2max  # not used but kept for completeness with MATPOWER
+        self.ramp_agc = ramp_agc  # not used but kept for completeness with MATPOWER
+        self.ramp_10 = ramp_10  # not used but kept for completeness with MATPOWER
+        self.ramp_30 = ramp_30  # not used but kept for completeness with MATPOWER
+        self.ramp_q = ramp_q  # not used but kept for completeness with MATPOWER
+        self.apf = apf  # not used but kept for completeness with MATPOWER
 
     def addcost_plain(self, costvector, costtype, startup, shutdown, baseMVA):
+        """
+        Updates generator cost data.
+        Scales the values by given degree and baseMVA.
+
+        Parameters
+        ----------
+        costvector : list
+            List of generator costs
+        costtype : int
+            Generator cost type
+        startup : float
+            Startup voltage value
+        shutdown : float
+            Shutdown voltage value
+        baseMVA : float
+            base voltage for scaling
+        """
         self.costdegree = len(costvector) - 1
         # Re-scale costs
         for j in range(self.costdegree + 1):
@@ -309,9 +330,11 @@ class Gen:
         self.costtype = costtype
         self.startup = startup
         self.shutdown = shutdown
-        self.costlinenum = -1
 
-    def showcostvector(self):  # TODO-Dan This is used nowhere
+    def showcostvector(self):
+        """
+        Prints the generator cost vector. Could be useful for debugging.
+        """
         logger = logging.getLogger("OpfLogger")
         logger.info(self.costvector)
         for i in range(0, self.costdegree + 1):
@@ -331,49 +354,43 @@ def read_case(alldata, case_dict):
     """
 
     logger = logging.getLogger("OpfLogger")
+    logger.info("Building case data structures from dictionary.")
+    baseMVA = alldata["baseMVA"] = case_dict["baseMVA"]
+    # Buses
+    logger.info("Buses.")
     buses = {}
     IDtoCountmap = {}
-    slackbus = -1
+    slackbus = refbus = -1
     numbuses = 0
     numPload = 0
     sumPd = sumQd = 0
     numisolated = 0
-
-    logger.info("Building case data structures from dictionary.")
-
     dict_buses = case_dict["bus"]
-    baseMVA = alldata["baseMVA"] = case_dict["baseMVA"]
-
-    logger.info("Buses.")
 
     for dbus in dict_buses.values():
         numbuses += 1
         count = numbuses
         nodeID = dbus["bus_i"]
         nodetype = dbus["type"]
+        Pd = dbus["Pd"]
+        Qd = dbus["Qd"]
 
-        if nodetype != 1 and nodetype != 2 and nodetype != 3 and nodetype != 4:
-            raise ValueError("Bad bus %s has type %s." % (count, nodetype))
+        if nodetype not in [1, 2, 3, 4]:
+            raise ValueError(
+                "Bus %s has type %s. Only bus types [1,2,3,4] allowed."
+                % (count, nodetype)
+            )
 
         if nodetype == 3:
-            slackbus = count
+            slackbus = refbus = count
             logger.info("    Bus %d ID %d is the reference bus." % (count, nodeID))
-            alldata["refbus"] = count
 
         if nodetype == 4:
             numisolated += 1
 
-        Pd = dbus["Pd"]
-        Qd = dbus["Qd"]
-        Gs = dbus["Gs"]
-        Bs = dbus["Bs"]
-        area = dbus["area"]
-        Vm = dbus["Vm"]
-        Va = dbus["Va"]
-        Vbase = dbus["baseKV"]
-        zone = dbus["zone"]
-        Vmax = dbus["Vmax"]
-        Vmin = dbus["Vmin"]
+        if nodetype in [1, 2, 3]:
+            sumPd += Pd
+            sumQd += Qd
 
         buses[numbuses] = Bus(
             numbuses,
@@ -381,20 +398,16 @@ def read_case(alldata, case_dict):
             nodetype,
             Pd / baseMVA,
             Qd / baseMVA,
-            Gs / baseMVA,
-            Bs / baseMVA,
-            area,
-            Vm,
-            Va,
-            Vbase,
-            zone,
-            Vmax,
-            Vmin,
+            dbus["Gs"] / baseMVA,
+            dbus["Bs"] / baseMVA,
+            dbus["area"],
+            dbus["Vm"],
+            dbus["Va"],
+            dbus["baseKV"],
+            dbus["zone"],
+            dbus["Vmax"],
+            dbus["Vmin"],
         )
-
-        if nodetype == 1 or nodetype == 2 or nodetype == 3:
-            sumPd += Pd
-            sumQd += Qd
 
         IDtoCountmap[nodeID] = count
         numPload += Pd > 0
@@ -405,6 +418,7 @@ def read_case(alldata, case_dict):
     alldata["sumQd"] = sumQd
     alldata["IDtoCountmap"] = IDtoCountmap
     alldata["slackbus"] = slackbus
+    alldata["refbus"] = refbus
 
     logger.info("    sumloadPd %f numPload %d" % (sumPd, numPload))
     logger.info("    sumloadQd %f" % sumQd)
@@ -414,59 +428,54 @@ def read_case(alldata, case_dict):
 
     logger.info("    %d buses" % numbuses)
     if numisolated > 0:
-        logger.info("    isolated buses: %d" % numisolated)
+        logger.info("    Isolated buses: %d" % numisolated)
 
+    # Branches
     logger.info("Branches.")
     branches = {}
     defaultlimit = 1e20
     numbranches = 0
     activebranches = 0
-    zerolimit = 0
-
     dict_branches = case_dict["branch"]
-    branches = {}
 
     for dbranch in dict_branches.values():
         # print(dbranch)
         numbranches += 1
         brcnt1 = numbranches
-        f = dbranch["fbus"]
-        t = dbranch["tbus"]
-        r = dbranch["r"]
-        x = dbranch["x"]
-        bc = dbranch["b"]
-        rateA = dbranch["rateA"]
-        rateB = dbranch["rateB"]
-        rateC = dbranch["rateC"]
         ratio = dbranch["ratio"]
-        if ratio == 0:
-            ratio = 1.0  # to be sure
-        angle = dbranch["angle"]
-        status = dbranch["status"]
         minangle = dbranch["angmin"]
         maxangle = dbranch["angmax"]
-        if maxangle < minangle:
-            raise ValueError("Branch # %d has illegal angle constraints." % numbranches)
-
+        f = dbranch["fbus"]
+        t = dbranch["tbus"]
         count_f = IDtoCountmap[f]
         count_t = IDtoCountmap[t]
+
+        if ratio == 0:
+            ratio = 1.0  # to be sure
+
+        if maxangle < minangle:
+            raise ValueError(
+                "Branch # %d has illegal angle constraints. minangle: %f > %f :maxangle"
+                % (numbranches, minangle, maxangle)
+            )
+
         branches[numbranches] = Branch(
             brcnt1,
             f,
             count_f,
             t,
             count_t,
-            r,
-            x,
-            bc,
-            rateA / baseMVA,
-            rateB / baseMVA,
-            rateC / baseMVA,
+            dbranch["r"],
+            dbranch["x"],
+            dbranch["b"],
+            dbranch["rateA"] / baseMVA,
+            dbranch["rateB"] / baseMVA,
+            dbranch["rateC"] / baseMVA,
             ratio,
-            angle,
+            dbranch["angle"],
             maxangle,
             minangle,
-            status,
+            dbranch["status"],
             defaultlimit,
         )
         activebranches += 1
@@ -475,80 +484,58 @@ def read_case(alldata, case_dict):
 
     alldata["branches"] = branches
     alldata["numbranches"] = numbranches
-    logger.info("    numbranches: %d active: %d" % (numbranches, activebranches))
-    if zerolimit > 0:
-        logger.info("    ---> %d unconstrained" % zerolimit)
+    logger.info("    Numbranches: %d active: %d" % (numbranches, activebranches))
 
+    # Generators
     logger.info("Generators.")
     gens = {}
-    dict_gens = case_dict["gen"]
     summaxgenP = summaxgenQ = 0
     numgens = 0
+    dict_gens = case_dict["gen"]
 
     for dgen in dict_gens.values():
         numgens += 1
         gencount1 = numgens
         nodeID = dgen["bus"]
-        Pg = dgen["Pg"]
-        Qg = dgen["Qg"]
         Qmax = dgen["Qmax"]
-        Qmin = dgen["Qmin"]
-        Vg = dgen["Vg"]
-        mBase = dgen["mBase"]
-        status = dgen["status"]
         Pmax = dgen["Pmax"]
-        Pmin = dgen["Pmin"]
-        Pc1 = dgen["Pc1"]
-        Pc2 = dgen["Pc2"]
-        Qc1min = dgen["Qc1min"]
-        Qc1max = dgen["Qc1max"]
-        Qc2min = dgen["Qc2min"]
-        Qc2max = dgen["Qc2max"]
-        ramp_agc = dgen["ramp_agc"]
-        ramp_10 = dgen["ramp_10"]
-        ramp_30 = dgen["ramp_30"]
-        ramp_q = dgen["ramp_q"]
-        apf = dgen["apf"]
+        idgencount1 = IDtoCountmap[nodeID]
 
-        idgencount1 = -1
-        if nodeID in IDtoCountmap.keys():
-            idgencount1 = IDtoCountmap[nodeID]
-            gens[gencount1] = Gen(
-                gencount1,
-                nodeID,
-                Pg,
-                Qg,
-                Qmax / baseMVA,
-                Qmin / baseMVA,
-                Vg,
-                mBase,
-                status,
-                Pmax / baseMVA,
-                Pmin / baseMVA,
-                Pc1,
-                Pc2,
-                Qc1min,
-                Qc1max,
-                Qc2min,
-                Qc2max,
-                ramp_agc,
-                ramp_10,
-                ramp_30,
-                ramp_q,
-                apf,
-            )
-
-            buses[idgencount1].addgenerator(gencount1, gens[gencount1])
-
-            if (
-                buses[idgencount1].nodetype == 2 or buses[idgencount1].nodetype == 3
-            ):  # But not 4
-                summaxgenP += Pmax
-                summaxgenQ += Qmax
-        else:
+        if nodeID not in IDtoCountmap.keys():
             raise ValueError(
                 "Generator # %d in nonexistent bus ID %d." % (gencount1, nodeID)
             )
+
+        if buses[idgencount1].nodetype in [2, 3]:  # But not 4
+            summaxgenP += Pmax
+            summaxgenQ += Qmax
+
+        gens[gencount1] = Gen(
+            gencount1,
+            nodeID,
+            dgen["Pg"],
+            dgen["Qg"],
+            Qmax / baseMVA,
+            dgen["Qmin"] / baseMVA,
+            dgen["Vg"],
+            dgen["mBase"],
+            dgen["status"],
+            Pmax / baseMVA,
+            dgen["Pmin"] / baseMVA,
+            dgen["Pc1"],
+            dgen["Pc2"],
+            dgen["Qc1min"],
+            dgen["Qc1max"],
+            dgen["Qc2min"],
+            dgen["Qc2max"],
+            dgen["ramp_agc"],
+            dgen["ramp_10"],
+            dgen["ramp_30"],
+            dgen["ramp_q"],
+            dgen["apf"],
+        )
+
+        buses[idgencount1].addgenerator(gencount1, gens[gencount1])
 
     alldata["gens"] = gens
     alldata["numgens"] = len(gens)
@@ -561,8 +548,8 @@ def read_case(alldata, case_dict):
     alldata["summaxgenP"] = summaxgenP
     alldata["summaxgenQ"] = summaxgenQ
 
-    logger.info("    number of generators: %d" % alldata["numgens"])
-    logger.info("    number of buses with gens: %d" % busgencount)
+    logger.info("    Number of generators: %d" % alldata["numgens"])
+    logger.info("    Number of buses with gens: %d" % busgencount)
     logger.info("    summaxPg %f summaxQg %f" % (summaxgenP, summaxgenQ))
 
     logger.info("Generator cost vectors.")
@@ -580,7 +567,7 @@ def read_case(alldata, case_dict):
 
 def read_case_file(casefile):
     """
-    Reads case data from an .m file following MATPOWER standards and
+    Reads case data from a .m file following MATPOWER standards and
     returns an OptiMod compatible dictionary holding all relevant case data
 
     Parameters
@@ -666,8 +653,7 @@ def read_case_build_dict(lines):
             logger.info("    baseMVA: %f" % baseMVA)
 
         elif theword == "mpc.bus":
-            buses = {}
-            case_dict["bus"] = buses
+            case_dict["bus"] = buses = {}
             lookingforendofbus = 1
             slackbus = -1
             numbuses = 0
@@ -692,7 +678,6 @@ def read_case_build_dict(lines):
                 if thisline[0] != "%":
                     nodeID = int(thisline[0])
                     nodetype = int(thisline[1])
-
                     Pd = float(thisline[2])
                     Qd = float(thisline[3])
                     Gs = float(thisline[4])
@@ -747,7 +732,7 @@ def read_case_build_dict(lines):
                 linenum += 1
 
             if lookingforendofbus:
-                raise ValueError("Could not find bus data section.")
+                raise ValueError("Could not find end of bus data section.")
 
         elif theword == "mpc.gen":
             case_dict["gen"] = gens = {}
@@ -767,59 +752,38 @@ def read_case_build_dict(lines):
                     break
 
                 gencount1 += 1
-
-                nodeID = int(thisline[0])
-                Pg = float(thisline[1])
-                Qg = float(thisline[2])
-                Qmax = float(thisline[3])
-                Qmin = float(thisline[4])
-                Vg = float(thisline[5])
-                mBase = float(thisline[6])
                 status = int(thisline[7])
-                Pmax = float(thisline[8])
-                Pmin = float(thisline[9])
-                Pc1 = float(thisline[10])
-                Pc2 = float(thisline[11])
-                Qc1min = float(thisline[12])
-                Qc1max = float(thisline[13])
-                Qc2min = float(thisline[14])
-                Qc2max = float(thisline[15])
-                ramp_agc = float(thisline[16])
-                ramp_10 = float(thisline[17])
-                ramp_30 = float(thisline[18])
-                ramp_q = float(thisline[19])
+                if status <= 0:
+                    status = 0
+                else:
+                    status = 1
                 # Trim ; if present
                 apf = thisline[20]
                 if apf[len(apf) - 1] == ";":
                     apf = apf[: len(apf) - 1]
                 apf = float(apf)
 
-                if status <= 0:
-                    status = 0
-                else:
-                    status = 1
-
                 gens[gencount1] = {}
-                gens[gencount1]["bus"] = nodeID
-                gens[gencount1]["Pg"] = Pg
-                gens[gencount1]["Qg"] = Qg
-                gens[gencount1]["Qmax"] = Qmax
-                gens[gencount1]["Qmin"] = Qmin
-                gens[gencount1]["Vg"] = Vg
-                gens[gencount1]["mBase"] = mBase
+                gens[gencount1]["bus"] = int(thisline[0])
+                gens[gencount1]["Pg"] = float(thisline[1])
+                gens[gencount1]["Qg"] = float(thisline[2])
+                gens[gencount1]["Qmax"] = float(thisline[3])
+                gens[gencount1]["Qmin"] = float(thisline[4])
+                gens[gencount1]["Vg"] = float(thisline[5])
+                gens[gencount1]["mBase"] = float(thisline[6])
                 gens[gencount1]["status"] = status
-                gens[gencount1]["Pmax"] = Pmax
-                gens[gencount1]["Pmin"] = Pmin
-                gens[gencount1]["Pc1"] = Pc1
-                gens[gencount1]["Pc2"] = Pc2
-                gens[gencount1]["Qc1min"] = Qc1min
-                gens[gencount1]["Qc1max"] = Qc1max
-                gens[gencount1]["Qc2min"] = Qc2min
-                gens[gencount1]["Qc2max"] = Qc2max
-                gens[gencount1]["ramp_agc"] = ramp_agc
-                gens[gencount1]["ramp_10"] = ramp_10
-                gens[gencount1]["ramp_30"] = ramp_30
-                gens[gencount1]["ramp_q"] = ramp_q
+                gens[gencount1]["Pmax"] = float(thisline[8])
+                gens[gencount1]["Pmin"] = float(thisline[9])
+                gens[gencount1]["Pc1"] = float(thisline[10])
+                gens[gencount1]["Pc2"] = float(thisline[11])
+                gens[gencount1]["Qc1min"] = float(thisline[12])
+                gens[gencount1]["Qc1max"] = float(thisline[13])
+                gens[gencount1]["Qc2min"] = float(thisline[14])
+                gens[gencount1]["Qc2max"] = float(thisline[15])
+                gens[gencount1]["ramp_agc"] = float(thisline[16])
+                gens[gencount1]["ramp_10"] = float(thisline[17])
+                gens[gencount1]["ramp_30"] = float(thisline[18])
+                gens[gencount1]["ramp_q"] = float(thisline[19])
                 gens[gencount1]["apf"] = apf
 
                 linenum += 1
@@ -845,20 +809,9 @@ def read_case_build_dict(lines):
                     break
 
                 numbranches += 1
-                f = int(thisline[0])
-                t = int(thisline[1])
-                r = float(thisline[2])
-                x = float(thisline[3])
-                bc = float(thisline[4])
-                rateA = float(thisline[5])
-                rateB = float(thisline[6])
-                rateC = float(thisline[7])
                 ratio = float(thisline[8])
                 if ratio == 0:
                     ratio = 1.0
-                angle = float(thisline[9])
-                status = int(thisline[10])
-                minangle = float(thisline[11])
                 maxangle = thisline[12]
                 # Trim ; at the end of line
                 if maxangle[len(maxangle) - 1] == ";":
@@ -866,18 +819,18 @@ def read_case_build_dict(lines):
                 maxangle = float(maxangle)
 
                 branches[numbranches] = {}
-                branches[numbranches]["fbus"] = f
-                branches[numbranches]["tbus"] = t
-                branches[numbranches]["r"] = r
-                branches[numbranches]["x"] = x
-                branches[numbranches]["b"] = bc
-                branches[numbranches]["rateA"] = rateA
-                branches[numbranches]["rateB"] = rateB
-                branches[numbranches]["rateC"] = rateC
+                branches[numbranches]["fbus"] = int(thisline[0])
+                branches[numbranches]["tbus"] = int(thisline[1])
+                branches[numbranches]["r"] = float(thisline[2])
+                branches[numbranches]["x"] = float(thisline[3])
+                branches[numbranches]["b"] = float(thisline[4])
+                branches[numbranches]["rateA"] = float(thisline[5])
+                branches[numbranches]["rateB"] = float(thisline[6])
+                branches[numbranches]["rateC"] = float(thisline[7])
                 branches[numbranches]["ratio"] = ratio
-                branches[numbranches]["angle"] = angle
-                branches[numbranches]["status"] = status
-                branches[numbranches]["angmin"] = minangle
+                branches[numbranches]["angle"] = float(thisline[9])
+                branches[numbranches]["status"] = int(thisline[10])
+                branches[numbranches]["angmin"] = float(thisline[11])
                 branches[numbranches]["angmax"] = maxangle
 
                 linenum += 1
@@ -906,33 +859,27 @@ def read_case_build_dict(lines):
                     lookingforendofgencost = 0
                     break
 
-                if gencostcount <= gencount1:
-                    gencoststruct[gencostcount] = {}
-                    costtype = int(thisline[0])
-                    startup = thisline[1]
-                    shutdown = thisline[2]
-                    degree = int(thisline[3])
-
-                    gencoststruct[gencostcount]["costtype"] = costtype
-                    gencoststruct[gencostcount]["n"] = degree
-                    gencoststruct[gencostcount]["startup"] = startup
-                    gencoststruct[gencostcount]["shutdown"] = shutdown
-
-                    costvector = [float(thisline[j]) for j in range(4, 4 + degree - 1)]
-                    # Trim ; at the end of line
-                    lastcost = thisline[-1]
-                    if lastcost[len(lastcost) - 1] == ";":
-                        lastcost = lastcost[: len(lastcost) - 1]
-                    lastcost = float(lastcost)
-                    costvector.append(lastcost)
-                    gencoststruct[gencostcount]["costvector"] = costvector
-
-                else:
+                if gencostcount > gencount1:
                     raise ValueError(
                         "Read %d gen costs but only %d generators."
                         % (gencostcount, gencount1)
                     )
+                degree = int(thisline[3])
 
+                gencoststruct[gencostcount] = {}
+                gencoststruct[gencostcount]["costtype"] = int(thisline[0])
+                gencoststruct[gencostcount]["startup"] = float(thisline[1])
+                gencoststruct[gencostcount]["shutdown"] = float(thisline[2])
+                gencoststruct[gencostcount]["n"] = degree
+
+                costvector = [float(thisline[j]) for j in range(4, 4 + degree - 1)]
+                # Trim ; at the end of line
+                lastcost = thisline[-1]
+                if lastcost[len(lastcost) - 1] == ";":
+                    lastcost = lastcost[: len(lastcost) - 1]
+                lastcost = float(lastcost)
+                costvector.append(lastcost)
+                gencoststruct[gencostcount]["costvector"] = costvector
                 gencostcount += 1
                 linenum += 1
             # Finished reading gen cost section
@@ -943,14 +890,14 @@ def read_case_build_dict(lines):
             linenum += 1
 
         linenum += 1
-    # Finished reading file line by line
 
+    # Finished reading file line by line
     return case_dict
 
 
 def read_case_file_mat(casefile):
     """
-    Reads case data from an .mat file following MATPOWER standards and
+    Reads case data from a .mat file following MATPOWER standards and
     returns an OptiMod compatible dictionary holding all relevant case data
 
     Parameters
@@ -987,7 +934,7 @@ def read_case_file_mat(casefile):
     mpcbranch = mpc["branch"]
     mpcgencost = mpc["gencost"]
 
-    # print(mat)
+    # Buses
     numbuses = 0
     buses = {}
     for b in mpcbuses:
@@ -1017,6 +964,7 @@ def read_case_file_mat(casefile):
 
     case_dict["bus"] = buses
 
+    # Generators
     numgens = 0
     gens = {}
     for g in mpcgen:
@@ -1046,6 +994,7 @@ def read_case_file_mat(casefile):
 
     case_dict["gen"] = gens
 
+    # Branches
     numbranches = 0
     branches = {}
     for b in mpcbranch:
@@ -1067,6 +1016,7 @@ def read_case_file_mat(casefile):
 
     case_dict["branch"] = branches
 
+    # Generator costs
     numgencosts = 0
     gencosts = {}
     for g in mpcgencost:
@@ -1164,7 +1114,7 @@ def _todict(matobj):
 
 def turn_opf_dict_into_mat_file(solution, filename):
     """
-    Writes a .mat file out of and OPF solution dictionary
+    Writes a .mat file out of an OPF solution dictionary
 
     Parameters
     ----------

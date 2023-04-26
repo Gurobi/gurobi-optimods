@@ -72,7 +72,6 @@ def lpformulator_dc_create_vars(alldata, model):
         thetavar[bus] = model.addVar(
             obj=0.0, lb=lbound, ub=ubound, name="theta_" + str(bus.nodeID)
         )
-        bus.thetavarind = varcount
         varcount += 1
 
         Plbound = Qlbound = -GRB.INFINITY
@@ -82,7 +81,6 @@ def lpformulator_dc_create_vars(alldata, model):
         Pinjvar[bus] = model.addVar(
             obj=0.0, lb=Plbound, ub=Pubound, name="IP_%d" % bus.nodeID
         )
-        bus.Pinjvarind = varcount
         # comment: Pinjvar is the variable modeling total active power injected by bus j into the branches incident with j
         varcount += 1
 
@@ -97,7 +95,6 @@ def lpformulator_dc_create_vars(alldata, model):
             GenPvar[gen] = model.addVar(
                 obj=0.0, lb=lower, ub=upper, name="GP_%d_%d" % (gen.count, gen.nodeID)
             )
-            gen.Pvarind = varcount
             varcount += 1
 
     alldata["LP"][
@@ -130,7 +127,6 @@ def lpformulator_dc_create_vars(alldata, model):
             ub=ubound,
             name="P_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
         )
-        branch.Pftvarind = varcount
         varcount += 1
 
         if alldata["branchswitching_mip"]:
@@ -140,7 +136,6 @@ def lpformulator_dc_create_vars(alldata, model):
                 ub=ubound,
                 name="twinP_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
             )
-            branch.twinPftvarind = varcount
             varcount += 1
 
     alldata["LP"][
@@ -161,7 +156,6 @@ def lpformulator_dc_create_vars(alldata, model):
                 vtype=GRB.BINARY,
                 name="z_%d_%d_%d" % (j, f, t),
             )
-            branch.switchvarind = varcount
             varcount += 1
     alldata["MIP"]["zvar"] = zvar
 

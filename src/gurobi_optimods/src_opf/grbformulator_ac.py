@@ -75,7 +75,6 @@ def lpformulator_ac_create_vars(alldata, model):
             obj=0.0, lb=lbound, ub=ubound, name="c_%d_%d" % (bus.nodeID, bus.nodeID)
         )
 
-        bus.cffvarind = varcount
         varcount += 1
 
         # csdefslacks to be done
@@ -86,16 +85,14 @@ def lpformulator_ac_create_vars(alldata, model):
         Pinjvar[bus] = model.addVar(
             obj=0.0, lb=Plbound, ub=Pubound, name="IP_%d" % bus.nodeID
         )
-        bus.Pinjvarind = varcount
         # comment: Pinjvar is the variable modeling total active power injected by bus j into the branches incident with j
         varcount += 1
 
         Qinjvar[bus] = model.addVar(
             obj=0.0, lb=Qlbound, ub=Qubound, name="IQ_%d" % bus.nodeID
         )
-        bus.Qinjvarind = varcount
-        # TODO-Dan Why is the varcount += 1 in the below comment? Should it be uncommented?
-        # comment: Qinjvar is the variable modeling total reactive power injected by bus j into the branches incident with j           varcount += 1
+        # comment: Qinjvar is the variable modeling total reactive power injected by bus j into the branches incident with j
+        varcount += 1
 
         # Next, generator variables
         for genid in bus.genidsbycount:
@@ -108,7 +105,6 @@ def lpformulator_ac_create_vars(alldata, model):
             GenPvar[gen] = model.addVar(
                 obj=0.0, lb=lower, ub=upper, name="GP_%d_%d" % (gen.count, gen.nodeID)
             )
-            gen.Pvarind = varcount
             varcount += 1
 
             lower = gen.Qmin * gen.status
@@ -120,7 +116,6 @@ def lpformulator_ac_create_vars(alldata, model):
             GenQvar[gen] = model.addVar(
                 obj=0.0, lb=lower, ub=upper, name="GQ_%d_%d" % (gen.count, gen.nodeID)
             )
-            gen.Qvarind = varcount
             varcount += 1
 
     # Branch related variables
@@ -195,7 +190,6 @@ def lpformulator_ac_create_vars(alldata, model):
             ub=ubound,
             name="c_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
         )
-        branch.cftvarind = varcount
         varcount += 1
 
         # Sine
@@ -246,7 +240,6 @@ def lpformulator_ac_create_vars(alldata, model):
             ub=ubound,
             name="s_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
         )
-        branch.sftvarind = varcount
         varcount += 1
 
     Pvar_f = {}
@@ -281,7 +274,6 @@ def lpformulator_ac_create_vars(alldata, model):
             ub=ubound,
             name="P_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
         )
-        branch.Pftvarind = varcount
         varcount += 1
 
         if alldata["branchswitching_mip"]:
@@ -291,7 +283,6 @@ def lpformulator_ac_create_vars(alldata, model):
                 ub=ubound,
                 name="twinP_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
             )
-            branch.twinPftvarind = varcount
             varcount += 1
 
         Pvar_t[branch] = model.addVar(
@@ -319,7 +310,6 @@ def lpformulator_ac_create_vars(alldata, model):
             ub=ubound,
             name="Q_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
         )
-        branch.Qftvarind = varcount
         varcount += 1
 
         if alldata["branchswitching_mip"]:
@@ -329,7 +319,6 @@ def lpformulator_ac_create_vars(alldata, model):
                 ub=ubound,
                 name="twinQ_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
             )
-            branch.twinQftvarind = varcount
             varcount += 1
 
         Qvar_t[branch] = model.addVar(
@@ -367,7 +356,6 @@ def lpformulator_ac_create_vars(alldata, model):
                 vtype=GRB.INTEGER,
                 name="z_%d_%d_%d" % (j, f, t),
             )
-            branch.switchvarind = varcount
             varcount += 1
     alldata["MIP"]["zvar"] = zvar
 
@@ -469,7 +457,6 @@ def lpformulator_ac_create_polar_vars(alldata, model, varcount):
         vvar[bus] = model.addVar(
             obj=0.0, lb=lbound, ub=ubound, name="v_" + str(bus.nodeID)
         )
-        bus.vvarind = varcount + newvarcount
 
         ubound = 2 * math.pi
         lbound = -ubound
@@ -483,7 +470,6 @@ def lpformulator_ac_create_polar_vars(alldata, model, varcount):
         thetavar[bus] = model.addVar(
             obj=0.0, lb=lbound, ub=ubound, name="theta_" + str(bus.nodeID)
         )
-        bus.thetavarind = varcount + newvarcount + 1
         newvarcount += 2
 
     cosvar = {}

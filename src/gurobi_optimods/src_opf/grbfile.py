@@ -51,7 +51,8 @@ def read_optimization_settings(alldata, settings):
     """
 
     # Currently Hard-coded
-    alldata["usequadcostvar"] = False  # TODO-Dan What do we want to do with this?
+    # We leave it like this for now, it needs further experimentation in a future release
+    alldata["usequadcostvar"] = False
 
     defaults = get_default_optimization_settings()
     read_settings_dict(alldata, settings, defaults)
