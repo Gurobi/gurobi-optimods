@@ -25,24 +25,19 @@ from .src_opf.utils import initialize_logger, remove_and_close_handlers
 
 def solve_opf_model(settings, case, logfile=""):
     """
-    Construct an OPF model from given data and solve it with Gurobi
+    Constructs an OPF model from given data and solves it with Gurobi.
+    Returns a result dictionary following MATPOWER notation
 
+    :param settings: Dictionary holding settings
+    :type settings: dictionary
+    :param case: Dictionary holding case data
+    :type case: dictionary
+    :param logfile: Name of log file, defaults to ""
+    :type logfile: str, optional
 
-    Parameters
-    ----------
-    settings : dictionary
-        Dictionary holding settings
-    case : dictionary
-        Dictionary holding case data
-    logfile: string
-        Name of log file. Can be empty
-
-
-    Returns
-    -------
-    dictionary
-        A result dictionary following MATPOWER notation, e.g., the objective value
-        is at solution["f"]
+    :return: A result dictionary following MATPOWER notation, e.g., the objective value
+             is at solution["f"] if solution["success"] = 1
+    :rtype: dictionary
     """
 
     # Initialize output and file handler and start logging
@@ -68,29 +63,23 @@ def solve_opf_model(settings, case, logfile=""):
 
 def generate_opf_solution_figure(settings, case, coords, solution):
     """
-    Read the given case and plot a given solution.
-    In best case the solution has been computed by the solve_opf_model function
-    so the indices of variables fit the ones computed by the previously
-    constructed model.
+    Reads the given case and returns a plotly figure object.
+    Ideally the solution has been computed by the `solve_opf_model` function
+
+    :param settings: Dictionary holding user settings
+    :type settings: dictionary
+    :param case: Dictionary holding case data
+    :type case: dictionary
+    :param coords: Dictionary holding bus coordinates
+    :type coords: dictionary
+    :param solution: Dictionary holding solution data following the MATPOWER notation as returned
+                      by the solve_opf_model function
+    :type solution: dictionary
 
 
-    Parameters
-    ----------
-    settings : dictionary
-        Dictionary holding settings
-    case : dictionary
-        Dictionary holding case data
-    coords : dictionary
-        Dictionary holding bus coordinates
-    solution : dictionary
-        Dictionary holding solution data following the MATPOWER notation as returned
-        by the solve_opf_model function
-
-    Returns
-    -------
-    plotly.graph_objects.Figure
-        A plotly figure objects which can be displayed via the show() function,
-        see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
+    :return: A plotly figure objects which can be displayed via the show() function,
+             see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
+    :rtype: :class:`plotly.graph_objects.Figure`
     """
 
     # Initialize output and file handler and start logging
@@ -125,24 +114,19 @@ def generate_opf_solution_figure(settings, case, coords, solution):
 
 def read_settings_from_file(settingsfile, graphics=False):
     """
-    Helper function for users
-    Used to construct a settings dictionary which can be used as input
-    for all other API functions
+    Helper function for users.
+    Constructs a settings dictionary which can be used as input
+    for all other OPF API functions
 
-    Parameters
-    ----------
-    settingsfile : string
-        Name of and possibly full path to settings file
-    graphics : boolean, optional
-        If set to true, then the function expects a settings file
-        with special graphics settings
+    :param settingsfile: Name of and possibly full path to settings file
+    :type settingsfile: string
+    :param graphics: `True` is the settingsfile holds only graphics settings,
+                     `False` otherwise
+    :type graphics: bool, optional
 
-
-    Returns
-    -------
-    dictionary
-        Dictionary object of the given settings which is to be used in
-        other API functions
+    :return: Dictionary object of user settings read in from settingsfile
+              which can be used in other OPF API functions
+    :rtype: dictionary
     """
 
     settings_dict = read_settings_file(settingsfile, graphics)
@@ -152,21 +136,17 @@ def read_settings_from_file(settingsfile, graphics=False):
 
 def read_case_from_file(casefile):
     """
-    Helper function for users
-    Used to construct a case dictionary which can be used as input
-    for other API functions
+    Helper function for users.
+    Reads a `.m` text file and constructs a case dictionary,
+    which can be used as input for other OPF API functions
 
-    Parameters
-    ----------
-    casefile :
-        Name of and possibly full path to case file given as .m file
-        The .m file should be in standard MATPOWER notation
+    :param casefile: Name of and possibly full path to case file given as `.m` file
+                     The `.m` file should be in standard MATPOWER notation
+    :type casefile: str
 
-    Returns
-    -------
-    dictionary
-        Dictionary object of the given case which is to be used in
-        other API functions
+    :return: Dictionary object of the given case which can be used in
+             other OPF API functions
+    :rtype: dictionary
     """
 
     case_dict = read_case_file(casefile)
@@ -176,21 +156,17 @@ def read_case_from_file(casefile):
 
 def read_case_from_mat_file(casefile):
     """
-    Helper function for users
-    Used to construct a case dictionary which can be used as input
-    for other API functions
+    Helper function for users.
+    Reads a `.mat` data file and constructs a case dictionary,
+    which can be used as input for other OPF API functions
 
-    Parameters
-    ----------
-    casefile :
-        Name of and possibly full path to case file given as .mat file
-        The .mat file should be in standard MATPOWER notation
+    :param casefile: Name of and possibly full path to case file given as `.mat` file
+                     The `.mat` file should be in standard MATPOWER notation
+    :type casefile: str
 
-    Returns
-    -------
-    dictionary
-        Dictionary object of the given case which is to be used in
-        other API functions
+    :return: Dictionary object of the given case which can be used in
+             other OPF API functions
+    :rtype: dictionary
     """
 
     case_dict = read_case_file_mat(casefile)
@@ -200,14 +176,13 @@ def read_case_from_mat_file(casefile):
 
 def turn_solution_into_mat_file(solution, matfilename=""):
     """
-    Writes a .mat file out of an OPF solution dictionary
+    Writes a `.mat` data file in MATPOWER notation out of an OPF solution dictionary
 
-    Parameters
-    ----------
-    solution : dictionary
-        OPF solution dictionary
-    matfilename : string, optional
-        Name of .mat file where to write the solution data
+    :param solution: OPF solution dictionary
+    :type solution: dictionary
+    :param matfilename: Name of `.mat` file where to write the solution data,
+                        defaults to `result.mat`
+    :type matfilename: str, optional
     """
 
     # Initialize output and file handler and start logging
@@ -221,7 +196,7 @@ def turn_solution_into_mat_file(solution, matfilename=""):
     if not matfilename[-4:] == ".mat":
         matfilename += ".mat"
     logger.info(
-        "Generating .mat file %s out of given OPF solution dictionary." % matfilename
+        f"Generating .mat file {matfilename} out of given OPF solution dictionary."
     )
 
     # Generate .mat file out of solution
@@ -233,20 +208,16 @@ def turn_solution_into_mat_file(solution, matfilename=""):
 
 def read_coords_from_csv_file(coordsfile):
     """
-    Helper function for users
-    Used to construct a coordinate dictionary which can be used as input
-    for other API functions
+    Helper function for users.
+    Construct a coordinate dictionary which can be used as input
+    for the `generate_opf_solution_figure` function
 
-    Parameters
-    ----------
-    coordsfile :
-        Name of and possibly full path to case file given as .csv file
+    :param coordsfile: Name of and possibly full path to case file given as `.csv` file
+    :type coordsfile: str
 
-    Returns
-    -------
-    dictionary
-        Dictionary object of the given coordinates which is to be used in
-        other API functions
+    :return: Dictionary of the given coordinates which can be used in
+             the `generate_opf_solution_figure` function
+    :rtype: dictionary
     """
 
     coord_dict = read_coords_file_csv(coordsfile)
