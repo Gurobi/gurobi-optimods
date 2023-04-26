@@ -16,7 +16,6 @@ def lpformulator_ac_body(alldata, model):
         Gurobi model to be constructed
     """
 
-    logger = logging.getLogger("OpfLogger")
     # Create model variables
     lpformulator_ac_create_vars(alldata, model)
     # Create model constraints
@@ -372,9 +371,6 @@ def lpformulator_ac_create_vars(alldata, model):
         alldata["LP"]["twinQvar_f"] = twinQvar_f
         alldata["LP"]["twinQvar_t"] = twinQvar_t
 
-    alldata["LP"]["lincostvar"] = lincostvar
-    alldata["LP"]["constvar"] = constvar
-
     alldata["LP"]["GenPvar"] = GenPvar  # AC generator real power injections
     alldata["LP"]["GenQvar"] = GenQvar  # AC generator reactive power injections
     alldata["LP"][
@@ -383,6 +379,9 @@ def lpformulator_ac_create_vars(alldata, model):
     alldata["LP"][
         "Qinjvar"
     ] = Qinjvar  # Qinjvar is the variable modeling total reactive power injected by bus j into the branches incident with j
+
+    alldata["LP"]["lincostvar"] = lincostvar
+    alldata["LP"]["constvar"] = constvar
 
 
 def lpformulator_ac_create_polar_vars(alldata, model):
@@ -517,7 +516,7 @@ def lpformulator_ac_create_efvars(alldata, model):
     IDtoCountmap = alldata["IDtoCountmap"]
     efvarcount = 0
 
-    logger.info("  Creating e,f variables.")
+    logger.info("  Creating e, f variables.")
 
     evar = {}
     fvar = {}

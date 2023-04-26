@@ -17,7 +17,6 @@ def lpformulator_iv_body(alldata, model):
         Gurobi model to be constructed
     """
 
-    logger = logging.getLogger("OpfLogger")
     # Create model variables
     lpformulator_iv_create_vars(alldata, model)
     # Create model constraints
@@ -39,17 +38,13 @@ def lpformulator_iv_create_vars(alldata, model):
     logger = logging.getLogger("OpfLogger")
     logger.info("Creating variables.")
 
-    fixtolerance = alldata["fixtolerance"]
+    # fixtolerance = alldata["fixtolerance"] # Currently not used
 
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     IDtoCountmap = alldata["IDtoCountmap"]
     gens = alldata["gens"]
-
-    # cffvars
     cffvar = {}
-
-    varcount = 0
 
     """
     for j in range(1,numbuses+1):
@@ -96,7 +91,6 @@ def lpformulator_iv_create_vars(alldata, model):
             GenPvar[gen] = model.addVar(
                 obj=0.0, lb=lower, ub=upper, name="GP_%d_%d" % (gen.count, gen.nodeID)
             )
-            varcount += 1
 
             lower = gen.Qmin * gen.status
             upper = gen.Qmax * gen.status
@@ -107,9 +101,6 @@ def lpformulator_iv_create_vars(alldata, model):
             GenQvar[gen] = model.addVar(
                 obj=0.0, lb=lower, ub=upper, name="GQ_%d_%d" % (gen.count, gen.nodeID)
             )
-            varcount += 1
-
-    logger.info("Added generator variables.")
 
     # Branch related variables
     branches = alldata["branches"]
@@ -119,7 +110,6 @@ def lpformulator_iv_create_vars(alldata, model):
     irvar_t = {}
     ijvar_f = {}  # branches!
     ijvar_t = {}
-
     Pvar_f = {}
     Qvar_f = {}
     Pvar_t = {}
@@ -152,14 +142,12 @@ def lpformulator_iv_create_vars(alldata, model):
                 ub=ubound,
                 name="ir_f_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
             )
-            varcount += 1
             irvar_t[branch] = model.addVar(
                 obj=0.0,
                 lb=lbound,
                 ub=ubound,
                 name="ir_t_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
             )
-            varcount += 1
 
             ijvar_f[branch] = model.addVar(
                 obj=0.0,
@@ -167,16 +155,13 @@ def lpformulator_iv_create_vars(alldata, model):
                 ub=ubound,
                 name="ij_f_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
             )
-            varcount += 1
             ijvar_t[branch] = model.addVar(
                 obj=0.0,
                 lb=lbound,
                 ub=ubound,
                 name="ij_t_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
             )
-            varcount += 1
 
-        logger.info("Added branch current variables.")
     else:
         logger.info("Aggressive IV formulation, so skipping current variables.")
 
@@ -202,7 +187,6 @@ def lpformulator_iv_create_vars(alldata, model):
             ub=ubound,
             name="P_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
         )
-        varcount += 1
 
         Pvar_t[branch] = model.addVar(
             obj=0.0,
@@ -210,8 +194,6 @@ def lpformulator_iv_create_vars(alldata, model):
             ub=ubound,
             name="P_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
         )
-        branch.Ptfvarind = varcount
-        varcount += 1
 
         Qvar_f[branch] = model.addVar(
             obj=0.0,
@@ -219,7 +201,6 @@ def lpformulator_iv_create_vars(alldata, model):
             ub=ubound,
             name="Q_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
         )
-        varcount += 1
 
         Qvar_t[branch] = model.addVar(
             obj=0.0,
@@ -227,10 +208,6 @@ def lpformulator_iv_create_vars(alldata, model):
             ub=ubound,
             name="Q_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
         )
-        branch.Qtfvarind = varcount
-        varcount += 1
-
-    logger.info("Added branch power flow variables.")
 
     """
     #next, bus current variables
@@ -257,15 +234,10 @@ def lpformulator_iv_create_vars(alldata, model):
     lincostvar = model.addVar(
         obj=1.0, lb=-GRB.INFINITY, ub=GRB.INFINITY, name="lincost"
     )
-    alldata["LP"]["lincostvar"] = lincostvar
-    alldata["LP"]["lincostvarind"] = varcount
-    varcount += 1
 
     if alldata["usequadcostvar"]:
         quadcostvar = model.addVar(obj=1.0, lb=0, ub=GRB.INFINITY, name="quadcost")
         alldata["LP"]["quadcostvar"] = quadcostvar
-        alldata["LP"]["quadcostvarind"] = varcount
-        varcount += 1
 
     constobjval = 0
     for gen in gens.values():
@@ -273,8 +245,6 @@ def lpformulator_iv_create_vars(alldata, model):
             constobjval += gen.costvector[gen.costdegree]
 
     constvar = model.addVar(obj=constobjval, lb=1.0, ub=1.0, name="constant")
-    alldata["LP"]["constvar"] = constvar
-    varcount += 1
 
     # Save variable data
     # alldata['LP']['cffvar']   = cffvar
@@ -290,8 +260,8 @@ def lpformulator_iv_create_vars(alldata, model):
     alldata["LP"]["Qvar_t"] = Qvar_t
     alldata["LP"]["GenPvar"] = GenPvar
     alldata["LP"]["GenQvar"] = GenQvar
-
-    logger.info("Added a total of %d variables." % (varcount))
+    alldata["LP"]["lincostvar"] = lincostvar
+    alldata["LP"]["constvar"] = constvar
 
 
 def lpformulator_iv_create_constraints(alldata, model):
@@ -458,7 +428,7 @@ def lpformulator_iv_create_constraints(alldata, model):
 
             count += 4
         logger.info("    %d branch power flow definitions added." % count)
-    else:
+    else:  # Aggressive formulation
         logger.info(
             "Aggressive formulation, so will define power flows as functions of voltages."
         )
@@ -467,6 +437,10 @@ def lpformulator_iv_create_constraints(alldata, model):
         count = 0
         for j in range(1, 1 + numbranches):
             branch = branches[j]
+
+            if not branch.status:
+                continue
+
             f = branch.f
             t = branch.t
             count_of_f = IDtoCountmap[f]
@@ -478,58 +452,53 @@ def lpformulator_iv_create_constraints(alldata, model):
             branch.Qfcname = "Qdef_%d_%d_%d" % (j, f, t)
             branch.Qtcname = "Qdef_%d_%d_%d" % (j, t, f)
 
-            if branch.status:
-                gkk = branch.Gff
-                bkk = branch.Bff
-                gkm = branch.Gft
-                bkm = branch.Bft
+            gkk = branch.Gff
+            bkk = branch.Bff
+            gkm = branch.Gft
+            bkm = branch.Bft
 
-                # (e + jf)*(Ir - jIj) = e*Ir + f*Ij + j( -e*Ij + f*Ir)
-                # But Ir = gkk*ek - bkk*fk + gkm*em - bkm*fm,
-                # And Ij = bkk*ek + gkk*fk + bkm*em + gkm*fm
+            # (e + jf)*(Ir - jIj) = e*Ir + f*Ij + j( -e*Ij + f*Ir)
+            # But Ir = gkk*ek - bkk*fk + gkm*em - bkm*fm,
+            # And Ij = bkk*ek + gkk*fk + bkm*em + gkm*fm
 
-                # So real power from k to m = ek*[ gkk*ek - bkk*fk + gkm*em - bkm*fm ]
-                #                           + fk*[ bkk*ek + gkk*fk + bkm*em + gkm*fm ] =
-                #
-                #                   gkk*(ek^2 + fk^2) + gkm*(ek*em + fk*fm) + bkm*(-ek*fm + em*fk)
+            # So real power from k to m = ek*[ gkk*ek - bkk*fk + gkm*em - bkm*fm ]
+            #                           + fk*[ bkk*ek + gkk*fk + bkm*em + gkm*fm ] =
+            #
+            #                   gkk*(ek^2 + fk^2) + gkm*(ek*em + fk*fm) + bkm*(-ek*fm + em*fk)
 
-                qexpr = gkk * (evar[busf] * evar[busf] + fvar[busf] * fvar[busf])
-                qexpr += gkm * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
-                qexpr += bkm * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
+            qexpr = gkk * (evar[busf] * evar[busf] + fvar[busf] * fvar[busf])
+            qexpr.add(gkm * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust]))
+            qexpr.add(bkm * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust]))
+            model.addConstr(qexpr == Pvar_f[branch], name=branch.Pfcname)
 
-                model.addConstr(qexpr == Pvar_f[branch], name=branch.Pfcname)
+            # And imag power from k to m = -ek*[ bkk*ek + gkk*fk + bkm*em + gkm*fm ]
+            #                            +  fk*[ gkk*ek - bkk*fk + gkm*em - bkm*fm ] =
+            #
+            #                 -bkk*(ek^2 + fk^2) - bkm*( ek*em + fk*fm) + gkm*(-ek*fm + em*fk)
 
-                # And imag power from k to m = -ek*[ bkk*ek + gkk*fk + bkm*em + gkm*fm ]
-                #                            +  fk*[ gkk*ek - bkk*fk + gkm*em - bkm*fm ] =
-                #
-                #                 -bkk*(ek^2 + fk^2) - bkm*( ek*em + fk*fm) + gkm*(-ek*fm + em*fk)
+            qexpr = -bkk * (evar[busf] * evar[busf] + fvar[busf] * fvar[busf])
+            qexpr.add(-bkm * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust]))
+            qexpr.add(gkm * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust]))
+            model.addConstr(qexpr == Qvar_f[branch], name=branch.Qfcname)
 
-                qexpr = -bkk * (evar[busf] * evar[busf] + fvar[busf] * fvar[busf])
-                qexpr += -bkm * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
-                qexpr += gkm * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
+            # now, the reversals
 
-                model.addConstr(qexpr == Qvar_f[branch], name=branch.Qfcname)
+            gmm = branch.Gtt
+            bmm = branch.Btt
+            gmk = branch.Gtf
+            bmk = branch.Btf
 
-                # now, the reversals
+            qexpr = gmm * (evar[bust] * evar[bust] + fvar[bust] * fvar[bust])
+            qexpr.add(gmk * (evar[bust] * evar[busf] + fvar[bust] * fvar[busf]))
+            qexpr.add(bmk * (-evar[bust] * fvar[busf] + fvar[bust] * evar[busf]))
+            model.addConstr(qexpr == Pvar_t[branch], name=branch.Ptcname)
 
-                gmm = branch.Gtt
-                bmm = branch.Btt
-                gmk = branch.Gtf
-                bmk = branch.Btf
+            qexpr = -bmm * (evar[bust] * evar[bust] + fvar[bust] * fvar[bust])
+            qexpr.add(-bmk * (evar[bust] * evar[busf] + fvar[bust] * fvar[busf]))
+            qexpr.add(gmk * (-evar[bust] * fvar[busf] + fvar[bust] * evar[busf]))
+            model.addConstr(qexpr == Qvar_t[branch], name=branch.Qtcname)
 
-                qexpr = gmm * (evar[bust] * evar[bust] + fvar[bust] * fvar[bust])
-                qexpr += gmk * (evar[bust] * evar[busf] + fvar[bust] * fvar[busf])
-                qexpr += bmk * (-evar[bust] * fvar[busf] + fvar[bust] * evar[busf])
-
-                model.addConstr(qexpr == Pvar_t[branch], name=branch.Ptcname)
-
-                qexpr = -bmm * (evar[bust] * evar[bust] + fvar[bust] * fvar[bust])
-                qexpr += -bmk * (evar[bust] * evar[busf] + fvar[bust] * fvar[busf])
-                qexpr += gmk * (-evar[bust] * fvar[busf] + fvar[bust] * evar[busf])
-
-                model.addConstr(qexpr == Qvar_t[branch], name=branch.Qtcname)
-
-                count += 4
+            count += 4
 
         logger.info("    %d branch power flow definitions added." % count)
 
@@ -640,11 +609,10 @@ def lpformulator_iv_create_constraints(alldata, model):
         model.addConstr(
             evar[bus] ** 2 + fvar[bus] ** 2 <= bus.Vmax * bus.Vmax, name="Vmax_%d" % j
         )
-        count += 1
         model.addConstr(
             evar[bus] ** 2 + fvar[bus] ** 2 >= bus.Vmin * bus.Vmin, name="Vmin_%d" % j
         )
-        count += 1
+        count += 2
 
     logger.info("    %d bus voltage limit constraints added." % count)
 
