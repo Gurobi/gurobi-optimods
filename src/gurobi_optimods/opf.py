@@ -40,9 +40,9 @@ def solve_opf_model(settings, case, logfile=""):
 
     Returns
     -------
-    dictionary, float
-        A result dictionary following MATPOWER notation and
-        the final objective value
+    dictionary
+        A result dictionary following MATPOWER notation, e.g., the objective value
+        is at solution["f"]
     """
 
     # Initialize output and file handler and start logging
@@ -58,15 +58,15 @@ def solve_opf_model(settings, case, logfile=""):
     read_case(alldata, case)
 
     # Construct and solve model using given case data and user settings
-    solution, objval = construct_and_solve_model(alldata)
+    solution = construct_and_solve_model(alldata)
 
     # Remove and close all logging handlers
     remove_and_close_handlers(logger, handlers)
 
-    return solution, objval
+    return solution
 
 
-def generate_opf_solution_figure(settings, case, coords, solution, objval):
+def generate_opf_solution_figure(settings, case, coords, solution):
     """
     Read the given case and plot a given solution.
     In best case the solution has been computed by the solve_opf_model function
@@ -82,10 +82,9 @@ def generate_opf_solution_figure(settings, case, coords, solution, objval):
         Dictionary holding case data
     coords : dictionary
         Dictionary holding bus coordinates
-    solution : OrderedDict
-        OrderedDictionary holding solution data
-    objval : float
-        Objective value
+    solution : dictionary
+        Dictionary holding solution data following the MATPOWER notation as returned
+        by the solve_opf_model function
 
     Returns
     -------
@@ -116,7 +115,7 @@ def generate_opf_solution_figure(settings, case, coords, solution, objval):
     grbmap_coords_from_dict(alldata, coords)
 
     # Generate a plotly figure object representing the given solution for the network
-    fig = generate_solution_figure(alldata, solution, objval)
+    fig = generate_solution_figure(alldata, solution)
 
     # Remove and close all logging handlers
     remove_and_close_handlers(logger, handlers)

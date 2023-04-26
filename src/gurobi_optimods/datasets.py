@@ -866,6 +866,5 @@ def load_case9solution():
         "success": 1,
         "f": 5296.686204000454,
     }
-    objval = 5216.026607747274
 
-    return solution, objval
+    return solution

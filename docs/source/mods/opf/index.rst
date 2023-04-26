@@ -113,7 +113,7 @@ easy access by users.
     # read case file and return a case dictionary
     case = read_case_from_file(casefile)
     # solve opf model and return a solution and the final objective value
-    solution, objval = solve_opf_model(settings, case)
+    solution = solve_opf_model(settings, case)
 
 ..  A snippet of the Gurobi log output here won't show in the rendered page,
     but serves as a doctest to make sure the code example runs. The ... lines

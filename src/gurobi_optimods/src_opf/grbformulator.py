@@ -47,7 +47,6 @@ def construct_and_solve_model(alldata):
 
     sol_count = 0
     solution = None
-    objval = None
     modelname = opftype.value + "_Formulation_Model"
 
     # Handle special settings
@@ -93,12 +92,7 @@ def construct_and_solve_model(alldata):
         # Need to turn Gurobi solution into a dictionary following MATPOWER notation
         solution = turn_solution_into_result_dict(alldata, model, opftype)
 
-        if solution["success"] == 1:
-            objval = solution["f"]
-        else:
-            objval = GRB.INFINITY
-
-    return solution, objval
+    return solution
 
     """
     buses        = alldata['buses']
@@ -464,7 +458,7 @@ def turn_solution_into_result_dict(alldata, model, opftype):
     # Now extend the result dictionary by additional information derived from Gurobi solution
     # See MATPOWER-manual for more details https://matpower.org/docs/MATPOWER-manual.pdf
     result["et"] = model.Runtime
-    if model.SolCount == 0:
+    if model.SolCount < 1:
         # We did not find any feasible solution
         result["success"] = 0
         return result

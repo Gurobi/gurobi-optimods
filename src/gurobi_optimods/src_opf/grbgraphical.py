@@ -6,7 +6,7 @@ from .grbgraph import Grbgraph
 from .plotlyhandler import Plotlyhandler
 
 
-def generate_solution_figure(alldata, solution, objval):
+def generate_solution_figure(alldata, solution):
     """
     Plots a given OPF solution.
     Saves necessary data from solution to alldata dictionary
@@ -19,8 +19,6 @@ def generate_solution_figure(alldata, solution, objval):
         Main dictionary holding all necessary data
     solution : dictionary
         Dictionary holding an OPF solution
-    objval: float
-        Objective solution value of a previously solved OPF
 
     Returns
     -------
@@ -30,7 +28,8 @@ def generate_solution_figure(alldata, solution, objval):
     """
 
     logger = logging.getLogger("OpfLogger")
-    logger.info("Plotting solution with value %.3e. Coordinates given." % objval)
+    print(solution["f"])
+    logger.info("Plotting solution with value %.3e. Coordinates given." % solution["f"])
     numbranches = alldata["numbranches"]
     numgens = alldata["numgens"]
 
@@ -54,7 +53,7 @@ def generate_solution_figure(alldata, solution, objval):
         gholder[j - 1] = gen["Pg"]
 
     textlist = []
-    textlist.append("OBJ: %10.2f" % (objval))
+    textlist.append("OBJ: %10.2f" % (solution["f"]))
     textlist.append("Lines off: %d" % (numzeros))
     return grbgraphical(alldata, "branchswitching", textlist)
 

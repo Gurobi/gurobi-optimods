@@ -70,10 +70,11 @@ class TestOpf(unittest.TestCase):
         # read case file and return a case dictionary
         case = read_case_from_mat_file(casefile)
         # solve opf model and return a solution and the final objective value
-        solution, objval = solve_opf_model(settings, case, "")
+        solution = solve_opf_model(settings, case, "")
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
-        self.assertTrue(objval is not None)
+        self.assertTrue(solution["success"] == 1)
+        self.assertTrue(solution["f"] is not None)
 
     # test a real data set for New York
     def test_NY(self):
@@ -84,21 +85,23 @@ class TestOpf(unittest.TestCase):
         case = read_case_from_file(casefile)
         casemat = read_case_from_mat_file(casemat)
         # solve opf model and return a solution and the final objective value
-        solution, objval = solve_opf_model(settings, case)
-        solutionmat, objvalmat = solve_opf_model(settings, casemat)
+        solution = solve_opf_model(settings, case)
+        solutionmat = solve_opf_model(settings, casemat)
         self.assertTrue(solution is not None)
-        self.assertTrue(objval is not None)
+        self.assertTrue(solution["success"] == 1)
+        self.assertTrue(solution["f"] is not None)
         self.assertTrue(solutionmat is not None)
-        self.assertTrue(objvalmat is not None)
+        self.assertTrue(solutionmat["success"] == 1)
+        self.assertTrue(solutionmat["f"] is not None)
 
         # objective values should be the same because it's the same data
-        self.assertTrue(objval == objvalmat)
+        self.assertTrue(solution["f"] == solutionmat["f"])
 
         # get path to csv file holding the coordinates for NY
         coordsfile = load_coordsfilepath("nybuses.csv")
         coords_dict = read_coords_from_csv_file(coordsfile)
         # plot the given solution
-        fig = generate_opf_solution_figure({}, case, coords_dict, solution, objval)
+        fig = generate_opf_solution_figure({}, case, coords_dict, solution)
         # test a few coordinates
         self.assertLess(abs(fig.data[1].x[0] - 1381.2), 1e-9)
         self.assertLess(abs(fig.data[1].y[0] - 1203.5), 1e-9)
@@ -111,10 +114,11 @@ class TestOpf(unittest.TestCase):
     def test_opfdicts(self):
         settings = {"branchswitching_mip": True, "doac": True}
         case = load_opfdictcase()
-        solution, objval = solve_opf_model(settings, case)
+        solution = solve_opf_model(settings, case)
         # check whether the solution point looks correct
         self.assertTrue(solution is not None)
-        self.assertTrue(objval is not None)
+        self.assertTrue(solution["success"] == 1)
+        self.assertTrue(solution["f"] is not None)
         self.assertLess(abs(solution["f"] - 5296.665647261), 1e-4)
         self.assertLess(abs(solution["bus"][1]["Va"] - 1), 1e-4)
         self.assertLess(abs(solution["gen"][2]["Qg"] - 3.14366), 1e-4)
@@ -125,10 +129,11 @@ class TestOpf(unittest.TestCase):
         settingsfile = load_opfsettings()
         settings = read_settings_from_file(settingsfile)
         case = load_opfdictcase()
-        solution, objval = solve_opf_model(settings, case)
+        solution = solve_opf_model(settings, case)
         # check whether the solution point looks correct
         self.assertTrue(solution is not None)
-        self.assertTrue(objval is not None)
+        self.assertTrue(solution["success"] == 1)
+        self.assertTrue(solution["f"] is not None)
         self.assertLess(abs(solution["f"] - 5296.665647261), 1e-4)
         self.assertLess(abs(solution["bus"][1]["Va"] - 1), 1e-4)
         self.assertLess(abs(solution["gen"][2]["Qg"] - 3.14366), 1e-4)
@@ -147,13 +152,15 @@ class TestOpf(unittest.TestCase):
             case = read_case_from_file(casefile)
             casemat = read_case_from_mat_file(casefilemat)
             # solve opf models and return a solution and the final objective value
-            solution, objval = solve_opf_model(settings, case)
-            solutionmat, objvalmat = solve_opf_model(settings, casemat)
+            solution = solve_opf_model(settings, case)
+            solutionmat = solve_opf_model(settings, casemat)
             # check whether the solution point looks correct
             self.assertTrue(solution is not None)
-            self.assertTrue(objval is not None)
+            self.assertTrue(solution["success"] == 1)
+            self.assertTrue(solution["f"] is not None)
             self.assertTrue(solutionmat is not None)
-            self.assertTrue(objvalmat is not None)
+            self.assertTrue(solutionmat["success"] == 1)
+            self.assertTrue(solutionmat["f"] is not None)
             self.assertLess(abs(solution["f"] - self.objvals_dc[i]), 1e-4)
             self.assertLess(abs(solutionmat["f"] - self.objvals_dc[i]), 1e-4)
             self.assertLess(abs(solution["bus"][1]["Va"] - self.Va_dc[i]), 1e-4)
@@ -164,7 +171,7 @@ class TestOpf(unittest.TestCase):
             self.assertLess(abs(solutionmat["branch"][3]["Pt"] - self.Pt_dc[i]), 1e-4)
             # objective values should be the same because it's the same data and the model is linear
             # without (too much) symmetry
-            self.assertLess(abs(objval - objvalmat), 1e-2)
+            self.assertLess(abs(solution["f"] - solutionmat["f"]), 1e-2)
 
     # test AC formulation
     def test_acopf(self):
@@ -178,13 +185,15 @@ class TestOpf(unittest.TestCase):
             case = read_case_from_file(casefile)
             casemat = read_case_from_mat_file(casefilemat)
             # solve opf models and return a solution and the final objective value
-            solution, objval = solve_opf_model(settings, case)
-            solutionmat, objvalmat = solve_opf_model(settings, casemat)
+            solution = solve_opf_model(settings, case)
+            solutionmat = solve_opf_model(settings, casemat)
             # check whether the solution point looks correct
             self.assertTrue(solution is not None)
-            self.assertTrue(objval is not None)
+            self.assertTrue(solution["success"] == 1)
+            self.assertTrue(solution["f"] is not None)
             self.assertTrue(solutionmat is not None)
-            self.assertTrue(objvalmat is not None)
+            self.assertTrue(solutionmat["success"] == 1)
+            self.assertTrue(solutionmat["f"] is not None)
             self.assertLess(abs(solution["f"] - self.objvals_ac[i]), 1e-4)
             self.assertLess(abs(solutionmat["f"] - self.objvals_ac[i]), 1e-4)
             self.assertLess(abs(solution["bus"][3]["Vm"] - self.Vm_ac[i]), 1e-4)
@@ -195,7 +204,7 @@ class TestOpf(unittest.TestCase):
             self.assertLess(abs(solutionmat["branch"][1]["Qf"] - self.Qf_ac[i]), 1e-4)
 
             # objective value should be the same because it's the same data
-            self.assertLess(abs(objval - objvalmat), 1e-2)
+            self.assertLess(abs(solution["f"] - solutionmat["f"]), 1e-2)
             # cannot check solution point because it can be symmetric
 
     # test AC formulation relaxation
@@ -210,14 +219,16 @@ class TestOpf(unittest.TestCase):
             case = read_case_from_file(casefile)
             casemat = read_case_from_mat_file(casefilemat)
             # solve opf models and return a solution and the final objective value
-            solution, objval = solve_opf_model(settings, case)
-            solutionmat, objvalmat = solve_opf_model(settings, casemat)
+            solution = solve_opf_model(settings, case)
+            solutionmat = solve_opf_model(settings, casemat)
             # check whether the solution point looks correct
             self.assertTrue(solution is not None)
-            self.assertTrue(objval is not None)
+            self.assertTrue(solution["success"] == 1)
+            self.assertTrue(solution["f"] is not None)
             self.assertTrue(solutionmat is not None)
-            self.assertTrue(objvalmat is not None)
-            self.assertLess(abs(objval - self.objvals_acconv[i]), 1)
+            self.assertTrue(solutionmat["success"] == 1)
+            self.assertTrue(solutionmat["f"] is not None)
+            self.assertLess(abs(solution["f"] - self.objvals_acconv[i]), 1)
             self.assertLess(abs(solution["gen"][1]["Pg"] - self.Pg_acconv[i]), 1)
             self.assertLess(abs(solutionmat["gen"][1]["Pg"] - self.Pg_acconv[i]), 1)
             self.assertLess(abs(solution["branch"][2]["Pt"] - self.Pt_acconv[i]), 1)
@@ -228,9 +239,9 @@ class TestOpf(unittest.TestCase):
             # so there can be quite a difference in objective value
             if self.cases[i] == "300":
                 # case 300 is quite large and has numerical issues
-                self.assertLess(abs(objval - objvalmat), 100)
+                self.assertLess(abs(solution["f"] - solutionmat["f"]), 100)
             else:
-                self.assertLess(abs(objval - objvalmat), 10)
+                self.assertLess(abs(solution["f"] - solutionmat["f"]), 10)
 
     # test IV formulation
     def test_ivopf(self):
@@ -242,10 +253,11 @@ class TestOpf(unittest.TestCase):
         # read case file and return a case dictionary
         case = read_case_from_file(casefile)
         # solve opf model and return a solution and the final objective value
-        solution, objval = solve_opf_model(settings, case)
+        solution = solve_opf_model(settings, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
-        self.assertTrue(objval is not None)
+        self.assertTrue(solution["success"] == 1)
+        self.assertTrue(solution["f"] is not None)
         self.assertLess(abs(solution["f"] - 5296.716652), 1e-4)
         # TODO finish test for IV
         # print(solution["bus"][3]["Vm"])
@@ -262,10 +274,10 @@ class TestOpf(unittest.TestCase):
         # load case dictionary
         case = load_opfdictcase()
         # load a precomputed solution and objective value
-        solution, objval = load_case9solution()
+        solution = load_case9solution()
         # plot the given solution
         fig = generate_opf_solution_figure(
-            graphics_settings, case, coords_dict, solution, objval
+            graphics_settings, case, coords_dict, solution
         )
         # check whether figure coordinates and scaled input coordinates are the same
         for i in range(9):
@@ -285,14 +297,14 @@ class TestOpf(unittest.TestCase):
         # load case dictionary
         case = load_opfdictcase()
         # solve opf model and return a solution and the final objective value
-        solution, objval = solve_opf_model(optimization_settings, case)
+        solution = solve_opf_model(optimization_settings, case)
         # plot the computed solution
         # graphics_settings = {"branchswitching_mip": True}
         graphics_settings = {}
         coordsfile = load_coordsfilepath("case9coords.csv")
         coords_dict = read_coords_from_csv_file(coordsfile)
         fig = generate_opf_solution_figure(
-            graphics_settings, case, coords_dict, solution, objval
+            graphics_settings, case, coords_dict, solution
         )
         # check whether figure coordinates and scaled input coordinates are the same
         for i in range(9):
@@ -315,10 +327,10 @@ class TestOpf(unittest.TestCase):
         # read case file and return a case dictionary
         case = read_case_from_file(casefile)
         # load a precomputed solution and objective value
-        solution, objval = load_case9solution()
+        solution = load_case9solution()
         # plot the computed solution
         fig = generate_opf_solution_figure(
-            graphics_settings, case, coords_dict, solution, objval
+            graphics_settings, case, coords_dict, solution
         )
         # check whether figure coordinates and scaled input coordinates are the same
         for i in range(9):
