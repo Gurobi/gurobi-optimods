@@ -1,5 +1,5 @@
-Portfolio Optimization
-======================
+Optimal mean-variance portfolios
+================================
 
 Portfolio optimization is concerned with the allocation of wealth into assets (such as stocks, bonds, commodities, etc.). This mod returns portfolios on the efficient frontier given expected returns and variances.
 
