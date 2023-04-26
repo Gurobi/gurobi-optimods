@@ -29,7 +29,6 @@ dependencies = [
     "numpy",
     "pandas",
     "scipy",
-    "networkx",
 ]
 dynamic = ["version"]
 
