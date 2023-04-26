@@ -322,10 +322,10 @@ portfolio :math:`x`, you can use the ``fees_buy`` (for long positions) and
     Model has 55 quadratic objective terms
     ...
 
-Note that the ``fees_buy`` parameter designates the transaction cost
-*relative* to the total portfolio value.  In the above example we used
-the value 0.005, meaning that each trasaction has a fixed-cost of 0.5%
-of the total portfolio value.
+Note that these parameters prescribe the transaction cost *relative* to the
+total portfolio value.  In the above example we used the ``fees_buy=0.005``,
+meaning that each transaction for a long position has a fixed-cost of 0.5% of
+the total portfolio value.
 
 All transaction fees are assumed to be covered by the portfolio itself,
 thus reducing the total sum of the returned optimal portfolio:
