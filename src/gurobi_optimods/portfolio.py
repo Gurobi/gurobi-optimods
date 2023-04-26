@@ -137,6 +137,9 @@ class MeanVariancePortfolio:
         :param max_total_short: Maximum total short positions, relative to
             total investment.
         :type max_total_short: :class:`float` >= 0
+
+        Refer to the Section :ref:`portfolio features` for a detailed discussion
+        of these parameters.
         """
 
         # max x' * mu + x' * Sigma * x
