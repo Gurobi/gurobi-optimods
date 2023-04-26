@@ -120,7 +120,7 @@ def read_settings_from_file(settingsfile, graphics=False):
 
     :param settingsfile: Name of and possibly full path to settings file
     :type settingsfile: string
-    :param graphics: `True` is the settingsfile holds only graphics settings,
+    :param graphics: Has to be `True` if reading settings for graphics,
                      `False` otherwise
     :type graphics: bool, optional
 

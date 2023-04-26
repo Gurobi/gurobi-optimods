@@ -13,6 +13,35 @@ class Bus:
     Describes a bus in a power system, including loads,
     voltage limits, type of bus (generator, reference, etc.), ID and count.
     The data structure also keeps track of branches incident with the bus
+
+    :param count: Number of bus in the order of reading it in
+    :type count: int
+    :param nodeID: Bus ID
+    :type nodeID: int
+    :param nodetype: Bus type: PQ bus = 1, PV bus = 2, reference bus = 3, isolated bus = 4
+    :type nodetype: int
+    :param Pd: Real power demand
+    :type Pd: float
+    :param Qd: reactive power demand
+    :type Qd: float
+    :param Gs: shunt conductance
+    :type Gs: float
+    :param Bs: shunt susceptance
+    :type Bs: float
+    :param area: area number (currently not used)
+    :type area: int
+    :param Vm: Voltage magnitude
+    :type Vm: float
+    :param Va: Voltage angle
+    :type Va: float
+    :param Vbase: Base voltage
+    :type Vbase: float
+    :param zone: loss zone (currently not used)
+    :type zone: int
+    :param Vmax: Maximum voltage magnitude
+    :type Vmax: float
+    :param Vmin: Minimum voltage magnitude
+    :type Vmin: float
     """
 
     def __init__(
@@ -32,6 +61,7 @@ class Bus:
         Vmax,
         Vmin,
     ):
+        """Constructor method"""
         self.genidsbycount = []  # array of generator IDs at this bus
         self.frombranchids = {}  # branches where this bus is the 'from' bus
         self.tobranchids = {}  # branches where this bus is the 'to' bus
@@ -62,35 +92,24 @@ class Bus:
         """
         Adds a generator to the bus
 
-
-        Parameters
-        ----------
-        generatorcount : int
-            Number of generator added to the bus
-        generator : Gen
-            generator to be added to the bus
+        :param generatorcount: Number of generator added to the bus
+        :type generatorcount: int
+        :parameter generator: Generator to be added to the bus
+        :type generator: Gen
         """
         logger = logging.getLogger("OpfLogger")
         self.genidsbycount.append(generatorcount)
         loud = False
         if loud:
-            logger.info(
-                " added generator # "
-                + str(generatorcount)
-                + " to bus ID "
-                + str(self.nodeID)
-            )
-            logger.info(" Pmax " + str(generator.Pmax) + " Pmin " + str(generator.Pmin))
+            logger.info(f" added generator # {generatorcount} to bus ID {self.nodeID}")
+            logger.info(f" Pmax {generator.Pmax} Pmin {generator.Pmin}")
 
     def addfrombranch(self, id):
         """
         Adds a "from" branch to the bus
 
-
-        Parameters
-        ----------
-        id : int
-            ID of "from" branch
+        :param id: ID of "from" branch
+        :type id: int
         """
         quant = len(self.frombranchids)
         self.frombranchids[quant] = id
@@ -101,11 +120,8 @@ class Bus:
         """
         Adds a "to" branch to the bus
 
-
-        Parameters
-        ----------
-        id : int
-            ID of "to" branch
+        :param id: ID of "to" branch
+        :type id: int
         """
         quant = len(self.tobranchids)
         self.tobranchids[quant] = id
@@ -115,8 +131,42 @@ class Bus:
 
 class Branch:
     """
-    Branch class
-    TODO-Dan Please add more description similar to the Bus class
+    Describes a branch in a power flow network which connects two buses.
+
+    :param count: Number of branch in the order of reading it in
+    :type count: int
+    :param f: "from" bus ID
+    :type f: int
+    :param count_f: count attribute value of "from" bus
+    :type count_f: int
+    :param t: "to" bus ID
+    :type t: int
+    :param count_t: count attribute value of "to" bus
+    :type count_t: int
+    :param r: resistance
+    :type r: float
+    :param x: reactance
+    :type x: float
+    :param bc: total line charging susceptance
+    :type bc: float
+    :param rateAmva: MVA long term rating
+    :type rateAmva: float
+    :param rateBmva: MVA short term rating
+    :type rateBmva: float
+    :param rateCmva: MVA emergency term rating
+    :type rateCmva: float
+    :param ratio: tranformer off nominal turns ratio
+    :type ratio: int
+    :param angle: transformer phase shift angle (degrees)
+    :type angle: float
+    :param maxangle: maximum angle difference (degrees)
+    :param status: States whether branch is on or off
+    :type status: int
+    :type maxangle: float
+    :param minangle: minimum angle difference (degrees)
+    :type minangle: float
+    :param defaultlimit: default limit on branch voltage
+    :type defaultlimit: float
     """
 
     def __init__(
@@ -134,11 +184,12 @@ class Branch:
         rateCmva,
         ratio,
         angle,
+        status,
         maxangle,
         minangle,
-        status,
         defaultlimit,
     ):
+        """Constructor method"""
         self.count = count
         self.f = f  # bus ID for from bus
         self.t = t  # bus ID for to bus
@@ -198,7 +249,9 @@ class Branch:
         self.Gtt = Gtt = (self.Ytt).real
         self.Btt = Btt = (self.Ytt).imag
 
-        self.isacline = (ratio == 1) and (self.angle_rad == 0)
+        self.isacline = (ratio == 1) and (
+            self.angle_rad == 0
+        )  # Currently not used, keep for future work
         self.nongaining = (
             (self.Gff >= 0)
             and (self.Gtt >= 0)
@@ -213,37 +266,23 @@ class Branch:
         loud = False  # TODO-Dan Do we need this?
         if loud:
             logger = logging.getLogger("OpfLogger")
-            logger.info("\nbr " + str(count) + " f " + str(f) + " t " + str(t))
-            logger.info("   idf " + str(count_f) + " idt " + str(count_t))
-            logger.info("   r " + str(r) + " x " + str(x) + " bb " + str(bc))
+            logger.info(f"\nbr {count} f {f} t {t}")
+            logger.info(f"   idf {count_f} idt {count_t}")
+            logger.info(f"   r {r} x {x} bb {bc}")
             logger.info(
-                "   ratio "
-                + str(self.ratio)
-                + " angle "
-                + str(angle)
-                + " angle_rad: "
-                + str(self.angle_rad)
+                f"   ratio {self.ratio} angle {angle} angle_rad: {self.angle_rad}"
             )
-            logger.info("   y " + str(y))
-            logger.info(
-                "       Yff "
-                + str(Yff)
-                + " , Yft "
-                + str(Yft)
-                + " , Ytf "
-                + str(Ytf)
-                + " , Ytt "
-                + str(Ytt)
-            )
+            logger.info(f"   y {y}")
+            logger.info(f"       Yff {Yff} , Yft {Yft} , Ytf {Ytf} , Ytt {Ytt}")
 
     def show(self):
         """
-        Prints a branch. Could be useful for debugging.
+        Prints a branch. Could be useful for debugging
         """
         logger = logging.getLogger("OpfLogger")
-        logger.info(" < " + str(self.f) + " , " + str(self.t) + " > ")
-        logger.info(" r " + str(self.r) + " x " + str(self.x) + " bc " + str(self.bc))
-        logger.info(" ra " + str(self.ratio) + " ang " + str(self.angle))
+        logger.info(f" < {self.f} , {self.t} > ")
+        logger.info(f" r {self.r} x {self.x} bc {self.bc}")
+        logger.info(f" ra {self.ratio} ang {self.angle}")
 
 
 class Gen:
@@ -251,9 +290,52 @@ class Gen:
     A generator models a complex power injection at a specific bus
 
     See Matpower manual for more details
-    TODO-Dan Could you please at least add a link
-    https://matpower.org/docs/MATPOWER-manual.pdf # TODO-Dan is it this one?
-    TODO-Dan Please add more description similar to the Bus class if you think it's needed
+    https://matpower.org/docs/MATPOWER-manual.pdf
+
+    :param count: Number of generator in the order of reading it in
+    :type count: int
+    :param nodeID: Generator ID
+    :type nodeID: int
+    :param Pg: Real power output
+    :type Pg: float
+    :param Qg: Reactive power output
+    :type Qg: float
+    :param Qmax: Maximum reactive power output
+    :type Qmax: float
+    :param Qmin: Minimum reactive power output
+    :type Qmin: float
+    :param Vg: Voltage magnitude setpoint
+    :type Vg: float
+    :param mBase: Total MVA base of this machine
+    :type mBase: float
+    :param status: > 0 generator in service, <= 0 out of service
+    :type status: int
+    :param Pmax: Maximum real power output
+    :type Pmax: float
+    :param Pmin: Minimum real power output
+    :type Pmin: float
+    :param Pc1: Lower real power output of PQ capability curve
+    :type Pc1: float
+    :param Pc2: Upper real power output of PQ capability curve
+    :type Pc2: float
+    :param Qc1min: Minimum reactive power output at Pc1
+    :type Qc1min: float
+    :param Qc1max: Maximum reactive power output at Pc1
+    :type Qc1max: float
+    :param Qc2min: Minimum reactive power output at Pc2
+    :type Qc2min: float
+    :param Qc2max: Maximum reactive power output at Pc2
+    :type Qc2max: float
+    :param ramp_agc: Ramp rate for load following/AGC
+    :type ramp_agc: float
+    :param ramp_10: Ramp rate for 10 minute reserves
+    :type ramp_10: float
+    :param ramp_30: Ramp rate for 30 minute reserves
+    :type ramp_30: float
+    :param ramp_q: Ramp rate for reactive power
+    :type ramp_q: float
+    :param apf: Area participation factor
+    :type apf: float
     """
 
     def __init__(
@@ -281,6 +363,7 @@ class Gen:
         ramp_q,
         apf,
     ):
+        """Constructor method"""
         self.count = count  # TODO-Dan Why do we need the count?
         self.nodeID = nodeID  # ID of bus holding gen
         self.Pg = Pg  # active power generation in existing solution
@@ -307,20 +390,18 @@ class Gen:
     def addcost_plain(self, costvector, costtype, startup, shutdown, baseMVA):
         """
         Updates generator cost data.
-        Scales the values by given degree and baseMVA.
+        Scales the values by given degree and baseMVA
 
-        Parameters
-        ----------
-        costvector : list
-            List of generator costs
-        costtype : int
-            Generator cost type
-        startup : float
-            Startup voltage value
-        shutdown : float
-            Shutdown voltage value
-        baseMVA : float
-            base voltage for scaling
+        :param costvector: List of generator costs
+        :type costvector: list
+        :param costtype: Generator cost type
+        :type costtype: int
+        :param startup: Startup cost in US dollar
+        :type startup: float
+        :param shutdown: Shutdown cost in US dollar
+        :type shutdown: float
+        :param baseMVA: base voltage for scaling
+        :type baseMVA: float
         """
         self.costdegree = len(costvector) - 1
         # Re-scale costs
@@ -345,12 +426,13 @@ def read_case(alldata, case_dict):
     """
     Fills alldata dictionary out of a user-given case dictionary
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    case_dict : dictionary
-        Dictionary holding all case relevant data
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dictionary
+    :param case_dict: Dictionary holding all case relevant data
+    :type case_dict: dictionary
+
+    :raises ValueError: Bus type not allowed, illegal angle for branch,
+                        non-existent generator
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -377,13 +459,12 @@ def read_case(alldata, case_dict):
 
         if nodetype not in [1, 2, 3, 4]:
             raise ValueError(
-                "Bus %s has type %s. Only bus types [1,2,3,4] allowed."
-                % (count, nodetype)
+                f"Bus {count} has type {nodetype}. Only bus types [1,2,3,4] allowed."
             )
 
         if nodetype == 3:
             slackbus = refbus = count
-            logger.info("    Bus %d ID %d is the reference bus." % (count, nodeID))
+            logger.info(f"    Bus {count} ID {nodeID} is the reference bus.")
 
         if nodetype == 4:
             numisolated += 1
@@ -420,15 +501,15 @@ def read_case(alldata, case_dict):
     alldata["slackbus"] = slackbus
     alldata["refbus"] = refbus
 
-    logger.info("    sumloadPd %f numPload %d" % (sumPd, numPload))
-    logger.info("    sumloadQd %f" % sumQd)
+    logger.info(f"    sumloadPd {sumPd} numPload {numPload}")
+    logger.info(f"    sumloadQd {sumQd}")
 
     if slackbus < 0:
         logger.info("    Could not find slack bus.")
 
-    logger.info("    %d buses" % numbuses)
+    logger.info(f"    {numbuses} buses")
     if numisolated > 0:
-        logger.info("    Isolated buses: %d" % numisolated)
+        logger.info(f"    Isolated buses: {numisolated}")
 
     # Branches
     logger.info("Branches.")
@@ -455,8 +536,7 @@ def read_case(alldata, case_dict):
 
         if maxangle < minangle:
             raise ValueError(
-                "Branch # %d has illegal angle constraints. minangle: %f > %f :maxangle"
-                % (numbranches, minangle, maxangle)
+                f"Branch # {numbranches} has illegal angle constraints. minangle: {minangle} > {maxangle} :maxangle"
             )
 
         branches[numbranches] = Branch(
@@ -473,9 +553,9 @@ def read_case(alldata, case_dict):
             dbranch["rateC"] / baseMVA,
             ratio,
             dbranch["angle"],
+            dbranch["status"],
             maxangle,
             minangle,
-            dbranch["status"],
             defaultlimit,
         )
         activebranches += 1
@@ -484,7 +564,7 @@ def read_case(alldata, case_dict):
 
     alldata["branches"] = branches
     alldata["numbranches"] = numbranches
-    logger.info("    Numbranches: %d active: %d" % (numbranches, activebranches))
+    logger.info(f"    Numbranches: {numbranches} active: {activebranches}")
 
     # Generators
     logger.info("Generators.")
@@ -502,9 +582,7 @@ def read_case(alldata, case_dict):
         idgencount1 = IDtoCountmap[nodeID]
 
         if nodeID not in IDtoCountmap.keys():
-            raise ValueError(
-                "Generator # %d in nonexistent bus ID %d." % (gencount1, nodeID)
-            )
+            raise ValueError(f"Generator # {gencount1} in nonexistent bus ID {nodeID}.")
 
         if buses[idgencount1].nodetype in [2, 3]:  # But not 4
             summaxgenP += Pmax
@@ -548,9 +626,9 @@ def read_case(alldata, case_dict):
     alldata["summaxgenP"] = summaxgenP
     alldata["summaxgenQ"] = summaxgenQ
 
-    logger.info("    Number of generators: %d" % alldata["numgens"])
-    logger.info("    Number of buses with gens: %d" % busgencount)
-    logger.info("    summaxPg %f summaxQg %f" % (summaxgenP, summaxgenQ))
+    logger.info(f"    Number of generators: {alldata['numgens']}")
+    logger.info(f"    Number of buses with gens: {busgencount}")
+    logger.info(f"    summaxPg {summaxgenP} summaxQg {summaxgenQ}")
 
     logger.info("Generator cost vectors.")
     gencoststruct = case_dict["gencost"]
@@ -567,23 +645,19 @@ def read_case(alldata, case_dict):
 
 def read_case_file(casefile):
     """
-    Reads case data from a .m file following MATPOWER standards and
-    returns an OptiMod compatible dictionary holding all relevant case data
+    Reads case data from a `.m` file following MATPOWER notation and
+    returns an OPF compatible dictionary holding all relevant case data
 
-    Parameters
-    ----------
-    casefile : string
-        Path to .m file holding all case relevant information
+    :param casefile: Path to `.m` file holding all case relevant information
+    :type casefile: str
 
-    Returns
-    -------
-    dictionary
-        Dictionary holding all case relevant data
+    :return: Dictionary holding all case relevant data
+    :rtype: dictionary
     """
 
     logger, handlers = initialize_logger("CaseReadingLogger")
 
-    logger.info("Reading case file %s." % casefile)
+    logger.info(f"Reading case file {casefile}.")
     starttime = time.time()
     f = open(casefile, "r")
     lines = f.readlines()
@@ -593,7 +667,7 @@ def read_case_file(casefile):
     logger.info("Building case dictionary.")
     case_dict = read_case_build_dict(lines)
     endtime = time.time()
-    logger.info("Reading and building time: %f s." % (endtime - starttime))
+    logger.info(f"Reading and building time: {endtime - starttime} s.")
     logger.info("")
 
     remove_and_close_handlers(logger, handlers)
@@ -603,19 +677,17 @@ def read_case_file(casefile):
 
 def read_case_build_dict(lines):
     """
-    Reads thru all lines of a previously read-in case file in .m format and
+    Reads thru all lines of a previously read-in case file in `.m` format and
     returns an OptiMod compatible dictionary holding all relevant case data
     This is a helper function for translating casefiles into dict format
 
-    Parameters
-    ----------
-    lines : list
-        List holding all lines of a previously read-in case file
+    :param lines: List holding all lines of a previously read-in case file
+    :type lines: list
 
-    Returns
-    -------
-    dictionary
-        Dictionary holding all case relevant data
+    :raises ValueError: Could not find end of section
+
+    :return: Dictionary holding all case relevant data
+    :rtype: dictionary
     """
 
     logger = logging.getLogger("CaseReadingLogger")
@@ -642,7 +714,7 @@ def read_case_build_dict(lines):
             linenum += 1
             continue
 
-        logger.info("  Found %s on line %d." % (theword, linenum))
+        logger.info(f"  Found {theword} on line {linenum}.")
         if theword == "mpc.baseMVA":
             tmp = thisline[2]
             # Trim ; if present
@@ -650,7 +722,7 @@ def read_case_build_dict(lines):
                 tmp = tmp[: len(tmp) - 1]
 
             case_dict["baseMVA"] = baseMVA = float(tmp)
-            logger.info("    baseMVA: %f" % baseMVA)
+            logger.info(f"    baseMVA: {baseMVA}")
 
         elif theword == "mpc.bus":
             case_dict["bus"] = buses = {}
@@ -666,14 +738,14 @@ def read_case_build_dict(lines):
 
                 # Look for end of section
                 if thisline[0] == "];":
-                    logger.info("    Found end of bus section on line %d." % linenum)
+                    logger.info(f"    Found end of bus section on line {linenum}.")
                     lookingforendofbus = 0
                     break
 
                 numbuses += 1
                 if thisline[1] == "3":
                     slackbus = int(thisline[0])
-                    logger.info("    Slack bus: %d" % slackbus)
+                    logger.info(f"    Slack bus: {slackbus}")
 
                 if thisline[0] != "%":
                     nodeID = int(thisline[0])
@@ -696,16 +768,14 @@ def read_case_build_dict(lines):
 
                     if nodetype == 3:
                         logger.info(
-                            "    Bus %d ID %d is the reference bus."
-                            % (numbuses, nodeID)
+                            f"    Bus {numbuses} ID {nodeID} is the reference bus."
                         )
 
                 else:
                     nodeID = int(thisline[1])
                     nodetype = int(thisline[2])
                     logger.info(
-                        "bus %d nodeID %d is isolated and has type %d."
-                        % (numbuses, nodeID, nodetype)
+                        f"bus {numbuses} nodeID {nodeID} is isolated and has type {nodetype}."
                     )
                     logger.info("   setting it to type 4.")
                     nodetype = 4
@@ -747,7 +817,7 @@ def read_case_build_dict(lines):
 
                 # Look for end of section
                 if thisline[0] == "];":
-                    logger.info("    Found end of gen section on line %d." % linenum)
+                    logger.info(f"    Found end of gen section on line {linenum}.")
                     lookingforendofgen = 0
                     break
 
@@ -804,7 +874,7 @@ def read_case_build_dict(lines):
 
                 # Look for end of branch section
                 if thisline[0] == "];":
-                    logger.info("    Found end of branch section on line %d." % linenum)
+                    logger.info(f"    Found end of branch section on line {linenum}.")
                     lookingforendofbranch = 0
                     break
 
@@ -853,16 +923,13 @@ def read_case_build_dict(lines):
 
                 # Look for end of gen section
                 if thisline[0] == "];":
-                    logger.info(
-                        "    Found end of gencost section on line %d." % linenum
-                    )
+                    logger.info(f"    Found end of gencost section on line {linenum}.")
                     lookingforendofgencost = 0
                     break
 
                 if gencostcount > gencount1:
                     raise ValueError(
-                        "Read %d gen costs but only %d generators."
-                        % (gencostcount, gencount1)
+                        f"Read {gencostcount} gen costs but only {gencount1} generators."
                     )
                 degree = int(thisline[3])
 
@@ -897,18 +964,16 @@ def read_case_build_dict(lines):
 
 def read_case_file_mat(casefile):
     """
-    Reads case data from a .mat file following MATPOWER standards and
+    Reads case data from a `.mat` file following MATPOWER notation and
     returns an OptiMod compatible dictionary holding all relevant case data
 
-    Parameters
-    ----------
-    casefile : string
-        Path to .mat file holding all case relevant information
+    :param casefile: Path to `.mat` file holding all case relevant information
+    :type casefile: str
 
-    Returns
-    -------
-    dictionary
-        A dictionary holding all case relevant data
+    :raises ValueError: Missing field
+
+    :return: A dictionary holding all case relevant data
+    :rtype: dictionary
     """
 
     logger, handlers = initialize_logger("CaseReadingLogger")
@@ -926,7 +991,7 @@ def read_case_file_mat(casefile):
 
     for x in ["baseMVA", "bus", "gen", "branch", "gencost"]:
         if x not in mpc.keys():
-            raise ValueError("Provided .mat file does not have a %s field" % x)
+            raise ValueError(f"Provided .mat file does not have a {x} field")
 
     case_dict["baseMVA"] = mpc["baseMVA"]
     mpcbuses = mpc["bus"]
@@ -956,10 +1021,9 @@ def read_case_file_mat(casefile):
         if buses[numbuses]["type"] == 3:
             slackbus = buses[numbuses]["bus_i"]
             refbus = numbuses
-            logger.info("    Slack bus: %d" % slackbus)
+            logger.info(f"    Slack bus: {slackbus}")
             logger.info(
-                "    Bus %d ID %d is the reference bus."
-                % (numbuses, buses[numbuses]["bus_i"])
+                f"    Bus {numbuses} ID {buses[numbuses]['bus_i']} is the reference bus."
             )
 
     case_dict["bus"] = buses
@@ -1031,14 +1095,12 @@ def read_case_file_mat(casefile):
         gencosts[numgencosts]["costvector"] = costvector
 
     if numgencosts > numgens:
-        raise ValueError(
-            "Read %d gen costs but only %d generators." % (numgencosts, numgens)
-        )
+        raise ValueError(f"Read {numgencosts} gen costs but only {numgens} generators.")
 
     case_dict["gencost"] = gencosts
 
     endtime = time.time()
-    logger.info("Reading and building time: %f s." % (endtime - starttime))
+    logger.info(f"Reading and building time: {endtime - starttime} s.")
     logger.info("")
     remove_and_close_handlers(logger, handlers)
 
@@ -1052,15 +1114,11 @@ def loadmat(filename):
     from mat files. It calls the function check keys to cure all entries
     which are still mat-objects
 
-    Parameters
-    ----------
-    filename : string
-        Path to .mat file holding all case relevant information
+    :param filename: Path to `.mat` file holding all case relevant information
+    :type filename: str
 
-    Returns
-    -------
-    dictionary
-        Dictionary holding all case relevant data read from the given .mat file
+    :return: Dictionary holding all case relevant data read from the given `.mat` file
+    :rtype: dictionary
     """
     data = scipy.io.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
@@ -1071,16 +1129,12 @@ def _check_keys(dict):
     Checks if entries in dictionary are mat-objects. If yes
     todict is called to change them to nested dictionaries
 
-    Parameters
-    ----------
-    dict : dictionary
-        Dictionary holding all case data read from a .mat file by the
-        scipy.io.loadmat function
+    :param dict: Dictionary holding all case data read from a `.mat` file by the
+                 scipy.io.loadmat function
+    :type dict: dictionary
 
-    Returns
-    -------
-    dictionary
-        Dictionary holding all case relevant data read from the given .mat file
+    :return: Dictionary holding all case relevant data read from the given `.mat` file
+    :rtype: dictionary
     """
     for key in dict:
         if isinstance(dict[key], scipy.io.matlab.mat_struct):
@@ -1092,15 +1146,11 @@ def _todict(matobj):
     """
     A recursive function which constructs from matobjects nested dictionaries
 
-    Parameters
-    ----------
-    matobj : scipy.io.matlab.mat_struct
-        Placeholder for holding read data from structs
+    :param matobj: Placeholder for holding read data from structs
+    :type matobj: scipy.io.matlab.mat_struct
 
-    Returns
-    -------
-    dictionary
-        A possibly nested dictionary with all case relevant data
+    :rtype: dictionary
+    :return: A possibly nested dictionary with all case relevant data
     """
     dict = {}
     for strg in matobj._fieldnames:
@@ -1114,14 +1164,12 @@ def _todict(matobj):
 
 def turn_opf_dict_into_mat_file(solution, filename):
     """
-    Writes a .mat file out of an OPF solution dictionary
+    Writes a `.mat` file out of an OPF solution dictionary
 
-    Parameters
-    ----------
-    solution : dictionary
-        OPF solution dictionary
-    filename : string
-        Name of .mat file where to write the solution data
+    :param solution: OPF solution dictionary
+    :type solution: dictionary
+    :param filename: Name of `.mat` file where to write the solution data
+    :type filename: str
     """
 
     # Buses

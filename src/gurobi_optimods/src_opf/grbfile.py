@@ -16,16 +16,11 @@ def initialize_data_dict(logfile=""):
     """
     Initializes a dictionary holding all necessary data
 
+    :param logfile: Name of log file, defaults to ""
+    :type logfile: str, optional
 
-    Parameters
-    ----------
-    logfile : string, optional
-        Name of log file. Can be empty
-
-    Returns
-    -------
-    dictionary
-        Returns a dictionary with a few initialized default fields
+    :return: Returns a dictionary with a few initialized default fields
+    :rtype: dictionary
     """
     alldata = {}
     alldata["LP"] = {}  # continuous variables
@@ -37,17 +32,15 @@ def initialize_data_dict(logfile=""):
 
 def read_optimization_settings(alldata, settings):
     """
-    Reads settings dictionary holding settings for an optimization call
-    and saves non-default settings to alldata dictionary.
-    Also performs basic checks for incompatible settings
+    Reads settings dictionary for an optimization call
+    and saves all settings to alldata dictionary.
 
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dictionary
+    :param settings: Dictionary holding settings used for an optimization call provided by the user
+    :type settings: dictionary
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    settings : dictionary
-        Dictionary holding settings used for an optimization call provided by the user
+    :raise ValueError: Incompatible settings
     """
 
     # Currently Hard-coded
@@ -65,22 +58,20 @@ def read_optimization_settings(alldata, settings):
     logger = logging.getLogger("OpfLogger")
     logger.info("All settings:")
     for s in defaults.keys():
-        logger.info("  {} {}".format(s, alldata[s]))
+        logger.info(f"  {s} {alldata[s]}")
 
     logger.info("")
 
 
 def read_graphics_settings(alldata, settings):
     """
-    Reads settings dictionary holding settings for a graphics call
-    and saves non-default settings to alldata dictionary
+    Reads settings dictionary for a graphics call
+    and saves all settings to alldata dictionary
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    settings : dictionary
-        Dictionary holding settings used for a graphics call provided by the user
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dictionary
+    :param settings: Dictionary holding settings used for a graphics call provided by the user
+    :type settings: dictionary
     """
 
     defaults = get_default_graphics_settings()
@@ -90,21 +81,21 @@ def read_graphics_settings(alldata, settings):
 def read_settings_dict(alldata, inputsettings, defaults):
     """
     Sets input settings in alldata from a settings dict.
+    Also checks for correct data types of settings
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    inputsettings : dictionary
-        Dictionary holding settings provided by the user
-    defaults: dictionary
-        Dictionary holding optimization or graphics default settings
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dictionary
+    :param inputsettings: Dictionary holding settings provided by the user
+    :type inputsettings: dictionary
+    :param defaults: Dictionary holding optimization or graphics default settings
+    :type defaults: dictionary
+
+    :raises ValueError: Unknown option string
     """
 
     for s in inputsettings.keys():
         if s not in defaults.keys():
-            raise ValueError("Illegal option string %s." % s)
-        # Possible TODO do we have to check for correct types of values inputsettings[s]?
+            raise ValueError(f"Unknown option string {s}.")
         defaults[s] = inputsettings[s]
 
     check_settings_for_correct_type(defaults)
@@ -115,25 +106,21 @@ def read_settings_dict(alldata, inputsettings, defaults):
 
 def read_settings_file(filename, graphics=False):
     """
-    Function to read settings from a file
+    Reads settings from a plain text file
 
-    Parameters
-    ----------
-    filename : string
-        Path to text based file holding user settings
-    graphics : boolean, optional
-        If set to true, then graphic specific settings are expected. Otherwise,
-        settings for an optimization call are expected
+    :param filename: Path to text based file holding user settings
+    :type filename: string
+    :param graphics: Has to be `True` if reading settings for graphics,
+                     `False` otherwise, defaults to `False`
+    :type graphics: bool, optional
 
-    Returns
-    -------
-    dictionary
-        A dictionary holding all non-default settings
+    :return: Dictionary holding all provided settings
+    :rtype: dictionary
     """
 
     logger, handlers = initialize_logger("SettingsReadingLogger")
 
-    logger.info("Reading settings file %s." % filename)
+    logger.info(f"Reading settings file {filename}.")
     starttime = time.time()
     settings = {}
     if graphics:
@@ -150,12 +137,12 @@ def read_settings_file(filename, graphics=False):
     settings_dict = read_settings_build_dict(settings, lines)
     endtime = time.time()
     logger.info(
-        "Settings reading and dictionary building time: %f s." % (endtime - starttime)
+        f"Settings reading and dictionary building time: {endtime - starttime} s."
     )
     logger.info("")
     logger.info("User set settings read from file.")
     for s in settings_dict.keys():
-        logger.info("  {} {}".format(s, settings_dict[s]))
+        logger.info(f"  {s} {settings_dict[s]}")
 
     logger.info("")
 
@@ -169,18 +156,16 @@ def read_settings_build_dict(settings, lines):
     Helper function to read thru all lines of a previously given settings
     file and return a dictionary holding all non-default settings
 
-    Parameters
-    ----------
-    settings : dictionary
-        Settings dictionary currently holding default settings which will
-        be overwritten by settings defined by lines
-    lines : list
-        List of all lines of a previously read in settings file
+    :param settings: Settings dictionary holding default settings at input which will
+                     be overwritten by settings defined in lines
+    :type settings: dictionary
+    :param lines: List of all lines of a previously read in settings file
+    :type lines: list
 
-    Returns
-    -------
-    dictionary
-        A dictionary holding all user set settings
+    :raises ValueError: Unkown option string
+
+    :return: A dictionary holding all user set settings
+    :rtype: dictionary
     """
 
     settings_dict = {}
@@ -195,12 +180,12 @@ def read_settings_build_dict(settings, lines):
             break
         # Check whether we know the setting
         if thisline[0] not in settings.keys():
-            raise ValueError("Illegal option string %s." % thisline[0])
+            raise ValueError(f"Illegal option string {thisline[0]}.")
         # We only have one setting which accepts 3 inputs in one line
         if len(thisline) > 2 and thisline[0] not in [
             "voltsfilename",
         ]:
-            raise ValueError("Illegal option string %s." % thisline[3])
+            raise ValueError(f"Illegal option string {thisline[3]}.")
         # Set setting with 2 inputs
         if len(thisline) == 2:
             if thisline[0] in ["maxdispersion_deg", "maxphasediff_deg", "fixtolerance"]:
@@ -250,21 +235,17 @@ def read_settings_build_dict(settings, lines):
 
 def read_coords_file_csv(filename):
     """
-    Function to read bus coordinates from a csv file
+    Reads bus coordinates from a `.csv` file
 
-    Parameters
-    ----------
-    filename : string
-        Path to text based file holding bus coordinates
+    :param filename: Path to text based file holding bus coordinates
+    :type filename: string
 
-    Returns
-    -------
-    dictionary
-        A dictionary holding the respective coordinates
+    :return: Dictionary holding the respective coordinates
+    :rtype: dictionary
     """
 
     logger, handlers = initialize_logger("CoordsReadingLogger")
-    logger.info("Reading csv coordinates file %s and building dictionary." % filename)
+    logger.info(f"Reading csv coordinates file {filename} and building dictionary.")
 
     with open(filename, mode="r") as infile:
         reader = csv.reader(infile)
@@ -287,12 +268,10 @@ def grbmap_coords_from_dict(alldata, coords_dict):
     """
     Maps given case data with given bus coordinates
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    coords_dict : dictionary
-        Dictionary holding a mapping of bus index to a given coordinate
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dictionary
+    :param coords_dict: Dictionary holding a mapping of bus index to a given coordinate
+    :type coords_dict: dictionary
     """
 
     numbuses = alldata["numbuses"]
@@ -306,19 +285,17 @@ def grbmap_coords_from_dict(alldata, coords_dict):
 
 def grbread_graphattrs(alldata, filename):
     """
-    Function to read graphical attributes from a user-given file and
-    save these into the alldata dictionary
+    Reads graphical attributes from a user-given file and
+    saves these into the alldata dictionary
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    filename : string
-        Path to text based file holding user-given graph attributes
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dictionary
+    :param filename: Path to text based file holding user-given graph attributes
+    :type filename: str
     """
 
     logger = logging.getLogger("OpfLogger")
-    logger.info("Reading graphical attributes file %s." % filename)
+    logger.info(f"Reading graphical attributes file {filename}.")
     f = open(filename, "r")
     lines = f.readlines()
     f.close()
@@ -348,7 +325,7 @@ def grbread_graphattrs(alldata, filename):
 
         linenum += 1
 
-    logger.info("Succesfully read %d graphical features." % numfeatures)
+    logger.info(f"Succesfully read {numfeatures} graphical features.")
     alldata["graphical"]["numfeatures"] = numfeatures
     alldata["graphical"]["thresh"] = thresh
     alldata["graphical"]["colorstring"] = colorstring
@@ -358,13 +335,13 @@ def grbread_graphattrs(alldata, filename):
 def grbreadvoltsfile(alldata):
     """
     TODO-Dan Review description
-    Function to read a file holding input voltages for buses.
-    The voltage filename is given via the voltsfilename setting
+    Read a file holding input voltages for buses and saves
+    necessary data into the alldata dictionary
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dictionary
+
+    :raises ValueError: Illegal line in voltsfile
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -372,7 +349,7 @@ def grbreadvoltsfile(alldata):
     IDtoCountmap = alldata["IDtoCountmap"]
 
     filename = alldata["voltsfilename"]
-    logger.info("Reading volts file %s." % filename)
+    logger.info(f"Reading volts file {filename}.")
 
     f = open(filename, "r")
     lines = f.readlines()
@@ -398,9 +375,7 @@ def grbreadvoltsfile(alldata):
             buses[buscount].inputV = float(thisline[3])  # Vm
             buses[buscount].inputA_rad = vadeg * math.pi / 180.0  # VaRad
         else:
-            raise ValueError(
-                "Illegal line %d in voltsfile %s." % (linenum + 1, filename)
-            )
+            raise ValueError(f"Illegal line {linenum + 1} in voltsfile {filename}.")
 
         linenum += 1
 
