@@ -108,6 +108,7 @@ class MeanVariancePortfolio:
         gamma,
         max_trades=None,
         fees_buy=None,
+        fees_sell=None,
         min_long=None,
         min_short=None,
         max_total_short=0.0,
@@ -121,9 +122,12 @@ class MeanVariancePortfolio:
         :type gamma: :class:`float` >= 0
         :param max_trades: Upper limit on the number of trades
         :type max_trades: :class:`int` >= 0
-        :param fees_buys: Fixed-charge cost for each traded position, relative
+        :param fees_buy: Fixed-charge cost for each traded long position, relative
             to total portfolio value
-        :type fees_buys: :class:`float` >= 0
+        :type fees_buy: :class:`float` >= 0
+        :param fees_sell: Fixed-charge cost for each traded short position, relative
+            to total portfolio value
+        :type fees_sell: :class:`float` >= 0
         :param min_long: Lower bound on the volume on a traded long position,
             relative to total portfolio value
         :type min_long: :class:`float` >= 0
@@ -168,6 +172,9 @@ class MeanVariancePortfolio:
 
             if fees_buy is not None:
                 investment += b_long.sum() * fees_buy
+
+            if fees_sell is not None:
+                investment += b_short.sum() * fees_sell
 
             if min_long is not None:
                 m.addConstr(x_long >= min_long * b_long, name="min_long")
