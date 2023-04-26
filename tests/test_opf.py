@@ -69,12 +69,28 @@ class TestOpf(unittest.TestCase):
         casefile = load_caseopfmat("9")
         # read case file and return a case dictionary
         case = read_case_from_mat_file(casefile)
-        # solve opf model and return a solution and the final objective value
+        case = load_opfdictcase()
+        # solve opf model and return a solution
         solution = solve_opf_model(settings, case, "")
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
+
+    def test_infeasible(self):
+        settings = {
+            "doac": True,
+            "skipjabr": False,
+            "use_ef": True,
+            "branchswitching_mip": True,
+        }
+        case = load_opfdictcase()
+        # make case infeasible
+        case["bus"][1]["Vmax"] = 0.8
+        # solve opf model and return a solution
+        solution = solve_opf_model(settings, case, "")
+        self.assertTrue(solution is not None)
+        self.assertTrue(solution["success"] == 0)
 
     # test a real data set for New York
     def test_NY(self):
@@ -84,7 +100,7 @@ class TestOpf(unittest.TestCase):
         # read case file and return a case dictionary
         case = read_case_from_file(casefile)
         casemat = read_case_from_mat_file(casemat)
-        # solve opf model and return a solution and the final objective value
+        # solve opf model and return a solution
         solution = solve_opf_model(settings, case)
         solutionmat = solve_opf_model(settings, casemat)
         self.assertTrue(solution is not None)
@@ -151,7 +167,7 @@ class TestOpf(unittest.TestCase):
             # read case file in .m and .mat format and return a case dictionary
             case = read_case_from_file(casefile)
             casemat = read_case_from_mat_file(casefilemat)
-            # solve opf models and return a solution and the final objective value
+            # solve opf models and return a solution
             solution = solve_opf_model(settings, case)
             solutionmat = solve_opf_model(settings, casemat)
             # check whether the solution point looks correct
@@ -184,7 +200,7 @@ class TestOpf(unittest.TestCase):
             # read case file in .m and .mat format and return a case dictionary
             case = read_case_from_file(casefile)
             casemat = read_case_from_mat_file(casefilemat)
-            # solve opf models and return a solution and the final objective value
+            # solve opf models and return a solution
             solution = solve_opf_model(settings, case)
             solutionmat = solve_opf_model(settings, casemat)
             # check whether the solution point looks correct
@@ -218,7 +234,7 @@ class TestOpf(unittest.TestCase):
             # read case file in .m and .mat format and return a case dictionary
             case = read_case_from_file(casefile)
             casemat = read_case_from_mat_file(casefilemat)
-            # solve opf models and return a solution and the final objective value
+            # solve opf models and return a solution
             solution = solve_opf_model(settings, case)
             solutionmat = solve_opf_model(settings, casemat)
             # check whether the solution point looks correct
@@ -252,7 +268,7 @@ class TestOpf(unittest.TestCase):
         casefile = load_caseopf("9")
         # read case file and return a case dictionary
         case = read_case_from_file(casefile)
-        # solve opf model and return a solution and the final objective value
+        # solve opf model and return a solution
         solution = solve_opf_model(settings, case)
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
@@ -296,7 +312,7 @@ class TestOpf(unittest.TestCase):
         }
         # load case dictionary
         case = load_opfdictcase()
-        # solve opf model and return a solution and the final objective value
+        # solve opf model and return a solution
         solution = solve_opf_model(optimization_settings, case)
         # plot the computed solution
         # graphics_settings = {"branchswitching_mip": True}

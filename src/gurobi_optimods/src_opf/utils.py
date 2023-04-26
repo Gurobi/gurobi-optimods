@@ -115,7 +115,9 @@ def get_default_optimization_settings():
         "doiv": False,
         "ivtype": None,
         "branchswitching_mip": False,
-        "branchswitching_comp": False,  # formulation for branch-switching where the binary variables simply multiply the continuous variables.  Sometimes it works better.
+        # Formulation for branch-switching where the binary variables simply multiply the continuous variables.
+        # Sometimes it works better. Only applicable for AC.
+        "branchswitching_comp": False,
         "maxdispersion_deg": 0.0,
         "maxphasediff_deg": 360.0,
         "fixtolerance": 0.0,

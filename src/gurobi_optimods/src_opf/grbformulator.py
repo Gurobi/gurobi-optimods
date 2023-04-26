@@ -68,7 +68,7 @@ def construct_and_solve_model(alldata):
         # Write model to file if requested by user
         if alldata["lpfilename"] != None:
             model.write(alldata["lpfilename"])
-            logger.info("Wrote LP to " + alldata["lpfilename"])
+            logger.info("Wrote LP to %s." % alldata["lpfilename"])
 
         # TODO This will be an own API function
         if alldata["strictcheckvoltagesolution"]:
@@ -93,13 +93,6 @@ def construct_and_solve_model(alldata):
         solution = turn_solution_into_result_dict(alldata, model, opftype)
 
     return solution
-
-    """
-    buses        = alldata['buses']
-    branches     = alldata['branches']
-    gens         = alldata['gens']
-    IDtoCountmap = alldata['IDtoCountmap']
-    """
 
 
 def lpformulator_body(alldata, model, opftype):
@@ -144,7 +137,6 @@ def lpformulator_strictchecker(alldata, model, spitoutvector, opftype):
         Type of OPF formulation
     """
     if opftype == OpfType.DC:
-        # lpformulator_dc_strictchecker(alldata, model, spitoutvector)
         pass  # TODO-Dan Is there a reason why there is no strict checker for DC (except that it's linear)
     elif opftype == OpfType.AC or opftype == OpfType.IV:
         lpformulator_ac_strictchecker(alldata, model, spitoutvector)
@@ -187,21 +179,21 @@ def lpformulator_optimize(alldata, model, opftype):
         model.Params.MIPGap = 1.0e-4
         model.Params.OptimalityTol = 1.0e-4
 
+    # Use user specified parameters
     if alldata["gurobiparamfile"] != None:
         model.read(alldata["gurobiparamfile"])
 
-    # model.Params.SolutionLimit = 20  # TODO-Dan This setting was set for DC. Why do we need a solution limit for DC?
-
-    # TODO-Dan Why is DC handled differently? It looks like the user does not have to set the usemipstart setting but only
-    #          the branchswitching_mip setting if they are solving DC
-    if (
+    # Always use a pre-defined MIPStart for DC if we have binary variables
+    # For AC only use it if it is requested
+    # Note that IV currently does not support branch switching
+    if (alldata["branchswitching_mip"] and opftype == OpfType.DC) or (
         alldata["usemipstart"]
         and (alldata["branchswitching_mip"] or alldata["branchswitching_comp"])
-        or (alldata["branchswitching_mip"] and opftype == OpfType.DC)
     ):
-        # logging level needs to be critical because INFO is disabled
+        # Logging level needs to be critical because INFO is disabled
         logger.critical("Using mip start with all branches kept on.")
-        # mip start
+        # MIP start
+        # Turn on all branches and hope for the best
         zvar = alldata["MIP"]["zvar"]
         branches = alldata["branches"]
         numbranches = alldata["numbranches"]
@@ -212,7 +204,7 @@ def lpformulator_optimize(alldata, model, opftype):
             # print(zvar[branch], ' ',zvar[branch].Start)
             # TODO-Dan What strange behavior?
 
-        # writemipstart(alldata)
+        # writemipstart(alldata) # For debugging
 
     model.optimize()
 
@@ -234,8 +226,13 @@ def lpformulator_optimize(alldata, model, opftype):
         logging.disable(logging.INFO)
         model.computeIIS()
         logging.disable(logging.NOTSET)
-        logger.info("\nIIS computed, writing IIS to file acopfmodel.ilp.")
-        model.write("acopfmodel_iis.ilp")
+        iisname = opftype.value + "opfmodel.ilp"
+        logger.info("\nIIS computed, writing IIS to file %s." % iisname)
+        logger.info("For more information on how to deal with infeasible models.")
+        logger.info(
+            "Please refer to\n  https://support.gurobi.com/hc/en-us/articles/360029969391-How-do-I-determine-why-my-model-is-infeasible-"
+        )
+        model.write(iisname)
 
     if model.status == GRB.NUMERIC:
         logger.info("\nModel Status: Numerically difficult model.\n")
@@ -304,6 +301,15 @@ def lpformulator_setup(alldata, opftype):
         alldata["use_ef"] = True
         logger.info("  IV formulation requires use_ef. Turning it on.")
 
+    if alldata["doiv"] and (
+        alldata["branchswitching_mip"] or alldata["branchswitching_comp"]
+    ):
+        alldata["branchswitching_mip"] = False
+        alldata["branchswitching_comp"] = False
+        logger.info(
+            "  IV formulation currently does not support branch switching. Turning it off."
+        )
+
     # The following settings are only for AC
     if opftype != OpfType.AC:
         return
@@ -312,7 +318,6 @@ def lpformulator_setup(alldata, opftype):
 
     branches = alldata["branches"]
     numbranches = alldata["numbranches"]
-    buses = alldata["buses"]
 
     if alldata["usemaxphasediff"]:
         logger.info(
@@ -320,9 +325,7 @@ def lpformulator_setup(alldata, opftype):
         )
 
         maxrad = alldata["maxphasediff_rad"]
-
         count = 0
-
         for j in range(1, 1 + numbranches):
             branch = branches[j]
 
@@ -377,7 +380,6 @@ def turn_solution_into_result_dict(alldata, model, opftype):
             "zone": b.zone,
             "Vmax": b.Vmax,
             "Vmin": b.Vmin,
-            # "mu": # balance constraints
         }
         result["bus"][index] = matbus
         index += 1
@@ -450,7 +452,6 @@ def turn_solution_into_result_dict(alldata, model, opftype):
             "status": b.status,
             "angmin": b.minangle,
             "angmax": b.maxangle,
-            # "switching": 1 alldata["MIP"]["zholder"] index is number of branch
         }
         result["branch"][index] = matbranch
         index += 1
@@ -478,7 +479,7 @@ def turn_solution_into_result_dict(alldata, model, opftype):
             if not alldata["branchswitching_mip"]:
                 resbus["mu"] = alldata["LP"]["balancecons"][
                     databus
-                ].Pi  # shadow prices of balance constraints
+                ].Pi  # shadow prices of balance constraints only available for LP
 
         # Generator solution data
         for genindex in result["gen"]:
@@ -559,7 +560,9 @@ def turn_solution_into_result_dict(alldata, model, opftype):
             resbranch["switching"] = 1  # Default value for switching
 
     # Set MIP fields
-    if alldata["branchswitching_mip"]:
+    if alldata["branchswitching_mip"] or (
+        opftype == OpfType.AC and alldata["branchswitching_comp"]
+    ):
         for branchindex in result["branch"]:
             resbranch = result["branch"][branchindex]
             databranch = alldata["branches"][branchindex]
@@ -588,6 +591,7 @@ def compute_voltage_angles(alldata, result):
     buses = alldata["buses"]
     branches = alldata["branches"]
     busindex = alldata["refbus"]
+    cvar = alldata["LP"]["cvar"]
     result["bus"][busindex]["Va"] = 0
     # Next, compute the angle of all other buses starting from the reference bus
     # k = "from" m = "to"
@@ -596,11 +600,11 @@ def compute_voltage_angles(alldata, result):
     busesnext = set()
     for branchindex in buses[busindex].frombranchids.values():
         b = branches[branchindex]
-        # already computed angle is always at first place of tuple
+        # Already computed angle is always at first place of tuple
         busesnext.add((b.f, b.t, branchindex, "f"))
     for branchindex in buses[busindex].tobranchids.values():
         b = branches[branchindex]
-        # already computed angle is always at first place of tuple
+        # Already computed angle is always at first place of tuple
         busesnext.add((b.t, b.f, branchindex, "t"))
 
     while len(busesdone) != alldata["numbuses"]:
@@ -612,7 +616,7 @@ def compute_voltage_angles(alldata, result):
         nextbus = buses[nextbusindex]
         knownbusindex = next[0]
         knownbus = buses[knownbusindex]
-        cvarval = alldata["LP"]["cvar"][branches[next[2]]].X
+        cvarval = cvar[branches[next[2]]].X
         res = math.acos(
             cvarval
             / (result["bus"][nextbusindex]["Vm"] * result["bus"][knownbusindex]["Vm"])
@@ -646,10 +650,6 @@ def writemipstart(alldata):
     ----------
     alldata : dictionary
         Main dictionary holding all necessary data
-
-    Returns
-    -------
-    Number of found solutions
     """
 
     logger = logging.getLogger("OpfLogger")
