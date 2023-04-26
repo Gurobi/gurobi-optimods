@@ -349,8 +349,8 @@ trade:
     ...
 
 Comparing the two portfolios `x_plain`, which has no minimum position
-constraints set with `x_minpos`, which defines these constraints we see that
-all "tiny" transactions have been removed from the portfolio.
+constraints set with `x_minpos`, which defines these constraints, we see that
+the latter portfolio is free of "tiny" transactions.
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
