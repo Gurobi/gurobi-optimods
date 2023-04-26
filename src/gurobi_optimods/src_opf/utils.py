@@ -120,7 +120,7 @@ def get_default_optimization_settings():
         "branchswitching_comp": False,
         "maxdispersion_deg": 0.0,
         "maxphasediff_deg": 360.0,
-        "fixtolerance": 0.0,
+        "fixtolerance": 1.0e-5,
     }
 
     return settings

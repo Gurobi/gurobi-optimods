@@ -28,8 +28,8 @@ def initialize_data_dict(logfile=""):
         Returns a dictionary with a few initialized default fields
     """
     alldata = {}
-    alldata["LP"] = {}
-    alldata["MIP"] = {}
+    alldata["LP"] = {}  # continuous variables
+    alldata["MIP"] = {}  # discrete variables
     alldata["logfile"] = logfile
 
     return alldata

@@ -24,8 +24,6 @@ def lpformulator_dc_body(alldata, model):
     # Create model constraints
     lpformulator_dc_create_constraints(alldata, model)
 
-    alldata["model"] = model
-
 
 def lpformulator_dc_create_vars(alldata, model):
     """
@@ -42,9 +40,7 @@ def lpformulator_dc_create_vars(alldata, model):
     logger = logging.getLogger("OpfLogger")
     logger.info("Creating variables.")
 
-    fixtolerance = 1e-05
-    if alldata["fixtolerance"] > 0:
-        fixtolerance = alldata["fixtolerance"]
+    fixtolerance = alldata["fixtolerance"]
 
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
