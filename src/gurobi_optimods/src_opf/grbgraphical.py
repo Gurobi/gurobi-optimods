@@ -28,7 +28,6 @@ def generate_solution_figure(alldata, solution):
     """
 
     logger = logging.getLogger("OpfLogger")
-    print(solution["f"])
     logger.info("Plotting solution with value %.3e. Coordinates given." % solution["f"])
     numbranches = alldata["numbranches"]
     numgens = alldata["numgens"]
@@ -104,7 +103,7 @@ def grbgraphical(alldata, plottype, textlist):
     myedge_width = {}
     myedge_color = {}
 
-    # default actions
+    # Default actions
     for j in range(1, numbuses + 1):
         bus = buses[j]
         mynode_size[j - 1] = 1
@@ -165,19 +164,6 @@ def grbgraphical(alldata, plottype, textlist):
                         " bus %d gen %d produces %f\n"
                         % (j, gen.count, gholder[gen.count - 1])
                     )
-                # break_exit('gen in grbgraphical')
-
-            """
-            if sumPgen > 500:
-                largegen = True
-            elif sumPgen > 150:
-                largegen = True
-            elif sumPgen > 100:
-                largegen = True
-            if False and sumPgen > 0:
-                print('bus',j,'sumP', sumPgen, 'color',mynode_color[j-1])
-                break_exit('huhhhh')
-            """
 
             largegen, mynode_size[j - 1], mynode_color[j - 1] = grbgetgraphattr(
                 alldata, sumPgen
@@ -189,12 +175,10 @@ def grbgraphical(alldata, plottype, textlist):
                 sumPgen,
                 Pload,
             )
-
+            # Default value for buses with load > 50 and that are not generating much
             if Pload > 50 and largegen == False:
-                mynode_size[j - 1] = 8
+                mynode_size[j - 1] = 7
                 mynode_color[j - 1] = "blue"
-
-        # break_exit('bus examination')
 
         zholder = alldata["MIP"]["zholder"]
         for j in range(1, 1 + numbranches):
@@ -210,7 +194,7 @@ def grbgraphical(alldata, plottype, textlist):
                         "branch %d (%d, %d) has small x\n"
                         % (j, branch.count_f, branch.count_t)
                     )
-                myedge_width[j] = 10
+                myedge_width[j] = 5
                 myedge_color[j] = "red"
 
                 if mynode_size[count_of_f - 1] < 10:  # a lot of hard-coded values...
@@ -295,8 +279,9 @@ def graphplot(
     textlist,
 ):
     """
-    Plots an OPF network out of user given solution/violation data which has been
-    translated into necessary dictionaries in function grbgraphical.py:grbgraphical.
+    Generates a plotly.graph_objects.Figure object from an OPF network out of user
+    given solution/violation data which has been translated into necessary dictionaries
+    in function grbgraphical.py:grbgraphical.
     Uses lat, lon coordinates as in coordinates dictionary,
     together with the plotlyhandler library to create a plotly figure.
     The figure is then rendered in a browser window.
@@ -416,30 +401,25 @@ def graphplot(
                     % (width, scannedordpair[0], scannedordpair[1], j, jprime, color)
                 )
 
-    if (
-        True
-    ):  # alldata['coordsfilename'] != None:  #should change this #TODO-Dan change to what?
-        vertexx -= np.min(vertexx)
-        vertexy -= np.min(vertexy)
+    vertexx -= np.min(vertexx)
+    vertexy -= np.min(vertexy)
 
-        # print('vertexx', vertexx)
-        # print('vertexy', vertexy)
+    deltax = np.max(vertexx) - np.min(vertexx)  # min should be 0 now
+    deltay = np.max(vertexy) - np.min(vertexy)  # min should be 0 now
 
-        deltax = np.max(vertexx) - np.min(vertexx)  # min should be 0 now
-        deltay = np.max(vertexy) - np.min(vertexy)  # min should be 0 now
+    ratioxy = deltax / deltay
 
-        ratioxy = deltax / deltay
+    scaley = 290
+    scalex = 200  # ratio approximately 1.5, mimicking the ratio between one degree of latitute and longitude
 
-        scaley = 290
-        scalex = 200  # ratio approximately 1.5, mimicking the ratio between one degree of latitute and longitude
-
-        vertexx *= scalex
-        vertexy *= scaley
+    vertexx *= scalex
+    vertexy *= scaley
 
     pos = {}
     for j in range(n):
         pos[j] = [vertexx[j], vertexy[j]]
 
+    # Construct network graph
     gG = Grbgraph()
 
     for j in range(n):
@@ -459,8 +439,8 @@ def graphplot(
         small = min(adj[j][0], adj[j][1])
         large = max(adj[j][0], adj[j][1])
         # G.add_edge(small, large)
-        addcode = gG.addedge(small, large)
-        if addcode:
+        error = gG.addedge(small, large)
+        if error:
             logger.info(
                 "Could not add edge (%d, %d) to graph object.\n" % (small, large)
             )
@@ -543,7 +523,6 @@ def scangraph(alldata, graph_dict):
         Dictionary holding each edge as a unique ordered pair
     int
         Number of unique edges
-
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -611,11 +590,31 @@ def scangraph(alldata, graph_dict):
 
 
 def grbgetgraphattr(alldata, value):
-    # looks through threshold list to find first match
+    """
+    Looks through a possibly pre-set graphical attributes list
+    and sets the corresponding values
+
+    Parameters
+    ----------
+    alldata : dictionary
+        Main dictionary holding all necessary data
+    value : float
+        Threshold value for graph attributes
+
+    Returns
+    -------
+    bool
+        States whether the graph attributes have been set, i.e.,
+        if the value is > 100
+    float
+        Size of node
+    float
+        Color of node
+    """
 
     color = "Black"
-    size = 0
-    caughtit = False
+    size = 4
+    valuesset = False
     numfeatures = 0  # alldata['graphical']['numfeatures']
 
     if numfeatures > 0:
@@ -632,21 +631,21 @@ def grbgetgraphattr(alldata, value):
             if value >= thresh[feature]:
                 size = sizeval[feature]
                 color = colorstring[feature]
-                caughtit = True
+                valuesset = True
                 break
 
     else:  # if numfeatures == 0: #default case
         if value > 500:
-            size = 20
-            color = "orange"
-            caughtit = True
-        elif value > 150:
-            size = 15
+            size = 16
             color = "red"
-            caughtit = True
-        elif value > 100:
-            size = 10
+            valuesset = True
+        elif value > 150:
+            size = 13
+            color = "orange"
+            valuesset = True
+        elif value > 75:
+            size = 8
             color = "purple"
-            caughtit = True
+            valuesset = True
 
-    return caughtit, size, color
+    return valuesset, size, color

@@ -8,7 +8,7 @@ from .grbgraph import Grbgraph
 
 class Plotlyhandler:
     """
-    Creates a plotly graph to be rendered
+    Creates a plotly figure to be rendered
     Input is a graph given by coordinates
     """
 
