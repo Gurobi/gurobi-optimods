@@ -355,8 +355,8 @@ the latter portfolio is free of "tiny" transactions.
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>> pd.concat((x_plain, x_minpos), axis=1)
-               0         1
+    >>> pd.concat([x_plain, x_minpos], keys=["plain", "minpos"], axis=1)
+           plain    minpos
     AA  0.437482  0.431366
     BB  0.020704  0.000000
     CC -0.080789 -0.070755
