@@ -46,7 +46,7 @@ class TestMod(unittest.TestCase):
         x_3 = mvp.efficient_portfolio(gamma, max_trades=3)
         self.assertLessEqual((x_3 > 1e-4).sum(), 3)
 
-    def test_transaction_fees(self):
+    def test_transaction_fees_long(self):
         data = load_portfolio()
         Sigma = data.cov()
         mu = data.mean()
@@ -57,6 +57,26 @@ class TestMod(unittest.TestCase):
         x = mvp.efficient_portfolio(gamma, fees_buy=fees_buy)
         n_trades = (x > 1e-4).sum()
         self.assertLessEqual(x.sum(), 1 - n_trades * fees_buy)
+
+    def test_transaction_fees_short(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        fees_sell = 1e-4
+        mvp = MeanVariancePortfolio(Sigma, mu)
+
+        # Ensure that we go short somewhere
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.3)
+        n_trades = (x < 0).sum()
+        self.assertGreater(n_trades, 0)
+        self.assertAlmostEqual(x.sum(), 1)
+
+        # Ensure that transaction fees are paid out of the portfolio
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.3, fees_sell=fees_sell)
+        n_trades = (x < 0).sum()
+        self.assertGreater(n_trades, 0)
+        self.assertLessEqual(x.sum(), 1 - n_trades * fees_sell + 1e-8)
 
     def test_min_long(self):
         data = load_portfolio()
