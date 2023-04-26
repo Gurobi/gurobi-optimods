@@ -295,7 +295,8 @@ Transaction fees
 ~~~~~~~~~~~~~~~~
 
 In order to define fixed costs per transaction suggested by the optimal
-portfolio :math:`x`, you can use the ``fees_buy`` keyword parameter:
+portfolio :math:`x`, you can use the ``fees_buy`` (for long positions) and
+``fees_sell`` (for short positions) keyword parameters.
 
 .. testcode:: mod
 
