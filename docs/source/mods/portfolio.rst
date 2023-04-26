@@ -219,12 +219,34 @@ portfolio value, you can do:
     Model has 55 quadratic objective terms
     ...
 
+With leverage allowed we now obtain an optimal portfolio with three short
+positions, totaling to about 14% of the wealth:
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> x
+        AA    0.437482
+        BB    0.020704
+        CC   -0.080789
+        DD    0.271877
+        EE    0.019897
+        FF   -0.029849
+        GG    0.083466
+        HH    0.240992
+        II    0.066809
+        JJ   -0.030588
+    dtype: float64
+
+    >>> x[x<0].sum()
+    -0.14122620800822816
+
 Restricting the number of trades
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible to compute an optimal portfolio under the additional restriction
 that only a limited number of positions can be traded.  This can be set through
-the `max_trades` keyword parameter.  For the example above, restricting the
+the ``max_trades`` keyword parameter.  For the example above, restricting the
 total number of trades to three we get the following optimal portfolio.
 
 .. testcode:: mod
@@ -273,7 +295,7 @@ Transaction fees
 ~~~~~~~~~~~~~~~~
 
 In order to define fixed costs per transaction suggested by the optimal
-portfolio :math:`x`, you can use the `fees_buy` keyword parameter:
+portfolio :math:`x`, you can use the ``fees_buy`` keyword parameter:
 
 .. testcode:: mod
 
@@ -299,7 +321,7 @@ portfolio :math:`x`, you can use the `fees_buy` keyword parameter:
     Model has 55 quadratic objective terms
     ...
 
-Note that the `fees_buy` parameter designates the transaction cost
+Note that the ``fees_buy`` parameter designates the transaction cost
 *relative* to the total portfolio value.  In the above example we used
 the value 0.005, meaning that each trasaction has a fixed-cost of 0.5%
 of the total portfolio value.
@@ -317,10 +339,10 @@ Minimum position constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A minimum fraction of investment can be enforced upon each individual position,
-preventing trades at negligible volume.  Use the keyword parameters `min_long`
-and `min_short` to set a thresholds for trading long and short positions.  For
-example, here we enforce that at least 5% of the wealth are allocated to each
-trade:
+preventing trades at negligible volume.  Use the keyword parameters
+``min_long`` and ``min_short`` to set a thresholds for trading long and short
+positions.  For example, here we enforce that at least 5% of the wealth are
+allocated to each trade:
 
 .. testcode:: mod
 
@@ -348,8 +370,8 @@ trade:
     Model has 55 quadratic objective terms
     ...
 
-Comparing the two portfolios `x_plain`, which has no minimum position
-constraints set with `x_minpos`, which defines these constraints, we see that
+Comparing the two portfolios ``x_plain``, which has no minimum position
+constraints set with ``x_minpos``, which defines these constraints, we see that
 the latter portfolio is free of "tiny" transactions.
 
 .. doctest:: mod
