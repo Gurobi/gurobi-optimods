@@ -2,8 +2,8 @@ import logging
 import math
 import numpy as np
 
-from .grbgraph import Grbgraph
-from .plotlyhandler import Plotlyhandler
+from gurobi_optimods.opf.grbgraph import Grbgraph
+from gurobi_optimods.opf.plotlyhandler import Plotlyhandler
 
 
 def generate_solution_figure(alldata, solution):

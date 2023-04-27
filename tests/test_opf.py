@@ -22,7 +22,7 @@ except ImportError:
 
 # If plotly is installed, the opfgraphics module should import ok
 if plotly:
-    from gurobi_optimods.opfgraphics import generate_opf_solution_figure
+    from gurobi_optimods.opf.graphics import generate_opf_solution_figure
 
 
 class TestOpf(unittest.TestCase):

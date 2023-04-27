@@ -3,7 +3,7 @@ import logging
 import gurobipy as gp
 from gurobipy import GRB
 
-from .grbformulator_ac import computebalbounds
+from gurobi_optimods.opf.grbformulator_ac import computebalbounds
 
 
 def lpformulator_dc_body(alldata, model):

@@ -5,16 +5,14 @@ import numpy as np
 import gurobipy as gp
 from gurobipy import GRB
 
-from .utils import OpfType
-from .grbfile import grbreadvoltsfile
-from .grbformulator_ac import (
+from gurobi_optimods.opf.utils import OpfType
+from gurobi_optimods.opf.grbfile import grbreadvoltsfile
+from gurobi_optimods.opf.grbformulator_ac import (
     lpformulator_ac_body,
     lpformulator_ac_strictchecker,
 )
-from .grbformulator_dc import lpformulator_dc_body
-from .grbformulator_iv import (
-    lpformulator_iv_body,
-)
+from gurobi_optimods.opf.grbformulator_dc import lpformulator_dc_body
+from gurobi_optimods.opf.grbformulator_iv import lpformulator_iv_body
 
 
 def construct_and_solve_model(alldata):

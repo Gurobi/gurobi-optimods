@@ -1,11 +1,11 @@
-from .src_opf.grbgraphical import generate_solution_figure
-from .src_opf.utils import initialize_logger, remove_and_close_handlers
-from .src_opf.grbfile import (
+from gurobi_optimods.opf.grbgraphical import generate_solution_figure
+from gurobi_optimods.opf.utils import initialize_logger, remove_and_close_handlers
+from gurobi_optimods.opf.grbfile import (
     initialize_data_dict,
     read_graphics_settings,
     grbmap_coords_from_dict,
 )
-from .src_opf.grbcasereader import read_case
+from gurobi_optimods.opf.grbcasereader import read_case
 
 
 def generate_opf_solution_figure(

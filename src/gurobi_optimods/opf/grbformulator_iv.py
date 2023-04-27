@@ -2,7 +2,7 @@ import logging
 import gurobipy as gp
 from gurobipy import GRB
 
-from .grbformulator_ac import lpformulator_ac_create_efvars
+from gurobi_optimods.opf.grbformulator_ac import lpformulator_ac_create_efvars
 
 
 def lpformulator_iv_body(alldata, model):

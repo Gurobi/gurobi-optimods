@@ -2,13 +2,13 @@ import logging
 
 import gurobipy as gp
 
-from .src_opf.grbcasereader import (
+from gurobi_optimods.opf.grbcasereader import (
     read_case,
     read_case_file_mat,
     turn_opf_dict_into_mat_file,
 )
 
-from .src_opf.grbfile import (
+from gurobi_optimods.opf.grbfile import (
     initialize_data_dict,
     construct_settings_dict,
     read_optimization_settings,
@@ -17,8 +17,8 @@ from .src_opf.grbfile import (
     grbmap_coords_from_dict,
     grbread_graphattrs,
 )
-from .src_opf.grbformulator import construct_and_solve_model
-from .src_opf.utils import initialize_logger, remove_and_close_handlers
+from gurobi_optimods.opf.grbformulator import construct_and_solve_model
+from gurobi_optimods.opf.utils import initialize_logger, remove_and_close_handlers
 
 
 def solve_opf_model(

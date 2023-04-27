@@ -4,7 +4,7 @@ from typing import Union
 
 import plotly.graph_objects as go
 
-from .grbgraph import Grbgraph
+from gurobi_optimods.opf.grbgraph import Grbgraph
 
 
 class Plotlyhandler:

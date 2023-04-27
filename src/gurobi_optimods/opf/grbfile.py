@@ -3,7 +3,7 @@ import math
 import csv
 import logging
 
-from .utils import (
+from gurobi_optimods.opf.utils import (
     get_default_optimization_settings,
     get_default_graphics_settings,
     initialize_logger,

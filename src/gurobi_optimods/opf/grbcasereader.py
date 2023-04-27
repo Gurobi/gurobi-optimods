@@ -5,7 +5,7 @@ import logging
 import scipy
 import numpy as np
 
-from .utils import initialize_logger, remove_and_close_handlers
+from gurobi_optimods.opf.utils import initialize_logger, remove_and_close_handlers
 
 
 class Bus:
