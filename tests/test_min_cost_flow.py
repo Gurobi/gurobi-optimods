@@ -25,6 +25,13 @@ class TestMinCostFlow(unittest.TestCase):
             sol.index.tolist(), [(0, 1), (0, 2), (1, 3), (2, 3), (2, 4), (3, 5), (4, 5)]
         )
 
+    def test_min_cost_flow_infeasible(self):
+        edge_data, node_data = datasets.load_min_cost_flow()
+        # Add a node requesting more flow than is available.
+        node_data["demand"].values[-1] = 10.0
+        with self.assertRaisesRegex(ValueError, "Unsatisfiable flows"):
+            obj, sol = mcf.min_cost_flow(edge_data, node_data)
+
     def test_min_cost_flow_scipy(self):
         G, cap, cost, demands = datasets.load_min_cost_flow_scipy()
         cost, sol = mcf.min_cost_flow_scipy(G, cap, cost, demands)

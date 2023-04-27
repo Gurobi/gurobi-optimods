@@ -61,11 +61,14 @@ def min_cost_flow(arc_data: pd.DataFrame, demand_data: pd.DataFrame, *, create_e
 
     # Nodes and attributes
     rep_nodes = np.concatenate((from_arc, to_arc), dtype="object")
+    # Get unique node labels in the order they appear in rep_nodes
     _, idx = np.unique(rep_nodes, return_index=True)
     nodes = rep_nodes[np.sort(idx)]
+
     demand_nodes = demand_data.index.to_numpy()
     _demands = demand_data["demand"].to_numpy()
     demands = np.zeros(nodes.shape, dtype=object)
+    # Assign demand in the same order as the nodes array
     demand_nodes_indeces = np.where(np.isin(nodes, demand_nodes, assume_unique=True))[0]
     for i, n in enumerate(demand_nodes_indeces):
         demands[n] = _demands[i]

@@ -25,10 +25,11 @@ between two molecules.
 Problem Specification
 ---------------------
 
-Consider an undirected graph G with n vertices and m edges where each vertex is
-associated with a positive weight w. Find a maximum weighted independent set, i.e.,
-select a set of vertices in graph G where there is no edge between any pair of
-vertices and the sum of the vertex weight is maximum.
+Consider an undirected graph :math:`G` with :math:`n` vertices and :math:`m`
+edges where each vertex is associated with a positive weight :math:`w`. Find a
+maximum weighted independent set, i.e., select a set of vertices in graph
+:math:`G` where there is no edge between any pair of vertices and the sum of the
+vertex weight is maximum.
 
 .. tabs::
 
