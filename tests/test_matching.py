@@ -1,10 +1,13 @@
 import random
 import unittest
+from collections import Counter
 from itertools import chain, product
 
 import numpy as np
+import pandas as pd
 import scipy.sparse as sp
 from numpy.testing import assert_allclose, assert_array_equal
+from pandas.testing import assert_frame_equal
 
 try:
     import networkx as nx
@@ -29,7 +32,7 @@ def random_bipartite(n1, n2, p, seed):
     return triu + triu.T, nodes1, nodes2
 
 
-class TestBipartiteMatching(unittest.TestCase):
+class TestBipartiteMatchingScipySparse(unittest.TestCase):
     def assert_is_unweighted_matching(self, matching):
         assert_allclose(matching.data, np.ones(matching.data.shape))
         adj = matching.todense()
@@ -91,6 +94,30 @@ class TestBipartiteMatching(unittest.TestCase):
         self.assert_is_unweighted_matching(matching)
         self.assertEqual(matching.nnz, expect_matching_size * 2)  # symmetric
 
+    def test_simple_2(self):
+        # Simple case with a known solution
+        nodes1 = np.array([0, 1, 2])
+        nodes2 = np.array([3, 4, 5])
+        i = np.array([0, 0, 1, 1, 2])
+        j = np.array([3, 4, 4, 5, 5])
+        data = np.ones(5)
+        triu = sp.coo_matrix((data, (i, j)), shape=(6, 6))
+        adjacency = triu + triu.T
+
+        matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
+
+        self.assertIsInstance(matching, sp.spmatrix)
+        self.assertIsNot(matching, adjacency)
+        self.assertEqual(matching.shape, (6, 6))
+        self.assert_is_unweighted_matching(matching)
+
+        i = np.array([0, 1, 2])
+        j = np.array([3, 4, 5])
+        data = np.ones(3)
+        expected = sp.coo_matrix((data, (i, j)), shape=(6, 6))
+        expected = expected + expected.T
+        assert_array_equal(matching.todense(), expected.todense())
+
     def test_random(self):
         # Property test for matchings on random graphs
         adjacency, nodes1, nodes2 = random_bipartite(n1=2, n2=3, p=0.5, seed=2394)
@@ -124,7 +151,63 @@ class TestBipartiteMatching(unittest.TestCase):
         self.assertEqual(matching.shape, adjacency.shape)
         self.assert_is_unweighted_matching(matching)
 
-    @unittest.skipIf(nx is None, "networkx is not installed")
+
+class TestBipartiteMatchingPandas(unittest.TestCase):
+    def assert_is_unweighted_matching(self, matching, columns):
+        incidence_count = Counter(matching[columns].to_numpy().reshape(-1))
+        self.assertTrue(all(count == 1 for count in incidence_count.values()))
+
+    def test_matchymatchy(self):
+        # Max matching of a matching is itself
+        frame = pd.DataFrame(
+            [
+                {"n1": "p1", "n2": "j1", "other": "a"},
+                {"n1": "p2", "n2": "j2", "other": "b"},
+                {"n1": "p3", "n2": "j3", "other": "c"},
+            ]
+        )
+
+        matching = maximum_bipartite_matching(frame, "n1", "n2")
+
+        self.assertIsInstance(matching, pd.DataFrame)
+        self.assertIsNot(matching, frame)
+        self.assert_is_unweighted_matching(matching, columns=["n1", "n2"])
+        assert_frame_equal(matching, frame)
+
+    def test_simple(self):
+        # Simple case with a known result
+        frame = pd.DataFrame(
+            [
+                {"n1": "p1", "n2": "j1", "other": "a"},
+                {"n1": "p1", "n2": "j2", "other": "b"},
+                {"n1": "p2", "n2": "j2", "other": "c"},
+                {"n1": "p2", "n2": "j3", "other": "d"},
+                {"n1": "p3", "n2": "j3", "other": "e"},
+            ]
+        )
+        expected_result = pd.DataFrame(
+            [
+                {"n1": "p1", "n2": "j1", "other": "a"},
+                {"n1": "p2", "n2": "j2", "other": "c"},
+                {"n1": "p3", "n2": "j3", "other": "e"},
+            ]
+        )
+
+        matching = maximum_bipartite_matching(frame, "n1", "n2")
+
+        self.assertIsInstance(matching, pd.DataFrame)
+        self.assertIsNot(matching, frame)
+        self.assert_is_unweighted_matching(matching, columns=["n1", "n2"])
+        assert_frame_equal(matching, expected_result)
+
+
+@unittest.skipIf(nx is None, "networkx is not installed")
+class TestBipartiteMatchingNetworkx(unittest.TestCase):
+    def assert_is_unweighted_matching(self, matching):
+        # Verify that the given networkx graph is a matching
+        incidence_count = Counter(chain(*matching.edges))
+        self.assertTrue(all(count == 1 for count in incidence_count.values()))
+
     def test_random_networkx(self):
         graph = nx.bipartite.random_graph(n=5, m=7, p=0.5, seed=293847, directed=True)
         nodes1 = np.array(
@@ -139,9 +222,7 @@ class TestBipartiteMatching(unittest.TestCase):
         self.assertIsInstance(matching, nx.Graph)
         self.assertIsNot(matching, graph)
         self.assertEqual(matching.number_of_nodes(), graph.number_of_nodes())
-        self.assert_is_unweighted_matching(
-            nx.convert_matrix.to_scipy_sparse_array(matching)
-        )
+        self.assert_is_unweighted_matching(matching)
 
 
 class TestWeightedMatching(unittest.TestCase):
