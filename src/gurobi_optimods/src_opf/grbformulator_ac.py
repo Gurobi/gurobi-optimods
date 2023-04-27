@@ -1193,9 +1193,6 @@ def computebalbounds(alldata, bus):
 
     logger = logging.getLogger("OpfLogger")
     # First let's get max/min generations
-    # TODO-Dan What about all those "loud" settings? can we remove them?
-    loud = 0  # See below
-
     gens = alldata["gens"]
     Pubound = Plbound = 0
     Qubound = Qlbound = 0
@@ -1214,19 +1211,6 @@ def computebalbounds(alldata, bus):
             Qubound += upper
             Qlbound += lower
 
-        if (
-            loud
-        ):  # It is worth keeping because a user may want to debug the generator limits that they imposed, which could make a problem infeasible
-            # logger.info(" Pubound for %d %f genc %d."%(bus.nodeID, Pubound, gencounter))
-            # logger.info(" Plbound for %d %f genc %d."%(bus.nodeID, Plbound, gencounter))
-            # TODO-Dan How is this worth keeping if loud cannot be set by the user? The user would have to hack the code to get the debug output
-            logger.info(
-                " Qubound for %d %f genc %d." % (bus.nodeID, Qubound, gencounter)
-            )
-            logger.info(
-                " Qlbound for %d %f genc %d." % (bus.nodeID, Qlbound, gencounter)
-            )
-
     Pubound -= bus.Pd
     Plbound -= bus.Pd
     Qubound -= bus.Qd
@@ -1234,15 +1218,6 @@ def computebalbounds(alldata, bus):
 
     if bus.nodetype == 4:
         Pubound = Plbound = Qubound = Qlbound = 0
-
-    if loud:  # same as above
-        # TODO-Dan same as above
-        # logger.info(" Pubound for %d final %f."%(bus.nodeID, Pubound))
-        # logger.info(" (Pd was %g)"%bus.Pd)
-        # logger.info(" Plbound for %d final %f."%(bus.nodeID, Plbound))
-        logger.info(f" Qubound for {bus.nodeID} final {Qubound}.")
-        logger.info(f" (Qd was {bus.Qd})")
-        logger.info(f" Qlbound for {bus.nodeID} final {Qlbound}.")
 
     return Pubound, Plbound, Qubound, Qlbound
 
@@ -1271,8 +1246,6 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
     svar = alldata["LP"]["svar"]
 
     logger.info("Creating derived solution values from input voltage solution.")
-
-    loud = False
 
     for j in range(1, numbuses + 1):
         bus = buses[j]
@@ -1360,33 +1333,16 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
     for j in range(1, 1 + numbranches):
         branch = branches[j]
         row = model.getRow(branch.Pdeffconstr)
-        if (
-            loud
-        ):  # TODO-Dan We have to discuss the loud variable. If you want to keep it then it should be handled
-            # properly via a setting and not be hard-coded
-            print(
-                j,
-                branch.Pdeffconstr,
-                row,
-                branch.Pdeffconstr.Sense,
-                branch.Pdeffconstr.RHS,
-            )
-            print(row.size())
         sum = -branch.Pdeffconstr.RHS
         leadcoeff = 0
         for i in range(row.size()):
             var = row.getVar(i)
             coeff = row.getCoeff(i)
             if var.Varname != Pvar_f[branch].Varname:
-                if loud:
-                    print("   ", i, coeff, var.Varname, "at", xbuffer[var])
                 sum += coeff * xbuffer[var]
             else:
-                if loud:
-                    print("   >", i, coeff, var.Varname)
                 leadcoeff = coeff
-        if loud:
-            print("sum =", sum, leadcoeff)
+
         xbuffer[Pvar_f[branch]] = -sum / leadcoeff
         # leadcoeff should be +1 or -1
         logger.info(
@@ -1394,30 +1350,16 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
         )
 
         row = model.getRow(branch.Pdeftconstr)
-        if loud:
-            print(
-                j,
-                branch.Pdeftconstr,
-                row,
-                branch.Pdeftconstr.Sense,
-                branch.Pdeftconstr.RHS,
-            )
-            print(row.size())
         sum = -branch.Pdeftconstr.RHS
         leadcoeff = 0
         for i in range(row.size()):
             var = row.getVar(i)
             coeff = row.getCoeff(i)
             if var.Varname != Pvar_t[branch].Varname:
-                if loud:
-                    print("   ", i, coeff, var.Varname, "at", xbuffer[var])
                 sum += coeff * xbuffer[var]
             else:
-                if loud:
-                    print("   >", i, coeff, var.Varname)
                 leadcoeff = coeff
-        if loud:
-            print("sum =", sum, leadcoeff)
+
         xbuffer[Pvar_t[branch]] = -sum / leadcoeff
         # leadcoeff should be +1 or -1
         logger.info(
@@ -1427,15 +1369,6 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
         # Now, reactive power flows
 
         row = model.getRow(branch.Qdeffconstr)
-        if loud:
-            print(
-                j,
-                branch.Qdeffconstr,
-                row,
-                branch.Qdeffconstr.Sense,
-                branch.Qdeffconstr.RHS,
-            )
-            print("size", row.size())
         sum = -branch.Qdeffconstr.RHS
         leadcoeff = 0
 
@@ -1443,15 +1376,9 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
             var = row.getVar(i)
             coeff = row.getCoeff(i)
             if var.Varname != Qvar_f[branch].Varname:
-                if loud:
-                    print("   ", i, coeff, var.Varname, "at", xbuffer[var])
                 sum += coeff * xbuffer[var]
             else:
-                if loud:
-                    print("   >", i, coeff, var.Varname)
                 leadcoeff = coeff
-        if loud:
-            print("sum =", sum, leadcoeff)
 
         xbuffer[Qvar_f[branch]] = -sum / leadcoeff
         # leadcoeff should be +1 or -1
@@ -1460,16 +1387,6 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
         )
 
         row = model.getRow(branch.Qdeftconstr)
-        if loud:
-            print(
-                "\n",
-                j,
-                branch.Qdeftconstr,
-                row,
-                branch.Qdeftconstr.Sense,
-                branch.Qdeftconstr.RHS,
-            )
-            print(row.size())
         sum = -branch.Qdeftconstr.RHS
         leadcoeff = 0
         for i in range(row.size()):
@@ -1478,25 +1395,9 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
             if var.Varname != Qvar_t[branch].Varname:
                 product = coeff * xbuffer[var]
                 sum += product
-                if loud:
-                    print(
-                        "   ",
-                        i,
-                        coeff,
-                        var.Varname,
-                        "at",
-                        xbuffer[var],
-                        " prod:",
-                        product,
-                    )
-                    print("    sum:", sum)
-
             else:
-                if loud:
-                    print("   >", i, coeff, var.Varname)
                 leadcoeff = coeff
-        if loud:
-            print("sum =", sum, leadcoeff)
+
         xbuffer[Qvar_t[branch]] = -sum / leadcoeff
         # leadcoeff should be +1 or -1
         logger.info(
@@ -1679,7 +1580,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
                 badubvar,
                 max_violation_value,
                 max_violation_string,
-                True,
             )
 
             (
@@ -1700,7 +1600,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
                 badubvar,
                 max_violation_value,
                 max_violation_string,
-                True,
             )
 
             alldata["LP"]["xbuffer"][evar[bus]] = bus.inpute
@@ -1734,7 +1633,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
                 badubvar,
                 max_violation_value,
                 max_violation_string,
-                True,
             )
 
         logger.info("Vmag values checked.")
@@ -1761,7 +1659,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
             badubvar,
             max_violation_value,
             max_violation_string,
-            True,
         )
         (
             maxlbviol,
@@ -1781,7 +1678,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
             badubvar,
             max_violation_value,
             max_violation_string,
-            True,
         )
 
     for j in range(1, 1 + numbranches):
@@ -1804,7 +1700,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
             badubvar,
             max_violation_value,
             max_violation_string,
-            True,
         )
         (
             maxlbviol,
@@ -1824,7 +1719,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
             badubvar,
             max_violation_value,
             max_violation_string,
-            True,
         )
 
     logger.info("Checking flow balance constraints.")
@@ -1852,7 +1746,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
             badubvar,
             max_violation_value,
             max_violation_string,
-            True,
         )
 
         alldata["violation"][bus]["Pinjmax"] = max(
@@ -1916,7 +1809,6 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
             badubvar,
             max_violation_value,
             max_violation_string,
-            True,
         )
 
         alldata["violation"][bus]["Qinjmax"] = max(
@@ -1983,7 +1875,6 @@ def lpformulator_checkviol_simple(
     badubvar,
     max_violation_value,
     max_violation_string,
-    loud,  # TODO-Dan Remove loud?
 ):
     """
     Returns bounds infeasibility if setting grbvariable to some value.
@@ -2016,7 +1907,7 @@ def lpformulator_checkviol_simple(
     ub = grbvariable.ub
     lb = grbvariable.lb
 
-    if loud:
+    if True:
         logger.info(
             "%s =  %.16e  [ LB %.4e  UB %.4e ]" % (grbvariable.varname, value, lb, ub)
         )

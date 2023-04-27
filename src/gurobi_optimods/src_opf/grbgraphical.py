@@ -138,8 +138,6 @@ def grbgraphical(alldata, plottype, textlist):
 
     elif plottype == "branchswitching":
 
-        loud = False
-
         gholder = alldata["MIP"]["gholder"]
         for j in range(1, numbuses + 1):
             bus = buses[j]
@@ -180,11 +178,6 @@ def grbgraphical(alldata, plottype, textlist):
             count_of_t = IDtoCountmap[t]
 
             if zholder[j - 1] < 0.5:  # turned off
-                if loud:
-                    logger.info(
-                        "branch %d (%d, %d) has small x\n"
-                        % (j, branch.count_f, branch.count_t)
-                    )
                 myedge_width[j] = 5
                 myedge_color[j] = "red"
 
@@ -200,7 +193,6 @@ def grbgraphical(alldata, plottype, textlist):
     myedge_list_consolidated = {}
     myedge_degrees_consolidated = {}
 
-    loud = False
     for j in range(1, numbranches + 1):
         branch = alldata["branches"][j]
         myedge_ends[(branch.count_f, branch.count_t)] = j
@@ -211,19 +203,9 @@ def grbgraphical(alldata, plottype, textlist):
             myedge_degrees_consolidated[(small, large)] = 1
             myedge_list_consolidated[(small, large)] = []
             myedge_list_consolidated[(small, large)].append(j)
-            if loud:
-                logger.info(
-                    " --> line %d color %s creates my consolidated list for (%d,%d)\n"
-                    % (j, myedge_color[j], small, large)
-                )
         else:
             myedge_degrees_consolidated[(small, large)] += 1
             myedge_list_consolidated[(small, large)].append(j)
-            if loud:
-                logger.info(
-                    " --> appended line %d color %s to my consolidated list for (%d,%d)\n"
-                    % (j, myedge_color[j], small, large)
-                )
 
     return graphplot(
         alldata,
@@ -329,7 +311,6 @@ def graphplot(
     # lines graph file file.  list_consolidated is the array of lines whose ends are that vertex pair, listing the order in which
     # the lines are found in the graph file.  degrees_consolidated is the number of such lines (for each sorted vertex pair found in the file
 
-    loud = False
     local_reordered_width = {}
     local_reordered_color = {}
 
@@ -357,12 +338,6 @@ def graphplot(
 
             local_reordered_color[scannedordpair][k] = color
             local_reordered_width[scannedordpair][k] = width
-
-            if loud and width > 1:
-                logger.info(
-                    " Width %d edge (%d,%d) orderings %d -> %d color %s.\n"
-                    % (width, scannedordpair[0], scannedordpair[1], j, jprime, color)
-                )
 
     vertexx -= np.min(vertexx)
     vertexy -= np.min(vertexy)
@@ -397,7 +372,6 @@ def graphplot(
     reordered_color = {}
     reordered_position = {}
 
-    loud = False
     for j in range(m):
         small = min(adj[j][0], adj[j][1])
         large = max(adj[j][0], adj[j][1])
@@ -412,18 +386,8 @@ def graphplot(
         pair = (fbus, tbus)
         deg = newdeg[pair]
         if ((fbus, tbus)) in scanned_list_consolidated.keys():
-            if loud and local_reordered_width[pair][deg] > 0:
-                logger.info(
-                    " pair ind0 %d (%d, %d) local color %s width %d\n"
-                    % (
-                        j,
-                        fbus,
-                        tbus,
-                        local_reordered_color[pair][deg],
-                        local_reordered_width[pair][deg],
-                    )
-                )
             newdeg[fbus, tbus] += 1
+
         reordered_width[j] = local_reordered_width[pair][deg]
         reordered_color[j] = local_reordered_color[pair][deg]
         reordered_position[(fbus, tbus, deg)] = j
@@ -497,7 +461,6 @@ def scangraph(alldata, graph_dict):
     scanned_degrees_consolidated = {}
     scanned_unique_ordered_pairs = {}
     scanned_num_unique = 0
-    loud = False
     for i in range(M):
         edge = graph_dict[i]
         busfrom = edge[0]
@@ -510,19 +473,9 @@ def scangraph(alldata, graph_dict):
             scanned_list_consolidated[(small, large)].append(trueM)
             scanned_unique_ordered_pairs[scanned_num_unique] = (small, large)
             scanned_num_unique += 1
-            if loud:
-                logger.info(
-                    " --> Line %d creates scanned consolidated list for (%d,%d) --> unique ct %d\n"
-                    % (trueM, small, large, scanned_num_unique)
-                )
         else:
             scanned_degrees_consolidated[(small, large)] += 1
             scanned_list_consolidated[(small, large)].append(trueM)
-            if loud:
-                logger.info(
-                    " --> Appended line %d to scanned consolidated list for (%d,%d)\n"
-                    % (trueM, small, large)
-                )
 
         endbus[trueM] = (busfrom, busto)
         revendbus[(busfrom, busto)] = trueM + 1

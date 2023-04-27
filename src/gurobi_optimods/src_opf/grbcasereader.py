@@ -99,10 +99,6 @@ class Bus:
         """
         logger = logging.getLogger("OpfLogger")
         self.genidsbycount.append(generatorcount)
-        loud = False
-        if loud:
-            logger.info(f" added generator # {generatorcount} to bus ID {self.nodeID}")
-            logger.info(f" Pmax {generator.Pmax} Pmin {generator.Pmin}")
 
     def addfrombranch(self, id):
         """
@@ -262,18 +258,6 @@ class Branch:
         self.inputcs = False  # Parameter for future work
         self.inputc = 2  # Parameter for future work
         self.inputs = 2  # Parameter for future work
-
-        loud = False  # TODO-Dan Do we need this?
-        if loud:
-            logger = logging.getLogger("OpfLogger")
-            logger.info(f"\nbr {count} f {f} t {t}")
-            logger.info(f"   idf {count_f} idt {count_t}")
-            logger.info(f"   r {r} x {x} bb {bc}")
-            logger.info(
-                f"   ratio {self.ratio} angle {angle} angle_rad: {self.angle_rad}"
-            )
-            logger.info(f"   y {y}")
-            logger.info(f"       Yff {Yff} , Yft {Yft} , Ytf {Ytf} , Ytt {Ytt}")
 
     def show(self):
         """

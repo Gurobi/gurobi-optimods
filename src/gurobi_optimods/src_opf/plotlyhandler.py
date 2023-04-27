@@ -120,8 +120,6 @@ class Plotlyhandler:
             large = max(edge[0] + 1, edge[1] + 1)
             localdeg[small, large] = 0
 
-        loud = False
-
         # for edge in self.G.edges():
         for edgecnt in range(self.gG.m):
             edge = self.gG.edges[edgecnt]
@@ -133,24 +131,8 @@ class Plotlyhandler:
             width = self.input_edge_width[position]
             color = self.input_edge_color[position]
 
-            if loud:
-                logger = logging.getLogger("OpfLogger")
-                logger.info(
-                    "edge %d is (+1) (%d, %d) position %d width %d localdeg %d\n"
-                    % (
-                        count,
-                        edge[0] + 1,
-                        edge[1] + 1,
-                        position,
-                        self.input_edge_width[position],
-                        localdeg[small, large],
-                    )
-                )
-
             localdeg[small, large] += 1
-
             groups[(color, width)] += [edge]
-
             count += 1
 
         # process each group
