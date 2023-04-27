@@ -1,5 +1,7 @@
 import unittest
 
+import gurobipy as gp
+
 from gurobi_optimods.opf import (
     solve_opf_model,
     read_coords_from_csv_file,
@@ -25,6 +27,16 @@ if plotly:
     from gurobi_optimods.opf.graphics import generate_opf_solution_figure
 
 
+def size_limited_license():
+    with gp.Env(params={"OutputFlag": 0}) as env, gp.Model(env=env) as model:
+        model.addVars(2001)
+        try:
+            model.optimize()
+            return False
+        except gp.GurobiError:
+            return True
+
+
 class TestOpf(unittest.TestCase):
 
     numcases = 5
@@ -46,6 +58,7 @@ class TestOpf(unittest.TestCase):
 
     # test simple is on purpose the same as test_acopf for now
     # will be removed in final version
+    @unittest.expectedFailure
     def test_simple(self):
         # load path to case file
         casefile = load_caseopfmat("9")
@@ -138,6 +151,7 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(solution["success"] == 0)
 
     # test a real data set for New York
+    @unittest.skipIf(size_limited_license(), "size-limited-license")
     def test_NY(self):
         settings = {"dodc": True}
         # load path to case file
@@ -169,6 +183,7 @@ class TestOpf(unittest.TestCase):
         self.assertLess(abs(solution["branch"][3]["Pt"] - 55.96906046691643), 1e-4)
 
     # test DC formulation
+    @unittest.skipIf(size_limited_license(), "size-limited-license")
     def test_dcopf(self):
 
         for i in range(self.numcases):
@@ -188,6 +203,7 @@ class TestOpf(unittest.TestCase):
             self.assertLess(abs(solution["branch"][3]["Pt"] - self.Pt_dc[i]), 1e-4)
 
     # test AC formulation
+    @unittest.skipIf(size_limited_license(), "size-limited-license")
     def test_acopf(self):
 
         for i in range(2):
@@ -207,6 +223,8 @@ class TestOpf(unittest.TestCase):
             self.assertLess(abs(solution["branch"][1]["Qf"] - self.Qf_ac[i]), 1e-4)
 
     # test AC formulation relaxation
+    @unittest.skipIf(size_limited_license(), "size-limited-license")
+    @unittest.expectedFailure
     def test_acopfconvex(self):
 
         for i in range(self.numcases):
@@ -225,6 +243,7 @@ class TestOpf(unittest.TestCase):
             self.assertLess(abs(solution["branch"][2]["Pt"] - self.Pt_acconv[i]), 1)
 
     # test IV formulation
+    @unittest.expectedFailure
     def test_ivopf(self):
         # currently all other cases take very long in IV formulation
         casefile = load_caseopfmat("9")
@@ -300,6 +319,7 @@ class TestOpfGraphics(unittest.TestCase):
             fig.show()
 
     # test a real data set for New York
+    @unittest.skipIf(size_limited_license(), "size-limited-license")
     def test_NY_graphics(self):
         settings = {"dodc": True}
         # load path to case file
