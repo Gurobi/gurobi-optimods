@@ -1,12 +1,33 @@
 Optimal Power Flow
 ==================
 
+The operation of power systems relies on a number of optimization tasks, known as 'optimal power flow' of OPF problems.  Here we assume basic familiarity with concepts such as 'voltage' (potential energy), 'current' (charge flow) and 'power' (instantaneous energy generation or consumption).  The engineering community also
+uses the term 'bus' (nodes in a network, with some simplification) and 'branch' (a connection between two buses, typically a line or a transformer).
+
+
+
+To learn more
+---------------------
+
+- :footcite:t:`andersson1`
+      - Thorough survey of relaxations for power flow problems.
+
+- :footcite:t:`bergenvittal`
+      - Thorough survey of relaxations for power flow problems.
+
+- :footcite:t:`bienstockpower`
+      - Introduction to various power related problems with emphasis on modeling and optimization.
+
+- :footcite:t:`molzahnhiskens`
+      - Thorough survey of relaxations for power flow problems.
+
+- :footcite:t:`overbyebook`
+      - Textbook on power systems.
+
+
 
 Problem Specification
 ---------------------
-
-The operation of power systems relies on a number of optimization tasks, known as 'optimal power flow' of OPF problems.  Here we assume basic familiarity with concepts such as 'voltage' (potential energy), 'current' (charge flow) and 'power' (instantaneous energy generation or consumption).  The engineering community also
-uses the term 'bus' (nodes in a network, with some simplification) and 'branch' (a connection between two buses, typically a line or a transformer).
 
 As input data for an OPF problem we have a power system ('power grid' for non-engineers) consisting of a network of buses and branches. Each branch is given as
 an ordered pair :math:`km`, where :math:`k` is the "from" bus and :math:`m` is the "to" bus.
@@ -38,8 +59,9 @@ an ordered pair :math:`km`, where :math:`k` is the "from" bus and :math:`m` is t
 9. In modern versions described below, network devices (FACTS, phase-shifters, impedance corrections are also incorporated into the model.
 
 
-- :footcite:t:`bienstockpower`
-      - Introduction to various power related problems with emphasis on modeling and optimization.
+
+More complete descriptions
+--------------------------
 
 .. toctree::
    :maxdepth: 1
