@@ -4,6 +4,7 @@ from gurobi_optimods.opf.grbfile import (
     initialize_data_dict,
     read_graphics_settings,
     grbmap_coords_from_dict,
+    grbread_graphattrs,
 )
 from gurobi_optimods.opf.grbcasereader import read_case
 
