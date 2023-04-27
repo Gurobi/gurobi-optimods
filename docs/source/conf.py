@@ -24,7 +24,6 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.intersphinx",
     "sphinxcontrib.bibtex",
-    "sphinx_design",
 ]
 
 pygments_style = "vs"
