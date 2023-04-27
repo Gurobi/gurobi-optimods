@@ -332,10 +332,11 @@ All transaction fees are assumed to be covered by the portfolio itself,
 thus reducing the total sum of the returned optimal portfolio:
 
 .. doctest:: mod
-    :options: +NORMALIZE_WHITESPACE
+   :options: +NORMALIZE_WHITESPACE
 
-    >>> x.sum()
+    >>> print(x.sum())
     0.95
+
 
 Minimum position constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
