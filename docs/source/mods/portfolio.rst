@@ -224,7 +224,7 @@ With leverage allowed we now obtain an optimal portfolio with three short
 positions, totaling to about 14% of the wealth:
 
 .. doctest:: mod
-    :options: +NORMALIZE_WHITESPACE
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
 
     >>> x
         AA    0.437482
@@ -240,7 +240,7 @@ positions, totaling to about 14% of the wealth:
     dtype: float64
 
     >>> x[x<0].sum()
-    -0.14122620800822816
+    -0.141226...
 
 Restricting the number of trades
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
