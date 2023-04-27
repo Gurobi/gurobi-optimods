@@ -7,6 +7,7 @@ def break_exit(foo):
     """
     For Dan only
     Will be definitely removed in the final version
+    # TODO remove it
     """
 
     stuff = input("(" + foo + ") break> ")
@@ -18,25 +19,18 @@ def initialize_logger(loggername, logfile="", usefilehandler=False):
     """
     Initializes a logger object from the logging package
 
+    :param loggername: Name of logger
+    :type loggername: str
+    :param logfile: Name of log file, defaults to ""
+    :type logfile: str, optional
+    :param usefilehandler: If set to True, then an aditional filehandler is created and the
+                           returned logger will write to a file specified by logfile, defaults
+                           to False
+    :type usefilehandler: bool, optional
 
-    Parameters
-    ----------
-    loggername : string
-        Name of logger
-
-    logfile : string, optional
-        Name of log file. Can be empty
-
-    usefilehandler: boolean, optional
-        If set to True, then an aditional filehandler is created and the
-        returned logger will write to a file specified by logfile
-
-
-    Returns
-    -------
-    logging.logger, list
-        Returns the created logger object and a list of associated handler,
-        a StreamHandler and possibly a FileHandler
+    :rtype: :class: `logging.logger`, list
+    :return: Returns the created logger object and a list of associated handlers,
+             a :class: `logging.StreamHandler` and possibly a :class: `logging.FileHandler`
     """
     logger = logging.getLogger("OpfLogger")
     logger.setLevel(logging.INFO)
@@ -60,14 +54,10 @@ def remove_and_close_handlers(logger, handlers):
     """
     Removes and closes all handler associated to a given logger object
 
-
-    Parameters
-    ----------
-    logger : logging.logger
-        Logger object
-
-    handlers : list
-        List of handlers associated to the logger object
+    :param logger: Logger object
+    :type logger: :class: `logging.logger`
+    :param handler: List of handlers associated to the logger object
+    :type handlers: list
     """
 
     for h in handlers:
@@ -89,10 +79,8 @@ def get_default_optimization_settings():
     """
     Returns a dictionary holding default settings for an optimization call
 
-    Returns
-    -------
-    dictionary
-        A dictionary holding default setting for an optimization call
+    :rtype: dict
+    :return: Dictionary holding default setting for an optimization call
     """
 
     settings = {
@@ -110,10 +98,10 @@ def get_default_optimization_settings():
         "use_ef": False,
         "dopolar": False,
         # "doslp_polar": False, # Not used yet, this is for future work
-        "doac": False,
+        "doac": False,  # TODO combine to a opftype argument
         "dodc": False,
         "doiv": False,
-        "ivtype": None,
+        "ivtype": "aggressive",
         "branchswitching_mip": False,
         # Formulation for branch-switching where the binary variables simply multiply the continuous variables.
         # Sometimes it works better. Only applicable for AC.
@@ -130,10 +118,8 @@ def get_default_graphics_settings():
     """
     Returns a dictionary holding default settings for a graphics call
 
-    Returns
-    -------
-    dictionary
-        A dictionary holding default setting for an graphics call
+    :rtype: dict
+    :return: Dictionary holding default setting for a graphics call
     """
 
     settings = {
@@ -148,10 +134,10 @@ def check_settings_for_correct_type(settings):
     """
     Checks whether the provided settings have correct types
 
-    Parameters
-    ----------
-    settings : dictionary
-        Settings dictionary to be checked for correct data types
+    :param settings: Settings dictionary to be checked for correct data types
+    :type settings: dict
+
+    :raises ValueError: Wrong setting type
     """
 
     wrongsetting = None
@@ -211,4 +197,4 @@ def check_settings_for_correct_type(settings):
             break
 
     if wrongsetting != None:
-        raise ValueError("Setting %s is not of type %s." % (wrongsetting, settingtype))
+        raise ValueError(f"Setting {wrongsetting} is not of type {settingtype}.")

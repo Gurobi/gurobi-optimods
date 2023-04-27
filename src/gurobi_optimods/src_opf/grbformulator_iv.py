@@ -9,12 +9,10 @@ def lpformulator_iv_body(alldata, model):
     """
     Adds variables and constraints for IV formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     # Create model variables
@@ -27,12 +25,10 @@ def lpformulator_iv_create_vars(alldata, model):
     """
     Creates and adds variables for IV formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -267,16 +263,11 @@ def lpformulator_iv_create_vars(alldata, model):
 def lpformulator_iv_create_constraints(alldata, model):
     """
     Creates and adds constraints for IV formulation to a given Gurobi model
-    TODO-Dan Is this function very different from the one in grbformulator_ac.py?
-             Couldn't we call lpformulator_ac_create_constraints(alldata, model)
-             and then add the missing IV constraints?
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -318,7 +309,7 @@ def lpformulator_iv_create_constraints(alldata, model):
             numquadgens += 1
 
     logger.info(
-        "    Number of generators with quadratic cost coefficient: %d." % numquadgens
+        f"    Number of generators with quadratic cost coefficient: {numquadgens}."
     )
 
     if numquadgens > 0:
@@ -395,7 +386,7 @@ def lpformulator_iv_create_constraints(alldata, model):
 
             count += 4
 
-        logger.info("    %d branch current definitions added." % count)
+        logger.info(f"    {count} branch current definitions added.")
 
         logger.info("  Adding plain branch power definitions.")
         # (e + jf)*(Ir - jIj) = e*Ir + f*Ij + j( -e*Ij + f*Ir)
@@ -427,7 +418,7 @@ def lpformulator_iv_create_constraints(alldata, model):
                 model.addConstr(qexpr == Qvar_t[branch], name=branch.Qtcname)
 
             count += 4
-        logger.info("    %d branch power flow definitions added." % count)
+        logger.info(f"    {count} branch power flow definitions added.")
     else:  # Aggressive formulation
         logger.info(
             "Aggressive formulation, so will define power flows as functions of voltages."
@@ -481,7 +472,7 @@ def lpformulator_iv_create_constraints(alldata, model):
             qexpr.add(gkm * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust]))
             model.addConstr(qexpr == Qvar_f[branch], name=branch.Qfcname)
 
-            # now, the reversals
+            # Now, the reversals
 
             gmm = branch.Gtt
             bmm = branch.Btt
@@ -500,7 +491,7 @@ def lpformulator_iv_create_constraints(alldata, model):
 
             count += 4
 
-        logger.info("    %d branch power flow definitions added." % count)
+        logger.info(f"    {count} branch power flow definitions added.")
 
     # Balance constraints
 
@@ -527,7 +518,7 @@ def lpformulator_iv_create_constraints(alldata, model):
 
         count += 1
 
-    logger.info("    %d active bus power balance constraints added." % count)
+    logger.info(f"    {count} active bus power balance constraints added.")
 
     logger.info("  Adding reactive power balance constraints.")
     count = 0
@@ -552,7 +543,7 @@ def lpformulator_iv_create_constraints(alldata, model):
 
         count += 1
 
-    logger.info("    %d reactive bus power balance constraints added." % count)
+    logger.info(f"    {count} reactive bus power balance constraints added.")
 
     # the next set of constraints is optional
     """
@@ -614,7 +605,7 @@ def lpformulator_iv_create_constraints(alldata, model):
         )
         count += 2
 
-    logger.info("    %d bus voltage limit constraints added." % count)
+    logger.info(f"    {count} bus voltage limit constraints added.")
 
     # Branch limits.
     logger.info("  Adding branch limits.")
@@ -642,7 +633,7 @@ def lpformulator_iv_create_constraints(alldata, model):
             )
             count += 2
 
-    logger.info("    %d branch limits added." % count)
+    logger.info(f"    {count} branch limits added.")
 
     # Active loss inequalities.
     if alldata["useactivelossineqs"] == True:
@@ -665,4 +656,4 @@ def lpformulator_iv_create_constraints(alldata, model):
 
                 count += 1
 
-        logger.info("    %d active loss inequalities added." % count)
+        logger.info(f"    {count} active loss inequalities added.")

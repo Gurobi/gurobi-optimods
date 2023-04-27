@@ -8,12 +8,10 @@ def lpformulator_ac_body(alldata, model):
     """
     Adds variables and constraints for AC formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     # Create model variables
@@ -26,12 +24,10 @@ def lpformulator_ac_create_vars(alldata, model):
     """
     Creates and adds variables for AC formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -122,12 +118,10 @@ def lpformulator_ac_create_vars(alldata, model):
         # Assumption 1.  zero angle difference is always allowed! More precisely minangle_rad <= 0 and maxaxangle_rad >= 0
         if branch.maxangle_rad < 0 or branch.minangle_rad > 0:
             logger.error(
-                " --- Broken assumption 1: branch j %d f %d t %d minanglerad %f maxanglerad %f."
-                % (j, f, t, branch.minangle_rad, branch.maxangle_rad)
+                f" --- Broken assumption 1: branch j {j} f {f} t {t} minanglerad {branch.minangle_rad} maxanglerad {branch.maxangle_rad}."
             )
             raise ValueError(
-                "Broken assumption 1: branch j %d f %d t %d minanglerad %f maxanglerad %f."
-                % (j, f, t, branch.minangle_rad, branch.maxangle_rad)
+                f"Broken assumption 1: branch j {j} f {f} t {t} minanglerad {branch.minangle_rad} maxanglerad {branch.maxangle_rad}."
             )
 
         ubound = ubasic = maxprod
@@ -388,12 +382,10 @@ def lpformulator_ac_create_polar_vars(alldata, model):
     """
     Creates and adds variables for polar AC formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -495,19 +487,17 @@ def lpformulator_ac_create_polar_vars(alldata, model):
     alldata["LP"]["thetaftvar"] = thetaftvar
     alldata["LP"]["vfvtvar"] = vfvtvar
 
-    logger.info("    Added %d new variables to handle polar formulation." % newvarcount)
+    logger.info(f"    Added {newvarcount} new variables to handle polar formulation.")
 
 
 def lpformulator_ac_create_efvars(alldata, model):
     """
     Creates and adds e, f variables for bilinear AC formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -548,19 +538,17 @@ def lpformulator_ac_create_efvars(alldata, model):
     alldata["LP"]["evar"] = evar
     alldata["LP"]["fvar"] = fvar  # e^2 + f^2 = voltage magnitude
 
-    logger.info("  Added %d e, f variables." % efvarcount)
+    logger.info(f"  Added {efvarcount} e, f variables.")
 
 
 def lpformulator_ac_create_constraints(alldata, model):
     """
     Creates and adds constraints for AC formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -602,13 +590,13 @@ def lpformulator_ac_create_constraints(alldata, model):
             numquadgens += 1
 
     logger.info(
-        "    Number of generators with quadratic cost coefficient: %d." % numquadgens
+        f"    Number of generators with quadratic cost coefficient: {numquadgens}."
     )
 
     if numquadgens > 0:
         if alldata["usequadcostvar"]:  # Currently this is always False
             quadcostvar = alldata["LP"]["quadcostvar"]
-            logger.info("    Adding quadcost definition constraint.")
+            logger.info("    Adding quadratic cost definition constraint.")
             qcost = gp.QuadExpr()
             for gen in gens.values():
                 if gen.costdegree == 2 and gen.costvector[0] != 0:
@@ -616,7 +604,7 @@ def lpformulator_ac_create_constraints(alldata, model):
 
             model.addConstr(qcost <= quadcostvar, name="qcostdef")
         else:
-            logger.info("    Adding quad cost to objective.")
+            logger.info("    Adding quadratic cost to objective.")
             model.update()  # Necessary to flush changes in the objective function
             oldobj = model.getObjective()
             newobj = gp.QuadExpr(oldobj)
@@ -731,7 +719,7 @@ def lpformulator_ac_create_constraints(alldata, model):
 
         count += 2
 
-    logger.info("    %d active power flow definitions added." % count)
+    logger.info(f"    {count} active power flow definitions added.")
 
     # Reactive PF defs
     logger.info("  Adding reactive power flow definitions.")
@@ -834,7 +822,7 @@ def lpformulator_ac_create_constraints(alldata, model):
 
         count += 2
 
-    logger.info("    %d reactive power flow definitions added." % count)
+    logger.info(f"    {count} reactive power flow definitions added.")
 
     # Balance constraints
     logger.info(
@@ -903,7 +891,7 @@ def lpformulator_ac_create_constraints(alldata, model):
             )
         count += 1
 
-    logger.info("    %d balance constraints added." % count)
+    logger.info(f"    {count} balance constraints added.")
 
     # Injection defs
     logger.info("  Adding injection definition constraints.")
@@ -929,7 +917,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         model.addConstr(Qinjvar[bus] == expr - bus.Qd, name="Bus_QInj_%d" % j)
         count += 2
 
-    logger.info("    %d injection definition constraints added." % count)
+    logger.info(f"    {count} injection definition constraints added.")
 
     # Branch limits
     logger.info("  Adding branch limits.")
@@ -958,7 +946,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         )
         count += 2
 
-    logger.info("    %d branch limits added." % count)
+    logger.info(f"    {count} branch limits added.")
 
     # JABR.
     if alldata["skipjabr"] == False:
@@ -980,7 +968,7 @@ def lpformulator_ac_create_constraints(alldata, model):
                 )
                 count += 1
 
-        logger.info("    %d Jabr constraints added." % count)
+        logger.info(f"    {count} Jabr constraints added.")
     else:
         logger.info("  Skipping Jabr inequalities.")
 
@@ -1039,7 +1027,7 @@ def lpformulator_ac_create_constraints(alldata, model):
 
                             count += 1
 
-        logger.info("    %d active loss constraints added." % count)
+        logger.info(f"    {count} active loss constraints added.")
     else:
         logger.info("  Skipping active loss inequalities.")
 
@@ -1056,7 +1044,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         delta = numbranches
         N = numbranches - delta  # <<<<<<---- here is the heuristic lower bound
         # TODO-Dan N is here always just = 0. How should this be used?
-        logger.info("In bound_zs constraint, N = %d." % (N))
+        logger.info(f"In bound_zs constraint, N = {N}.")
         for j in range(1, 1 + numbranches):
             branch = branches[j]
             expr.add(zvar[branch])
@@ -1067,12 +1055,10 @@ def lpformulator_ac_add_polarconstraints(alldata, model):
     """
     Creates and adds constraints for polar represenation of AC formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -1130,19 +1116,17 @@ def lpformulator_ac_add_polarconstraints(alldata, model):
         )
         count += 6  # Count general constraints as well
 
-    logger.info("    %d polar constraints added." % count)
+    logger.info(f"    {count} polar constraints added.")
 
 
 def lpformulator_ac_add_nonconvexconstraints(alldata, model):
     """
     Creates and adds nonconvex bilinear e, f constraints for AC formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -1153,10 +1137,10 @@ def lpformulator_ac_add_nonconvexconstraints(alldata, model):
     evar = alldata["LP"]["evar"]
     fvar = alldata["LP"]["fvar"]  #
     # cvar[km] = (voltage mag at k) * (voltage mag at m) * cos(thetak - thetam)
-    # compute voltage magnitudes for k and m
-    # take arccos to get thetak - thetam = some value
-    # set arbitrarily theta1 = 0 and solve all others
-    cvar = alldata["LP"]["cvar"]  # square of the voltage magnitude e^2 + f^2
+    # Compute voltage magnitudes for k and m
+    # Take arccos to get thetak - thetam = some value
+    # Set arbitrarily theta1 = 0 and solve all others
+    cvar = alldata["LP"]["cvar"]  # Square of the voltage magnitude e^2 + f^2
     svar = alldata["LP"]["svar"]
     IDtoCountmap = alldata["IDtoCountmap"]
     count = 0
@@ -1191,23 +1175,20 @@ def lpformulator_ac_add_nonconvexconstraints(alldata, model):
             )
             count += 2
 
-    logger.info("    %d nonconvex e, f constraints added." % count)
+    logger.info(f"    {count} nonconvex e, f constraints added.")
 
 
 def computebalbounds(alldata, bus):
     """
     Computes active and reactive max and min bus flow balance values
 
-    TODO-Dan There is a function with the same name in grbformulator_iv.
-    It looks like the other function does something slightly different.
-    Can we combine them to 1 function? Or even delete 1 of the 2
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param bus: Input bus
+    :type bus: :class: `Bus`
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    bus : Bus
-        Input bus
+    :return: Values for active and reactive bounds
+    :rtype: float, float, float, float
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -1235,7 +1216,7 @@ def computebalbounds(alldata, bus):
 
         if (
             loud
-        ):  # it is worth keeping because a user may want to debug the generator limits that they imposed, which could make a problem infeasible
+        ):  # It is worth keeping because a user may want to debug the generator limits that they imposed, which could make a problem infeasible
             # logger.info(" Pubound for %d %f genc %d."%(bus.nodeID, Pubound, gencounter))
             # logger.info(" Plbound for %d %f genc %d."%(bus.nodeID, Plbound, gencounter))
             # TODO-Dan How is this worth keeping if loud cannot be set by the user? The user would have to hack the code to get the debug output
@@ -1259,23 +1240,21 @@ def computebalbounds(alldata, bus):
         # logger.info(" Pubound for %d final %f."%(bus.nodeID, Pubound))
         # logger.info(" (Pd was %g)"%bus.Pd)
         # logger.info(" Plbound for %d final %f."%(bus.nodeID, Plbound))
-        logger.info(" Qubound for %d final %f." % (bus.nodeID, Qubound))
-        logger.info(" (Qd was %g)" % bus.Qd)
-        logger.info(" Qlbound for %d final %f." % (bus.nodeID, Qlbound))
+        logger.info(f" Qubound for {bus.nodeID} final {Qubound}.")
+        logger.info(f" (Qd was {bus.Qd})")
+        logger.info(f" Qlbound for {bus.nodeID} final {Qlbound}.")
 
     return Pubound, Plbound, Qubound, Qlbound
 
 
 def grbderive_xtra_sol_values_fromvoltages(alldata, model):
     """
-    Generates complete solution vectors from input voltages
-    TODO-Dan This is the same function as in grbformulator_iv.py.
-             If this is indeed the same function then please remove 1 of the 2 (or just let me know and I'll do it)
+    Computes complete solution vectors from input voltages
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model
+    :type model: :class: `gurobipy.Model`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -1565,14 +1544,12 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     TODO-Dan This is the same function as in grbformulator_iv.py.
              If this is indeed the same function then please remove 1 of the 2 (or just let me know and I'll do it)
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
-    spitoutvector: boolean
-        # TODO-Dan What does it do?
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model
+    :type model: :class: `gurobipy.Model`
+    :param spitoutvector: # TODO-Dan What does it do?
+    :type spitoutvector: bool
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -1614,18 +1591,16 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     for j in range(1, numbuses + 1):
         bus = buses[j]
         if bus.inputV > bus.Vmax:
-            logger.error(
-                ">>> Error: bus # %d has input voltage %f which is larger than Vmax %f."
-                % (j, bus.inputV, bus.Vmax)
+            logger.error(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+                f">>> Error: bus # {j} has input voltage {bus.inputV} which is larger than Vmax {bus.Vmax}."
             )
             thisviol = bus.inputV - bus.Vmax
             if thisviol > max_violation_value:
                 max_violation_string = "bus_" + str(bus.nodeID) + "_Vmax"
                 max_violation_value = thisviol
         if bus.inputV < bus.Vmin:
-            logger.error(
-                ">>> Error: bus # %d has input voltage %f which is smaller than Vmin %f."
-                % (j, bus.inputV, bus.Vmin)
+            logger.error(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+                f">>> Error: bus # {j} has input voltage {bus.inputV} which is smaller than Vmin {bus.Vmin}."
             )
             thisviol = bus.Vmin - bus.inputV
             if thisviol > max_violation_value:
@@ -1658,11 +1633,10 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         )
         fromviol = max(fromvalue - branch.limit, 0)
         if fromvalue > branch.limit:
-            logger.error(
-                ">>> Error: branch # %d has 'from' flow magnitude %f which is larger than limit %f."
-                % (j, fromvalue, branch.limit)
+            logger.error(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+                f">>> Error: branch # {j} has 'from' flow magnitude {fromvalue} which is larger than limit {branch.limit}."
             )
-            logger.error("    branch is ( %d %d )." % (branch.f, branch.t))
+            logger.error(f"    branch is ( {branch.f} {branch.t} ).")
             thisviol = fromviol
             if thisviol > max_violation_value:
                 max_violation_string = "branch_" + str(j) + "_from"
@@ -1674,11 +1648,10 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         )
         toviol = max(tovalue - branch.limit, 0)
         if tovalue > branch.limit:
-            logger.error(
-                ">>> Error: branch # %d has 'to' flow magnitude %f which is larger than limit %f."
-                % (j, tovalue, branch.limit)
+            logger.error(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+                f">>> Error: branch # {j} has 'to' flow magnitude {tovalue} which is larger than limit {branch.limit}."
             )
-            logger.error("    branch is ( %d %d )." % (branch.f, branch.t))
+            logger.error(f"    branch is ( {branch.f} {branch.t} ).")
             thisviol = toviol
             if thisviol > max_violation_value:
                 max_violation_string = "branch_" + str(j) + "_to"
@@ -1913,10 +1886,9 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         maxnetgen = myPubound - bus.Pd
 
         logger.info(
-            "Bus ID %s #%d injection %g mingen %g maxgen %g load %g."
-            % (bus.nodeID, j, injection, myPlbound, myPubound, bus.Pd)
+            f"Bus ID {bus.nodeID} #{j} injection {injection} mingen {myPlbound} maxgen {myPubound} load {bus.Pd}."
         )
-        logger.info("   min net generation %g; max %g." % (minnetgen, maxnetgen))
+        logger.info(f"   min net generation {minnetgen} max {maxnetgen}.")
 
         candmaxviol = alldata["violation"][bus]["Pinjmax"]
         if candmaxviol < alldata["violation"][bus]["Pinjmin"]:
@@ -1978,10 +1950,9 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         maxnetgen = myQubound - bus.Qd
 
         logger.info(
-            "Bus ID %s #%d injection %g mingen %g maxgen %g load %g."
-            % (bus.nodeID, j, injection, myQlbound, myQubound, bus.Qd)
+            f"Bus ID {bus.nodeID} #{j} injection {injection} mingen {myQlbound} maxgen {myQubound} load {bus.Qd}."
         )
-        logger.info("   min net generation %g; max %g." % (minnetgen, maxnetgen))
+        logger.info(f"   min net generation {minnetgen} max {maxnetgen}.")
 
         candmaxviol = alldata["violation"][bus]["Qinjmax"]
         if candmaxviol < alldata["violation"][bus]["Qinjmin"]:
@@ -1991,10 +1962,9 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     worstboundviol_report(badlbvar, maxlbviol, "LB")
     worstboundviol_report(badubvar, maxubviol, "UB")
 
-    logger.info("\nSummary: Max LB viol %g, Max UB viol %g." % (maxlbviol, maxubviol))
+    logger.info(f"\nSummary: Max LB viol {maxlbviol}, Max UB viol {maxubviol}.")
     logger.info(
-        "\nSummary: Max violation %g, key: %s."
-        % (max_violation_value, max_violation_string)
+        f"\nSummary: Max violation {max_violation_value}, key: {max_violation_string}."
     )
 
     # if alldata["dographics"]:
@@ -2016,34 +1986,30 @@ def lpformulator_checkviol_simple(
     loud,  # TODO-Dan Remove loud?
 ):
     """
-    Return bounds infeasibility if setting grbvariable to some value
-    maxlbviol, maxubviol, badlb, ubvar are updated if the infeasibility is larger
-    TODO-Dan This function definitely looks the same as in grbformulator_iv
-             Are these the same function? If yes, please remove 1 of the 2.
-             Wouldn't it be enough to use Gurobi attributes BoundVio?
+    Returns bounds infeasibility if setting grbvariable to some value.
+    Inputs maxlbviol, maxubviol, badlb, ubvar are updated if the infeasibility is larger
+    TODO-Dan Wouldn't it be enough to use Gurobi attributes BoundVio?
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
-    grbvariable : gurobipy.Var
-        Gurobi variable of interest
-    value : double
-        Value of optimization variable of interest
-    maxlbviol : double
-        Current max lower bound violation over all variables
-    maxubviol : double
-        Current max upper bound violation over all variables
-    badlbvar : gurobipy.Var
-        Variable with the biggest lower bound violation
-    badubvar : gurobipy.Var
-        Variable with the biggest upper bound violation
-    max_violation_value : double
-        Max overall bound violation # TODO-Dan We can get this via model.BoundVio, see https://www.gurobi.com/documentation/current/refman/attributes.html
-    max_violation_string : string
-        Name of variable with largest overall bound violation # TODO-Dan We can get this via model.BoundVioIndex, see https://www.gurobi.com/documentation/current/refman/attributes.html
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model
+    :type model: :class: `gurobipy.Model`
+    :param grbvariable: Gurobi variable of interest
+    :type grbvariable: :class: `gurobipy.Var`
+    :param value: Value of optimization variable of interest
+    :type value: float
+    :param maxlbviol: Current max lower bound violation over all variables
+    :type maxlbviol: float
+    :param maxubviol: Current max upper bound violation over all variables
+    :type maxubviol: float
+    :param badlbvar: Variable with the biggest lower bound violation
+    :type badlbvar: :class: `gurobipy.Var`
+    :param badubvar: Variable with the biggest upper bound violation
+    :type badubvar: :class: `gurobipy.Var`
+    :param max_violation_value: Max overall bound violation # TODO-Dan We can get this via model.BoundVio, see https://www.gurobi.com/documentation/current/refman/attributes.html
+    :type max_violation_value: float
+    :param max_violation_string: Name of variable with largest overall bound violation # TODO-Dan We can get this via model.BoundVioIndex, see https://www.gurobi.com/documentation/current/refman/attributes.html
+    :type max_violation_string: str
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -2060,8 +2026,7 @@ def lpformulator_checkviol_simple(
 
     if lbviol > 0:
         logger.info(
-            "LBVIOL %s  LB %.6e  x %.16e  UB %.6e"
-            % (grbvariable.varname, lb, value, ub)
+            f"Lower bound violation for variable {grbvariable.varname}  LB {lb}  x {value}  UB {ub}"
         )
 
     if lbviol > maxlbviol:
@@ -2071,8 +2036,7 @@ def lpformulator_checkviol_simple(
 
     if ubviol > 0:
         logger.info(
-            "UBVIOL %s  LB %.6e  x %.16e  UB %.6e"
-            % (grbvariable.varname, lb, value, ub)
+            f"Upper bound violation for variable UBVIOL {grbvariable.varname} LB {lb}  x {value}  UB {ub}"
         )
 
     if ubviol > maxubviol:
@@ -2099,25 +2063,20 @@ def lpformulator_checkviol_simple(
 
 def worstboundviol_report(badvar, maxviol, boundtype):
     """
-    Report the variable with largest bound violation
-    TODO-Dan This function definitely looks the same as in grbformulator_iv
-             Are these the same function? If yes, please remove 1 of the 2.
+    Reports the variable with largest bound violation
 
-    Parameters
-    ----------
-    badvar : gurobipy.Var
-        Gurobi variable with largest bound violation
-    maxviol : double
-        Value of violation
-    boundtype : string
-        States whether it's a lower or an upper bound
+    :param badvar: Gurobi variable with largest bound violation
+    :type badvar: :class: `gurobipy.Var`
+    :param maxviol: Value of violation
+    :type maxviol: float
+    :param boundtype: States whether it's a lower or an upper bound
+    :type boundtype: str
     """
 
     logger = logging.getLogger("OpfLogger")
     if badvar != None:
         logger.info(
-            "Worst %s bound violation by %s viol %g."
-            % (boundtype, badvar.Varname, maxviol)
+            f"Worst {boundtype} bound violation by {badvar.Varname} viol {maxviol}."
         )
     else:
-        logger.info("No %s bound violations." % boundtype)
+        logger.info(f"No {boundtype} bound violations.")

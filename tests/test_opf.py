@@ -54,7 +54,7 @@ class TestOpf(unittest.TestCase):
     ]
 
     # Currently, this is just a convenience setting while working on OptiMod
-    plot_graphics = False
+    plot_graphics = True
 
     # test simple is on purpose the same as test_acopf for now
     # will be removed in final version

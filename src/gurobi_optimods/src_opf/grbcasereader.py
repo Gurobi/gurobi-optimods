@@ -427,9 +427,9 @@ def read_case(alldata, case_dict):
     Fills alldata dictionary out of a user-given case dictionary
 
     :param alldata: Main dictionary holding all necessary data
-    :type alldata: dictionary
+    :type alldata: dict
     :param case_dict: Dictionary holding all case relevant data
-    :type case_dict: dictionary
+    :type case_dict: dict
 
     :raises ValueError: Bus type not allowed, illegal angle for branch,
                         non-existent generator
@@ -652,7 +652,7 @@ def read_case_file(casefile):
     :type casefile: str
 
     :return: Dictionary holding all case relevant data
-    :rtype: dictionary
+    :rtype: dict
     """
 
     logger, handlers = initialize_logger("CaseReadingLogger")
@@ -687,7 +687,7 @@ def read_case_build_dict(lines):
     :raises ValueError: Could not find end of section
 
     :return: Dictionary holding all case relevant data
-    :rtype: dictionary
+    :rtype: dict
     """
 
     logger = logging.getLogger("CaseReadingLogger")
@@ -973,7 +973,7 @@ def read_case_file_mat(casefile):
     :raises ValueError: Missing field
 
     :return: A dictionary holding all case relevant data
-    :rtype: dictionary
+    :rtype: dict
     """
 
     logger, handlers = initialize_logger("CaseReadingLogger")
@@ -1118,7 +1118,7 @@ def loadmat(filename):
     :type filename: str
 
     :return: Dictionary holding all case relevant data read from the given `.mat` file
-    :rtype: dictionary
+    :rtype: dict
     """
     data = scipy.io.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
@@ -1131,10 +1131,10 @@ def _check_keys(dict):
 
     :param dict: Dictionary holding all case data read from a `.mat` file by the
                  scipy.io.loadmat function
-    :type dict: dictionary
+    :type dict: dict
 
     :return: Dictionary holding all case relevant data read from the given `.mat` file
-    :rtype: dictionary
+    :rtype: dict
     """
     for key in dict:
         if isinstance(dict[key], scipy.io.matlab.mat_struct):
@@ -1149,7 +1149,7 @@ def _todict(matobj):
     :param matobj: Placeholder for holding read data from structs
     :type matobj: scipy.io.matlab.mat_struct
 
-    :rtype: dictionary
+    :rtype: dict
     :return: A possibly nested dictionary with all case relevant data
     """
     dict = {}
@@ -1167,7 +1167,7 @@ def turn_opf_dict_into_mat_file(solution, filename):
     Writes a `.mat` file out of an OPF solution dictionary
 
     :param solution: OPF solution dictionary
-    :type solution: dictionary
+    :type solution: dict
     :param filename: Name of `.mat` file where to write the solution data
     :type filename: str
     """

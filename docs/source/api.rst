@@ -18,3 +18,6 @@ API
 
 .. automodule:: gurobi_optimods.workforce
    :members: solve_workforce_scheduling
+
+.. automodule:: gurobi_optimods.opf
+   :members: solve_opf_model, read_case_from_mat_file, turn_solution_into_mat_file, read_coords_from_csv_file

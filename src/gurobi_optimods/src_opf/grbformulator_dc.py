@@ -10,12 +10,10 @@ def lpformulator_dc_body(alldata, model):
     """
     Adds variables and constraints for DC formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     # Create model variables
@@ -28,12 +26,10 @@ def lpformulator_dc_create_vars(alldata, model):
     """
     Creates and adds variables for DC formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -171,12 +167,10 @@ def lpformulator_dc_create_constraints(alldata, model):
     """
     Creates and adds constraints for DC formulation to a given Gurobi model
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -210,7 +204,7 @@ def lpformulator_dc_create_constraints(alldata, model):
             numquadgens += 1
 
     logger.info(
-        "    Number of generators with quadratic cost coefficient: %d." % numquadgens
+        f"    Number of generators with quadratic cost coefficient: {numquadgens}."
     )
 
     if numquadgens > 0:
@@ -291,7 +285,7 @@ def lpformulator_dc_create_constraints(alldata, model):
                 name="dnmip_twin_%d_%d_%d" % (j, f, t),
             )
 
-    logger.info("    %d active power flow definitions added." % count)
+    logger.info(f"    {count} active power flow definitions added.")
 
     # Balance constraints
     logger.info(
@@ -314,7 +308,7 @@ def lpformulator_dc_create_constraints(alldata, model):
 
         count += 1
     alldata["LP"]["balancecons"] = balancecons
-    logger.info("    %d constraints added." % count)
+    logger.info(f"    {count} constraints added.")
 
     # Injection defs
     logger.info("  Adding injection definition constraints.")
@@ -331,7 +325,7 @@ def lpformulator_dc_create_constraints(alldata, model):
         model.addConstr(Pinjvar[bus] == expr - bus.Pd, name="Bus_PInj_%d" % j)
         count += 1
 
-    logger.info("    %d injection definition constraints added." % count)
+    logger.info(f"    {count} injection definition constraints added.")
 
     if alldata["branchswitching_mip"]:
         expr = gp.LinExpr()

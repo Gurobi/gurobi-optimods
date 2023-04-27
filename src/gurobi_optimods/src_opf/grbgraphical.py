@@ -8,27 +8,22 @@ from .plotlyhandler import Plotlyhandler
 
 def generate_solution_figure(alldata, solution):
     """
-    Plots a given OPF solution.
+    Generates a :class: `plotly.graph_objects.Figure` out of a given solution.
     Saves necessary data from solution to alldata dictionary
     and calls the main plotting function.
 
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param solution: Dictionary holding an OPF solution
+    :type solution: dict
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    solution : dictionary
-        Dictionary holding an OPF solution
-
-    Returns
-    -------
-    plotly.graph_objects.Figure
-        A plotly figure objects which can be displayed via the show() function,
-        see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
+    :return: A plotly figure objects which can be displayed via the show() function,
+             see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
+    :rtype: :class: `plotly.graph_objects.Figure`
     """
 
     logger = logging.getLogger("OpfLogger")
-    logger.info("Plotting solution with value %.3e. Coordinates given." % solution["f"])
+    logger.info(f"Plotting solution with value {solution['f']:.3f}. Coordinates given.")
     numbranches = alldata["numbranches"]
     numgens = alldata["numgens"]
 
@@ -52,31 +47,27 @@ def generate_solution_figure(alldata, solution):
         gholder[j - 1] = gen["Pg"]
 
     textlist = []
-    textlist.append("OBJ: %10.2f" % (solution["f"]))
-    textlist.append("Lines off: %d" % (numzeros))
+    textlist.append(f"OBJ: {solution['f']:10.2f}")
+    textlist.append(f"Lines off: {numzeros}")
     return grbgraphical(alldata, "branchswitching", textlist)
 
 
 def grbgraphical(alldata, plottype, textlist):
     """
     Plots a given OPF solution. Depending on the plottype,
-    the edge and node colors are different and we print different
-    information
+    the edge and node colors are different and different information
+    is printed
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    plottype : string
-        Type of plot to show. Currently, "branchswitching" or "violation"
-    textlist: list
-        List of additional strings printed on the plot
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param plottype: Type of plot to show. Currently, `branchswitching` or `violation`
+    :type plottype: str
+    :param textlist: List of additional strings printed on the plot
+    :type textlist: list
 
-    Returns
-    -------
-    plotly.graph_objects.Figure
-        A plotly figure objects which can be displayed via the show() function,
-        see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
+    :return: A plotly figure objects which can be displayed via the show() function,
+             see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
+    :rtype: :class: `plotly.graph_objects.Figure`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -234,20 +225,6 @@ def grbgraphical(alldata, plottype, textlist):
                     % (j, myedge_color[j], small, large)
                 )
 
-    # break_exit('cons')
-
-    if False:
-        for j in range(1, numbuses + 1):
-            if mynode_size[j - 1] > 1:
-                print(
-                    "pre graphplot, bus",
-                    j,
-                    "size",
-                    mynode_size[j - 1],
-                    "color",
-                    mynode_color[j - 1],
-                )
-
     return graphplot(
         alldata,
         graph_dict,
@@ -279,45 +256,43 @@ def graphplot(
     textlist,
 ):
     """
-    Generates a plotly.graph_objects.Figure object from an OPF network out of user
+    Generates a :class: `plotly.graph_objects.Figure` object from an OPF network out of user
     given solution/violation data which has been translated into necessary dictionaries
-    in function grbgraphical.py:grbgraphical.
+    in function ``grbgraphical``.
     Uses lat, lon coordinates as in coordinates dictionary,
     together with the plotlyhandler library to create a plotly figure.
     The figure is then rendered in a browser window.
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    graph_dict : dictionary
-        Dictionary holding graph data
-    myvertex_text : dictionary
-        Dictionary holding the texts when hovering over a node
-    myvertex_size : dictionary
-        Dictionary holding the size of each node. The size depends on generated power
-    myvertex_color : dictionary
-        Dictionary holding the color of each node. The color depends on generated power
-    myvertex_border_width : dictionary
-        Dictionary holding the thickness of the border of each node
-    myedge_width : dictionary
-        Dictionary holding the thickness of each network edge
-    myedge_color : dictionary
-        Dictionary holding the color of each network edge. The color depends on violation and whether the edge is turned on/off
-    myedge_ends : dictionary # TODO-Dan do we need it?
-        Dictionary holding each edge in both directions, e.g., (1,2) and (2,1)
-    myedge_list_consolidated : dictionary # TODO-Dan What exactly is this?
-        Dictionary holding possible multi-edges
-    myedge_degrees_consolidated : dictionary
-        Dictionary holding the degree of each edge
-    textlist : list
-        List with additional strings printed on the plot
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param graph_dict: Dictionary holding graph data
+    :type graph_dict: dict
+    :param myvertex_text: Dictionary holding the texts when hovering over a node
+    :type myvertex_text: dict
+    :param myvertex_size: Dictionary holding the size of each node. The size depends on generated power
+    :type myvertex_size: dict
+    :param myvertex_color: Dictionary holding the color of each node. The color depends on generated power
+    :type myvertex_color: dict
+    :param myvertex_border_width: Dictionary holding the thickness of the border of each node
+    :type myvertex_border_width: dict
+    :param myedge_width: Dictionary holding the thickness of each network edge
+    :type myedge_width: dict
+    :param myedge_color: Dictionary holding the color of each network edge. The color depends on violation and whether the edge is turned on/off
+    :type myedge_color: dict
+    :param myedge_ends: Dictionary holding each edge in both directions, e.g., (1,2) and (2,1)# TODO-Dan do we need it?
+    :type myedge_ends: dict
+    :param myedge_list_consolidated: Dictionary holding possible multi-edges# TODO-Dan What exactly is this?
+    :type myedge_list_consolidated: dict
+    :param myedge_degrees_consolidated: Dictionary holding the degree of each edge
+    :type myedge_degrees_consolidated : dict
+    :param textlist: List with additional strings printed on the plot
+    :type textlist: list
 
-    Returns
-    -------
-    plotly.graph_objects.Figure
-        A plotly figure objects which can be displayed via the show() function,
-        see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
+    :raises ValueError: Inconsistent graph <-> data property
+
+    :return: A plotly figure objects which can be displayed via the ``show()`` function,
+             see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
+    :rtype: :class: `plotly.graph_objects.Figure`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -331,14 +306,12 @@ def graphplot(
 
     if m != alldata["numbranches"]:
         raise ValueError(
-            "Number of branches in graph = %d, whereas number of branches in problem = %d."
-            % (m, alldata["numbranches"])
+            f"Number of branches in graph = {m}, whereas number of branches in problem = {alldata['numbranches']}."
         )
 
     if n != alldata["numbuses"]:
         raise ValueError(
-            "Number of buses in graph = %d, whereas number of buses in problem = %d."
-            % (n, alldata["numbuses"])
+            f"Number of buses in graph = {n}, whereas number of buses in problem = {alldata['numbuses']}."
         )
 
     (
@@ -364,23 +337,13 @@ def graphplot(
         scannedordpair = scanned_unique_ordered_pairs[j]
         degscanned = scanned_degrees_consolidated[scannedordpair]
         if scannedordpair not in myedge_degrees_consolidated.keys():
-            logger.info(
-                "Error. Ordered pair %d -> (%d,%d) not in consolidated list\n"
-                % (j, scannedordpair[0], scannedordpair[1])
-            )
             raise ValueError(
-                "Error. Ordered pair %d -> (%d,%d) not in consolidated list\n"
-                % (j, scannedordpair[0], scannedordpair[1])
+                f"Error. Ordered pair {j} -> ({scannedordpair[0]},{scannedordpair[1]}) not in consolidated list\n"
             )
         degmine = myedge_degrees_consolidated[scannedordpair]
         if degscanned != degmine:
-            logger.info(
-                "Error. Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists\n"
-                % (j, scannedordpair[0], scannedordpair[1], degscanned, degmine)
-            )
             raise ValueError(
-                "Error. Ordered pair %d -> (%d,%d) has different degrees %d, %d in scanned vs consolidated lists\n"
-                % (j, scannedordpair[0], scannedordpair[1], degscanned, degmine)
+                f"Error. Ordered pair {j} -> ({scannedordpair[0]},{scannedordpair[1]}) has different degrees {degscanned}, {degmine} in scanned vs consolidated lists\n"
             )
 
         local_reordered_color[scannedordpair] = {}
@@ -441,11 +404,8 @@ def graphplot(
         # G.add_edge(small, large)
         error = gG.addedge(small, large)
         if error:
-            logger.info(
-                "Could not add edge (%d, %d) to graph object.\n" % (small, large)
-            )
             raise ValueError(
-                "Could not add edge (%d, %d) to graph object.\n" % (small, large)
+                f"Could not add edge ({small}, {large}) to graph object.\n"
             )
         fbus = small + 1
         tbus = large + 1
@@ -499,30 +459,20 @@ def graphplot(
 
 def scangraph(alldata, graph_dict):
     """
-    Plots an OPF network out of user given solution/violation data which has been
-    translated into necessary dictionaries in function grbgraphical.py:grbgraphical.
+    Scans given graph data and translates it into internal lists and dictionaries
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    graph_dict : dictionary
-        Dictionary holding graph data
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param graph_dict: Dictionary holding graph data
+    :type graph_dict: dict
 
-    Returns
-    -------
-    list
-        List holding x coordinate values for each node
-    list
-        List holding y coordinate values for each node
-    dictionary
-        Dictionary holding possible multi-edges
-    dictionary
-        Dictionary holding the degree of each edge
-    dictionary
-        Dictionary holding each edge as a unique ordered pair
-    int
-        Number of unique edges
+    :return: List holding x coordinate values for each node
+             List holding y coordinate values for each node
+             Dictionary holding possible multi-edges
+             Dictionary holding the degree of each edge
+             Dictionary holding each edge as a unique ordered pair
+             Number of unique edges
+    :rtype: list, list, dict, dict, dict, int
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -578,7 +528,7 @@ def scangraph(alldata, graph_dict):
         revendbus[(busfrom, busto)] = trueM + 1
         revendbus[(busto, busfrom)] = trueM + 1
         trueM += 1
-    logger.info("After scanning, number of edges is %d.\n" % trueM)
+    logger.info(f"After scanning, number of edges is {trueM}.\n")
     return (
         nodex,
         nodey,
@@ -592,24 +542,18 @@ def scangraph(alldata, graph_dict):
 def grbgetgraphattr(alldata, value):
     """
     Looks through a possibly pre-set graphical attributes list
-    and sets the corresponding values
+    and sets the corresponding values in ``alldata`` dictionary
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    value : float
-        Threshold value for graph attributes
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param value: Threshold value for graph attributes
+    :type value: float
 
-    Returns
-    -------
-    bool
-        States whether the graph attributes have been set, i.e.,
-        if the value is > 100
-    float
-        Size of node
-    float
-        Color of node
+    :return: States whether the graph attributes have been set, i.e.,
+             if the value is > 100
+             Size of node
+             Color of node
+    :rtype: bool, float, float
     """
 
     color = "Black"

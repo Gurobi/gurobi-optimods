@@ -19,12 +19,15 @@ from .grbformulator_iv import (
 
 def construct_and_solve_model(alldata):
     """
-    Construct OPF model and solve it
+    Construct OPF model for given data and solve it
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+
+    :raises ValueError: No model type set
+
+    :return: A dictionary holding result data in MATPOWER notation
+    :rtype: dict
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -38,10 +41,10 @@ def construct_and_solve_model(alldata):
     else:
         # This should have been checked before already but it can't hurt to have this error
         raise ValueError(
-            "Illegal option combination. Have to use exactly 1 of options [doac, dodc, doiv]."
+            "No model type set. Have to use exactly 1 of options [doac, dodc, doiv]."
         )
 
-    logger.info("\n%s formulation." % opftype.value)
+    logger.info(f"\n{opftype.value} formulation.")
 
     starttime = time.time()
 
@@ -61,14 +64,13 @@ def construct_and_solve_model(alldata):
         # Update to get correct model stats
         model.update()
         logger.info(
-            "Constructed %sOPF model with %d variables and %d constraints.\n"
-            % (opftype.value, model.NumVars, model.NumConstrs)
+            f"Constructed {opftype.value}OPF model with {model.NumVars} variables and {model.NumConstrs} constraints.\n"
         )
 
         # Write model to file if requested by user
         if alldata["lpfilename"] != None:
             model.write(alldata["lpfilename"])
-            logger.info("Wrote LP to %s." % alldata["lpfilename"])
+            logger.info(f"Wrote LP to {alldata['lpfilename']}.")
 
         # TODO This will be an own API function
         if alldata["strictcheckvoltagesolution"]:
@@ -84,10 +86,9 @@ def construct_and_solve_model(alldata):
 
         endtime = time.time()
         logger.info(
-            "Overall time taken (model construction + optimization): %f s."
-            % (endtime - starttime)
+            f"Overall time taken (model construction + optimization): {endtime - starttime} s."
         )
-        logger.info("Solution count: %d." % (sol_count))
+        logger.info(f"Solution count: {sol_count}.")
 
         # Need to turn Gurobi solution into a dictionary following MATPOWER notation
         solution = turn_solution_into_result_dict(alldata, model, opftype)
@@ -97,16 +98,16 @@ def construct_and_solve_model(alldata):
 
 def lpformulator_body(alldata, model, opftype):
     """
-    Call the corresponding model construction method
+    Calls the corresponding model construction method
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
-    opftype : OpfType
-        Type of OPF formulation
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
+    :param opftype: Type of OPF formulation
+    :type opftype: :enum: `OpfType`
+
+    :raises ValueError: Unknown OPF type
     """
     if opftype == OpfType.AC:
         lpformulator_ac_body(alldata, model)
@@ -120,24 +121,28 @@ def lpformulator_body(alldata, model, opftype):
 
 def lpformulator_strictchecker(alldata, model, spitoutvector, opftype):
     """
-    Call the corresponding strictchecker function
+    Calls the corresponding strictchecker function
 
     TODO-Dan How do we use this function? It says "check input solution against formulation".
              Which input solution? Where does the user provide the input solution? Is it in the voltage file?
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model to be constructed
-    spitoutvector: boolean
-        # TODO-Dan What does it do?
-    opftype : OpfType
-        Type of OPF formulation
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model to be constructed
+    :type model: :class: `gurobipy.Model`
+    :param spitoutvector: #TODO-Dan What does it do?
+    :type spitoutvector: bool
+    :param opftype: Type of OPF formulation
+    :type opftype: :enum: `OpfType`
+
+    :raises ValueError: Unknown OPF type
     """
+    logger = logging.getLogger("OpfLogger")
     if opftype == OpfType.DC:
-        pass  # TODO-Dan Is there a reason why there is no strict checker for DC (except that it's linear)
+        logger.warning(
+            "Warning: Strict checker currently not available for DC formulation."
+        )
+        # TODO-Dan Is there a reason why there is no strict checker for DC (except that it's linear)
     elif opftype == OpfType.AC or opftype == OpfType.IV:
         lpformulator_ac_strictchecker(alldata, model, spitoutvector)
     else:
@@ -146,20 +151,29 @@ def lpformulator_strictchecker(alldata, model, spitoutvector, opftype):
 
 def lpformulator_optimize(alldata, model, opftype):
     """
-    Optimize constructed model
+    Optimizes constructed OPF model.
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Constructed Gurobi model
-    opftype : OpfType
-        Type of OPF formulation
+    Resolves model with DualReductions=0 when model is found to
+    be infeasible or unbounded in order to get more information.
 
-    Returns
-    -------
-    Number of found solutions
+    Computes an IIS if model is found to be infeasible and saves
+    it to an `.ilp` file.
+
+    Resolves model with additional settings if numerical trouble
+    has been encountered to possible still get a solution.
+
+    In any other case, returns the feasible solution count.
+
+
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Constructed Gurobi model
+    :type model: :class: `gurobipy.Model`
+    :param opftype: Type of OPF formulation
+    :type opftype: :enum: `OpfType`
+
+    :return: Number of found solutions
+    :rtype: int
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -167,7 +181,6 @@ def lpformulator_optimize(alldata, model, opftype):
     logging.disable(logging.INFO)
     model.params.LogFile = alldata["logfile"]
     # Specific settings for better convergence
-
     if opftype != OpfType.DC:
         if alldata["use_ef"]:
             model.params.NonConvex = 2
@@ -223,16 +236,16 @@ def lpformulator_optimize(alldata, model, opftype):
     if model.status == GRB.INFEASIBLE:
         logger.info("\nModel Status: infeasible.\n")
         logger.info("Computing IIS...")
+        iisname = opftype.value + "opfmodel.ilp"
         logging.disable(logging.INFO)
         model.computeIIS()
+        model.write(iisname)
         logging.disable(logging.NOTSET)
-        iisname = opftype.value + "opfmodel.ilp"
-        logger.info("\nIIS computed, writing IIS to file %s." % iisname)
+        logger.info(f"\nIIS computed, written IIS to file {iisname}.")
         logger.info("For more information on how to deal with infeasible models.")
         logger.info(
             "Please refer to\n  https://support.gurobi.com/hc/en-us/articles/360029969391-How-do-I-determine-why-my-model-is-infeasible-"
         )
-        model.write(iisname)
 
     if model.status == GRB.NUMERIC:
         logger.info("\nModel Status: Numerically difficult model.\n")
@@ -258,7 +271,7 @@ def lpformulator_optimize(alldata, model, opftype):
     # Only print objective value and solution quality if at least
     # one feasible point is available
     if model.SolCount > 0:
-        logger.info("Objective value = %.8e." % model.objVal)
+        logger.info(f"Objective value = {model.objVal}.")
         logging.disable(logging.INFO)
         model.printQuality()
         logging.disable(logging.NOTSET)
@@ -270,12 +283,10 @@ def lpformulator_setup(alldata, opftype):
     """
     Helper function to handle specific settings before starting optimization
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    opftype : OpfType
-        Type of OPF formulation
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param opftype: Type of OPF formulation
+    :type opftype: :enum: `OpfType`
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -321,7 +332,7 @@ def lpformulator_setup(alldata, opftype):
 
     if alldata["usemaxphasediff"]:
         logger.info(
-            "Applying max phase diff of %g degrees." % (alldata["maxphasediff_deg"])
+            f"Applying max phase diff of {alldata['maxphasediff_deg']} degrees."
         )
 
         maxrad = alldata["maxphasediff_rad"]
@@ -335,20 +346,25 @@ def lpformulator_setup(alldata, opftype):
             if branch.minangle_rad < -maxrad:
                 branch.minangle_rad = -maxrad
 
-        logger.info("Updated %d maxangle constraints." % (count))
+        logger.info(f"Updated {count} maxangle constraints.")
 
 
 def turn_solution_into_result_dict(alldata, model, opftype):
     """
-    Function to turn a Gurobi solution into an OPF dictionary in MATPOWER notation.
+    Turns a Gurobi solution into an OPF dictionary in MATPOWER notation.
     If no solution is present, the result dictionary "success" value is 0.
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    model : gurobipy.Model
-        Gurobi model which was recently optimized
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model which was recently optimized
+    :type model: :class: `gurobipy.Model`
+    :param opftype: Type of OPF formulation
+    :type opftype: :enum: `OpfType`
+
+    :return: Dictionary holding OPF result information following MATPOWER notation
+             The "success" entry states whether a feasible solution has been found
+             during the optimization process
+    :rtype: dict
     """
 
     # Reconstruct case data from our data
@@ -360,12 +376,12 @@ def turn_solution_into_result_dict(alldata, model, opftype):
     result["branch"] = {}
     result["gencost"] = {}
 
-    # buses
+    # Buses
     buses = alldata["buses"]
     index = 1
     for b in buses.values():
         # bus_i type    Pd  Qd  Gs  Bs  area    Vm  Va  baseKV  zone    Vmax    Vmin
-        # we don't use area, Vm, Va, zone but we save them for consistency with MATPOWER
+        # We don't use area and zone but we save them for consistency with MATPOWER
         matbus = {
             "bus_i": b.nodeID,
             "type": b.nodetype,
@@ -384,13 +400,13 @@ def turn_solution_into_result_dict(alldata, model, opftype):
         result["bus"][index] = matbus
         index += 1
 
-    # generators and gen costs
+    # Generators and gen costs
     gens = alldata["gens"]
     index = 1
     for g in gens.values():
-        # generator data
+        # Generator data
         # bus   Pg  Qg  Qmax    Qmin    Vg  mBase   status  Pmax    Pmin    Pc1 Pc2 Qc1min  Qc1max  Qc2min  Qc2max  ramp_agc    ramp_10 ramp_30 ramp_q  apf
-        # we don't use Vg, mBase, and everything after Pmin but we save them for consistency with MATPOWER
+        # We don't use Vg, mBase, and everything after Pmin but we save them for consistency with MATPOWER
         matgen = {
             "bus": g.nodeID,
             "Pg": g.Pg,
@@ -419,10 +435,10 @@ def turn_solution_into_result_dict(alldata, model, opftype):
         for j in range(len(gencost)):  # scale cost back to MATPOWER format
             gencost[j] /= baseMVA ** (g.costdegree - j)
 
-        # generator cost data
+        # Generator cost data
         #   1   startup shutdown    n   x1  y1  ... xn  yn
         #   2   startup shutdown    n   c(n-1)  ... c0
-        # we don't use startup and shutdown but we save them for consistency with MATPOWER
+        # We don't use startup and shutdown but we save them for consistency with MATPOWER
         matgencost = {
             "costtype": g.costtype,
             "startup": g.startup,
@@ -433,7 +449,7 @@ def turn_solution_into_result_dict(alldata, model, opftype):
         result["gencost"][index] = matgencost
         index += 1
 
-    # branches
+    # Branches
     branches = alldata["branches"]
     index = 1
     for b in branches.values():
@@ -479,7 +495,7 @@ def turn_solution_into_result_dict(alldata, model, opftype):
             if not alldata["branchswitching_mip"]:
                 resbus["mu"] = alldata["LP"]["balancecons"][
                     databus
-                ].Pi  # shadow prices of balance constraints only available for LP
+                ].Pi  # Shadow prices of balance constraints only available for LP
 
         # Generator solution data
         for genindex in result["gen"]:
@@ -578,12 +594,10 @@ def compute_voltage_angles(alldata, result):
     Helper function to compute voltage angles out of previously computed
     voltage magnitudes for a given AC OPF solution
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
-    result : dictionary
-        Result dictionary which is constructed for the user
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param result: Result dictionary which is constructed for the user
+    :type result: dict
     """
 
     # After setting all voltage magnitudes, we can compute the voltage angle
@@ -609,25 +623,24 @@ def compute_voltage_angles(alldata, result):
 
     while len(busesdone) != alldata["numbuses"]:
         # Get a new bus
-        next = busesnext.pop()
-        while next[1] in busesdone:
-            next = busesnext.pop()
-        nextbusindex = next[1]
+        nextb = busesnext.pop()
+        while nextb[1] in busesdone:
+            nextb = busesnext.pop()
+        nextbusindex = nextb[1]
         nextbus = buses[nextbusindex]
-        knownbusindex = next[0]
+        knownbusindex = nextb[0]
         knownbus = buses[knownbusindex]
-        cvarval = cvar[branches[next[2]]].X
+        cvarval = cvar[branches[nextb[2]]].X
         res = math.acos(
             cvarval
             / (result["bus"][nextbusindex]["Vm"] * result["bus"][knownbusindex]["Vm"])
         )
-        if next[3] == "f":
+        if nextb[3] == "f":
             res -= result["bus"][knownbusindex]["Va"]
             res *= -1
         else:
             res += result["bus"][knownbusindex]["Va"]
         result["bus"][nextbusindex]["Va"] = res
-        # print("setting voltage angle of bus %d to value %f"%(nextbusindex,res))
         busesdone.add(nextbusindex)
 
         for branchindex in nextbus.frombranchids.values():
@@ -643,25 +656,23 @@ def compute_voltage_angles(alldata, result):
 
 def writemipstart(alldata):
     """
-    Helper function for writing a mip start to mipstart.mst file.
+    Helper function for writing a mip start to `mipstart.mst` file.
     Mainly used for debugging numerically difficult cases
 
-    Parameters
-    ----------
-    alldata : dictionary
-        Main dictionary holding all necessary data
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
     """
 
     logger = logging.getLogger("OpfLogger")
     filename = "mipstart.mst"
     f = open(filename, "w")
-    logger.info("Writing mipstart in file %s." % filename)
+    logger.info(f"Writing mipstart in file {filename}.")
 
     zvar = alldata["MIP"]["zvar"]
     branches = alldata["branches"]
     numbranches = alldata["numbranches"]
     for j in range(1, 1 + numbranches):
         branch = branches[j]
-        f.write("{} 1.0\n".format(zvar[branch].Varname))
+        f.write(f"{zvar[branch].Varname} 1.0\n")
 
     f.close()

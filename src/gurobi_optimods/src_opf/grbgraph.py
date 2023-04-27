@@ -18,10 +18,8 @@ class Grbgraph:
         """
         Adds a vertex to the Graph
 
-        Parameters
-        ----------
-        i : int
-            vertex index
+        :param i: vertex index
+        :type i: int
         """
         self.vertices[self.n] = i
         self.n += 1
@@ -30,12 +28,13 @@ class Grbgraph:
         """
         Adds an edge to the Graph
 
-        Parameters
-        ----------
-        i : int
-            vertex index of first node
-        j : int
-            vertex index of second node
+        :param i: vertex index of first node
+        :type i: int
+        :param j: vertex index of second node
+        :type j: int
+
+        :return: 0 if edge could be added, 1 otherwise
+        :rtype: int
         """
         if i in self.vertices.values() and j in self.vertices.values():
             self.edges[self.m] = (i, j)
@@ -49,4 +48,4 @@ class Grbgraph:
         Prints graph statistics
         """
         logger = logging.getLogger("OpfLogger")
-        logger.info("Graph object has %d vertices %d edges." % (self.n, self.m))
+        logger.info(f"Graph object has {self.n} vertices {self.m} edges.")
