@@ -30,6 +30,61 @@ def initialize_data_dict(logfile=""):
     return alldata
 
 
+def construct_settings_dict(
+    opftype,
+    polar,
+    useef,
+    usejabr,
+    ivtype,
+    branchswitching,
+    usemipstart,
+    additional_settings,
+):
+    """
+    Initializes a dictionary holding all necessary data
+
+    :param logfile: Name of log file, defaults to ""
+    :type logfile: str, optional
+
+    :return: Returns a dictionary with a few initialized default fields
+    :rtype: dict
+    """
+
+    settings = {}
+
+    opftypeL = opftype.lower()
+    if opftypeL not in ["ac", "dc", "iv"]:
+        raise ValueError(f"Unknown OPF type {opftype}.")
+
+    settings["do" + opftypeL] = True
+    settings["dopolar"] = polar
+    settings["use_ef"] = useef
+    settings["skipjabr"] = not usejabr
+
+    ivtypeL = ivtype.lower()
+    if ivtypeL not in ["plain", "aggressive"]:
+        raise ValueError(f"Unknown ivtype {ivtype}.")
+
+    settings["ivtype"] = ivtypeL
+    if branchswitching == 0:
+        settings["branchswitching_mip"] = settings["branchswitching_comp"] = False
+    elif branchswitching == 1:
+        settings["branchswitching_mip"] = True
+        settings["branchswitching_comp"] = False
+    elif branchswitching == 2:
+        settings["branchswitching_mip"] = False
+        settings["branchswitching_comp"] = True
+    else:
+        raise ValueError(f"Unknown branchswitching setting {branchswitching}.")
+
+    settings["usemipstart"] = usemipstart
+
+    for s in additional_settings:
+        settings[s] = additional_settings[s]
+
+    return settings
+
+
 def read_optimization_settings(alldata, settings):
     """
     Reads settings dictionary for an optimization call

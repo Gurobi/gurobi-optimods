@@ -11,6 +11,7 @@ from .src_opf.grbcasereader import (
 
 from .src_opf.grbfile import (
     initialize_data_dict,
+    construct_settings_dict,
     read_settings_file,
     read_optimization_settings,
     read_graphics_settings,
@@ -23,17 +24,51 @@ from .src_opf.grbgraphical import generate_solution_figure
 from .src_opf.utils import initialize_logger, remove_and_close_handlers
 
 
-def solve_opf_model(settings, case, logfile=""):  # add keyword arguments
+def solve_opf_model(
+    case,
+    logfile="",
+    opftype="AC",
+    polar=False,
+    useef=True,
+    usejabr=True,
+    ivtype="aggressive",
+    branchswitching=0,
+    usemipstart=True,
+    additional_settings=dict(),
+):
     """
     Constructs an OPF model from given data and solves it with Gurobi.
     Returns a result dictionary following MATPOWER notation
 
-    :param settings: Dictionary holding settings
-    :type settings: dict
     :param case: Dictionary holding case data
     :type case: dict
     :param logfile: Name of log file, defaults to ""
     :type logfile: str, optional
+    :param opftype: String telling the desired OPF model type. Available are `AC`, `DC`, `IV`, defaults to `AC`
+    :type opftype: str, optional
+    :param polar: Controls whether polar formulation should be used, defaults to `False`
+    :type polar: bool, optional
+    :param useef: Controls whether bilinear variables e, f and corresponding constraints should be used, defaults to `True`.
+                  Has only an effect if ``opftype`` equals `AC`
+    :type useef: bool, optional
+    :param usejabr: Controls whether JABR inequalities should be added, defaults to `True`.
+                    Has only an effect if ``opftype`` equals `AC`
+    :type usejabr: bool, optional
+    :param ivtype: States what type of IV formulation should be used. Availale are `aggressive` and `plain`,
+                   defaults to `aggressive`
+    :type ivtype: str, optional
+    :param branchswitching: Controls whether discrete variable for turning on/off branches should be used.
+                            0 = don't use discrete variables (all branches are on)
+                            1 = use binary variables to constrain bounds of (re)active power injections
+                            2 = use binary variables and multiply them with the (re)active power injections
+                            Usually, setting 1 works better than 2. Defaults to 0
+    :type branchswitching: int, optional
+    :param usemipstart: Controls whether a pre-defined MIPStart should be used. Has only an effect if
+                        branchswitching > 0. Deftault to `True`
+    :type usemipstart: bool, optional
+    :param additional_settings: Dictionary holding additional settings. For more details, please refer to
+                                the documentation. Defaults to an empty dictionary
+    :type additional_settings: dict, optional
 
     :return: A result dictionary following MATPOWER notation, e.g., the objective value
              is at ``solution["f"]`` if ``solution["success"] = 1``
@@ -42,6 +77,18 @@ def solve_opf_model(settings, case, logfile=""):  # add keyword arguments
 
     # Initialize output and file handler and start logging
     logger, handlers = initialize_logger("OpfLogger", logfile, True)
+
+    # Initialize settings dictionary
+    settings = construct_settings_dict(
+        opftype,
+        polar,
+        useef,
+        usejabr,
+        ivtype,
+        branchswitching,
+        usemipstart,
+        additional_settings,
+    )
 
     # Initilize data dictionary
     alldata = initialize_data_dict(logfile)
@@ -61,13 +108,13 @@ def solve_opf_model(settings, case, logfile=""):  # add keyword arguments
     return solution
 
 
-def generate_opf_solution_figure(settings, case, coords, solution):
+def generate_opf_solution_figure(
+    case, coords, solution, graphattrsfile="", voltsfile=""
+):
     """
     Reads the given case and returns a plotly figure object.
     Ideally the solution has been computed by the `solve_opf_model` function
 
-    :param settings: Dictionary holding user settings
-    :type settings: dict
     :param case: Dictionary holding case data
     :type case: dict
     :param coords: Dictionary holding bus coordinates
@@ -75,7 +122,12 @@ def generate_opf_solution_figure(settings, case, coords, solution):
     :param solution: Dictionary holding solution data following the MATPOWER notation as returned
                       by the solve_opf_model function
     :type solution: dict
-
+    :param graphattrsfile: Name of and possibly full path to a file holding additional graph attributes,
+                           defaults to "". #TODO will be very likely removed
+    :type graphattrsfile: str, optional
+    :param voltsfile: Name of and possibly full path to a file holding voltage solution information,
+                      defaults to "". #TODO will be very likely removed
+    :type voltsfile: str, optional
 
     :return: A plotly figure objects which can be displayed via the show() function,
              see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
@@ -88,6 +140,8 @@ def generate_opf_solution_figure(settings, case, coords, solution):
     # Initilize data dictionary
     alldata = initialize_data_dict()
 
+    settings = {"voltsfilename": voltsfile, "graphattrsfilename": graphattrsfile}
+
     # Read settings file/dict and save them into the alldata dict
     read_graphics_settings(alldata, settings)
 
@@ -97,7 +151,7 @@ def generate_opf_solution_figure(settings, case, coords, solution):
     # Special settings for graphics
     alldata["graphical"] = {}
     alldata["graphical"]["numfeatures"] = 0
-    if alldata["graphattrsfilename"] != None:
+    if alldata["graphattrsfilename"] != "" and alldata["graphattrsfilename"] != None:
         grbread_graphattrs(alldata, alldata["graphattrsfilename"])
 
     # Map given coordinate data to network data

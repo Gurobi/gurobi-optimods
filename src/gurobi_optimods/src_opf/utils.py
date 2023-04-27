@@ -95,7 +95,7 @@ def get_default_optimization_settings():
         "useconvexformulation": False,
         "usemaxdispersion": False,
         "usemaxphasediff": False,
-        "use_ef": False,
+        "use_ef": True,
         "dopolar": False,
         # "doslp_polar": False, # Not used yet, this is for future work
         "doac": False,  # TODO combine to a opftype argument

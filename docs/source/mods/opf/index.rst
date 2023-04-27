@@ -100,20 +100,16 @@ easy access by users.
 
 .. testcode:: mod
 
-    from gurobi_optimods.opf import solve_opf_model, read_settings_from_file, read_case_from_file
-    from gurobi_optimods.datasets import load_opfsettings, load_caseopf
+    from gurobi_optimods.opf import solve_opf_model, read_case_from_mat_file
+    from gurobi_optimods.datasets import load_caseopfmat
 
 
-    # load path to settings file
-    settingsfile = load_opfsettings()
-    # read settings file and return a settings dictionary
-    settings = read_settings_from_file(settingsfile)
-    # load path to case file
-    casefile = load_caseopf("9")
+    # load path to .mat case file
+    casefile = load_caseopfmat("9")
     # read case file and return a case dictionary
-    case = read_case_from_file(casefile)
+    case = read_case_from_mat_file(casefile)
     # solve opf model and return a solution and the final objective value
-    solution = solve_opf_model(settings, case)
+    solution = solve_opf_model(case, opftype="AC")
 
 ..  A snippet of the Gurobi log output here won't show in the rendered page,
     but serves as a doctest to make sure the code example runs. The ... lines
@@ -123,7 +119,7 @@ easy access by users.
     :hide:
 
     ...
-    Optimize a model with 218 rows, 134 columns and 541 nonzeros
+    Optimize a model with 73 rows, 107 columns and 208 nonzeros
     ...
     Optimal solution found (tolerance 1.00e-03)
     ...

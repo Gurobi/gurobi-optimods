@@ -182,7 +182,7 @@ def lpformulator_optimize(alldata, model, opftype):
     model.params.LogFile = alldata["logfile"]
     # Specific settings for better convergence
     if opftype != OpfType.DC:
-        if alldata["use_ef"]:
+        if alldata["use_ef"] or alldata["dopolar"]:
             model.params.NonConvex = 2
 
         # Specific settings for better convergence
