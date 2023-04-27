@@ -8,7 +8,7 @@ The Opti Mods
    card-regression
    diet
    l1-regression
-   opf/index
    mwis
+   opf/index
    weighted-matching
    workforce
