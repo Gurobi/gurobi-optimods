@@ -56,6 +56,7 @@ Here we derive the matrix :math:`\Sigma` and the vector :math:`\mu` from a time 
 .. testsetup:: mod
 
     # Set pandas options for displaying dataframes, if needed
+    import math
     import pandas as pd
     pd.options.display.max_rows = 10
     pd.options.display.max_columns = 7
@@ -332,11 +333,15 @@ All transaction fees are assumed to be covered by the portfolio itself,
 thus reducing the total sum of the returned optimal portfolio:
 
 .. doctest:: mod
-   :options: +NORMALIZE_WHITESPACE
+   :options: +NORMALIZE_WHITESPACE +SKIP
 
     >>> print(x.sum())
     0.95
 
+.. testcode:: mod
+    :hide:
+
+    assert math.isclose(x.sum(), 0.95)
 
 Minimum position constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
