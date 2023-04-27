@@ -8,6 +8,7 @@ The Opti Mods
    card-regression
    diet
    l1-regression
+   min-cost-flow
    mwis
    opf/index
    weighted-matching

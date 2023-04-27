@@ -25,10 +25,11 @@ between two molecules.
 Problem Specification
 ---------------------
 
-Consider an undirected graph G with n vertices and m edges where each vertex is
-associated with a positive weight w. Find a maximum weighted independent set, i.e.,
-select a set of vertices in graph G where there is no edge between any pair of
-vertices and the sum of the vertex weight is maximum.
+Consider an undirected graph :math:`G` with :math:`n` vertices and :math:`m`
+edges where each vertex is associated with a positive weight :math:`w`. Find a
+maximum weighted independent set, i.e., select a set of vertices in graph
+:math:`G` where there is no edge between any pair of vertices and the sum of the
+vertex weight is maximum.
 
 .. tabs::
 
@@ -147,7 +148,7 @@ The solution is a numpy array containing the vertices in set :math:`S`.
     >>> import networkx as nx
     >>> import matplotlib.pyplot as plt
     >>> layout = nx.spring_layout(g, seed=0)
-    >>> color_map= ["red" if node in mwis else "lightgrey" for node in g.nodes()]
+    >>> color_map = ["red" if node in mwis else "lightgrey" for node in g.nodes()]
     >>> nx.draw(g, pos=layout, node_color=color_map, node_size=600, with_labels=True)
 
 The vertices in the independent set are highlighted in red.
