@@ -5,7 +5,48 @@ import numpy as np
 import scipy.sparse as sp
 from gurobipy import GRB
 
+try:
+    import networkx as nx
+except ImportError:
+    nx = None
+
 logger = logging.getLogger(__name__)
+
+
+def _convert_pandas_to_digraph(edge_data, node_data):
+    """
+    Convert from a pandas DataFrame to a networkx.DiGraph with the appropriate
+    attributes. For edges: `capacity`, and `cost`. For nodes: `demand`.
+    """
+    G = nx.from_pandas_edgelist(
+        edge_data.reset_index(), create_using=nx.DiGraph(), edge_attr=True
+    )
+    for i, d in node_data.iterrows():
+        G.add_node(i, demand=d.demand)
+    return G
+
+
+def _convert_pandas_to_scipy(edge_data, node_data):
+    """
+    Convert from a pandas DataFrame to several scipy.sparse.coo_matrix contain
+    the graph structure, the capacity and cost values per edge, and the demand
+    values per node.
+    """
+    coords = edge_data.index.to_numpy()
+
+    a0 = np.array([c[0] for c in coords])
+    a1 = np.array([c[1] for c in coords])
+
+    data = np.ones(len(coords), dtype=np.int64)
+    G = sp.coo_matrix((data, (a0, a1)))
+
+    data = edge_data["capacity"].values
+    cap = sp.coo_matrix((data, (a0, a1)))
+
+    data = edge_data["cost"].values
+    costs = sp.coo_matrix((data, (a0, a1)))
+
+    return G, cap, costs, node_data["demand"].values
 
 
 def solve_min_cost_flow(
