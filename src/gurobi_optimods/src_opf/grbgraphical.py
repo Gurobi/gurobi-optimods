@@ -107,9 +107,9 @@ def grbgraphical(alldata, plottype, textlist):
         myedge_color[j] = "black"
 
     if plottype == "violation":
-        Vmagviol = alldata["violation"]["Vmagviol"]
-        IPviol = alldata["violation"]["IPviol"]
-        IQviol = alldata["violation"]["IQviol"]
+        Vmagviol = alldata["violation"]["Vmagviol"]  # Vm entry
+        IPviol = alldata["violation"]["IPviol"]  # Pviol
+        IQviol = alldata["violation"]["IQviol"]  # Qviol
         branchlimitviol = alldata["violation"]["branchlimit"]
 
         for j in range(1, numbuses + 1):

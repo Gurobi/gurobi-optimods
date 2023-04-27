@@ -62,10 +62,78 @@ class TestOpf(unittest.TestCase):
         solution = solve_opf_model(
             case, logfile="", opftype="AC", useef=True, usejabr=True, branchswitching=1
         )
+        solution = solve_opf_model(
+            case,
+            logfile="",
+            opftype="IV",
+            polar=True,
+            useef=False,
+            usejabr=False,
+            ivtype="plain",
+            branchswitching=0,
+            usemipstart=False,
+            additional_settings={"gurobiparamfile": "param.prm"},
+        )
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
+
+    # test all possible combinations of user-relevant settings
+    @unittest.skip(
+        "Skipping test_settings, because it takes too much time. It should be run manually"
+    )
+    def test_settings(self):
+        # construct all possible combinations of user-relevant settings
+        settingslist = [
+            (
+                type,
+                polar,
+                ef,
+                usejabr,
+                ivtype,
+                branchswitching,
+                usemipstart,
+                useactivelossineqs,
+            )
+            for type in ["AC", "DC", "IV"]
+            for polar in [False, True]
+            for ef in [False, True]
+            for usejabr in [False, True]
+            for ivtype in ["plain", "aggressive"]
+            for branchswitching in [0, 1, 2]
+            for usemipstart in [False, True]
+            for useactivelossineqs in [False, True]
+        ]
+        # load path to case file
+        casefile = load_caseopfmat("9")
+        # read case file and return a case dictionary
+        case = read_case_from_mat_file(casefile)
+        # solve opf model and return a solution
+        for s in settingslist:
+            print(
+                f"running setting opftype={s[0]}, polar={s[1]}, useef={s[2]}, usejabr={s[3]}, ivtype={s[4]}, branchswitching={s[5]}, usemipstart={s[6]}, useactivelossineq={s[7]}"
+            )
+            print(s)
+            # gurobi param.prm file should read
+            # TimeLimit 2
+            # SolutionLimit 1
+            # MIPGap 0.01
+            solution = solve_opf_model(
+                case,
+                logfile="",
+                opftype=s[0],
+                polar=s[1],
+                useef=s[2],
+                usejabr=s[3],
+                ivtype=s[4],
+                branchswitching=s[5],
+                usemipstart=s[6],
+                useactivelossineq=s[7],
+                additional_settings={"gurobiparamfile": "param.prm"},
+            )
+            self.assertTrue(solution is not None)
+            self.assertTrue(solution["success"] in [0, 1])
 
     def test_infeasible(self):
         case = load_opfdictcase()

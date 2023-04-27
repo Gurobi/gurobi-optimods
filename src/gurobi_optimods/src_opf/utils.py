@@ -84,31 +84,33 @@ def get_default_optimization_settings():
     """
 
     settings = {
-        "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this? I will.  It is a plain text file that has, for each bus, a line of the form "bus 8 M 1.099999e+00 A 9.051238e-01" (bus numbers 1 through N) plus a final "END" line
         "lpfilename": None,
         "gurobiparamfile": None,
-        "strictcheckvoltagesolution": False,
-        "fixcs": False,  # (approximately) fix c, s variables if a voltage solution was read in
-        "skipjabr": False,
-        "usemipstart": False,
-        "useactivelossineqs": False,
-        "useconvexformulation": False,
-        "usemaxdispersion": False,
-        "usemaxphasediff": False,
-        "use_ef": True,
-        "dopolar": False,
-        # "doslp_polar": False, # Not used yet, this is for future work
+        "strictcheckvoltagesolution": False,  # will be removed
         "doac": False,  # TODO combine to a opftype argument
         "dodc": False,
         "doiv": False,
+        "dopolar": False,
+        # "doslp_polar": False, # Not used yet, this is for future work
+        "use_ef": True,
+        "skipjabr": False,
         "ivtype": "aggressive",
         "branchswitching_mip": False,
         # Formulation for branch-switching where the binary variables simply multiply the continuous variables.
         # Sometimes it works better. Only applicable for AC.
         "branchswitching_comp": False,
+        "usemipstart": False,
+        "useactivelossineqs": False,  # new linear inequalities developed and implemented by Dan
+        # the following settings should currently not be disclosed
+        # for now keep for us, mainly used for debugging and experimenting with heuristics
+        "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this? I will.  It is a plain text file that has, for each bus, a line of the form "bus 8 M 1.099999e+00 A 9.051238e-01" (bus numbers 1 through N) plus a final "END" line
+        "fixcs": False,  # (approximately) fix c, s variables if a voltage solution was read in
+        "fixtolerance": 1.0e-5,
+        # heuristics to help NL solver find a good solution
+        "usemaxdispersion": False,  # difference between all bus angles is small
+        "usemaxphasediff": False,  # difference between 2 adjacent branches is small
         "maxdispersion_deg": 0.0,
         "maxphasediff_deg": 360.0,
-        "fixtolerance": 1.0e-5,
     }
 
     return settings

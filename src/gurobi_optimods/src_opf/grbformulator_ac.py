@@ -337,7 +337,7 @@ def lpformulator_ac_create_vars(alldata, model):
     constvar = model.addVar(obj=constobjval, lb=1.0, ub=1.0, name="constant")
 
     # Powerflow variables
-    if alldata["use_ef"] and alldata["useconvexformulation"] == False:
+    if alldata["use_ef"]:
         lpformulator_ac_create_efvars(alldata, model)
 
     if alldata["dopolar"]:
@@ -1036,7 +1036,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         lpformulator_ac_add_polarconstraints(alldata, model)
 
     # nonconvex e, f representation
-    if alldata["use_ef"] and alldata["useconvexformulation"] == False:
+    if alldata["use_ef"]:
         lpformulator_ac_add_nonconvexconstraints(alldata, model)
 
     if alldata["branchswitching_mip"] or alldata["branchswitching_comp"]:

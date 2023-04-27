@@ -32,6 +32,7 @@ def solve_opf_model(
     ivtype="aggressive",
     branchswitching=0,
     usemipstart=True,
+    useactivelossineq=False,
     additional_settings=dict(),
 ):
     """
@@ -44,7 +45,7 @@ def solve_opf_model(
     :type logfile: str, optional
     :param opftype: String telling the desired OPF model type. Available are `AC`, `DC`, `IV`, defaults to `AC`
     :type opftype: str, optional
-    :param polar: Controls whether polar formulation should be used, defaults to `False`
+    :param polar: Controls whether polar formulation should be used, defaults to `False`. Only affects `AC` formulation.
     :type polar: bool, optional
     :param useef: Controls whether bilinear variables e, f and corresponding constraints should be used, defaults to `True`.
                   Has only an effect if ``opftype`` equals `AC`
@@ -58,14 +59,20 @@ def solve_opf_model(
     :param branchswitching: Controls whether discrete variable for turning on/off branches should be used.
                             0 = don't use discrete variables (all branches are on)
                             1 = use binary variables to constrain bounds of (re)active power injections
-                            2 = use binary variables and multiply them with the (re)active power injections
+                            2 = use binary variables and multiply them with the (re)active power injections (only available for AC)
                             Usually, setting 1 works better than 2. Defaults to 0
     :type branchswitching: int, optional
     :param usemipstart: Controls whether a pre-defined MIPStart should be used. Has only an effect if
                         branchswitching > 0. Deftault to `True`
     :type usemipstart: bool, optional
-    :param additional_settings: Dictionary holding additional settings. For more details, please refer to
-                                the documentation. Defaults to an empty dictionary
+    :param useactivelossineq: Controls whether active loss constraints are used. These are linear outer approximation of the JABR
+                              constraints. Usually, they provide a very good lower bound while still being linear.
+                              Defaults to `False`.
+    :type useactivelossineq: bool, optional
+    :param additional_settings: Dictionary holding additional settings. Additional settings are: ``lpfilename`` which if evaluates
+                                to a non-empty string, makes Gurobi write a `.lp` file holding the generated model, ``gurobiparamfile``
+                                which if evaluates to a non-empty string, makes Gurobi read in a parameter file.
+                                Defaults to an empty dictionary
     :type additional_settings: dict, optional
 
     :return: A result dictionary following MATPOWER notation, e.g., the objective value

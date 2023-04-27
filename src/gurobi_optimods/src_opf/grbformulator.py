@@ -53,8 +53,7 @@ def construct_and_solve_model(alldata):
     modelname = opftype.value + "_Formulation_Model"
 
     # Handle special settings
-    if opftype != OpfType.DC:
-        lpformulator_setup(alldata, opftype)
+    lpformulator_setup(alldata, opftype)
 
     # Create model
     with gp.Env() as env, gp.Model(modelname, env=env) as model:
@@ -290,20 +289,22 @@ def lpformulator_setup(alldata, opftype):
     """
 
     logger = logging.getLogger("OpfLogger")
-    # Additional setup is only meant for AC and IV
+    logger.info("Auxiliary setup.")
     if opftype == OpfType.DC:
+        if alldata["branchswitching_comp"]:
+            logger.info("branchswitching = 2 only available for AC. Turning it off.")
+            alldata["branchswitching_comp"] = False
+
         return
 
-    logger.info("Auxiliary setup.")
-
+    # Additional setup is only meant for AC and IV
     alldata["maxdispersion_rad"] = (math.pi / 180.0) * alldata["maxdispersion_deg"]
 
     if alldata["dopolar"]:
         logger.info("  Polar formulation, shutting down incompatible options:")
         alldata["use_ef"] = False
-        alldata["useconvexformulation"] = False
         alldata["skipjabr"] = True
-        logger.info("    use_ef, useconvexformulation, jabr.")
+        logger.info("    use_ef, jabr.")
 
     if alldata["voltsfilename"] != None:
         grbreadvoltsfile(alldata)
@@ -522,9 +523,7 @@ def turn_solution_into_result_dict(alldata, model, opftype):
     if opftype in [OpfType.AC, OpfType.IV]:
         # Bus solution data only available if we have rectangular formulation or polar
         if (
-            alldata["use_ef"]
-            and not alldata["useconvexformulation"]
-            and not alldata["doiv"]
+            alldata["use_ef"] and not alldata["doiv"]
         ):  # TODO check how to compute voltage magnitude and angle values for IV
             for busindex in result["bus"]:
                 resbus = result["bus"][busindex]
@@ -535,7 +534,7 @@ def turn_solution_into_result_dict(alldata, model, opftype):
 
             compute_voltage_angles(alldata, result)
 
-        if alldata["dopolar"]:
+        if alldata["dopolar"] and not alldata["doiv"]:
             for busindex in result["bus"]:
                 resbus = result["bus"][busindex]
                 databus = alldata["buses"][busindex]
