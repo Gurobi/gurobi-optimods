@@ -1,7 +1,8 @@
 import logging
-import plotly.graph_objects as go
-from typing import Union
 from collections import defaultdict
+from typing import Union
+
+import plotly.graph_objects as go
 
 from .grbgraph import Grbgraph
 

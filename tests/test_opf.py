@@ -2,7 +2,6 @@ import unittest
 
 from gurobi_optimods.opf import (
     solve_opf_model,
-    generate_opf_solution_figure,
     read_coords_from_csv_file,
     read_case_from_mat_file,
     turn_solution_into_mat_file,
@@ -14,6 +13,16 @@ from gurobi_optimods.datasets import (
     load_coordsfilepath,
     load_case9solution,
 )
+
+# If plotly is not installed, some tests will be skipped
+try:
+    import plotly
+except ImportError:
+    plotly = None
+
+# If plotly is installed, the opfgraphics module should import ok
+if plotly:
+    from gurobi_optimods.opfgraphics import generate_opf_solution_figure
 
 
 class TestOpf(unittest.TestCase):
@@ -34,22 +43,6 @@ class TestOpf(unittest.TestCase):
     objvals_acconv = [5296.66532, 8074.9102, 41710.3065, 129338.093, 718633.78596]
     Pg_acconv = [89.803524, 194.796114, 142.58252, 24.518669, 0.030902]
     Pt_acconv = [-34.1774, -71.23414, -29.9637, 23.79936, 56.2152]
-    # graphics test values
-    graphics_9_x = [1129.2, 980.2, 977.6, 1182.8, 480.6, 85.4, 1079.6, 528.0, 0.0]
-    graphics_9_y = [
-        1066.62,
-        132.53,
-        220.4,
-        0.0,
-        777.49,
-        569.85,
-        1130.71,
-        653.08,
-        647.86,
-    ]
-
-    # Currently, this is just a convenience setting while working on OptiMod
-    plot_graphics = False
 
     # test simple is on purpose the same as test_acopf for now
     # will be removed in final version
@@ -157,18 +150,8 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
 
-        # get path to csv file holding the coordinates for NY
-        coordsfile = load_coordsfilepath("nybuses.csv")
-        coords_dict = read_coords_from_csv_file(coordsfile)
-        # plot the given solution
-        fig = generate_opf_solution_figure(case, coords_dict, solution)
-        # test a few coordinates
-        self.assertLess(abs(fig.data[1].x[0] - 1381.2), 1e-9)
-        self.assertLess(abs(fig.data[1].y[0] - 1203.5), 1e-9)
-        self.assertLess(abs(fig.data[1].x[-1] - 837.2), 1e-9)
-        self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
-        if self.plot_graphics:
-            fig.show()
+        # TODO: I moved the plotting part of the test to test_NY_graphics.
+        # Does the result need more tests here?
 
     # test reading settings and case file from dicts
     def test_opfdicts(self):
@@ -260,6 +243,27 @@ class TestOpf(unittest.TestCase):
         # print(solution["gen"][2]["Qg"])
         # print(solution["branch"][1]["Qf"])
 
+
+@unittest.skipIf(plotly is None, "plotly is not installed")
+class TestOpfGraphics(unittest.TestCase):
+
+    # Currently, this is just a convenience setting while working on OptiMod
+    plot_graphics = False
+
+    # graphics test values
+    graphics_9_x = [1129.2, 980.2, 977.6, 1182.8, 480.6, 85.4, 1079.6, 528.0, 0.0]
+    graphics_9_y = [
+        1066.62,
+        132.53,
+        220.4,
+        0.0,
+        777.49,
+        569.85,
+        1130.71,
+        653.08,
+        647.86,
+    ]
+
     # test plotting a solution from pre-loaded data
     def test_graphics(self):
         # get path to csv file holding the coordinates for case 9
@@ -292,5 +296,31 @@ class TestOpf(unittest.TestCase):
         for i in range(9):
             self.assertLess(abs(fig.data[1].x[i] - self.graphics_9_x[i]), 1e-9)
             self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
+        if self.plot_graphics:
+            fig.show()
+
+    # test a real data set for New York
+    def test_NY_graphics(self):
+        settings = {"dodc": True}
+        # load path to case file
+        casefile = load_caseNYopf()
+        # read case file and return a case dictionary
+        case = read_case_from_mat_file(casefile)
+        # solve opf model and return a solution
+        solution = solve_opf_model(case, opftype="DC")
+        self.assertTrue(solution is not None)
+        self.assertTrue(solution["success"] == 1)
+        self.assertTrue(solution["f"] is not None)
+
+        # get path to csv file holding the coordinates for NY
+        coordsfile = load_coordsfilepath("nybuses.csv")
+        coords_dict = read_coords_from_csv_file(coordsfile)
+        # plot the given solution
+        fig = generate_opf_solution_figure(case, coords_dict, solution)
+        # test a few coordinates
+        self.assertLess(abs(fig.data[1].x[0] - 1381.2), 1e-9)
+        self.assertLess(abs(fig.data[1].y[0] - 1203.5), 1e-9)
+        self.assertLess(abs(fig.data[1].x[-1] - 837.2), 1e-9)
+        self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
         if self.plot_graphics:
             fig.show()
