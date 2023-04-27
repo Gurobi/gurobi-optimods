@@ -10,6 +10,41 @@ class Plotlyhandler:
     """
     Creates a plotly figure to be rendered
     Input is a graph given by coordinates
+
+    :param gG: Graph to be plotted
+    :type gG: :class: `Grbgraph`
+    :param pos: Node coordinates given as list of tuples
+    :type pos: list
+    :param annotation_list: List of annotations
+    :type annotation_list: list
+    :param vertex_size: List of vertex sizes, defaults to None
+    :type vertex_size: list, optional
+    :param vertex_color: List of vertex colors, defaults to None
+    :type vertex_color: list, optional
+    :param edge_width: List of edge widths, defaults to None
+    :type edge_width: list, optional
+    :param edge_color: List of edge colors, defaults to None
+    :type edge_color: list, optional
+    :param edge_map: List of edge positions accessed by tuples of vertices and degree, defaults to None
+    :type edge_map: list, optional
+    :param vertex_text: List of texts for each vertex
+    :type vertex_text: list, optional
+    :param vertex_text_position: Position of text shown for each vertex, defaults to None
+    :type vertex_text_position: str, optional
+    :param vertex_text_font_color: Color of vertex text
+    :type vertex_text_font_color: #TODO-Dan what is the type here? A tuple?
+    :param vertex_text_font_family: Font name of vertext text, defaults to None
+    :type vertex_text_font_family: str, optional
+    :param vertex_text_font_size: Font size of vertex text, defaults to None
+    :type vertex_text_font_size: int, optional
+    :param vertex_border_width: Width of vertex border, defaults to None
+    :type vertex_border_width: float, optional
+    :param vertex_border_color: Color of vertex border, defaults to None
+    :type vertex_border_color: #TODO-Dan what is the type here? A tuple?
+    :param vertex_opacity: Vertex opacity, defaults to None
+    :type vertex_opacity: float, optional
+    :param edge_opacity: Edge opacity, defaults to None
+    :type edge_opacity: float, optional
     """
 
     def __init__(
@@ -67,6 +102,12 @@ class Plotlyhandler:
         self.edge_map = edge_map
 
     def generate_edge_traces(self):  # -> List[Union[go.Scatter, go.Scatter3d]]:
+        """
+        TODO-Dan add description
+
+        :return: TODO-Dan What does it return?
+        :rtype: TODO-Dan What is the return type?
+        """
         # group all edges by (color, width)
         groups = defaultdict(list)
 
@@ -137,6 +178,23 @@ class Plotlyhandler:
     def generate_vertex_trace(
         self, showlabel, colorscale, showscale, colorbar_title, reversescale
     ) -> Union[go.Scatter, go.Scatter3d]:
+        """
+        TODO-Dan add description
+
+        :param showlabel: TODO-Dan what is it?
+        :type showlabel: TODO-Dan what is the type?
+        :param colorscale: TODO-Dan what is it?
+        :type colorscale: TODO-Dan what is the type?
+        :param showscale: TODO-Dan what is it?
+        :type showscale: TODO-Dan what is the type?
+        :param colorbar_title: TODO-Dan what is it?
+        :type colorbar_title: TODO-Dan what is the type?
+        :param reversescale: TODO-Dan what is it?
+        :type reversescale: TODO-Dan what is the type?
+
+        :return: TODO-Dan What does it return?
+        :rtype: TODO-Dan What is the return type?
+        """
         x, y, z = [], [], []
         for v in self.gG.vertices.values():
             x += [self.pos[v][0]]
@@ -176,15 +234,31 @@ class Plotlyhandler:
         return trace
 
     def vertex_color_list(self):
+        """
+        :return: Returns a list of colors for each vertex
+        :rtype: list
+        """
         return [self.vertex_color[v] for v in self.gG.vertices.values()]
 
     def vertex_size_list(self):
+        """
+        :return: Returns a list of sizes for each vertex
+        :rtype: list
+        """
         return [self.vertex_size[v] for v in self.gG.vertices.values()]
 
     def vertex_border_width_list(self):
+        """
+        :return: Returns a list of widths for each vertex
+        :rtype: list
+        """
         return [self.vertex_border_width[v] for v in self.gG.vertices.values()]
 
     def vertex_text_list(self):
+        """
+        :return: Returns a list of texts for each vertex
+        :rtype: list
+        """
         return [self.vertex_text[v] for v in self.gG.vertices.values()]  #
 
     def create_figure(
@@ -196,6 +270,23 @@ class Plotlyhandler:
         reversescale=False,
         **params
     ) -> go.Figure:
+        """
+        Creates a :class: `plotly.graph_objects.Figure` object
+
+        :param showlabel: TODO-Dan what is it?
+        :type showlabel: TODO-Dan what is the type?
+        :param colorscale: TODO-Dan what is it?
+        :type colorscale: TODO-Dan what is the type?
+        :param showscale: TODO-Dan what is it?
+        :type showscale: TODO-Dan what is the type?
+        :param colorbar_title: TODO-Dan what is it?
+        :type colorbar_title: TODO-Dan what is the type?
+        :param reversescale: TODO-Dan what is it?
+        :type reversescale: TODO-Dan what is the type?
+
+        :return: Returns a :class: `plotly.graph_objects.Figure` object
+        :rtype: :class: `plotly.graph_objects.Figure`
+        """
         axis_settings = dict(
             autorange=True,
             showgrid=False,
