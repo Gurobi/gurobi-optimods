@@ -58,7 +58,6 @@ class TestOpf(unittest.TestCase):
 
     # test simple is on purpose the same as test_acopf for now
     # will be removed in final version
-    @unittest.expectedFailure
     def test_simple(self):
         # load path to case file
         casefile = load_caseopfmat("9")
@@ -224,7 +223,6 @@ class TestOpf(unittest.TestCase):
 
     # test AC formulation relaxation
     @unittest.skipIf(size_limited_license(), "size-limited-license")
-    @unittest.expectedFailure
     def test_acopfconvex(self):
 
         for i in range(self.numcases):
@@ -243,7 +241,6 @@ class TestOpf(unittest.TestCase):
             self.assertLess(abs(solution["branch"][2]["Pt"] - self.Pt_acconv[i]), 1)
 
     # test IV formulation
-    @unittest.expectedFailure
     def test_ivopf(self):
         # currently all other cases take very long in IV formulation
         casefile = load_caseopfmat("9")
