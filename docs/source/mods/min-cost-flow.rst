@@ -1,43 +1,37 @@
-Minimum Cost Flow
+Minimum-Cost Flow
 =================
 
-Minimum cost flow problems are defined on a graph or network where the goal is
-to send an amount of flow. Other graph problems can be modelled using this
-framework (with suitable alterations).
+Minimum-cost flow problems is are defined on a graph where the goal is to route
+a certain amount of flow in the cheapest way. It is a fundamental flow problem
+as many other graph problems can be modelled using this framework, for example,
+the shortest-path or maximum flow problems.
 
 Problem Specification
 ---------------------
-
 
 .. tabs::
 
     .. tab:: Graph Theory
 
         For a given graph :math:`G` with set of vertices :math:`V` and edges
-        :math:`E`. For a given :math:`(i,j)\in E`, we have:
+        :math:`E`. Each edge :math:`(i,j)\in E` has the following attributes:
 
         - cost: :math:`c_{ij}\in \mathbb{R}`;
         - and capacity: :math:`B_{ij}\in\mathbb{R}`.
 
         Also, each vertex :math:`i\in V` has a demand :math:`d_i\in\mathbb{R}`.
 
-        The problem can be stated as finding a capacity feasible flow such that
-        the total cost is minimised and the demand at each vertex is met.
+        The problem can be stated as finding a the flow with minimal cost such
+        that:
+
+        - the flow is capacity feasible;
+        - and, the demand at each vertex is met.
 
     .. tab:: Optimization Model
 
-        For a given graph :math:`G` with set of vertices :math:`V` and edges
-        :math:`E`. For a given :math:`(i,j)\in E`, we have:
-
-        - cost: :math:`c_{ij}\in \mathbb{R}`;
-        - and capacity: :math:`B_{ij}\in\mathbb{R}`.
-
-        Also, each vertex :math:`i\in V` has a demand :math:`d_i\in\mathbb{R}`.
-        A negative demand indicates a supply vertex whereas a positive demand
-        indicates a consumer vertex.
-
         Let us define a set of continuous variables :math:`x_{ij}` to represent
-        the amount of flow going through an edge.
+        the amount of non-negative (:math:`\geq 0`) flow going through an edge
+        :math:`(i,j)\in E`.
 
 
         The mathematical formulation can be stated as follows:
@@ -52,16 +46,18 @@ Problem Specification
 
         Where :math:`\delta^+(\cdot)` (:math:`\delta^-(\cdot)`) denotes the outgoing (incoming) neighours.
 
-The input data for this mod includes interfaces for the following:
-
-* pandas;
-* Networkx ;
-* SciPy.sparse.
-
 |
 
 Code and Inputs
 ---------------
+
+For this mod, one can use input graphs of different types:
+
+* pandas: using a ``pd.DataFrame``;
+* Networkx: using a ``nx.DiGraph`` or ``nx.Graph``;
+* SciPy.sparse: using some ``sp.sparray`` matrices and NumPy's ``np.ndarray``.
+
+An example of these inputs with their respective requirements is shown below.
 
 .. tab-set::
 
@@ -93,7 +89,8 @@ Code and Inputs
             5       2
 
         The ``edge_data`` DataFrame is indexed by ``source`` and ``target``
-        nodes contains columns labelled ``capacity`` and ``cost``.
+        nodes and contains columns labelled ``capacity`` and ``cost`` with the
+        edge attributes.
 
         The ``node_data`` DataFrame is indexed by node and contains columns
         labelled ``demand``.
@@ -172,10 +169,16 @@ Code and Inputs
             >>> print(demands)
             [-2  0 -1  1  0  2]
 
+        Three separate sparse matrices including the adjacency matrix, edge
+        capacity and cost, and a single array with the demands per node.
+
 |
 
 Solution
 --------
+
+Depending on the input of choice, the solution also comes with different
+formats.
 
 .. tab-set::
 
@@ -222,8 +225,8 @@ Solution
             >>> sol
             {(0, 1): 1.0, (0, 2): 1.0, (1, 3): 1.0, (2, 4): 2.0, (4, 5): 2.0}
 
-        The ``min_cost_flow_networkx`` function returns the cost of the solution as well
-        as a dictionary with the non-zero flow per edge.
+        The ``min_cost_flow_networkx`` function returns the cost of the solution
+        as well as a dictionary indexed by edge with the non-zero flow.
 
     .. tab-item:: scipy.sparse
         :sync: sp
@@ -249,12 +252,12 @@ Solution
 
         The ``min_cost_flow_scipy`` function returns the cost of the solution as
         well as a ``sp.sparray`` with the edges where the data is the amount of
-        flow in the solution.
+        non-zero flow in the solution.
 
-The solution for this example is shown in the following figure below. The edge
-labels denote the edge capacity, cost and resulting flow: :math:`(B_{ij},
-c_{ij}, x^*_{ij})`.  Edges with non-zero flow are highlighted in red. The demand
-for each vertex is shown on top of the vertex in red.
+The solution for this example is shown in the figure below. The edge labels
+denote the edge capacity, cost and resulting flow: :math:`(B_{ij}, c_{ij},
+x^*_{ij})`. Edges with non-zero flow are highlighted in red. Also the demand for
+each vertex is shown on top of the vertex in red.
 
 .. image:: figures/min-cost-flow-result.png
   :width: 600

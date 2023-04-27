@@ -52,7 +52,6 @@ def min_cost_flow(arc_data: pd.DataFrame, demand_data: pd.DataFrame, *, create_e
     :rtype: :class:`pd.Series`
     """
     # Perform conversion from pd to ndarray
-
     # Arcs and attributes
     arcs = arc_data.index.to_numpy()
     from_arc = np.array([a[0] for a in arcs], dtype="object")
@@ -75,7 +74,6 @@ def min_cost_flow(arc_data: pd.DataFrame, demand_data: pd.DataFrame, *, create_e
     with create_env() as env:
         obj, flows = solve_min_cost_flow(env, from_arc, to_arc, capacity, cost, demands)
 
-    # Put solution in the original dataframe
     return obj, pd.Series(flows, index=arc_data.index)
 
 
@@ -118,7 +116,6 @@ def min_cost_flow_scipy(
     costs = costs.tocoo()
     costs = costs.data
 
-    # Call solve_min_cost_flow using some data
     with create_env() as env:
         cost, flows = solve_min_cost_flow(
             env, from_arc, to_arc, capacities, costs, demands
@@ -163,7 +160,6 @@ def min_cost_flow_networkx(G, *, create_env):
         if d:
             demands[i] = d["demand"]
 
-    # Call solve_min_cost_flow using some data
     with create_env() as env:
         obj, flows = solve_min_cost_flow(env, from_arc, to_arc, capacity, cost, demands)
 
