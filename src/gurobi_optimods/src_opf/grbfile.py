@@ -45,6 +45,31 @@ def construct_settings_dict(
 
     :param logfile: Name of log file, defaults to ""
     :type logfile: str, optional
+    :param opftype: String telling the desired OPF model type. Available are `AC`, `DC`, `IV`, defaults to `AC`
+    :type opftype: str, optional
+    :param polar: Controls whether polar formulation should be used, defaults to `False`
+    :type polar: bool, optional
+    :param useef: Controls whether bilinear variables e, f and corresponding constraints should be used, defaults to `True`.
+                  Has only an effect if ``opftype`` equals `AC`
+    :type useef: bool, optional
+    :param usejabr: Controls whether JABR inequalities should be added, defaults to `True`.
+                    Has only an effect if ``opftype`` equals `AC`
+    :type usejabr: bool, optional
+    :param ivtype: States what type of IV formulation should be used. Availale are `aggressive` and `plain`,
+                   defaults to `aggressive`
+    :type ivtype: str, optional
+    :param branchswitching: Controls whether discrete variable for turning on/off branches should be used.
+                            0 = don't use discrete variables (all branches are on)
+                            1 = use binary variables to constrain bounds of (re)active power injections
+                            2 = use binary variables and multiply them with the (re)active power injections
+                            Usually, setting 1 works better than 2. Defaults to 0
+    :type branchswitching: int, optional
+    :param usemipstart: Controls whether a pre-defined MIPStart should be used. Has only an effect if
+                        branchswitching > 0. Deftault to `True`
+    :type usemipstart: bool, optional
+    :param additional_settings: Dictionary holding additional settings. For more details, please refer to
+                                the documentation. Defaults to an empty dictionary
+    :type additional_settings: dict, optional
 
     :return: Returns a dictionary with a few initialized default fields
     :rtype: dict
@@ -157,135 +182,6 @@ def read_settings_dict(alldata, inputsettings, defaults):
 
     for s in defaults.keys():
         alldata[s] = defaults[s]
-
-
-def read_settings_file(filename, graphics=False):
-    """
-    Reads settings from a plain text file
-
-    :param filename: Path to text based file holding user settings
-    :type filename: string
-    :param graphics: Has to be `True` if reading settings for graphics,
-                     `False` otherwise, defaults to `False`
-    :type graphics: bool, optional
-
-    :return: Dictionary holding all provided settings
-    :rtype: dict
-    """
-
-    logger, handlers = initialize_logger("SettingsReadingLogger")
-
-    logger.info(f"Reading settings file {filename}.")
-    starttime = time.time()
-    settings = {}
-    if graphics:
-        settings = get_default_graphics_settings()
-    else:
-        settings = get_default_optimization_settings()
-
-    f = open(filename, "r")
-    lines = f.readlines()
-    f.close()
-
-    # Read all lines of the casefile
-    logger.info("Building settings dictionary.")
-    settings_dict = read_settings_build_dict(settings, lines)
-    endtime = time.time()
-    logger.info(
-        f"Settings reading and dictionary building time: {endtime - starttime} s."
-    )
-    logger.info("")
-    logger.info("User set settings read from file.")
-    for s in settings_dict.keys():
-        logger.info(f"  {s} {settings_dict[s]}")
-
-    logger.info("")
-
-    remove_and_close_handlers(logger, handlers)
-
-    return settings_dict
-
-
-def read_settings_build_dict(settings, lines):
-    """
-    Helper function to read thru all lines of a previously given settings
-    file and return a dictionary holding all non-default settings
-
-    :param settings: Settings dictionary holding default settings at input which will
-                     be overwritten by settings defined in lines
-    :type settings: dict
-    :param lines: List of all lines of a previously read in settings file
-    :type lines: list
-
-    :raises ValueError: Unkown option string
-
-    :return: A dictionary holding all user set settings
-    :rtype: dict
-    """
-
-    settings_dict = {}
-    # Read lines of configuration file and save options
-    for line in lines:
-        thisline = line.split()
-        # Skip empty lines and comments
-        if len(thisline) <= 0 or thisline[0][0] == "#":
-            continue
-        # End of settings
-        if thisline[0] == "END":
-            break
-        # Check whether we know the setting
-        if thisline[0] not in settings.keys():
-            raise ValueError(f"Illegal option string {thisline[0]}.")
-        # We only have one setting which accepts 3 inputs in one line
-        if len(thisline) > 2 and thisline[0] not in [
-            "voltsfilename",
-        ]:
-            raise ValueError(f"Illegal option string {thisline[3]}.")
-        # Set setting with 2 inputs
-        if len(thisline) == 2:
-            if thisline[0] in ["maxdispersion_deg", "maxphasediff_deg", "fixtolerance"]:
-                settings_dict[thisline[0]] = float(thisline[1])
-            else:
-                settings_dict[thisline[0]] = thisline[1]
-        # Setting with 1 input are booleans, if they are present then they are True
-        elif len(thisline) == 1:
-            settings_dict[thisline[0]] = True
-        # Handle special settings which may or may not take a second argument
-        if thisline[0] == "usemaxdispersion":
-            settings_dict["usemaxdispersion"] = True
-            if len(thisline) > 1:
-                settings_dict["maxdispersion_deg"] = float(thisline[1])
-
-        elif thisline[0] == "usemaxphasediff":
-            settings_dict["usemaxphasediff"] = True
-            if len(thisline) > 1:
-                settings_dict["maxphasediff_deg"] = float(thisline[1])
-
-        elif thisline[0] == "strictcheckvoltagesolution":
-            settings_dict["strictcheckvoltagesolution"] = True
-            if len(thisline) > 1:
-                settings_dict["voltsfilename"] = thisline[1]
-
-        elif thisline[0] == "voltsfilename":
-            if len(thisline) < 3:
-                raise ValueError(
-                    "Voltsfilename option requires filename and tolerance."
-                )
-
-            settings_dict["voltsfilename"] = thisline[1]
-            settings_dict["fixtolerance"] = float(thisline[2])
-
-        elif thisline[0] == "useconvexformulation":
-            settings_dict["useconvexformulation"] = True
-            settings_dict["doac"] = True
-
-        elif thisline[0] == "doiv":
-            settings_dict["doiv"] = True
-            settings_dict["use_ef"] = True  # needed
-            if len(thisline) > 1:
-                settings_dict["ivtype"] = thisline[1]
-
-    return settings_dict
 
 
 def read_coords_file_csv(filename):

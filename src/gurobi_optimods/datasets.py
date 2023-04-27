@@ -40,16 +40,6 @@ def load_diet():
     )
 
 
-def load_opfsettings():
-    conf = str(DATA_FILE_DIR) + "/opf/opfsettings.txt"
-    return conf
-
-
-def load_caseopf(number):
-    case = str(DATA_FILE_DIR) + "/opf/case" + number + ".m"
-    return case
-
-
 def load_coordsfilepath(filename):
     file = str(DATA_FILE_DIR) + "/opf/" + filename
     return file
@@ -61,14 +51,8 @@ def load_caseopfmat(number):
 
 
 def load_caseNYopf():  # real world data case
-    case = str(DATA_FILE_DIR) + "/opf/caseNY.m"
-    casemat = str(DATA_FILE_DIR) + "/opf/caseNY.mat"
-    return case, casemat
-
-
-def load_opfgraphicssettings():
-    conf = str(DATA_FILE_DIR) + "/opf/graphicssettings.txt"
-    return conf
+    case = str(DATA_FILE_DIR) + "/opf/caseNY.mat"
+    return case
 
 
 def load_opfdictcase():

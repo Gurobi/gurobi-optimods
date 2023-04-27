@@ -4,7 +4,6 @@ import gurobipy as gp
 
 from .src_opf.grbcasereader import (
     read_case,
-    read_case_file,
     read_case_file_mat,
     turn_opf_dict_into_mat_file,
 )
@@ -12,7 +11,6 @@ from .src_opf.grbcasereader import (
 from .src_opf.grbfile import (
     initialize_data_dict,
     construct_settings_dict,
-    read_settings_file,
     read_optimization_settings,
     read_graphics_settings,
     read_coords_file_csv,
@@ -164,48 +162,6 @@ def generate_opf_solution_figure(
     remove_and_close_handlers(logger, handlers)
 
     return fig
-
-
-def read_settings_from_file(settingsfile, graphics=False):
-    """
-    Helper function for users.
-    Constructs a settings dictionary which can be used as input
-    for all other OPF API functions
-
-    :param settingsfile: Name of and possibly full path to settings file
-    :type settingsfile: string
-    :param graphics: Has to be `True` if reading settings for graphics,
-                     `False` otherwise
-    :type graphics: bool, optional
-
-    :return: Dictionary object of user settings read in from settingsfile
-              which can be used in other OPF API functions
-    :rtype: dict
-    """
-
-    settings_dict = read_settings_file(settingsfile, graphics)
-
-    return settings_dict
-
-
-def read_case_from_file(casefile):
-    """
-    Helper function for users.
-    Reads a `.m` text file and constructs a case dictionary,
-    which can be used as input for other OPF API functions
-
-    :param casefile: Name of and possibly full path to case file given as `.m` file
-                     The `.m` file should be in standard MATPOWER notation
-    :type casefile: str
-
-    :return: Dictionary object of the given case which can be used in
-             other OPF API functions
-    :rtype: dict
-    """
-
-    case_dict = read_case_file(casefile)
-
-    return case_dict
 
 
 def read_case_from_mat_file(casefile):
