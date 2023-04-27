@@ -1,7 +1,11 @@
 Maximum Bipartite Matching
 ==========================
 
-Something about specific graph algorithms vs mathprog formulations?
+- Application: assigning workers to tasks
+- Using bipartite matching, we can solve a really simple aspect of workforce
+  scheduling: covering as many tasks as possible, and giving work to as many
+  people as possible
+- Show example figure showing the matching of a graph
 
 Problem Specification
 ---------------------
@@ -21,32 +25,93 @@ are part of the matching.
 
 Note that we need a basic solution! TU and all that.
 
+Something about specific graph algorithms vs mathprog formulations?
+
 Code
 ----
 
-.. testcode:: bipartite_matching
+- Possible inputs representing edges on a graph:
+- scipy sparse array (show a directed edgelist as input and output; static input data)
+- networkx graph (show plots as inputs and outputs; input data nx.random_bipartite)
+- pandas dataframe (show frames as inputs and outputs; input data = workforce problem)
+- Output is a subgraph; so has the same type as the input
 
-    import numpy as np
-    import scipy.sparse as sp
+.. tabs::
 
-    from gurobi_optimods.matching import maximum_bipartite_matching
+    .. group-tab:: scipy
 
-    # Create a simple bipartite graph as a sparse matrix
-    nodes1 = np.array([0, 1, 2, 3, 4])
-    nodes2 = np.array([5, 6, 7])
-    row = [0, 3, 4, 0, 1, 3]
-    col = [7, 5, 5, 6, 6, 7]
-    data = [1, 1, 1, 1, 1, 1]
-    adjacency = sp.coo_array((data, (row, col)), shape=(8, 8))
+        When using scipy, create a sparse array as the graph adjacency matrix.
+        You also need to pass the bipartite node sets as numpy arrays.
 
-    # Compute the maximum matching
-    matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
+        .. testcode:: bipartite_matching_sp
 
-.. testoutput:: bipartite_matching
-    :hide:
+            import numpy as np
+            import scipy.sparse as sp
 
-    ...
-    Optimal objective -3.000000000e+00
+            from gurobi_optimods.matching import maximum_bipartite_matching
+
+            # Create a simple bipartite graph as a sparse matrix
+            nodes1 = np.array([0, 1, 2, 3, 4])
+            nodes2 = np.array([5, 6, 7])
+            row = [0, 3, 4, 0, 1, 3]
+            col = [7, 5, 5, 6, 6, 7]
+            data = [1, 1, 1, 1, 1, 1]
+            adjacency = sp.coo_array((data, (row, col)), shape=(8, 8))
+
+            # Compute the maximum matching
+            matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
+
+        .. testoutput:: bipartite_matching_sp
+            :hide:
+
+            ...
+            Optimal objective -3.000000000e+00
+
+    .. group-tab:: networkx
+
+        To find a maximum bipartite matching on a networkx graph ...
+
+        .. testcode:: bipartite_matching_nx
+
+            import networkx as nx
+            import numpy as np
+            from gurobi_optimods.matching import maximum_bipartite_matching
+
+            # Create a random bipartite graph
+            graph = nx.bipartite.random_graph(n=5, m=4, p=0.2, seed=123)
+            nodes1 = np.arange(5)
+            nodes2 = np.arange(5, 5 + 4)
+
+            # Compute the maximum matching
+            matching = maximum_bipartite_matching(graph, nodes1, nodes2)
+
+        .. testoutput:: bipartite_matching_nx
+            :hide:
+
+            ...
+            Optimal objective -2.000000000e+00
+
+    .. group-tab:: pandas
+
+        To use pandas, pass a dataframe with two columns specifying the edges
+
+        .. testcode:: bipartite_matching_pd
+
+            import pandas as pd
+            from gurobi_optimods.matching import maximum_bipartite_matching
+
+            # Read in some task-worker assignment data
+            #...
+
+            # Compute the maximum matching
+            #matching = maximum_bipartite_matching(...)
+
+        .. testoutput:: bipartite_matching_pd
+            :hide:
+
+            ...
+            Optimal objective -3.000000000e+00
+
 
 The ``maximum_bipartite_matching`` function formulates a linear program for the
 the network flow model corresponding to the given bipartite graph. Gurobi
@@ -88,35 +153,47 @@ solves this model using a network primal simplex algorithm.
 Solution
 --------
 
-The maximum matching is returned as a subgraph of the original bipartite
-graph, as a ``scipy.sparse`` array. Inspecting the result, it is clear that
-this is a maximum matching, since no two edges share a node in common, and
-all nodes in the second set are incident to an edge in the matching.
+.. tabs::
 
-.. doctest:: bipartite_matching
-    :options: +NORMALIZE_WHITESPACE
+    .. group-tab:: scipy
 
-    >>> print(sp.triu(matching))
-      (0, 7)        1.0
-      (1, 6)        1.0
-      (3, 5)        1.0
+        The maximum matching is returned as a subgraph of the original bipartite
+        graph, as a ``scipy.sparse`` array. Inspecting the result, it is clear that
+        this is a maximum matching, since no two edges share a node in common, and
+        all nodes in the second set are incident to an edge in the matching.
 
-We can also inspect the result by plotting the graph and the edges selected
-in the matching using networkx.
+        .. doctest:: bipartite_matching_sp
+            :options: +NORMALIZE_WHITESPACE
 
-.. doctest:: bipartite_matching
-    :options: +NORMALIZE_WHITESPACE
+            >>> print(sp.triu(matching))
+              (0, 7)        1.0
+              (1, 6)        1.0
+              (3, 5)        1.0
 
-    >>> import networkx as nx
-    >>> import matplotlib.pyplot as plt
-    >>>
-    >>> fig, (ax1, ax2) = plt.subplots(1, 2)
-    >>> g = nx.from_scipy_sparse_array(adjacency)
-    >>> layout = nx.bipartite_layout(g, nodes1)
-    >>> nx.draw(g, layout, ax=ax1)
-    >>> g = nx.from_scipy_sparse_array(matching)
-    >>> nx.draw(g, layout, ax=ax2)
+    .. group-tab:: networkx
 
-.. image:: figures/bipartite-result.png
-  :width: 600
-  :alt: Bipartite matching result
+        The maximum matching is returned as a subgraph of the original bipartite
+        graph, as a ``scipy.sparse`` array. Inspecting the result, it is clear that
+        this is a maximum matching, since no two edges share a node in common, and
+        all nodes in the second set are incident to an edge in the matching.
+
+        We can also inspect the result by plotting the graph and the edges selected
+        in the matching using networkx.
+
+        .. testcode:: bipartite_matching_nx
+
+            import matplotlib.pyplot as plt
+            fig, (ax1, ax2) = plt.subplots(1, 2)
+            layout = nx.bipartite_layout(graph, nodes1)
+            nx.draw(graph, layout, ax=ax1)
+            nx.draw(matching, layout, ax=ax2)
+
+        FIXME this is not the right figure
+
+        .. image:: figures/bipartite-result.png
+          :width: 600
+          :alt: Bipartite matching result
+
+    .. group-tab:: pandas
+
+        Show the resulting dataframe

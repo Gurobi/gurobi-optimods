@@ -1,7 +1,9 @@
 Maximum Weighted Matching
 =========================
 
-Something about specific graph algorithms vs mathprog formulations?
+- Extend bipartite matching to general weighted matching
+- can't take the shortest path approach?? This is a more general MIP model, but still solved efficiently
+- Practical example: weighted bipartite matching = worker-task assignment with preferences (use pandas)
 
 Problem Specification
 ---------------------

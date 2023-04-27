@@ -5,6 +5,10 @@ A little background on the proud history of mathprog in workforce scheduling.
 
 Also data science.
 
+- Convert cost minimization to preference maximisation
+- Add an optional rolling time window constraint (rotating roster?)
+- Mention bipartite and weighted matching as simple cases of the problem. Here we add more interesting practical constraints
+
 Problem Specification
 ---------------------
 
