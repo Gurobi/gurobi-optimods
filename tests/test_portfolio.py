@@ -251,17 +251,74 @@ class TestMod(unittest.TestCase):
         small_trades = (trades > 1e-6) & (trades < (0.03 - 1e-6))
         self.assertEqual(small_trades.sum(), 0)
 
-    # TODO
-    def test_start_portfolio_min_sell(self):
-        # TODO: sell what we have vs go short
-        pass
-
     def test_start_portfolio_no_fees(self):
-        # we don't pay fees if the start portfolio is already optimal
-        pass
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        fees = 1e-4
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = mvp.efficient_portfolio(gamma, max_total_short=0.1)
+
+        x = mvp.efficient_portfolio(
+            gamma,
+            max_total_short=0.1,
+            initial_holdings=x0.to_numpy(),
+            fees_buy=fees,
+            fees_buy_short=fees,
+            fees_sell=fees,
+            fees_sell_short=fees,
+            min_long=0.02,
+            min_short=0.02,
+        )
+        assert_allclose(x0, x, atol=1e-6)
 
     def test_start_portfolio_fees_buy(self):
-        pass
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        fees = 1e-4
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = 1.0 / mu.size * np.ones(mu.size)
+
+        x = mvp.efficient_portfolio(
+            gamma,
+            max_total_short=0.1,
+            initial_holdings=x0,
+            fees_buy=fees,
+            fees_buy_short=fees,
+            min_long=0.02,
+            min_short=0.02,
+        )
+        buy_trades = (x - x0) > 1e-4
+        self.assertLessEqual(x.sum() + buy_trades.sum() * fees, 1 + 1e-6)
 
     def test_start_portfolio_fees_sell(self):
-        pass
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        fees = 1e-4
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = 1.0 / mu.size * np.ones(mu.size)
+
+        x = mvp.efficient_portfolio(
+            gamma,
+            max_total_short=0.1,
+            initial_holdings=x0,
+            fees_sell=fees,
+            fees_sell_short=fees,
+            min_long=0.02,
+            min_short=0.02,
+        )
+        sell_trades = (x0 - x) > 1e-4
+        # Since we started long only, all positions that are short now need to be counted twice
+        double_sell_trades = x < -1e-4
+        self.assertLessEqual(
+            x.sum() + sell_trades.sum() * fees + double_sell_trades.sum() * fees,
+            1 + 1e-6,
+        )
