@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 @dataclass
 class QuboResult:
-    solution: np.array
+    solution: np.ndarray
     objective_value: float
 
 
@@ -31,18 +31,20 @@ def callback(model, where):
         print(f"New QUBO solution found with objective {obj}")
 
 
-def solve_qubo(coeffMatrix, timeLimit=GRB.INFINITY, output=0, logFile="") -> QuboResult:
+def solve_qubo(
+    coeffMatrix, timeLimit=GRB.INFINITY, output=False, logFile=""
+) -> QuboResult:
     """
     Solve a quadratic unconstrained binary optimization (QUBO) problem,
     i.e., minimize quadratic function :math:`x'Qx` defined by coefficient matrix :math:`Q`
     over a binary decision variable vector :math:`x`
 
     :param coeffMatrix: Quadratic coefficient matrix
-    :type coeffMatrix: :class:`np.array` or :class:`scipy.sparse`
+    :type coeffMatrix: :class:`numpy.ndarray` or :class:`scipy.sparse`
     :param timeLimit: Solution time limit in seconds
     :type timeLimit: :class:`int`
     :param output: Enable progress output
-    :type output: :class:`int`
+    :type output: :class:`bool`
     :param logFile: Log Gurobi output to file
     :type logFile: :class:`string`
     :return: Binary solution array and objective value
