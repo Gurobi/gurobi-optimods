@@ -10,25 +10,52 @@ class QuboResult:
     objective_value: float
 
 
-def solve_qubo(coeff_matrix) -> QuboResult:
+def callback(model, where):
+
+    if where == GRB.Callback.MIP:
+        runtime = model.cbGet(GRB.Callback.RUNTIME)
+        if runtime >= model._nextOutputTime:
+            primalBound = model.cbGet(GRB.Callback.MIP_OBJBST)
+            dualBound = model.cbGet(GRB.Callback.MIP_OBJBND)
+            print(
+                f"Time: {runtime:.0f}s, "
+                f"best objective: {primalBound:.2f}, "
+                f"best bound: {dualBound:.2f}, "
+                f"gap: {100.0*(primalBound - dualBound)/abs(primalBound):.2f}% "
+                f"(use Ctrl+C to interrupt)"
+            )
+            model._nextOutputTime += 5
+
+    elif where == GRB.Callback.MIPSOL:
+        obj = model.cbGet(GRB.Callback.MIPSOL_OBJ)
+        print(f"New QUBO solution found with objective {obj}")
+
+
+def solve_qubo(coeffMatrix, timeLimit=GRB.INFINITY, output=0, logFile="") -> QuboResult:
     """
     Solve a quadratic unconstrained binary optimization (QUBO) problem,
     i.e., minimize quadratic function :math:`x'Qx` defined by coefficient matrix :math:`Q`
     over a binary decision variable vector :math:`x`
 
-    :param coeff_matrix: Quadratic coefficient matrix
-    :type coeff_matrix: :class:`np.array` or :class:`scipy.sparse`
+    :param coeffMatrix: Quadratic coefficient matrix
+    :type coeffMatrix: :class:`np.array` or :class:`scipy.sparse`
+    :param timeLimit: Solution time limit in seconds
+    :type timeLimit: :class:`int`
+    :param output: Enable progress output
+    :type output: :class:`int`
+    :param logFile: Log Gurobi output to file
+    :type logFile: :class:`string`
     :return: Binary solution array and objective value
     :rtype: :class:`QuboResult`
     """
 
-    if coeff_matrix is None:
+    if coeffMatrix is None:
         return None
 
-    if coeff_matrix.ndim != 2:
+    if coeffMatrix.ndim != 2:
         raise ValueError("Matrix is not 2-dimensional.")
 
-    shape = coeff_matrix.shape
+    shape = coeffMatrix.shape
     if shape[0] != shape[1]:
         raise ValueError("Matrix is not quadratic.")
 
@@ -37,8 +64,17 @@ def solve_qubo(coeff_matrix) -> QuboResult:
     with gp.Env() as env, gp.Model(env=env) as model:
 
         x = model.addMVar(n, vtype=GRB.BINARY)
-        model.setObjective(x @ coeff_matrix @ x, GRB.MINIMIZE)
+        model.setObjective(x @ coeffMatrix @ x, GRB.MINIMIZE)
 
-        model.optimize()
+        model._nextOutputTime = 5
+
+        model.params.TimeLimit = timeLimit
+        model.params.LogToConsole = 0
+        model.params.LogFile = logFile
+
+        if output:
+            model.optimize(callback)
+        else:
+            model.optimize()
 
         return QuboResult(solution=x.X.round(), objective_value=model.ObjVal)
