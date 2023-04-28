@@ -160,30 +160,47 @@ class MeanVariancePortfolio:
         # s.t.
         #      x = x_long - x_short  (x is split in positive/negative parts)
         #
-        #      sum(x) + sum(b_long) * fees_buy + sum(b_short) * fees_sell = 1
+        #      x_long = initial_holdings_long + x_long_buy - x_long_sell
+        #      x_short == initial_holdings_short - x_short_buy + x_short_sell
+        #
+        #      sum(x) + sum(b_long_buy) * fees_buy + sum(b_long_sell) * fees_sell + sum(b_short_buy) * fees_buy_short + sum(b_short_sell) * fees_sell_short = 1
         #                             (Fully invested, minus transaction fees)
         #
         #      x_long  <= M b_long    (force x_long to zero if not traded long)
         #                             (M >= 1 + max_total_short)
+        #      x_long_<y>  <= M b_long_<y>    (y in {buy, sell}, force x_long_<y> to zero if not traded)
+        #                                     (M >= 1 + max_total_short)
         #
-        #      x_short <= M b_long    (force x_long to zero if not traded long)
-        #                             (M >= max_total_short)
+        #      x_short <= M b_short    (force x_short to zero if not traded short)
+        #                              (M >= max_total_short)
+        #      x_short_<y> <= M b_short_<y>    (y in {buy, sell} force x_short_<y> to zero if not traded)
+        #                                      (M >= max_total_short)
         #
         #      b_short + b_long <= 1  (Cannot go long and short at the same time)
+        #      b_long_buy + b_long_sell <= 1  (Cannot buy and sell at the same time)
+        #      b_short_buy + b_short_sell <= 1  (Cannot buy and sell at the same time)
         #
         #      sum(x_short) <= max_total_short   (Bound total leverage)
         #
-        #      sum(b_short) + sum(b_long) <= max_trades  (Trade limit)
+        #      sum(b_short_buy) + sum(b_short_sell) + sum(b_long_buy) + sum(b_long_sell) <= max_trades  (Trade limit)
         #
-        #      x_long >= min_long * b_long (minimum long position)
+        #      x_<y>_buy >= min_long * b_<y>_buy (y in {long, short}, minimum buy position)
         #
-        #      x_short >= min_short * b_short (minimum short position)
+        #      x_<y>_sell >= min_short * b_<y>_sell (y in {long, short}, minimum sell position)
         #
         #    x free       (relative portfolio holdings)
         #    x_long  >= 0 (relative long holdings)
         #    x_short >= 0 (relative short holdings)
+        #    x_long_buy >=0 (relative buy on long side)
+        #    x_long_sell >=0 (relative sell on long side)
+        #    x_short_buy >=0 (relative buy on short side -> reduce short position)
+        #    x_short_sell >=0 (relative sell on short side -> increase short position)
         #    b_long \in {0,1} (indicator variable for x_long)
         #    b_short \in {0,1} (indicator variable for x_short)
+        #    b_long_buy \in {0,1} (indicator variable for x_long_buy)
+        #    b_short_buy \in {0,1} (indicator variable for x_short_buy)
+        #    b_long_sell \in {0,1} (indicator variable for x_long_sell)
+        #    b_short_sell \in {0,1} (indicator variable for x_short_sell)
 
         with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
             # Set default for initial_holdings and split into long/positive and short/negative part
