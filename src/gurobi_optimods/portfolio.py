@@ -109,9 +109,12 @@ class MeanVariancePortfolio:
         max_trades=None,
         fees_buy=None,
         fees_sell=None,
+        fees_sell_short=None,
+        fees_buy_short=None,
         min_long=None,
         min_short=None,
         max_total_short=0.0,
+        initial_holdings=None,
     ):
         """
         Compute efficient portfolio for given paramters
@@ -122,10 +125,16 @@ class MeanVariancePortfolio:
         :type gamma: :class:`float` >= 0
         :param max_trades: Upper limit on the number of trades
         :type max_trades: :class:`int` >= 0
-        :param fees_buy: Fixed-charge cost for each traded long position, relative
+        :param fees_buy: Fixed-charge buy cost for each traded long position, relative
             to total portfolio value
         :type fees_buy: :class:`float` >= 0
-        :param fees_sell: Fixed-charge cost for each traded short position, relative
+        :param fees_sell: Fixed-charge sell cost for each traded long position, relative
+            to total portfolio value
+        :type fees_sell: :class:`float` >= 0
+        :param fees_sell_short: Fixed-charge sell cost for each traded short position, relative
+            to total portfolio value
+        :type fees_sell: :class:`float` >= 0
+        :param fees_buy_short: Fixed-charge buy cost for each traded short position, relative
             to total portfolio value
         :type fees_sell: :class:`float` >= 0
         :param min_long: Lower bound on the volume on a traded long position,
@@ -137,6 +146,11 @@ class MeanVariancePortfolio:
         :param max_total_short: Maximum total short positions, relative to
             total investment.
         :type max_total_short: :class:`float` >= 0
+        :param max_total_short: Maximum total short positions, relative to
+            total investment.
+        :type max_total_short: :class:`float` >= 0
+        :param initial_holdings: Initial portfolio holdings (sum needs to be <= 1)
+        :type initial_holdings: 1-d :class:`np.ndarray`
 
         Refer to the Section :ref:`portfolio features` for a detailed discussion
         of these parameters.
@@ -172,15 +186,46 @@ class MeanVariancePortfolio:
         #    b_short \in {0,1} (indicator variable for x_short)
 
         with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
+            # Set default for initial_holdings and split into long/positive and short/negative part
+            if initial_holdings is None:
+                initial_holdings = np.zeros(self.mu.shape)
+            initial_holdings_long = np.maximum(
+                initial_holdings, np.zeros(self.mu.shape)
+            )
+            initial_holdings_short = np.maximum(
+                -initial_holdings, np.zeros(self.mu.shape)
+            )
+
             # Portfolio vector x is split into long and short positions
             x = m.addMVar(shape=self.mu.shape, lb=-float("inf"), name="x")
             x_long = m.addMVar(shape=self.mu.shape, name="x_long")
             x_short = m.addMVar(shape=self.mu.shape, name="x_short")
             m.addConstr(x == x_long - x_short)
 
-            # Binaries used to enforce VUB and minimum buy-in
-            b_long = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_long")
-            b_short = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_short")
+            # The difference between existing holdings and new portfolio is split into four parts
+            x_long_buy = m.addMVar(shape=self.mu.shape, name="x_long_buy")
+            x_long_sell = m.addMVar(shape=self.mu.shape, name="x_long_sell")
+            x_short_buy = m.addMVar(shape=self.mu.shape, name="x_short_buy")
+            x_short_sell = m.addMVar(shape=self.mu.shape, name="x_short_sell")
+            m.addConstr(x_long == initial_holdings_long + x_long_buy - x_long_sell)
+            m.addConstr(x_short == initial_holdings_short - x_short_buy + x_short_sell)
+
+            # Binaries used to enforce VUB and minimum position/trade size
+            b_long = m.addMVar(shape=self.mu.shape, vtype="B", name="position_long")
+            b_short = m.addMVar(shape=self.mu.shape, vtype="B", name="position_short")
+
+            b_long_buy = m.addMVar(
+                shape=self.mu.shape, vtype="B", name="trade_long_buy"
+            )
+            b_short_buy = m.addMVar(
+                shape=self.mu.shape, vtype="B", name="trade_short_buy"
+            )
+            b_long_sell = m.addMVar(
+                shape=self.mu.shape, vtype="B", name="trade_long_sell"
+            )
+            b_short_sell = m.addMVar(
+                shape=self.mu.shape, vtype="B", name="trade_short_sell"
+            )
 
             # Define VUB constraints for x_long and x_short.
             #
@@ -190,8 +235,15 @@ class MeanVariancePortfolio:
             m.addConstr(x_long <= (1.0 + max_total_short) * b_long)
             m.addConstr(x_short <= max_total_short * b_short)
 
-            # A position can only by short or long, not both
-            m.addConstr(b_long + b_short <= 1, name="long_or_short")
+            m.addConstr(x_long_buy <= (1.0 + max_total_short) * b_long_buy)
+            m.addConstr(x_long_sell <= (1.0 + max_total_short) * b_long_sell)
+            m.addConstr(x_short_buy <= max_total_short * b_short_buy)
+            m.addConstr(x_short_sell <= max_total_short * b_short_sell)
+
+            # A position/trade can only by short or long, not both
+            m.addConstr(b_long + b_short <= 1, name="long_or_short_position")
+            m.addConstr(b_long_buy + b_long_sell <= 1, name="long_or_short_trade")
+            m.addConstr(b_short_buy + b_short_sell <= 1, name="long_or_short_trade")
 
             # Bound total leverage
             m.addConstr(x_short.sum() <= max_total_short, name="total_short")
@@ -199,19 +251,35 @@ class MeanVariancePortfolio:
             investment = x.sum()
 
             if max_trades is not None:
-                m.addConstr(b_long.sum() + b_short.sum() <= max_trades)
+                m.addConstr(
+                    b_long_buy.sum()
+                    + b_long_sell.sum()
+                    + b_short_buy.sum()
+                    + b_short_sell.sum()
+                    <= max_trades
+                )
 
             if fees_buy is not None:
-                investment += b_long.sum() * fees_buy
+                investment += b_long_buy.sum() * fees_buy
+            if fees_buy_short is not None:
+                investment += b_short_buy.sum() * fees_buy_short
 
             if fees_sell is not None:
-                investment += b_short.sum() * fees_sell
+                investment += b_long_sell.sum() * fees_sell
+            if fees_sell_short is not None:
+                investment += b_short_sell.sum() * fees_sell_short
 
             if min_long is not None:
-                m.addConstr(x_long >= min_long * b_long, name="min_long")
+                m.addConstr(x_long_buy >= min_long * b_long_buy, name="min_long_buy")
+                m.addConstr(x_short_buy >= min_long * b_short_buy, name="min_short_buy")
 
             if min_short is not None:
-                m.addConstr(x_short >= min_short * b_short, name="min_short")
+                m.addConstr(
+                    x_short_sell >= min_short * b_short_sell, name="min_short_sell"
+                )
+                m.addConstr(
+                    x_long_sell >= min_short * b_long_sell, name="min_long_sell"
+                )
 
             m.addConstr(investment == 1, name="fully_invested")
 
@@ -220,6 +288,7 @@ class MeanVariancePortfolio:
                 self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)), GRB.MAXIMIZE
             )
 
+            m.params.outputflag = 0
             m.optimize()
             if m.Status == GRB.OPTIMAL:
                 return self._convert_result(x.X)

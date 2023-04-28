@@ -4,7 +4,7 @@
 
 import unittest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_array_equal
 
 from gurobi_optimods.datasets import load_portfolio
 from gurobi_optimods.portfolio import MeanVariancePortfolio
@@ -73,7 +73,9 @@ class TestMod(unittest.TestCase):
         self.assertAlmostEqual(x.sum(), 1)
 
         # Ensure that transaction fees are paid out of the portfolio
-        x = mvp.efficient_portfolio(gamma, max_total_short=0.3, fees_sell=fees_sell)
+        x = mvp.efficient_portfolio(
+            gamma, max_total_short=0.3, fees_sell_short=fees_sell
+        )
         n_trades = (x < 0).sum()
         self.assertGreater(n_trades, 0)
         self.assertLessEqual(x.sum(), 1 - n_trades * fees_sell + 1e-8)
@@ -140,12 +142,126 @@ class TestMod(unittest.TestCase):
         mvp = MeanVariancePortfolio(Sigma, mu)
         x = mvp.efficient_portfolio(gamma, max_total_short=0.5)
 
-        # Ensure that we have tiny short positions
+        # Ensure that we do have tiny short positions
         small_trades = (x < -1e-6) & (x > (-0.05 + 1e-6))
         self.assertGreater(small_trades.sum(), 0)
 
-        # Ensure that we still have short positions, but beyond the threshold
+        # Ensure that we still have short positions but beyond the threshold
         x = mvp.efficient_portfolio(gamma, max_total_short=0.5, min_short=0.05)
         self.assertGreater((x <= -0.05).sum(), 0)
         small_trades = (x < -1e-6) & (x > (-0.05 + 1e-6))
         self.assertEqual(small_trades.sum(), 0)
+
+    def test_start_portfolio_empty(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = np.zeros(mu.shape)
+        x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0)
+        x_without = mvp.efficient_portfolio(gamma, initial_holdings=None)
+        assert_array_equal(x_with, x_without)
+
+    def test_start_portfolio_without_restrictions(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        # If there are no additional restrictions, the resulting portfolio should be the same as without initial holdings
+        # sunk-cost-fallacy
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = 1.0 / mu.size * np.ones(mu.size)
+        x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0)
+        x_without = mvp.efficient_portfolio(gamma, initial_holdings=None)
+        assert_allclose(x_with, x_without, atol=1e-6)
+
+    def test_start_portfolio_not_fully_invested(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        # If there are no additional restrictions, the resulting portfolio should be the same as without initial holdings
+        # sunk-cost-fallacy
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = 0.5 / mu.size * np.ones(mu.size)
+        x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0)
+        x_without = mvp.efficient_portfolio(gamma, initial_holdings=None)
+        assert_allclose(x_with, x_without, atol=1e-6)
+
+    def test_start_portfolio_limit_trades(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = 1.0 / mu.size * np.ones(mu.size)
+        x1 = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=3)
+        trades = ((x1 - x0) > 1e-4) | ((x1 - x0) < -1e-4)
+        self.assertLessEqual(trades.sum(), 3)
+
+    def test_start_portfolio_max_total_short(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = 1.0 / mu.size * np.ones(mu.size)
+
+        # Ensure that we take advantage of leverage
+        x = mvp.efficient_portfolio(
+            gamma, initial_holdings=x0, max_trades=6, max_total_short=0.1
+        )
+
+        self.assertGreaterEqual((x.loc[x < 0]).sum(), -0.1 - 1e-6)
+        self.assertLess(x.loc[x < 0].sum(), -1e-3)
+        self.assertAlmostEqual(x.sum(), 1.0)
+        self.assertAlmostEqual(np.abs(x).sum(), 1.0 + 2 * 0.1)
+
+        trades = ((x - x0) > 1e-4) | ((x - x0) < -1e-4)
+        # Trades where we went from a long to a short position (or the other way) need to be counted twice
+        double_trades = x * x0 < -1e-4
+        self.assertLessEqual(trades.sum() + double_trades.sum(), 6)
+        # Since we started with long only, there needs to be at least one double trade
+        self.assertGreaterEqual(double_trades.sum(), 1)
+
+    def test_start_portfolio_min_buy(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = 1.0 / mu.size * np.ones(mu.size)
+
+        # Ensure that we _do_ have a small trade w/o minimum buy
+        x = mvp.efficient_portfolio(gamma, min_long=0.0, initial_holdings=x0)
+        trades = x - x0
+        small_trades = (trades > 1e-6) & (trades < (0.03 - 1e-6))
+        self.assertGreaterEqual(small_trades.sum(), 0)
+
+        # Ensure that we _don't_ have a small trade w/ minimum buy
+        x = mvp.efficient_portfolio(gamma, min_long=0.03)
+        trades = x - x0
+        small_trades = (trades > 1e-6) & (trades < (0.03 - 1e-6))
+        self.assertEqual(small_trades.sum(), 0)
+
+    # TODO
+    def test_start_portfolio_min_sell(self):
+        # TODO: sell what we have vs go short
+        pass
+
+    def test_start_portfolio_no_fees(self):
+        # we don't pay fees if the start portfolio is already optimal
+        pass
+
+    def test_start_portfolio_fees_buy(self):
+        pass
+
+    def test_start_portfolio_fees_sell(self):
+        pass
