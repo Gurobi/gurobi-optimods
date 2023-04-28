@@ -2,9 +2,11 @@ import collections
 import logging
 
 import numpy as np
+import pandas as pd
+import scipy.sparse as sp
+
 import gurobipy as gp
 from gurobipy import GRB
-import scipy.sparse as sp
 
 try:
     import networkx as nx
@@ -21,8 +23,40 @@ logger = logging.getLogger(__name__)
 def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
     if isinstance(graph, sp.spmatrix):
         return _maximum_bipartite_matching_scipy(graph, nodes1, nodes2, create_env)
+    elif isinstance(graph, pd.DataFrame):
+        return _maximum_bipartite_matching_pandas(graph, nodes1, nodes2, create_env)
     elif nx is not None and isinstance(graph, nx.Graph):
         return _maximum_bipartite_matching_networkx(graph, nodes1, nodes2, create_env)
+    else:
+        raise ValueError(f"Unknown graph type: {type(graph)}")
+
+
+def _maximum_bipartite_matching_pandas(frame, n1_column, n2_column, create_env):
+    # Turn categorical labels into disjoint sets in 0..N
+    row = frame[n1_column].astype("category").cat.codes.to_numpy()
+    col = frame[n2_column].astype("category").cat.codes.to_numpy() + row.max() + 1
+    degree = col.max() + 1
+
+    # Construct sparse matrix and solve
+    data = np.ones(row.shape)
+    adjacency = sp.coo_array((data, (row, col)), shape=(degree, degree))
+    nodes1 = np.unique(row)
+    nodes2 = np.unique(col)
+    matching = _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env)
+
+    # Join the original matrix to get the matching subset
+    adj = sp.triu(matching)
+    original = frame.assign(_n1_codes=row, _n2_codes=col)
+    selected = pd.DataFrame({"n1": adj.row, "n2": adj.col})
+    result = pd.merge(
+        original,
+        selected,
+        left_on=["_n1_codes", "_n2_codes"],
+        right_on=["n1", "n2"],
+        suffixes=("", "_joined"),
+    )
+    # TODO gurobipy-pandas would definitely be cleaner!
+    return result[frame.columns]
 
 
 def _maximum_bipartite_matching_networkx(graph, nodes1, nodes2, create_env):
