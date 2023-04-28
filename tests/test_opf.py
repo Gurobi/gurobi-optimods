@@ -170,11 +170,12 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
-        self.assertLess(abs(solution["f"] - 681590.8014), 1e-4)
+        # differences can be quite big because we solve only to 1% optimality
+        self.assertLess(abs(solution["f"] - 681590.8014), 1e2)
         for i in range(0, 10):
-            self.assertLess(abs(solution["bus"][i + 1]["Va"] - self.Va_NY[i]), 1e-4)
-            self.assertLess(abs(solution["gen"][i + 1]["Pg"] - self.Pg_NY[i]), 1e-4)
-            self.assertLess(abs(solution["branch"][i + 1]["Pf"] - self.Pf_NY[i]), 1e-4)
+            self.assertLess(abs(solution["bus"][i + 1]["Va"] - self.Va_NY[i]), 1e1)
+            self.assertLess(abs(solution["gen"][i + 1]["Pg"] - self.Pg_NY[i]), 1e1)
+            self.assertLess(abs(solution["branch"][i + 1]["Pf"] - self.Pf_NY[i]), 1e1)
 
     # test reading settings and case file from dicts
     def test_opfdicts(self):
@@ -183,13 +184,14 @@ class TestOpf(unittest.TestCase):
             case, opftype="AC", branchswitching=1, usemipstart=False
         )
         # check whether the solution point looks correct
+        # differences can be quite big because we solve only to 1% optimality
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
-        self.assertLess(abs(solution["f"] - 5296.6862), 1e-1)
-        self.assertLess(abs(solution["bus"][1]["Va"]), 1e-4)
-        self.assertLess(abs(solution["gen"][2]["Qg"] - 0.0318441), 1e-4)
-        self.assertLess(abs(solution["branch"][3]["Pt"] - 55.96906046691643), 1e-4)
+        self.assertLess(abs(solution["f"] - 5296.6862), 1)
+        self.assertLess(abs(solution["bus"][1]["Va"]), 1)
+        self.assertLess(abs(solution["gen"][2]["Qg"] - 0.0318441), 1)
+        self.assertLess(abs(solution["branch"][3]["Pt"] - 55.96906046691643), 1)
 
     # test DC formulation
     @unittest.skipIf(size_limited_license(), "size-limited-license")
@@ -206,10 +208,11 @@ class TestOpf(unittest.TestCase):
             self.assertTrue(solution is not None)
             self.assertTrue(solution["success"] == 1)
             self.assertTrue(solution["f"] is not None)
-            self.assertLess(abs(solution["f"] - self.objvals_dc[i]), 1e-4)
-            self.assertLess(abs(solution["bus"][1]["Va"] - self.Va_dc[i]), 1e-4)
-            self.assertLess(abs(solution["gen"][2]["Pg"] - self.Pg_dc[i]), 1e-4)
-            self.assertLess(abs(solution["branch"][3]["Pt"] - self.Pt_dc[i]), 1e-4)
+            # differences can be quite big because we solve only to 1% optimality
+            self.assertLess(abs(solution["f"] - self.objvals_dc[i]), 1e1)
+            self.assertLess(abs(solution["bus"][1]["Va"] - self.Va_dc[i]), 1e1)
+            self.assertLess(abs(solution["gen"][2]["Pg"] - self.Pg_dc[i]), 1e1)
+            self.assertLess(abs(solution["branch"][3]["Pt"] - self.Pt_dc[i]), 1e1)
 
     # test AC formulation
     @unittest.skipIf(size_limited_license(), "size-limited-license")
@@ -226,10 +229,11 @@ class TestOpf(unittest.TestCase):
             self.assertTrue(solution is not None)
             self.assertTrue(solution["success"] == 1)
             self.assertTrue(solution["f"] is not None)
-            self.assertLess(abs(solution["f"] - self.objvals_ac[i]), 1e-4)
-            self.assertLess(abs(solution["bus"][3]["Vm"] - self.Vm_ac[i]), 1e-4)
-            self.assertLess(abs(solution["gen"][2]["Qg"] - self.Qg_ac[i]), 1e-4)
-            self.assertLess(abs(solution["branch"][1]["Qf"] - self.Qf_ac[i]), 1e-4)
+            # differences can be quite big because we solve only to 1% optimality
+            self.assertLess(abs(solution["f"] - self.objvals_ac[i]), 1e1)
+            self.assertLess(abs(solution["bus"][3]["Vm"] - self.Vm_ac[i]), 1e1)
+            self.assertLess(abs(solution["gen"][2]["Qg"] - self.Qg_ac[i]), 1e1)
+            self.assertLess(abs(solution["branch"][1]["Qf"] - self.Qf_ac[i]), 1e1)
 
     # test AC formulation relaxation
     @unittest.skipIf(size_limited_license(), "size-limited-license")
