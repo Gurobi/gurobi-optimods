@@ -7,7 +7,9 @@ The Opti Mods
    qubo
    bipartite-matching
    card-regression
+   diet
    l1-regression
+   min-cost-flow
    mwis
    weighted-matching
    workforce
