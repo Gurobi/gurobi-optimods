@@ -101,16 +101,20 @@ Code
             from gurobi_optimods.matching import maximum_bipartite_matching
 
             # Read in some task-worker assignment data
-            #...
+            frame = pd.DataFrame([
+                {"expert": "Jill", "task": "uphill"},
+                {"expert": "Jack", "task": "uphill"},
+                {"expert": "Jill", "task": "fetchpail"},
+            ])
 
             # Compute the maximum matching
-            #matching = maximum_bipartite_matching(...)
+            matching = maximum_bipartite_matching(frame, "expert", "task")
 
         .. testoutput:: bipartite_matching_pd
             :hide:
 
             ...
-            Optimal objective -3.000000000e+00
+            Optimal objective -2.000000000e+00
 
 
 The ``maximum_bipartite_matching`` function formulates a linear program for the
@@ -173,12 +177,9 @@ Solution
     .. group-tab:: networkx
 
         The maximum matching is returned as a subgraph of the original bipartite
-        graph, as a ``scipy.sparse`` array. Inspecting the result, it is clear that
+        graph, as a ``nx.Graph`` graph. Inspecting the result, it is clear that
         this is a maximum matching, since no two edges share a node in common, and
         all nodes in the second set are incident to an edge in the matching.
-
-        We can also inspect the result by plotting the graph and the edges selected
-        in the matching using networkx.
 
         .. testcode:: bipartite_matching_nx
 
@@ -196,4 +197,14 @@ Solution
 
     .. group-tab:: pandas
 
-        Show the resulting dataframe
+        The maximum matching returns a subset of the original dataframe. We can
+        see in this case that each expert is assigned exactly one task, and each
+        task is only to be completed once.
+
+        .. doctest:: bipartite_matching_pd
+            :options: +NORMALIZE_WHITESPACE
+
+            >>> matching
+              expert       task
+            0   Jack     uphill
+            1   Jill  fetchpail
