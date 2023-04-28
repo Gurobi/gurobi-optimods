@@ -20,17 +20,30 @@ Consider a service business, like a restaurant, that develops its workforce plan
 
         The workforce scheduling model takes the following inputs:
 
-        * The ``availability`` dataframe has two columns: ``Worker`` and ``Shift``. Each row in dataframe specifies that the given worker is available to work the given shift.
-        * The ``shift_requirements`` dataframe has two columns: ``Shift`` and ``Required``. Each row specifies the number of workers required for a given shift. There should be one row for every unique worker in ``availability["Workers"]``.
-        * The ``pay_rates`` dataframe has two columns: ``Worker`` and ``PayRate``. Each row specifies the pay per shift worked for that worker. There should be one row for every unique shift in ``availability["Shift"]``.
+        * The ``availability`` dataframe has three columns: ``Worker``, ``Shift``,
+          and ``Preference``. Each row in dataframe specifies that the given worker
+          is available to work the given shift.
+        * The ``shift_requirements`` dataframe has two columns: ``Shift`` and
+          ``Required``. Each row specifies the number of workers required for a
+          given shift. There should be one row for every unique worker in
+          ``availability["Workers"]``.
 
-        When ``solve_workforce_scheduling`` is called, a model is formulated and solved immediately using Gurobi. Workers will be assigned only to shifts they are available for, in such a way that all requirements are covered while total cost of covering all shifts is minimised.
+        When ``solve_workforce_scheduling`` is called, a model is formulated and
+        solved immediately using Gurobi. Workers will be assigned only to shifts
+        they are available for, in such a way that all requirements are covered while
+        total sum of worker preference scores is maximised.
 
-        The returned assignment dataframe is a subset of the availability dataframe, with the same columns. Each row specifies that the given worker has been assigned the given shift.
+        The returned assignment dataframe is a subset of the availability dataframe,
+        with the same columns. Each row specifies that the given worker has been
+        assigned to the given shift.
 
     .. tab:: Optimization Model
 
-        Set of :math:`S` shifts to cover using set of workers :math:`W`. Workers :math:`w \in W_{s} \subseteq W` are available to work a given shift `s`, and are paid an amount :math:`c_{w}` for each assigned shift. Shift :math:`s` requires :math:`r_{s}` workers assigned. The model is defined on variables :math:`x_{ws}` such that
+        Set of :math:`S` shifts to cover using set of workers :math:`W`. Workers
+        :math:`w \in W_{s} \subseteq W` are available to work a given shift `s`,
+        and have a preference :math:`p_{ws}` for each assigned shift. Shift :math:`s`
+        requires :math:`r_{s}` workers assigned. The model is defined on variables
+        :math:`x_{ws}` such that
 
         .. math::
 
@@ -44,17 +57,19 @@ Consider a service business, like a restaurant, that develops its workforce plan
         .. math::
 
             \begin{alignat}{2}
-            \min \quad        & \sum_{s \in S} \sum_{w \in W_{s}} c_{w} x_{ws} \\
+            \max \quad        & \sum_{s \in S} \sum_{w \in W_{s}} p_{ws} x_{ws} \\
             \mbox{s.t.} \quad & \sum_{w \in W_{s}} x_{ws} = r_{s} & \forall s \in S \\
                               & 0 \le x_{ws} \le 1 & \forall s \in S, w \in W_{s} \\
             \end{alignat}
 
-        The objective computes the total cost of all shift assignments based on worker pay rates.
-        The constraint ensures all shifts are assigned the required number of workers.
+        The objective computes the total cost of all shift assignments based on
+        worker pay rates. The constraint ensures all shifts are assigned the
+        required number of workers.
 
-        Technically, :math:`x_{ws}` should be binary, but we're in magical assignment land here.
-        Read more about why assignment problems and network flows are the bees knees `here <www.gurobi.com>`_.
-        Note that if the model is modified with additional constraints, this elegant property may no longer hold.
+        Technically, :math:`x_{ws}` should be binary, but we're in magical
+        assignment land here. Read more about why assignment problems and network
+        flows are the bees knees `here <www.gurobi.com>`_. Note that if the model is
+        modified with additional constraints, this elegant property may no longer hold.
 
 Data examples
 
@@ -72,7 +87,7 @@ Data examples
 
 .. tabs::
 
-    .. tab:: ``availability``
+    .. tab:: ``preferences``
 
         Amy is available for a shift on Tuesday 2nd, etc, etc
 
@@ -81,23 +96,23 @@ Data examples
 
             >>> from gurobi_optimods import datasets
             >>> data = datasets.load_workforce()
-            >>> data.availability
-               Worker      Shift
-            0     Amy 2022-07-02
-            1     Amy 2022-07-03
-            2     Amy 2022-07-05
-            3     Amy 2022-07-07
-            4     Amy 2022-07-09
-            ..    ...        ...
-            67     Gu 2022-07-10
-            68     Gu 2022-07-11
-            69     Gu 2022-07-12
-            70     Gu 2022-07-13
-            71     Gu 2022-07-14
+            >>> data.preferences
+               Worker      Shift  Preference
+            0     Amy 2022-07-02         3.0
+            1     Amy 2022-07-03         3.0
+            2     Amy 2022-07-05         3.0
+            3     Amy 2022-07-07         3.0
+            4     Amy 2022-07-09         3.0
+            ..    ...        ...         ...
+            67     Gu 2022-07-10         2.0
+            68     Gu 2022-07-11         2.0
+            69     Gu 2022-07-12         2.0
+            70     Gu 2022-07-13         2.0
+            71     Gu 2022-07-14         2.0
             <BLANKLINE>
-            [72 rows x 2 columns]
+            [72 rows x 3 columns]
 
-        In the mathematical model, this models the set :math:`\lbrace (w, s) \mid s \in S, w \in W_s \rbrace`.
+        In the mathematical model, this models the set :math:`\lbrace (w, s) \mid s \in S, w \in W_s \rbrace` and preference values :math:`p_{ws}`.
 
     .. tab:: ``shift_requirements``
 
@@ -126,27 +141,6 @@ Data examples
 
         In the mathematical model, this models the values :math:`r_s`.
 
-    .. tab:: ``pay_rates``
-
-        Bob is the most expensive worker ...
-
-        .. doctest:: workforce
-            :options: +NORMALIZE_WHITESPACE
-
-            >>> from gurobi_optimods import datasets
-            >>> data = datasets.load_workforce()
-            >>> data.pay_rates
-              Worker  PayRate
-            0    Amy       10
-            1    Bob       12
-            2  Cathy       10
-            3    Dan        8
-            4     Ed        8
-            5   Fred        9
-            6     Gu       11
-
-        In the mathematical model, this models the values :math:`c_w`.
-
 |
 
 Code
@@ -168,9 +162,8 @@ Show the code required to run the mod. Users interact with the 'solver' by passi
 
     # Get winning results.
     assigned_shifts = solve_workforce_scheduling(
-        availability=data.availability,
+        availability=data.preferences,
         shift_requirements=data.shift_requirements,
-        pay_rates=data.pay_rates,
     )
 
 .. testoutput:: workforce
@@ -179,7 +172,7 @@ Show the code required to run the mod. Users interact with the 'solver' by passi
     ...
     Optimize a model with 14 rows, 72 columns and 72 nonzeros
     ...
-    Optimal objective  4.800000000e+02
+    Best objective 1.960000000000e+02, best bound 1.960000000000e+02, gap 0.0000%
 
 The model is solved as a linear program by Gurobi.
 
@@ -220,20 +213,20 @@ normal pandas code (no gurobipy interaction).
     :options: +NORMALIZE_WHITESPACE
 
     >>> assigned_shifts
-    Worker      Shift
-    0     Amy 2022-07-03
-    1     Amy 2022-07-05
-    2     Amy 2022-07-07
-    3     Amy 2022-07-10
-    4     Amy 2022-07-11
-    ..    ...        ...
-    47     Gu 2022-07-05
-    48     Gu 2022-07-06
-    49     Gu 2022-07-07
-    50     Gu 2022-07-12
-    51     Gu 2022-07-13
+       Worker      Shift  Preference
+    0     Amy 2022-07-03         3.0
+    1     Amy 2022-07-05         3.0
+    2     Amy 2022-07-07         3.0
+    3     Amy 2022-07-10         3.0
+    4     Amy 2022-07-11         3.0
+    ..    ...        ...         ...
+    47     Gu 2022-07-05         2.0
+    48     Gu 2022-07-06         2.0
+    49     Gu 2022-07-07         2.0
+    50     Gu 2022-07-12         2.0
+    51     Gu 2022-07-13         2.0
     <BLANKLINE>
-    [52 rows x 2 columns]
+    [52 rows x 3 columns]
 
 Further transform
 
