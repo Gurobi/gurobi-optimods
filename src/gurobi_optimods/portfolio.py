@@ -305,7 +305,6 @@ class MeanVariancePortfolio:
                 self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)), GRB.MAXIMIZE
             )
 
-            m.params.outputflag = 0
             m.optimize()
             if m.Status == GRB.OPTIMAL:
                 return self._convert_result(x.X)
