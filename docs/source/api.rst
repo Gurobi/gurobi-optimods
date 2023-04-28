@@ -23,4 +23,4 @@ API
    :members: solve_workforce_scheduling
 
 .. automodule:: gurobi_optimods.opf
-   :members: solve_opf_model, compute_violations_from_given_voltages, read_case_from_mat_file, turn_solution_into_mat_file, read_coords_from_csv_file, read_voltages_from_csv_file
+   :members: solve_opf_model, compute_violations_from_given_voltages, read_case_from_mat_file, turn_result_into_mat_file, read_coords_from_csv_file, read_voltages_from_csv_file

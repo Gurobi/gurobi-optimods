@@ -99,6 +99,7 @@ def get_default_optimization_settings():
         # Sometimes it works better than branchswitching_mip. Only applicable for AC
         "branchswitching_comp": False,
         "usemipstart": False,
+        "minactivebranches": 0.95,
         # New linear inequalities developed and implemented by Dan.
         # They are outer approximations of the JABR inequalities
         "useactivelossineqs": False,

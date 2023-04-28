@@ -37,6 +37,7 @@ def construct_settings_dict(
     ivtype,
     branchswitching,
     usemipstart,
+    minactivebranches,
     useactivelossineqs,
     additional_settings,
 ):
@@ -103,6 +104,7 @@ def construct_settings_dict(
         raise ValueError(f"Unknown branchswitching setting {branchswitching}.")
 
     settings["usemipstart"] = usemipstart
+    settings["minactivebranches"] = minactivebranches
 
     settings["useactivelossineqs"] = useactivelossineqs
 

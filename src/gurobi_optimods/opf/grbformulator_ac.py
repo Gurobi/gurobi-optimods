@@ -1041,14 +1041,14 @@ def lpformulator_ac_create_constraints(alldata, model):
 
     if alldata["branchswitching_mip"] or alldata["branchswitching_comp"]:
         expr = gp.LinExpr()
-        delta = numbranches
-        N = numbranches - delta  # <<<<<<---- here is the heuristic lower bound
-        # TODO-Dan N is here always just = 0. How should this be used?
+        N = math.floor(
+            numbranches * alldata["minactivebranches"]
+        )  # <<<<<<---- here is the heuristic lower bound
         logger.info(f"In bound_zs constraint, N = {N}.")
         for j in range(1, 1 + numbranches):
             branch = branches[j]
             expr.add(zvar[branch])
-        model.addConstr(expr >= N, name="sumz_lower")
+        model.addConstr(expr >= N, name="sumz_lower_heuristic_bound")
 
 
 def lpformulator_ac_add_polarconstraints(alldata, model):
@@ -1380,17 +1380,11 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
 def lpformulator_ac_strictchecker(alldata, model):
     """
     Check feasibility of input solution -- report infeasibilities
-    TODO-Dan How do we use this function? It says "check input solution against formulation".
-             Which input solution? Where does the user provide the input solution? Is it in the voltage file?
-    TODO-Dan This is the same function as in grbformulator_iv.py.
-             If this is indeed the same function then please remove 1 of the 2 (or just let me know and I'll do it)
 
     :param alldata: Main dictionary holding all necessary data
     :type alldata: dict
     :param model: Gurobi model
     :type model: :class: `gurobipy.Model`
-    :param spitoutvector: # TODO-Dan What does it do?
-    :type spitoutvector: bool
     """
 
     logger = logging.getLogger("OpfLogger")
@@ -1473,7 +1467,7 @@ def lpformulator_ac_strictchecker(alldata, model):
         )
         fromviol = max(fromvalue - branch.limit, 0)
         if fromvalue > branch.limit:
-            logger.warning(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+            logger.warning(
                 f">>> Warning: branch # {j} has 'from' flow magnitude {fromvalue} which is larger than limit {branch.limit}."
             )
             logger.warning(f"    branch is ( {branch.f} {branch.t} ).")
@@ -1488,7 +1482,7 @@ def lpformulator_ac_strictchecker(alldata, model):
         )
         toviol = max(tovalue - branch.limit, 0)
         if tovalue > branch.limit:
-            logger.warning(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+            logger.warning(
                 f">>> Warning: branch # {j} has 'to' flow magnitude {tovalue} which is larger than limit {branch.limit}."
             )
             logger.warning(f"    branch is ( {branch.f} {branch.t} ).")

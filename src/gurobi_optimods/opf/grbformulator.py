@@ -118,7 +118,7 @@ def compute_violations_from_voltages(alldata):
     :type opftype: :enum: `OpfType`
 
     :return: Dictionary holding case data following the MATPOWER notation with additional
-                       violations fields
+             violations fields
     :rtype: dict
     """
 
@@ -129,7 +129,7 @@ def compute_violations_from_voltages(alldata):
     with gp.Env() as env, gp.Model("AC_Violations_Model", env=env) as model:
         # Add model variables and constraints
         lpformulator_body(alldata, model, OpfType.AC)
-        # compute violations
+        # Compute violations
         lpformulator_ac_strictchecker(alldata, model)
         violations = turn_solution_into_result_dict(
             alldata, model, OpfType.AC, "violation"

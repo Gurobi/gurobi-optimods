@@ -32,6 +32,7 @@ def solve_opf_model(
     ivtype="aggressive",
     branchswitching=0,
     usemipstart=True,
+    minactivebranches=0.9,
     useactivelossineqs=False,
     additional_settings=dict(),
 ):
@@ -39,15 +40,19 @@ def solve_opf_model(
     Constructs an OPF model from given data and solves it with Gurobi.
     Returns a result dictionary following MATPOWER notation.
     The additional and possibly altered fields are
-    ``result["bus"][i]["Vm"]`` for voltage magnitude value at bus `i`
-    ``result["bus"][i]["Va"]`` for voltage angle value at bus `i`
-    ``result["gen"][i]["Pg"]`` for real power injection at generator `i`
-    ``result["gen"][i]["Qg"]`` for reactive power injection at generator `i`
-    ``result["branch"][i]["Pf"]`` for real power injected into "from" end of branch at branch `i`
-    ``result["branch"][i]["Pt"]`` for real power injected into "to" end of branch at branch `i`
-    ``result["branch"][i]["Qf"]`` for reactive power injected into "from" end of branch at branch `i` (AC only)
-    ``result["branch"][i]["Qt"]`` for reactive power injected into "from" end of branch at branch `i` (AC only)
-    ``result["branch"][i]["switching"]`` states whether a branch `i` is turned on or off in the final solution
+
+    - ``result["success"]`` 1 if at least one feasible solution has been found, 0 otherwise
+    - ``result["et"]`` time spent for optimization
+    - ``result["f"]`` solution objective value
+    - ``result["bus"][i]["Vm"]`` for voltage magnitude value at bus `i`
+    - ``result["bus"][i]["Va"]`` for voltage angle value at bus `i`
+    - ``result["gen"][i]["Pg"]`` for real power injection at generator `i`
+    - ``result["gen"][i]["Qg"]`` for reactive power injection at generator `i`
+    - ``result["branch"][i]["Pf"]`` for real power injected into "from" end of branch at branch `i`
+    - ``result["branch"][i]["Pt"]`` for real power injected into "to" end of branch at branch `i`
+    - ``result["branch"][i]["Qf"]`` for reactive power injected into "from" end of branch at branch `i` (AC only)
+    - ``result["branch"][i]["Qt"]`` for reactive power injected into "from" end of branch at branch `i` (AC only)
+    - ``result["branch"][i]["switching"]`` states whether a branch `i` is turned on or off in the final solution
 
     :param case: Dictionary holding case data
     :type case: dict
@@ -67,26 +72,35 @@ def solve_opf_model(
                    defaults to `aggressive`
     :type ivtype: str, optional
     :param branchswitching: Controls whether discrete variable for turning on/off branches should be used.
-                            0 = don't use discrete variables (all branches are on)
-                            1 = use binary variables to constrain bounds of (re)active power injections
-                            2 = use binary variables and multiply them with the (re)active power injections (only available for AC)
+
+                            - 0 = don't use discrete variables (all branches are on)
+                            - 1 = use binary variables to constrain bounds of (re)active power injections
+                            - 2 = use binary variables and multiply them with the (re)active power injections (only available for AC)
+
                             Usually, setting 1 works better than 2. Defaults to 0
     :type branchswitching: int, optional
     :param usemipstart: Controls whether a pre-defined MIPStart should be used. Has only an effect if
                         branchswitching > 0. Defaults to `True`
     :type usemipstart: bool, optional
+    :param minactivebranches: Controls the minimum number of branches that has to be turned on when branchswitching is active, i.e.,
+                              the minimum number of turned on branches is equal to ``numbranches * minactivebranches``. Defaults to
+                              0.95, i.e., at least 95% of branches have to be turned on
+    :type minactivebranches: float
     :param useactivelossineqs: Controls whether active loss constraints are used. These are linear outer approximation of the JABR
                               constraints. Usually, they provide a very good lower bound while still being linear.
                               Defaults to `False`.
     :type useactivelossineqs: bool, optional
-    :param additional_settings: Dictionary holding additional settings. Additional settings are: ``lpfilename`` which if evaluates
-                                to a non-empty string, makes Gurobi write a `.lp` file holding the generated model, ``gurobiparamfile``
-                                which if evaluates to a non-empty string, makes Gurobi read in a parameter file.
+    :param additional_settings: Dictionary holding additional settings. Additional settings are:
+
+                                - ``lpfilename`` which if evaluated to a non-empty string, makes Gurobi write a `.lp`
+                                  file holding the generated model
+                                - ``gurobiparamfile`` which if evaluated to a non-empty string, makes Gurobi read in
+                                  a parameter file.
+
                                 Defaults to an empty dictionary
     :type additional_settings: dict, optional
 
-    :return: A result dictionary following MATPOWER notation, e.g., the objective value
-             is at ``solution["f"]`` if ``solution["success"] = 1``
+    :return: Case dictionary following MATPOWER notation with additional result fields
     :rtype: dict
     """
 
@@ -102,6 +116,7 @@ def solve_opf_model(
         ivtype,
         branchswitching,
         usemipstart,
+        minactivebranches,
         useactivelossineqs,
         additional_settings,
     )
@@ -130,10 +145,12 @@ def compute_violations_from_given_voltages(case, voltages, polar=False):
     out of given voltage values.
     Returns a violation dictionary following MATPOWER notation which holds
     all case data and additional violation fields. The additional fields are
-    ``violation["bus"][i]["Vmviol"]`` for voltage magnitude violation at bus `i`
-    ``violation["bus"][i]["Pviol"]`` for real injection violation at bus `i`
-    ``violation["bus"][i]["Qviol"]`` for reactive injection violation at bus `i`
-    ``violation["branch"][i]["limitviol"]`` for limit violation at branch `i`
+
+    - ``violation["bus"][i]["Vmviol"]`` for voltage magnitude violation at bus `i`
+    - ``violation["bus"][i]["Pviol"]`` for real injection violation at bus `i`
+    - ``violation["bus"][i]["Qviol"]`` for reactive injection violation at bus `i`
+    - ``violation["branch"][i]["limitviol"]`` for limit violation at branch `i`
+
     The violation dictionary can be used to generate a violations figure with the
     ``generate_opf_violations_figure`` function
 
@@ -144,7 +161,7 @@ def compute_violations_from_given_voltages(case, voltages, polar=False):
     :param polar: Controls whether polar formulation should be used when checking violations, defaults to `False`
     :type polar: bool, optional
 
-    :return: A case dictionary following MATPOWER notation with additional violations fields
+    :return: Case dictionary following MATPOWER notation with additional violations fields
     :rtype: dict
     """
 
@@ -162,6 +179,7 @@ def compute_violations_from_given_voltages(case, voltages, polar=False):
         branchswitching=0,
         usemipstart=False,
         useactivelossineqs=False,
+        minactivebranches=0.95,
         additional_settings={},
     )
 
@@ -206,13 +224,15 @@ def read_case_from_mat_file(casefile):
     return case_dict
 
 
-def turn_solution_into_mat_file(solution, matfilename=""):
+def turn_result_into_mat_file(result, matfilename=""):
     """
-    Writes a `.mat` data file in MATPOWER notation out of an OPF solution dictionary
+    Writes a `.mat` data file in MATPOWER notation out of an OPF result dictionary.
+    It accepts dictionaries in the format returned by the ``solve_opf_model`` and
+    ``compute_violations_from_given_voltages`` functions
 
-    :param solution: OPF solution dictionary
-    :type solution: dict
-    :param matfilename: Name of `.mat` file where to write the solution data,
+    :param result: OPF result dictionary
+    :type result: dict
+    :param matfilename: Name of `.mat` file where to write the result data,
                         defaults to `result.mat`
     :type matfilename: str, optional
     """
@@ -228,11 +248,11 @@ def turn_solution_into_mat_file(solution, matfilename=""):
     if not matfilename[-4:] == ".mat":
         matfilename += ".mat"
     logger.info(
-        f"Generating .mat file {matfilename} out of given OPF solution dictionary."
+        f"Generating .mat file {matfilename} out of given OPF result dictionary."
     )
 
-    # Generate .mat file out of solution
-    turn_opf_dict_into_mat_file(solution, matfilename)
+    # Generate .mat file out of result
+    turn_opf_dict_into_mat_file(result, matfilename)
 
     # Remove and close all logging handlers
     remove_and_close_handlers(logger, handlers)

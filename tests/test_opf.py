@@ -7,7 +7,6 @@ from gurobi_optimods.opf import (
     read_coords_from_csv_file,
     read_voltages_from_csv_file,
     read_case_from_mat_file,
-    turn_solution_into_mat_file,
     compute_violations_from_given_voltages,
 )
 from gurobi_optimods.datasets import (
@@ -160,7 +159,6 @@ class TestOpf(unittest.TestCase):
     # test a real data set for New York
     @unittest.skipIf(size_limited_license(), "size-limited-license")
     def test_NY(self):
-        settings = {"dodc": True}
         # load path to case file
         casefile = load_caseNYopf()
         # read case file and return a case dictionary
@@ -294,7 +292,7 @@ class TestOpf(unittest.TestCase):
 class TestOpfGraphics(unittest.TestCase):
 
     # Currently, this is just a convenience setting while working on OptiMod
-    plot_graphics = False
+    plot_graphics = True
 
     # graphics test values
     graphics_9_x = [1129.2, 980.2, 977.6, 1182.8, 480.6, 85.4, 1079.6, 528.0, 0.0]

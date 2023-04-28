@@ -329,10 +329,11 @@ def lpformulator_dc_create_constraints(alldata, model):
 
     if alldata["branchswitching_mip"]:
         expr = gp.LinExpr()
-        delta = numbranches
-        N = numbranches - delta  # <<<<<<---- here is the heuristic lower bound
-        # TODO-Dan N is here always just = 0. How should this be used?
+        N = math.floor(
+            numbranches * alldata["minactivebranches"]
+        )  # <<<<<<---- here is the heuristic lower bound
+        logger.info(f"In bound_zs constraint, N = {N}.")
         for j in range(1, 1 + numbranches):
             branch = branches[j]
             expr.add(zvar[branch])
-        model.addConstr(expr >= N, name="sumzbd")
+        model.addConstr(expr >= N, name="sumz_lower_heuristic_bound")
