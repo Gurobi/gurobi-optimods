@@ -5,7 +5,6 @@ import logging
 
 from gurobi_optimods.opf.utils import (
     get_default_optimization_settings,
-    get_default_graphics_settings,
     initialize_logger,
     remove_and_close_handlers,
     check_settings_for_correct_type,
@@ -38,6 +37,7 @@ def construct_settings_dict(
     ivtype,
     branchswitching,
     usemipstart,
+    useactivelossineqs,
     additional_settings,
 ):
     """
@@ -104,6 +104,8 @@ def construct_settings_dict(
 
     settings["usemipstart"] = usemipstart
 
+    settings["useactivelossineqs"] = useactivelossineqs
+
     for s in additional_settings:
         settings[s] = additional_settings[s]
 
@@ -138,24 +140,18 @@ def read_optimization_settings(alldata, settings):
     logger = logging.getLogger("OpfLogger")
     logger.info("All settings:")
     for s in defaults.keys():
-        logger.info(f"  {s} {alldata[s]}")
+        # Don't print hidden settings
+        if s not in [
+            "fixcs",
+            "fixtolerance",
+            "usemaxdispersion",
+            "usemaxphasediff",
+            "maxdispersion_deg",
+            "maxphasediff_deg",
+        ]:
+            logger.info(f"  {s} {alldata[s]}")
 
     logger.info("")
-
-
-def read_graphics_settings(alldata, settings):
-    """
-    Reads settings dictionary for a graphics call
-    and saves all settings to alldata dictionary
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param settings: Dictionary holding settings used for a graphics call provided by the user
-    :type settings: dict
-    """
-
-    defaults = get_default_graphics_settings()
-    read_settings_dict(alldata, settings, defaults)
 
 
 def read_settings_dict(alldata, inputsettings, defaults):
@@ -184,36 +180,47 @@ def read_settings_dict(alldata, inputsettings, defaults):
         alldata[s] = defaults[s]
 
 
-def read_coords_file_csv(filename):
+def read_file_csv(filename, data):
     """
-    Reads bus coordinates from a `.csv` file
+    Reads bus data from a `.csv` file
 
-    :param filename: Path to text based file holding bus coordinates
-    :type filename: string
+    :param filename: Path to text based file holding bus data
+    :type filename: str
+    :param data: Name of data to be read in
+    :type data: str
 
-    :return: Dictionary holding the respective coordinates
+    :return: Dictionary holding the respective data of the form busID : (data1, data2)
     :rtype: dict
-    # TODO-Dan what are the other inputs of the csv file?
     """
 
     logger, handlers = initialize_logger("CoordsReadingLogger")
-    logger.info(f"Reading csv coordinates file {filename} and building dictionary.")
+    logger.info(f"Reading csv {data} file {filename} and building dictionary.")
 
     with open(filename, mode="r") as infile:
         reader = csv.reader(infile)
-        coords_dict = {
-            int(rows[1]): (
-                rows[3],
-                rows[4],
-            )
-            for rows in reader
-            if rows[0] != "index"
-        }
+        # Sanity check
+        data_dict = {}
+        first = True
+        for rows in reader:
+            # Skip first row of the .csv file
+            if first:
+                first = False
+                continue
 
-    logger.info("Done reading coordinates.\n")
+            if len(rows) != 5:
+                raise ValueError(
+                    f"Incorrect input in {data} .csv file {filename}. Number of columns does not equal 5."
+                )
+
+            data_dict[int(rows[1])] = (
+                float(rows[3]),
+                float(rows[4]),
+            )
+
+    logger.info(f"Done reading {data}.\n")
     remove_and_close_handlers(logger, handlers)
 
-    return coords_dict
+    return data_dict
 
 
 def grbmap_coords_from_dict(alldata, coords_dict):
@@ -235,100 +242,22 @@ def grbmap_coords_from_dict(alldata, coords_dict):
         buses[bnum].lon = coords_dict[index][1]
 
 
-def grbread_graphattrs(alldata, filename):
+def grbmap_volts_from_dict(alldata, volts_dict):
     """
-    Reads graphical attributes from a user-given file and
-    saves these into the alldata dictionary
+    Maps given case data with given bus input voltages
 
     :param alldata: Main dictionary holding all necessary data
     :type alldata: dict
-    :param filename: Path to text based file holding user-given graph attributes
-    :type filename: str
+    :param volts_dict: Dictionary holding a mapping of bus index to a given voltage input
+    :type volts_dict: dict
     """
 
-    logger = logging.getLogger("OpfLogger")
-    logger.info(f"Reading graphical attributes file {filename}.")
-    f = open(filename, "r")
-    lines = f.readlines()
-    f.close()
-
-    numfeatures = 0
-
-    thresh = {}
-    colorstring = {}
-    sizeval = {}
-
-    linenum = 0
-    # Read lines of configuration file and save options
-    while linenum < len(lines):
-        thisline = lines[linenum].split()
-        # Skip empty lines and comments
-        if len(thisline) <= 0 or thisline[0] == "#":
-            linenum += 1
-            continue
-        # End of graph attributes
-        if thisline[0] == "END":
-            break
-
-        thresh[numfeatures] = int(thisline[0])
-        colorstring[numfeatures] = thisline[1]
-        sizeval[numfeatures] = int(thisline[2])
-        numfeatures += 1
-
-        linenum += 1
-
-    logger.info(f"Succesfully read {numfeatures} graphical features.")
-    alldata["graphical"]["numfeatures"] = numfeatures
-    alldata["graphical"]["thresh"] = thresh
-    alldata["graphical"]["colorstring"] = colorstring
-    alldata["graphical"]["sizeval"] = sizeval
-
-
-def grbreadvoltsfile(alldata):
-    """
-    TODO-Dan Review description
-    Read a file holding input voltages for buses and saves
-    necessary data into the alldata dictionary
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-
-    :raises ValueError: Illegal line in voltsfile
-    """
-
-    logger = logging.getLogger("OpfLogger")
     buses = alldata["buses"]
     IDtoCountmap = alldata["IDtoCountmap"]
 
-    filename = alldata["voltsfilename"]
-    logger.info(f"Reading volts file {filename}.")
-
-    f = open(filename, "r")
-    lines = f.readlines()
-    f.close()
-
-    linenum = 0
-    while linenum < len(lines):
-        thisline = lines[linenum].split()
-        # Skip empty lines and comments
-        if len(thisline) <= 0 or thisline[0] == "#":
-            linenum += 1
-            continue
-        # End of voltage information
-        if thisline[0] == "END":
-            break
-
-        if thisline[0] == "bus":
-            busid = int(thisline[1])
-            buscount = IDtoCountmap[busid]
-
-            vadeg = float(thisline[5])
-            buses[buscount].inputvoltage = 1
-            buses[buscount].inputV = float(thisline[3])  # Vm
-            buses[buscount].inputA_rad = vadeg * math.pi / 180.0  # VaRad
-        else:
-            raise ValueError(f"Illegal line {linenum + 1} in voltsfile {filename}.")
-
-        linenum += 1
-
-    logger.info("Succesfully read volts file.\n")
+    for v in volts_dict:
+        buscount = IDtoCountmap[v]
+        buses[buscount].inputvoltage = 1
+        buses[buscount].inputV = volts_dict[v][0]  # Vm
+        vadeg = volts_dict[v][1]
+        buses[buscount].inputA_rad = vadeg * math.pi / 180.0  # VaRad

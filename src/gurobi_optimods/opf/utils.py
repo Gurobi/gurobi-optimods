@@ -86,8 +86,7 @@ def get_default_optimization_settings():
     settings = {
         "lpfilename": None,
         "gurobiparamfile": None,
-        "strictcheckvoltagesolution": False,  # will be removed
-        "doac": False,  # TODO combine to a opftype argument
+        "doac": False,
         "dodc": False,
         "doiv": False,
         "dopolar": False,
@@ -97,36 +96,22 @@ def get_default_optimization_settings():
         "ivtype": "aggressive",
         "branchswitching_mip": False,
         # Formulation for branch-switching where the binary variables simply multiply the continuous variables.
-        # Sometimes it works better. Only applicable for AC.
+        # Sometimes it works better than branchswitching_mip. Only applicable for AC
         "branchswitching_comp": False,
         "usemipstart": False,
-        "useactivelossineqs": False,  # new linear inequalities developed and implemented by Dan
-        # the following settings should currently not be disclosed
-        # for now keep for us, mainly used for debugging and experimenting with heuristics
-        "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this? I will.  It is a plain text file that has, for each bus, a line of the form "bus 8 M 1.099999e+00 A 9.051238e-01" (bus numbers 1 through N) plus a final "END" line
+        # New linear inequalities developed and implemented by Dan.
+        # They are outer approximations of the JABR inequalities
+        "useactivelossineqs": False,
+        #############################
+        # The following settings should currently not be disclosed
+        # For now keep for us, mainly used for debugging and experimenting with heuristics
         "fixcs": False,  # (approximately) fix c, s variables if a voltage solution was read in
         "fixtolerance": 1.0e-5,
-        # heuristics to help NL solver find a good solution
+        # Heuristics to help NL solver find a good solution
         "usemaxdispersion": False,  # difference between all bus angles is small
         "usemaxphasediff": False,  # difference between 2 adjacent branches is small
         "maxdispersion_deg": 0.0,
         "maxphasediff_deg": 360.0,
-    }
-
-    return settings
-
-
-def get_default_graphics_settings():
-    """
-    Returns a dictionary holding default settings for a graphics call
-
-    :rtype: dict
-    :return: Dictionary holding default setting for a graphics call
-    """
-
-    settings = {
-        "voltsfilename": None,  # TODO-Dan could you provide an example of how to use this? Will do
-        "graphattrsfilename": None,  # TODO-Dan where is this used? These are color choices for rendering graphics
     }
 
     return settings

@@ -6,7 +6,6 @@ import gurobipy as gp
 from gurobipy import GRB
 
 from gurobi_optimods.opf.utils import OpfType
-from gurobi_optimods.opf.grbfile import grbreadvoltsfile
 from gurobi_optimods.opf.grbformulator_ac import (
     lpformulator_ac_body,
     lpformulator_ac_strictchecker,
@@ -69,15 +68,6 @@ def construct_and_solve_model(alldata):
             model.write(alldata["lpfilename"])
             logger.info(f"Wrote LP to {alldata['lpfilename']}.")
 
-        # TODO This will be an own API function
-        if alldata["strictcheckvoltagesolution"]:
-            # check input solution against formulation
-            spitoutvector = True
-            # TODO-Dan Why do you need the feascode? It's not used anywhere and the function does not even return anything
-            feascode = lpformulator_strictchecker(
-                alldata, model, spitoutvector, opftype
-            )
-
         # Solve the OPF model
         sol_count = lpformulator_optimize(alldata, model, opftype)
 
@@ -88,7 +78,7 @@ def construct_and_solve_model(alldata):
         logger.info(f"Solution count: {sol_count}.")
 
         # Need to turn Gurobi solution into a dictionary following MATPOWER notation
-        solution = turn_solution_into_result_dict(alldata, model, opftype)
+        solution = turn_solution_into_result_dict(alldata, model, opftype, "result")
 
     return solution
 
@@ -116,34 +106,36 @@ def lpformulator_body(alldata, model, opftype):
         raise ValueError("Unknown OPF type.")
 
 
-def lpformulator_strictchecker(alldata, model, spitoutvector, opftype):
+def compute_violations_from_voltages(alldata):
     """
-    Calls the corresponding strictchecker function
-
-    TODO-Dan How do we use this function? It says "check input solution against formulation".
-             Which input solution? Where does the user provide the input solution? Is it in the voltage file?
+    Calls the corresponding violation checker function
 
     :param alldata: Main dictionary holding all necessary data
     :type alldata: dict
     :param model: Gurobi model to be constructed
     :type model: :class: `gurobipy.Model`
-    :param spitoutvector: #TODO-Dan What does it do?
-    :type spitoutvector: bool
     :param opftype: Type of OPF formulation
     :type opftype: :enum: `OpfType`
 
-    :raises ValueError: Unknown OPF type
+    :return: Dictionary holding case data following the MATPOWER notation with additional
+                       violations fields
+    :rtype: dict
     """
+
     logger = logging.getLogger("OpfLogger")
-    if opftype == OpfType.DC:
-        logger.warning(
-            "Warning: Strict checker currently not available for DC formulation."
+    logger.info("Computing violations from given voltage inputs.")
+    violations = None
+    # Create model
+    with gp.Env() as env, gp.Model("AC_Violations_Model", env=env) as model:
+        # Add model variables and constraints
+        lpformulator_body(alldata, model, OpfType.AC)
+        # compute violations
+        lpformulator_ac_strictchecker(alldata, model)
+        violations = turn_solution_into_result_dict(
+            alldata, model, OpfType.AC, "violation"
         )
-        # TODO-Dan Is there a reason why there is no strict checker for DC (except that it's linear)
-    elif opftype == OpfType.AC or opftype == OpfType.IV:
-        lpformulator_ac_strictchecker(alldata, model, spitoutvector)
-    else:
-        raise ValueError("Unknown OPF type.")
+
+    return violations
 
 
 def lpformulator_optimize(alldata, model, opftype):
@@ -304,9 +296,6 @@ def lpformulator_setup(alldata, opftype):
         alldata["skipjabr"] = True
         logger.info("    use_ef, jabr.")
 
-    if alldata["voltsfilename"] != None:
-        grbreadvoltsfile(alldata)
-
     if alldata["doiv"] and not alldata["use_ef"]:
         alldata["use_ef"] = True
         logger.info("  IV formulation requires use_ef. Turning it on.")
@@ -348,7 +337,7 @@ def lpformulator_setup(alldata, opftype):
         logger.info(f"Updated {count} maxangle constraints.")
 
 
-def turn_solution_into_result_dict(alldata, model, opftype):
+def turn_solution_into_result_dict(alldata, model, opftype, type):
     """
     Turns a Gurobi solution into an OPF dictionary in MATPOWER notation.
     If no solution is present, the result dictionary "success" value is 0.
@@ -359,6 +348,11 @@ def turn_solution_into_result_dict(alldata, model, opftype):
     :type model: :class: `gurobipy.Model`
     :param opftype: Type of OPF formulation
     :type opftype: :enum: `OpfType`
+    :param type: Type of output dictionary.
+                 Available are currently "result" and "violations"
+    :type type: str
+
+    :raises ValueError: Unknown result type
 
     :return: Dictionary holding OPF result information following MATPOWER notation
              The "success" entry states whether a feasible solution has been found
@@ -471,13 +465,37 @@ def turn_solution_into_result_dict(alldata, model, opftype):
         result["branch"][index] = matbranch
         index += 1
 
-    # Now extend the result dictionary by additional information derived from Gurobi solution
-    # See MATPOWER-manual for more details https://matpower.org/docs/MATPOWER-manual.pdf
+    if type == "result":
+        fill_result_fields(alldata, model, opftype, result)
+    elif type == "violation":
+        fill_violations_fields(alldata, opftype, result)
+    else:
+        raise ValueError("Unknown result type.")
+
+    return result
+
+
+def fill_result_fields(alldata, model, opftype, result):
+    """
+    Extends the result dictionary by additional information derived from Gurobi solution
+    See MATPOWER-manual for more details https://matpower.org/docs/MATPOWER-manual.pdf
+
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model which was recently optimized
+    :type model: :class: `gurobipy.Model`
+    :param opftype: Type of OPF formulation
+    :type opftype: :enum: `OpfType`
+    :param result: Dictionary holding all case and solution data
+    :type result: dict
+    """
+    baseMVA = result["baseMVA"]
+
     result["et"] = model.Runtime
     if model.SolCount < 1:
         # We did not find any feasible solution
         result["success"] = 0
-        return result
+        return
 
     # We have at least one feasible solution
     result["success"] = 1
@@ -522,7 +540,7 @@ def turn_solution_into_result_dict(alldata, model, opftype):
         # Bus solution data only available if we have rectangular formulation or polar
         if (
             alldata["use_ef"] and not alldata["doiv"]
-        ):  # TODO check how to compute voltage magnitude and angle values for IV
+        ):  # TODO-Dan how to compute voltage magnitude and angle values for IV?
             for busindex in result["bus"]:
                 resbus = result["bus"][busindex]
                 databus = alldata["buses"][busindex]
@@ -582,8 +600,6 @@ def turn_solution_into_result_dict(alldata, model, opftype):
             resbranch["switching"] = (
                 1 if alldata["MIP"]["zvar"][databranch].X > 0.5 else 0
             )
-
-    return result
 
 
 def compute_voltage_angles(alldata, result):
@@ -649,6 +665,49 @@ def compute_voltage_angles(alldata, result):
             b = branches[branchindex]
             if b.f not in busesdone:
                 busesnext.add((b.t, b.f, branchindex, "t"))
+
+
+def fill_violations_fields(alldata, opftype, result):
+    """
+    Extends the result dictionary by additional violation information
+
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param model: Gurobi model which was recently optimized
+    :type model: :class: `gurobipy.Model`
+    :param opftype: Type of OPF formulation
+    :type opftype: :enum: `OpfType`
+    :param result: Dictionary holding all case and violation data
+    :type result: dict
+
+    :raises ValueError: Unsupported OPF type
+    """
+    baseMVA = result["baseMVA"]
+
+    if opftype != OpfType.AC:
+        raise ValueError("Only AC model type supported for violations.")
+
+    # Bus violations
+    for busindex in result["bus"]:
+        resbus = result["bus"][busindex]
+        databus = alldata["buses"][busindex]
+        resbus["Vmviol"] = (
+            alldata["violation"]["Vmagviol"][databus] * baseMVA
+        )  # Voltage magnitude violation
+        resbus["Pviol"] = (
+            alldata["violation"]["IPviol"][databus] * baseMVA
+        )  # Real injection violation
+        resbus["Qviol"] = (
+            alldata["violation"]["IQviol"][databus] * baseMVA
+        )  # Reactive injection violation
+
+    # Branch limit violations
+    for branchindex in result["branch"]:
+        resbranch = result["branch"][branchindex]
+        databranch = alldata["branches"][branchindex]
+        resbranch["limitviol"] = (
+            alldata["violation"]["branchlimit"][databranch] * baseMVA
+        )
 
 
 def writemipstart(alldata):

@@ -23,7 +23,9 @@ def generate_solution_figure(alldata, solution):
     """
 
     logger = logging.getLogger("OpfLogger")
-    logger.info(f"Plotting solution with value {solution['f']:.3f}. Coordinates given.")
+    logger.info(
+        f"Generating solution figure with objective value {solution['f']:.3f}. Coordinates given."
+    )
     numbranches = alldata["numbranches"]
     numgens = alldata["numgens"]
 
@@ -50,6 +52,65 @@ def generate_solution_figure(alldata, solution):
     textlist.append(f"OBJ: {solution['f']:10.2f}")
     textlist.append(f"Lines off: {numzeros}")
     return grbgraphical(alldata, "branchswitching", textlist)
+
+
+def generate_violations_figure(alldata, violations):
+    """
+    Generates a :class: `plotly.graph_objects.Figure` out of given violations.
+    Saves necessary data from solution to alldata dictionary
+    and calls the main plotting function.
+
+    :param alldata: Main dictionary holding all necessary data
+    :type alldata: dict
+    :param solution: Dictionary holding an OPF solution
+    :type solution: dict
+
+    :return: A plotly figure objects which can be displayed via the show() function,
+             see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
+    :rtype: :class: `plotly.graph_objects.Figure`
+    """
+
+    logger = logging.getLogger("OpfLogger")
+    logger.info(f"Generating violations figure.")
+
+    alldata["violation"] = {}
+    alldata["violation"]["Vmagviol"] = {}  # Vm entry
+    alldata["violation"]["IPviol"] = {}  # Pviol
+    alldata["violation"]["IQviol"] = {}  # Qviol
+    alldata["violation"]["branchlimit"] = {}  # limit violation
+    numbuses = alldata["numbuses"]
+    numbranches = alldata["numbranches"]
+
+    maxvmviol = 0
+    maxPviol = 0
+    maxQviol = 0
+    for i in range(1, numbuses + 1):
+        busvmviol = violations["bus"][i]["Vmviol"]
+        databus = alldata["buses"][i]
+        alldata["violation"]["Vmagviol"][databus] = busvmviol
+        maxvmviol = max(busvmviol, maxvmviol)
+
+        busPviol = violations["bus"][i]["Pviol"]
+        alldata["violation"]["IPviol"][databus] = busPviol
+        maxPviol = max(busPviol, maxPviol)
+
+        busQviol = violations["bus"][i]["Qviol"]
+        alldata["violation"]["IQviol"][databus] = busQviol
+        maxQviol = max(busPviol, maxQviol)
+
+    maxlimiviol = 0
+    for i in range(1, numbranches + 1):
+        branchlimitviol = violations["branch"][i]["limitviol"]
+        databranch = alldata["branches"][i]
+        alldata["violation"]["branchlimit"][databranch] = branchlimitviol
+        maxlimiviol = max(branchlimitviol, maxlimiviol)
+
+    textlist = []
+    textlist.append(f"max voltage magnitude violation: {maxvmviol:10.2f}")
+    textlist.append(f"max real power injection violation: {maxPviol:10.2f}")
+    textlist.append(f"max reactive power injection violation: {maxQviol:10.2f}")
+    textlist.append(f"max branch limit violation: {maxlimiviol:10.2f}")
+    return grbgraphical(alldata, "violation", textlist)
 
 
 def grbgraphical(alldata, plottype, textlist):
@@ -110,7 +171,7 @@ def grbgraphical(alldata, plottype, textlist):
         Vmagviol = alldata["violation"]["Vmagviol"]  # Vm entry
         IPviol = alldata["violation"]["IPviol"]  # Pviol
         IQviol = alldata["violation"]["IQviol"]  # Qviol
-        branchlimitviol = alldata["violation"]["branchlimit"]
+        branchlimitviol = alldata["violation"]["branchlimit"]  # limit violation
 
         for j in range(1, numbuses + 1):
             bus = buses[j]
@@ -133,7 +194,7 @@ def grbgraphical(alldata, plottype, textlist):
         for j in range(1, numbranches + 1):
             branch = alldata["branches"][j]
             if abs(branchlimitviol[branch]) > 1e-3:
-                myedge_width[j] = 8
+                myedge_width[j] = 5
                 myedge_color[j] = "red"
 
     elif plottype == "branchswitching":

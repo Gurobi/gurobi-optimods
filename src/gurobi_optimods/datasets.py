@@ -91,7 +91,7 @@ def load_diet():
     )
 
 
-def load_coordsfilepath(filename):
+def load_filepath(filename):
     file = str(DATA_FILE_DIR) + "/opf/" + filename
     return file
 

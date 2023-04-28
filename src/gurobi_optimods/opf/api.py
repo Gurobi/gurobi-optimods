@@ -12,12 +12,13 @@ from gurobi_optimods.opf.grbfile import (
     initialize_data_dict,
     construct_settings_dict,
     read_optimization_settings,
-    read_graphics_settings,
-    read_coords_file_csv,
-    grbmap_coords_from_dict,
-    grbread_graphattrs,
+    read_file_csv,
+    grbmap_volts_from_dict,
 )
-from gurobi_optimods.opf.grbformulator import construct_and_solve_model
+from gurobi_optimods.opf.grbformulator import (
+    construct_and_solve_model,
+    compute_violations_from_voltages,
+)
 from gurobi_optimods.opf.utils import initialize_logger, remove_and_close_handlers
 
 
@@ -31,12 +32,22 @@ def solve_opf_model(
     ivtype="aggressive",
     branchswitching=0,
     usemipstart=True,
-    useactivelossineq=False,
+    useactivelossineqs=False,
     additional_settings=dict(),
 ):
     """
     Constructs an OPF model from given data and solves it with Gurobi.
-    Returns a result dictionary following MATPOWER notation
+    Returns a result dictionary following MATPOWER notation.
+    The additional and possibly altered fields are
+    ``result["bus"][i]["Vm"]`` for voltage magnitude value at bus `i`
+    ``result["bus"][i]["Va"]`` for voltage angle value at bus `i`
+    ``result["gen"][i]["Pg"]`` for real power injection at generator `i`
+    ``result["gen"][i]["Qg"]`` for reactive power injection at generator `i`
+    ``result["branch"][i]["Pf"]`` for real power injected into "from" end of branch at branch `i`
+    ``result["branch"][i]["Pt"]`` for real power injected into "to" end of branch at branch `i`
+    ``result["branch"][i]["Qf"]`` for reactive power injected into "from" end of branch at branch `i` (AC only)
+    ``result["branch"][i]["Qt"]`` for reactive power injected into "from" end of branch at branch `i` (AC only)
+    ``result["branch"][i]["switching"]`` states whether a branch `i` is turned on or off in the final solution
 
     :param case: Dictionary holding case data
     :type case: dict
@@ -44,7 +55,7 @@ def solve_opf_model(
     :type logfile: str, optional
     :param opftype: String telling the desired OPF model type. Available are `AC`, `DC`, `IV`, defaults to `AC`
     :type opftype: str, optional
-    :param polar: Controls whether polar formulation should be used, defaults to `False`. Only affects `AC` formulation.
+    :param polar: Controls whether polar formulation should be used, defaults to `False`. Only affects `AC` formulation
     :type polar: bool, optional
     :param useef: Controls whether bilinear variables e, f and corresponding constraints should be used, defaults to `True`.
                   Has only an effect if ``opftype`` equals `AC`
@@ -62,12 +73,12 @@ def solve_opf_model(
                             Usually, setting 1 works better than 2. Defaults to 0
     :type branchswitching: int, optional
     :param usemipstart: Controls whether a pre-defined MIPStart should be used. Has only an effect if
-                        branchswitching > 0. Deftault to `True`
+                        branchswitching > 0. Defaults to `True`
     :type usemipstart: bool, optional
-    :param useactivelossineq: Controls whether active loss constraints are used. These are linear outer approximation of the JABR
+    :param useactivelossineqs: Controls whether active loss constraints are used. These are linear outer approximation of the JABR
                               constraints. Usually, they provide a very good lower bound while still being linear.
                               Defaults to `False`.
-    :type useactivelossineq: bool, optional
+    :type useactivelossineqs: bool, optional
     :param additional_settings: Dictionary holding additional settings. Additional settings are: ``lpfilename`` which if evaluates
                                 to a non-empty string, makes Gurobi write a `.lp` file holding the generated model, ``gurobiparamfile``
                                 which if evaluates to a non-empty string, makes Gurobi read in a parameter file.
@@ -91,6 +102,7 @@ def solve_opf_model(
         ivtype,
         branchswitching,
         usemipstart,
+        useactivelossineqs,
         additional_settings,
     )
 
@@ -110,6 +122,68 @@ def solve_opf_model(
     remove_and_close_handlers(logger, handlers)
 
     return solution
+
+
+def compute_violations_from_given_voltages(case, voltages, polar=False):
+    """
+    Constructs an OPF model from given case data and computes a solution
+    out of given voltage values.
+    Returns a violation dictionary following MATPOWER notation which holds
+    all case data and additional violation fields. The additional fields are
+    ``violation["bus"][i]["Vmviol"]`` for voltage magnitude violation at bus `i`
+    ``violation["bus"][i]["Pviol"]`` for real injection violation at bus `i`
+    ``violation["bus"][i]["Qviol"]`` for reactive injection violation at bus `i`
+    ``violation["branch"][i]["limitviol"]`` for limit violation at branch `i`
+    The violation dictionary can be used to generate a violations figure with the
+    ``generate_opf_violations_figure`` function
+
+    :param case: Dictionary holding case data
+    :type case: dict
+    :param voltages: Dictionary holding bus input voltage data
+    :type voltages: dict
+    :param polar: Controls whether polar formulation should be used when checking violations, defaults to `False`
+    :type polar: bool, optional
+
+    :return: A case dictionary following MATPOWER notation with additional violations fields
+    :rtype: dict
+    """
+
+    # Initialize output and file handler and start logging
+    logger, handlers = initialize_logger("OpfLogger")
+
+    # Initialize fixed settings dictionary
+    # We need the settings to construct a correct model
+    settings = construct_settings_dict(
+        opftype="AC",
+        polar=polar,
+        useef=True,
+        usejabr=False,
+        ivtype="aggressive",
+        branchswitching=0,
+        usemipstart=False,
+        useactivelossineqs=False,
+        additional_settings={},
+    )
+
+    # Initilize data dictionary
+    alldata = initialize_data_dict("")
+
+    # Read settings file/dict and save them into the alldata dict
+    read_optimization_settings(alldata, settings)
+
+    # Read case file/dict and populate the alldata dictionary
+    read_case(alldata, case)
+
+    # Map given voltage data to network data
+    grbmap_volts_from_dict(alldata, voltages)
+
+    # Compute model violations based on user input voltages
+    violations = compute_violations_from_voltages(alldata)
+
+    # Remove and close all logging handlers
+    remove_and_close_handlers(logger, handlers)
+
+    return violations
 
 
 def read_case_from_mat_file(casefile):
@@ -168,16 +242,45 @@ def read_coords_from_csv_file(coordsfile):
     """
     Helper function for users.
     Constructs a coordinate dictionary which can be used as input
-    for the `generate_opf_solution_figure` function
+    for the ``generate_opf_solution_figure`` function.
 
-    :param coordsfile: Name of and possibly full path to case file given as `.csv` file
+    :param coordsfile: Name of and possibly full path to bus coordinates file given as `.csv` file.
+                       The `.csv` file has to consist of the following columns in the given order:
+                       ``index(starting with 0), busID, busname, latitude, longitude``
     :type coordsfile: str
 
     :return: Dictionary of the given coordinates which can be used in
              the ``generate_opf_solution_figure`` function
     :rtype: dict
+
+    .. note::
+        The first row of the csv file is ignored.
     """
 
-    coord_dict = read_coords_file_csv(coordsfile)
+    coord_dict = read_file_csv(coordsfile, "coordinates")
 
     return coord_dict
+
+
+def read_voltages_from_csv_file(voltsfile):
+    """
+    Helper function for users.
+    Constructs a bus input voltage dictionary which can be used as input
+    for the ``check_voltage_solution_violations`` function
+
+    :param voltsfile: Name of and possibly full path to voltage input file given as `.csv` file.
+                       The `.csv` file has to consist of the following columns in the given order:
+                       ``index(starting with 0), busID, busname, latitude, longitude``
+    :type voltsfile: str
+
+    :return: Dictionary of the given coordinates which can be used in
+             the ``check_voltage_solution_violations`` function
+    :rtype: dict
+
+    .. note::
+        The first row of the csv file is ignored.
+    """
+
+    volts_dict = read_file_csv(voltsfile, "voltages")
+
+    return volts_dict

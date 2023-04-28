@@ -1222,9 +1222,10 @@ def computebalbounds(alldata, bus):
     return Pubound, Plbound, Qubound, Qlbound
 
 
-def grbderive_xtra_sol_values_fromvoltages(alldata, model):
+def grbderive_xtra_sol_values_from_voltages(alldata, model):
     """
     Computes complete solution vectors from input voltages
+    required for violation computation
 
     :param alldata: Main dictionary holding all necessary data
     :type alldata: dict
@@ -1245,8 +1246,6 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
     cvar = alldata["LP"]["cvar"]
     svar = alldata["LP"]["svar"]
 
-    logger.info("Creating derived solution values from input voltage solution.")
-
     for j in range(1, numbuses + 1):
         bus = buses[j]
         bus.inpute = bus.inputV * math.cos(bus.inputA_rad)
@@ -1260,16 +1259,7 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
             bus = buses[j]
             xbuffer[evar[bus]] = bus.inpute
             xbuffer[fvar[bus]] = bus.inputf
-
-    if alldata["dopolar"]:
-        vvar = alldata["LP"]["vvar"]
-        thetavar = alldata["LP"]["vvar"]
-        for j in range(1, numbuses + 1):
-            bus = buses[j]
-            xbuffer[vvar[bus]] = bus.inputV
-            xbuffer[
-                thetavar[bus]  # TODO-Dan Which bug?
-            ] = bus.inputA_rad  # here is the bug; the first 'bus.' should not be there
+        logger.info("Derived e, f values.")
 
     if alldata["dopolar"] == False:
 
@@ -1293,17 +1283,22 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
                 xbuffer[svar[branch]] = (
                     -busf.inpute * bust.inputf + busf.inputf * bust.inpute
                 )
-
     else:
         # Note: we may not need all of these
         vfvtvar = alldata["LP"]["vfvtvar"]
         thetaftvar = alldata["LP"]["thetaftvar"]
         cosvar = alldata["LP"]["cosvar"]
         sinvar = alldata["LP"]["sinvar"]
+        vvar = alldata["LP"]["vvar"]
+        thetavar = alldata["LP"]["thetavar"]
 
         for j in range(1, numbuses + 1):
             bus = buses[j]
             xbuffer[cvar[bus]] = bus.inputV * bus.inputV
+            xbuffer[vvar[bus]] = bus.inputV
+            xbuffer[
+                thetavar[bus]  # TODO-Dan Which bug?
+            ] = bus.inputA_rad  # here is the bug; the first 'bus.' should not be there
 
         for j in range(1, 1 + numbranches):
             branch = branches[j]
@@ -1323,7 +1318,7 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
                 xbuffer[cvar[branch]] = vfvt * c
                 xbuffer[svar[branch]] = vfvt * s
 
-    logger.info("Derived e, f, c, s values.")
+    logger.info("Derived c, s values.")
 
     Pvar_f = alldata["LP"]["Pvar_f"]
     Pvar_t = alldata["LP"]["Pvar_t"]
@@ -1332,112 +1327,57 @@ def grbderive_xtra_sol_values_fromvoltages(alldata, model):
 
     for j in range(1, 1 + numbranches):
         branch = branches[j]
-        row = model.getRow(branch.Pdeffconstr)
-        sum = -branch.Pdeffconstr.RHS
-        leadcoeff = 0
-        for i in range(row.size()):
-            var = row.getVar(i)
-            coeff = row.getCoeff(i)
-            if var.Varname != Pvar_f[branch].Varname:
-                sum += coeff * xbuffer[var]
-            else:
-                leadcoeff = coeff
 
-        xbuffer[Pvar_f[branch]] = -sum / leadcoeff
-        # leadcoeff should be +1 or -1
-        logger.info(
-            "%s derived at %f." % (Pvar_f[branch].Varname, xbuffer[Pvar_f[branch]])
-        )
+        for item in [
+            (branch.Pdeffconstr, Pvar_f[branch]),
+            (branch.Pdeftconstr, Pvar_t[branch]),
+            (branch.Qdeffconstr, Qvar_f[branch]),
+            (branch.Qdeftconstr, Qvar_t[branch]),
+        ]:
+            constr = item[0]
+            var = item[1]
 
-        row = model.getRow(branch.Pdeftconstr)
-        sum = -branch.Pdeftconstr.RHS
-        leadcoeff = 0
-        for i in range(row.size()):
-            var = row.getVar(i)
-            coeff = row.getCoeff(i)
-            if var.Varname != Pvar_t[branch].Varname:
-                sum += coeff * xbuffer[var]
-            else:
-                leadcoeff = coeff
+            row = model.getRow(constr)
+            sum = -constr.RHS
+            leadcoeff = 0
+            for i in range(row.size()):
+                v = row.getVar(i)
+                coeff = row.getCoeff(i)
+                if v.Varname != var.Varname:
+                    sum += coeff * xbuffer[v]
+                else:
+                    leadcoeff = coeff
 
-        xbuffer[Pvar_t[branch]] = -sum / leadcoeff
-        # leadcoeff should be +1 or -1
-        logger.info(
-            "%s derived at %f." % (Pvar_t[branch].Varname, xbuffer[Pvar_t[branch]])
-        )
+            xbuffer[var] = -sum / leadcoeff
+            # leadcoeff should be +1 or -1
 
-        # Now, reactive power flows
-
-        row = model.getRow(branch.Qdeffconstr)
-        sum = -branch.Qdeffconstr.RHS
-        leadcoeff = 0
-
-        for i in range(row.size()):
-            var = row.getVar(i)
-            coeff = row.getCoeff(i)
-            if var.Varname != Qvar_f[branch].Varname:
-                sum += coeff * xbuffer[var]
-            else:
-                leadcoeff = coeff
-
-        xbuffer[Qvar_f[branch]] = -sum / leadcoeff
-        # leadcoeff should be +1 or -1
-        logger.info(
-            "%s derived at %f." % (Qvar_f[branch].Varname, xbuffer[Qvar_f[branch]])
-        )
-
-        row = model.getRow(branch.Qdeftconstr)
-        sum = -branch.Qdeftconstr.RHS
-        leadcoeff = 0
-        for i in range(row.size()):
-            var = row.getVar(i)
-            coeff = row.getCoeff(i)
-            if var.Varname != Qvar_t[branch].Varname:
-                product = coeff * xbuffer[var]
-                sum += product
-            else:
-                leadcoeff = coeff
-
-        xbuffer[Qvar_t[branch]] = -sum / leadcoeff
-        # leadcoeff should be +1 or -1
-        logger.info(
-            "%s derived at %f." % (Qvar_t[branch].Varname, xbuffer[Qvar_t[branch]])
-        )
+    logger.info("Derived (re)active power flows.")
 
     # Next, power flow injections
     Pinjvar = alldata["LP"]["Pinjvar"]
-    for j in range(1, 1 + numbuses):
-        bus = buses[j]
-
-        injection = 0
-        for branchid in bus.frombranchids.values():
-            branch = branches[branchid]
-            injection += xbuffer[Pvar_f[branch]]
-
-        for branchid in bus.tobranchids.values():
-            branch = branches[branchid]
-            injection += xbuffer[Pvar_t[branch]]
-
-        xbuffer[Pinjvar[bus]] = injection
-
-    # next, power flow injections
     Qinjvar = alldata["LP"]["Qinjvar"]
     for j in range(1, 1 + numbuses):
         bus = buses[j]
 
-        injection = 0
+        injectionP = 0
+        injectionQ = 0
         for branchid in bus.frombranchids.values():
             branch = branches[branchid]
-            injection += xbuffer[Qvar_f[branch]]
+            injectionP += xbuffer[Pvar_f[branch]]
+            injectionQ += xbuffer[Qvar_f[branch]]
 
         for branchid in bus.tobranchids.values():
             branch = branches[branchid]
-            injection += xbuffer[Qvar_t[branch]]
+            injectionP += xbuffer[Pvar_t[branch]]
+            injectionQ += xbuffer[Qvar_t[branch]]
 
-        xbuffer[Qinjvar[bus]] = injection
+        xbuffer[Pinjvar[bus]] = injectionP
+        xbuffer[Qinjvar[bus]] = injectionQ
+
+    logger.info("Derived (re)active power flow injections.")
 
 
-def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
+def lpformulator_ac_strictchecker(alldata, model):
     """
     Check feasibility of input solution -- report infeasibilities
     TODO-Dan How do we use this function? It says "check input solution against formulation".
@@ -1454,10 +1394,9 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     """
 
     logger = logging.getLogger("OpfLogger")
-    logger.info("Strict feasibility check for input voltage solution.\n")
 
-    if alldata["strictcheckvoltagesolution"]:
-        grbderive_xtra_sol_values_fromvoltages(alldata, model)
+    # Derive additional violation information before proceeding
+    grbderive_xtra_sol_values_from_voltages(alldata, model)
 
     buses = alldata["buses"]
     numbuses = alldata["numbuses"]
@@ -1487,21 +1426,21 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
     badlbvar = None
     badubvar = None
 
-    logger.info("Direct bus magnitude bounds check. Error issued if infeasibility.")
+    logger.info("Direct bus magnitude bounds check. Warning issued if violated.")
 
     for j in range(1, numbuses + 1):
         bus = buses[j]
         if bus.inputV > bus.Vmax:
-            logger.error(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
-                f">>> Error: bus # {j} has input voltage {bus.inputV} which is larger than Vmax {bus.Vmax}."
+            logger.warning(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+                f">>> Warning: bus # {j} has input voltage {bus.inputV} which is larger than Vmax {bus.Vmax}."
             )
             thisviol = bus.inputV - bus.Vmax
             if thisviol > max_violation_value:
                 max_violation_string = "bus_" + str(bus.nodeID) + "_Vmax"
                 max_violation_value = thisviol
         if bus.inputV < bus.Vmin:
-            logger.error(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
-                f">>> Error: bus # {j} has input voltage {bus.inputV} which is smaller than Vmin {bus.Vmin}."
+            logger.warning(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+                f">>> Warning: bus # {j} has input voltage {bus.inputV} which is smaller than Vmin {bus.Vmin}."
             )
             thisviol = bus.Vmin - bus.inputV
             if thisviol > max_violation_value:
@@ -1517,9 +1456,9 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
 
         Vmagviol[bus] = candmaxviol
 
-    logger.info("Checked input Vmag values.")
+    logger.info("Checked input Vm values.")
 
-    logger.info("Direct branch limit check. Error issued if infeasible.")
+    logger.info("Direct branch limit check. Warning issued if violated.")
 
     Pvar_f = alldata["LP"]["Pvar_f"]
     Pvar_t = alldata["LP"]["Pvar_t"]
@@ -1534,10 +1473,10 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         )
         fromviol = max(fromvalue - branch.limit, 0)
         if fromvalue > branch.limit:
-            logger.error(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
-                f">>> Error: branch # {j} has 'from' flow magnitude {fromvalue} which is larger than limit {branch.limit}."
+            logger.warning(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+                f">>> Warning: branch # {j} has 'from' flow magnitude {fromvalue} which is larger than limit {branch.limit}."
             )
-            logger.error(f"    branch is ( {branch.f} {branch.t} ).")
+            logger.warning(f"    branch is ( {branch.f} {branch.t} ).")
             thisviol = fromviol
             if thisviol > max_violation_value:
                 max_violation_string = "branch_" + str(j) + "_from"
@@ -1549,70 +1488,53 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         )
         toviol = max(tovalue - branch.limit, 0)
         if tovalue > branch.limit:
-            logger.error(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
-                f">>> Error: branch # {j} has 'to' flow magnitude {tovalue} which is larger than limit {branch.limit}."
+            logger.warning(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+                f">>> Warning: branch # {j} has 'to' flow magnitude {tovalue} which is larger than limit {branch.limit}."
             )
-            logger.error(f"    branch is ( {branch.f} {branch.t} ).")
+            logger.warning(f"    branch is ( {branch.f} {branch.t} ).")
             thisviol = toviol
             if thisviol > max_violation_value:
                 max_violation_string = "branch_" + str(j) + "_to"
                 max_violation_value = thisviol
         alldata["violation"]["branchlimit"][branch] = max(fromviol, toviol)
 
+    logger.info("Checked branch limits.")
+
     if alldata["use_ef"]:
+        logger.info("Checking e, f values.")
         for j in range(1, numbuses + 1):
             bus = buses[j]
-            (
-                maxlbviol,
-                maxubviol,
-                badlbvar,
-                badubvar,
-                max_violation_value,
-                max_violation_string,
-            ) = lpformulator_checkviol_simple(
-                alldata,
-                model,
-                evar[bus],
-                bus.inpute,
-                maxlbviol,
-                maxubviol,
-                badlbvar,
-                badubvar,
-                max_violation_value,
-                max_violation_string,
-            )
-
-            (
-                maxlbviol,
-                maxubviol,
-                badlbvar,
-                badubvar,
-                max_violation_value,
-                max_violation_string,
-            ) = lpformulator_checkviol_simple(
-                alldata,
-                model,
-                fvar[bus],
-                bus.inputf,
-                maxlbviol,
-                maxubviol,
-                badlbvar,
-                badubvar,
-                max_violation_value,
-                max_violation_string,
-            )
+            for var in [(evar[bus], bus.inpute), (fvar[bus], bus.inputf)]:
+                (
+                    maxlbviol,
+                    maxubviol,
+                    badlbvar,
+                    badubvar,
+                    max_violation_value,
+                    max_violation_string,
+                ) = lpformulator_checkviol_simple(
+                    alldata,
+                    model,
+                    var[0],
+                    var[1],
+                    maxlbviol,
+                    maxubviol,
+                    badlbvar,
+                    badubvar,
+                    max_violation_value,
+                    max_violation_string,
+                )
 
             alldata["LP"]["xbuffer"][evar[bus]] = bus.inpute
             alldata["LP"]["xbuffer"][fvar[bus]] = bus.inputf
 
-        logger.info("e, f values.")
+        logger.info("Checked e, f values.")
 
     if alldata["dopolar"]:
         logger.info(
             "Checking polar quantities. Note: bounds shifted by input solution."
         )  # which will repeat the Vmag value check, so ...
         vvar = alldata["LP"]["vvar"]
-        thetavar = alldata["LP"]["vvar"]
         for j in range(1, numbuses + 1):
             bus = buses[j]
             (
@@ -1635,99 +1557,44 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
                 max_violation_string,
             )
 
-        logger.info("Vmag values checked.")
+        logger.info("Polar quantities checked.")
 
     logger.info("Checking power flow values.")
 
     for j in range(1, 1 + numbranches):
         branch = branches[j]
-        (
-            maxlbviol,
-            maxubviol,
-            badlbvar,
-            badubvar,
-            max_violation_value,
-            max_violation_string,
-        ) = lpformulator_checkviol_simple(
-            alldata,
-            model,
-            Pvar_f[branch],
-            xbuffer[Pvar_f[branch]],
-            maxlbviol,
-            maxubviol,
-            badlbvar,
-            badubvar,
-            max_violation_value,
-            max_violation_string,
-        )
-        (
-            maxlbviol,
-            maxubviol,
-            badlbvar,
-            badubvar,
-            max_violation_value,
-            max_violation_string,
-        ) = lpformulator_checkviol_simple(
-            alldata,
-            model,
-            Pvar_t[branch],
-            xbuffer[Pvar_t[branch]],
-            maxlbviol,
-            maxubviol,
-            badlbvar,
-            badubvar,
-            max_violation_value,
-            max_violation_string,
-        )
+        for var in [Pvar_f[branch], Pvar_t[branch], Qvar_f[branch], Qvar_t[branch]]:
+            (
+                maxlbviol,
+                maxubviol,
+                badlbvar,
+                badubvar,
+                max_violation_value,
+                max_violation_string,
+            ) = lpformulator_checkviol_simple(
+                alldata,
+                model,
+                var,
+                xbuffer[var],
+                maxlbviol,
+                maxubviol,
+                badlbvar,
+                badubvar,
+                max_violation_value,
+                max_violation_string,
+            )
 
-    for j in range(1, 1 + numbranches):
-        branch = branches[j]
-        (
-            maxlbviol,
-            maxubviol,
-            badlbvar,
-            badubvar,
-            max_violation_value,
-            max_violation_string,
-        ) = lpformulator_checkviol_simple(
-            alldata,
-            model,
-            Qvar_f[branch],
-            xbuffer[Qvar_f[branch]],
-            maxlbviol,
-            maxubviol,
-            badlbvar,
-            badubvar,
-            max_violation_value,
-            max_violation_string,
-        )
-        (
-            maxlbviol,
-            maxubviol,
-            badlbvar,
-            badubvar,
-            max_violation_value,
-            max_violation_string,
-        ) = lpformulator_checkviol_simple(
-            alldata,
-            model,
-            Qvar_t[branch],
-            xbuffer[Qvar_t[branch]],
-            maxlbviol,
-            maxubviol,
-            badlbvar,
-            badubvar,
-            max_violation_value,
-            max_violation_string,
-        )
+    logger.info("Power flow values checked.")
 
     logger.info("Checking flow balance constraints.")
     Pinjvar = alldata["LP"]["Pinjvar"]
     Qinjvar = alldata["LP"]["Qinjvar"]
 
+    # P variables first
     for j in range(1, 1 + numbuses):
         bus = buses[j]
-
+        varinj = Pinjvar[bus]
+        varf = Pvar_f[branch]
         (
             maxlbviol,
             maxubviol,
@@ -1738,8 +1605,8 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         ) = lpformulator_checkviol_simple(
             alldata,
             model,
-            Pinjvar[bus],
-            xbuffer[Pinjvar[bus]],
+            varinj,
+            xbuffer[varinj],
             maxlbviol,
             maxubviol,
             badlbvar,
@@ -1748,27 +1615,19 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
             max_violation_string,
         )
 
-        alldata["violation"][bus]["Pinjmax"] = max(
-            xbuffer[Pinjvar[bus]] - Pinjvar[bus].ub, 0
-        )
-        alldata["violation"][bus]["Pinjmin"] = max(
-            Pinjvar[bus].lb - xbuffer[Pinjvar[bus]], 0
-        )
+        alldata["violation"][bus]["Pinjmax"] = max(xbuffer[varinj] - varinj.ub, 0)
+        alldata["violation"][bus]["Pinjmin"] = max(varinj.lb - xbuffer[varinj], 0)
 
-        injection = 0
+        injectionP = 0
         for branchid in bus.frombranchids.values():
             branch = branches[branchid]
-            injection += xbuffer[Pvar_f[branch]]
+            injectionP += xbuffer[varf]
 
         for branchid in bus.tobranchids.values():
             branch = branches[branchid]
-            injection += xbuffer[Pvar_t[branch]]
+            injectionP += xbuffer[varf]
 
-        # Pinjvar variable bounds should accommodate computed injection
-        # get bounds for P and Q injection variables
-        Pubound, Plbound, Qubound, Qlbound = computebalbounds(alldata, bus)
-
-        # but also, construct min/max injection at the bus by looking at available generators and load
+        # Construct min/max injection at the bus by looking at available generators and load
         myPubound = myPlbound = 0
         for gencounter in bus.genidsbycount:
             if gens[gencounter].status:
@@ -1778,18 +1637,22 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         minnetgen = myPlbound - bus.Pd
         maxnetgen = myPubound - bus.Pd
 
-        logger.info(
-            f"Bus ID {bus.nodeID} #{j} injection {injection} mingen {myPlbound} maxgen {myPubound} load {bus.Pd}."
-        )
-        logger.info(f"   min net generation {minnetgen} max {maxnetgen}.")
+        # TODO-Dan I don't understand how a user can make anything of this output. Could you explain? Or maybe improve the output?
+        # logger.info(
+        #     f"Bus ID {bus.nodeID} #{j} injection {injectionP} mingen {myPlbound} maxgen {myPubound} load {bus.Pd}."
+        # )
+        # logger.info(f"   min net generation {minnetgen} max {maxnetgen}.")
 
         candmaxviol = alldata["violation"][bus]["Pinjmax"]
         if candmaxviol < alldata["violation"][bus]["Pinjmin"]:
             candmaxviol = -alldata["violation"][bus]["Pinjmin"]
         IPviol[bus] = candmaxviol
 
+    # Q variables second
     for j in range(1, 1 + numbuses):
         bus = buses[j]
+        varinj = Qinjvar[bus]
+        varf = Qvar_f[branch]
 
         (
             maxlbviol,
@@ -1801,8 +1664,8 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         ) = lpformulator_checkviol_simple(
             alldata,
             model,
-            Qinjvar[bus],
-            xbuffer[Qinjvar[bus]],
+            varinj,
+            xbuffer[varinj],
             maxlbviol,
             maxubviol,
             badlbvar,
@@ -1811,25 +1674,17 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
             max_violation_string,
         )
 
-        alldata["violation"][bus]["Qinjmax"] = max(
-            xbuffer[Qinjvar[bus]] - Qinjvar[bus].ub, 0
-        )
-        alldata["violation"][bus]["Qinjmin"] = max(
-            Qinjvar[bus].lb - xbuffer[Qinjvar[bus]], 0
-        )
+        alldata["violation"][bus]["Qinjmax"] = max(xbuffer[varinj] - varinj.ub, 0)
+        alldata["violation"][bus]["Qinjmin"] = max(varinj.lb - xbuffer[varinj], 0)
 
-        injection = 0
+        injectionQ = 0
         for branchid in bus.frombranchids.values():
             branch = branches[branchid]
-            injection += xbuffer[Qvar_f[branch]]
+            injectionQ += xbuffer[varf]
 
         for branchid in bus.tobranchids.values():
             branch = branches[branchid]
-            injection += xbuffer[Qvar_t[branch]]
-
-        # Qinjvar variable bounds should accommodate computed injection
-        # get bounds for P and Q injection variables
-        Pubound, Plbound, Qubound, Qlbound = computebalbounds(alldata, bus)
+            injectionQ += xbuffer[varf]
 
         # but also, construct min/max injection at the bus by looking at available generators and load
         myQubound = myQlbound = 0
@@ -1841,27 +1696,26 @@ def lpformulator_ac_strictchecker(alldata, model, spitoutvector):
         minnetgen = myQlbound - bus.Qd
         maxnetgen = myQubound - bus.Qd
 
-        logger.info(
-            f"Bus ID {bus.nodeID} #{j} injection {injection} mingen {myQlbound} maxgen {myQubound} load {bus.Qd}."
-        )
-        logger.info(f"   min net generation {minnetgen} max {maxnetgen}.")
+        # TODO-Dan I don't understand how a user can make anything of this output. Could you explain? Or maybe improve the output?
+        # logger.info(
+        #     f"Bus ID {bus.nodeID} #{j} injection {injectionQ} mingen {myQlbound} maxgen {myQubound} load {bus.Qd}."
+        # )
+        # logger.info(f"   min net generation {minnetgen} max {maxnetgen}.")
 
         candmaxviol = alldata["violation"][bus]["Qinjmax"]
         if candmaxviol < alldata["violation"][bus]["Qinjmin"]:
             candmaxviol = -alldata["violation"][bus]["Qinjmin"]
         IQviol[bus] = candmaxviol
 
+    # TODO-Dan I don't understand how a user can make anything of this output. We provide some internal variable names and I don't think
+    #          that users can make anything out of it (maybe the experts). Could you explain? Or maybe improve the output?
     worstboundviol_report(badlbvar, maxlbviol, "LB")
     worstboundviol_report(badubvar, maxubviol, "UB")
 
-    logger.info(f"\nSummary: Max LB viol {maxlbviol}, Max UB viol {maxubviol}.")
+    logger.info(f"\nSummary: Max LB viol {maxlbviol:.4e}, Max UB viol {maxubviol:.4e}.")
     logger.info(
-        f"\nSummary: Max violation {max_violation_value}, key: {max_violation_string}."
+        f"         Max overall violation {max_violation_value:.4e}, key: {max_violation_string}."
     )
-
-    # if alldata["dographics"]:
-    #    textlist = []
-    #    grbgraphical(alldata, "violation", textlist)
 
 
 def lpformulator_checkviol_simple(
@@ -1907,31 +1761,31 @@ def lpformulator_checkviol_simple(
     ub = grbvariable.ub
     lb = grbvariable.lb
 
-    if True:
-        logger.info(
-            "%s =  %.16e  [ LB %.4e  UB %.4e ]" % (grbvariable.varname, value, lb, ub)
-        )
+    if False:  # For debugging only
+        logger.info(f"{grbvariable.varname} =  {value}  [ LB {lb}  UB {ub} ]")
 
     lbviol = lb - value
     ubviol = value - ub
 
+    # TODO-Dan I don't understand how a user can make anything of this output. We print an internal variable name.
+    #          I don't see how a user can get anything out of it. Could you explain? Or maybe improve the output?
     if lbviol > 0:
         logger.info(
-            f"Lower bound violation for variable {grbvariable.varname}  LB {lb}  x {value}  UB {ub}"
+            f"Lower bound violation for variable {grbvariable.varname}  LB {lb:<14.4e}  x {value:<14.4e}  UB {ub:<14.4e}"
         )
 
     if lbviol > maxlbviol:
-        logger.info(" -> incumbent MAX LBVIOL")
         maxlbviol = lb - value
         badlbvar = grbvariable
 
+    # TODO-Dan I don't understand how a user can make anything of this output. We print an internal variable name.
+    #          I don't see how a user can get anything out of it. Could you explain? Or maybe improve the output?
     if ubviol > 0:
         logger.info(
-            f"Upper bound violation for variable UBVIOL {grbvariable.varname} LB {lb}  x {value}  UB {ub}"
+            f"Upper bound violation for variable {grbvariable.varname}  LB {lb:<14.4e}  x {value:<14.4e}  UB {ub:<14.4e}"
         )
 
     if ubviol > maxubviol:
-        logger.info(" -> incumbent MAX UBVIOL")
         maxubviol = value - ub
         badubvar = grbvariable
 

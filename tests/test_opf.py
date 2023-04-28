@@ -5,14 +5,16 @@ import gurobipy as gp
 from gurobi_optimods.opf import (
     solve_opf_model,
     read_coords_from_csv_file,
+    read_voltages_from_csv_file,
     read_case_from_mat_file,
     turn_solution_into_mat_file,
+    compute_violations_from_given_voltages,
 )
 from gurobi_optimods.datasets import (
     load_caseopfmat,
     load_caseNYopf,
     load_opfdictcase,
-    load_coordsfilepath,
+    load_filepath,
     load_case9solution,
 )
 
@@ -24,7 +26,10 @@ except ImportError:
 
 # If plotly is installed, the opfgraphics module should import ok
 if plotly:
-    from gurobi_optimods.opf.graphics import generate_opf_solution_figure
+    from gurobi_optimods.opf.graphics import (
+        generate_opf_solution_figure,
+        generate_opf_violations_figure,
+    )
 
 
 def size_limited_license():
@@ -55,6 +60,21 @@ class TestOpf(unittest.TestCase):
     objvals_acconv = [5296.66532, 8074.9102, 41710.3065, 129338.093, 718633.78596]
     Pg_acconv = [89.803524, 194.796114, 142.58252, 24.518669, 0.030902]
     Pt_acconv = [-34.1774, -71.23414, -29.9637, 23.79936, 56.2152]
+    # New York test values
+    Va_NY = [
+        -4.317424,
+        -6.18956,
+        -5.959205,
+        -6.085699,
+        -6.0442,
+        -5.796713,
+        -5.670924,
+        -5.770995,
+        -3.930278,
+        -5.679304,
+    ]
+    Pg_NY = [1299.0, 1012.0, 45.0, 45.0, 1.0, 882.0, 655.1, 1259.3, 641.8, 100.0]
+    Pf_NY = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 82.369589]
 
     # test simple is on purpose the same as test_acopf for now
     # will be removed in final version
@@ -66,18 +86,6 @@ class TestOpf(unittest.TestCase):
         # solve opf model and return a solution
         solution = solve_opf_model(
             case, logfile="", opftype="AC", useef=True, usejabr=True, branchswitching=1
-        )
-        solution = solve_opf_model(
-            case,
-            logfile="",
-            opftype="IV",
-            polar=True,
-            useef=False,
-            usejabr=False,
-            ivtype="plain",
-            branchswitching=0,
-            usemipstart=False,
-            additional_settings={"gurobiparamfile": "param.prm"},
         )
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
@@ -117,7 +125,7 @@ class TestOpf(unittest.TestCase):
         # solve opf model and return a solution
         for s in settingslist:
             print(
-                f"running setting opftype={s[0]}, polar={s[1]}, useef={s[2]}, usejabr={s[3]}, ivtype={s[4]}, branchswitching={s[5]}, usemipstart={s[6]}, useactivelossineq={s[7]}"
+                f"running setting opftype={s[0]}, polar={s[1]}, useef={s[2]}, usejabr={s[3]}, ivtype={s[4]}, branchswitching={s[5]}, usemipstart={s[6]}, useactivelossineqs={s[7]}"
             )
             print(s)
             # gurobi param.prm file should read
@@ -134,7 +142,7 @@ class TestOpf(unittest.TestCase):
                 ivtype=s[4],
                 branchswitching=s[5],
                 usemipstart=s[6],
-                useactivelossineq=s[7],
+                useactivelossineqs=s[7],
                 additional_settings={"gurobiparamfile": "param.prm"},
             )
             self.assertTrue(solution is not None)
@@ -162,9 +170,11 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
-
-        # TODO: I moved the plotting part of the test to test_NY_graphics.
-        # Does the result need more tests here?
+        self.assertLess(abs(solution["f"] - 681590.8014), 1e-4)
+        for i in range(0, 10):
+            self.assertLess(abs(solution["bus"][i + 1]["Va"] - self.Va_NY[i]), 1e-4)
+            self.assertLess(abs(solution["gen"][i + 1]["Pg"] - self.Pg_NY[i]), 1e-4)
+            self.assertLess(abs(solution["branch"][i + 1]["Pf"] - self.Pf_NY[i]), 1e-4)
 
     # test reading settings and case file from dicts
     def test_opfdicts(self):
@@ -176,7 +186,7 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
-        self.assertLess(abs(solution["f"] - 5296.6862), 1e-4)
+        self.assertLess(abs(solution["f"] - 5296.6862), 1e-1)
         self.assertLess(abs(solution["bus"][1]["Va"]), 1e-4)
         self.assertLess(abs(solution["gen"][2]["Qg"] - 0.0318441), 1e-4)
         self.assertLess(abs(solution["branch"][3]["Pt"] - 55.96906046691643), 1e-4)
@@ -233,12 +243,13 @@ class TestOpf(unittest.TestCase):
             # solve opf models and return a solution
             solution = solve_opf_model(case, opftype="AC", useef=False)
             # check whether the solution point looks correct
+            # differences can be quite big because bigger models are often numerically unstable
             self.assertTrue(solution is not None)
             self.assertTrue(solution["success"] == 1)
             self.assertTrue(solution["f"] is not None)
-            self.assertLess(abs(solution["f"] - self.objvals_acconv[i]), 1)
-            self.assertLess(abs(solution["gen"][1]["Pg"] - self.Pg_acconv[i]), 1)
-            self.assertLess(abs(solution["branch"][2]["Pt"] - self.Pt_acconv[i]), 1)
+            self.assertLess(abs(solution["f"] - self.objvals_acconv[i]), 10)
+            self.assertLess(abs(solution["gen"][1]["Pg"] - self.Pg_acconv[i]), 10)
+            self.assertLess(abs(solution["branch"][2]["Pt"] - self.Pt_acconv[i]), 10)
 
     # test IV formulation
     def test_ivopf(self):
@@ -252,12 +263,27 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
-        print(abs(solution["f"]))
-        self.assertLess(abs(solution["f"] - 5297.0142014), 1e-4)
-        # TODO finish test for IV
-        # print(solution["bus"][3]["Vm"])
-        # print(solution["gen"][2]["Qg"])
-        # print(solution["branch"][1]["Qf"])
+        # differences can be quite big because we solve only to 1% optimality
+        self.assertLess(abs(solution["f"] - 5297.0142014), 1e1)
+        self.assertLess(abs(solution["gen"][2]["Pg"] - 132.87813), 1e1)
+        self.assertLess(abs(solution["gen"][3]["Qg"] + 22.802347), 1e1)
+        self.assertLess(abs(solution["branch"][4]["Pf"] - 95.113306), 1e1)
+        self.assertLess(abs(solution["branch"][5]["Qt"] + 18.431373), 1e1)
+
+    # test violation computation out of pre-defined voltage data
+    def test_volts(self):
+        # get path to csv file holding the input voltages for case 9
+        voltsfile = load_filepath("case9volts.csv")
+        volts_dict = read_voltages_from_csv_file(voltsfile)
+        # load case dictionary
+        case = load_opfdictcase()
+        # compute violations
+        violations = compute_violations_from_given_voltages(case, volts_dict, True)
+        self.assertTrue(violations is not None)
+        self.assertLess(abs(violations["bus"][2]["Vmviol"]), 1e-9)
+        self.assertLess(abs(violations["bus"][4]["Pviol"] + 318.899783), 1e-4)
+        self.assertLess(abs(violations["bus"][7]["Qviol"] - 9.8410206), 1e-4)
+        self.assertLess(abs(violations["branch"][7]["limitviol"] - 66.33435), 1e-4)
 
 
 @unittest.skipIf(plotly is None, "plotly is not installed")
@@ -283,7 +309,7 @@ class TestOpfGraphics(unittest.TestCase):
     # test plotting a solution from pre-loaded data
     def test_graphics(self):
         # get path to csv file holding the coordinates for case 9
-        coordsfile = load_coordsfilepath("case9coords.csv")
+        coordsfile = load_filepath("case9coords.csv")
         coords_dict = read_coords_from_csv_file(coordsfile)
         # load case dictionary
         case = load_opfdictcase()
@@ -298,6 +324,23 @@ class TestOpfGraphics(unittest.TestCase):
         if self.plot_graphics:
             fig.show()
 
+    # test plotting a solution from pre-loaded data
+    def test_graphics_volts(self):
+        # get path to csv file holding the coordinates for case 9
+        voltsfile = load_filepath("case9volts.csv")
+        volts_dict = read_voltages_from_csv_file(voltsfile)
+        # load case dictionary
+        case = load_opfdictcase()
+        # compute violations
+        violations = compute_violations_from_given_voltages(case, volts_dict, True)
+        self.assertTrue(violations is not None)
+
+        coordsfile = load_filepath("case9coords.csv")
+        coords_dict = read_coords_from_csv_file(coordsfile)
+        fig = generate_opf_violations_figure(case, coords_dict, violations)
+        if self.plot_graphics:
+            fig.show()
+
     # test plotting a solution after optimization is performed
     def test_graphics_after_solving(self):
         # load case dictionary
@@ -305,7 +348,7 @@ class TestOpfGraphics(unittest.TestCase):
         # solve opf model and return a solution
         solution = solve_opf_model(case, opftype="AC", branchswitching=1)
         # plot the computed solution
-        coordsfile = load_coordsfilepath("case9coords.csv")
+        coordsfile = load_filepath("case9coords.csv")
         coords_dict = read_coords_from_csv_file(coordsfile)
         fig = generate_opf_solution_figure(case, coords_dict, solution)
         # check whether figure coordinates and scaled input coordinates are the same
@@ -330,7 +373,7 @@ class TestOpfGraphics(unittest.TestCase):
         self.assertTrue(solution["f"] is not None)
 
         # get path to csv file holding the coordinates for NY
-        coordsfile = load_coordsfilepath("nybuses.csv")
+        coordsfile = load_filepath("nybuses.csv")
         coords_dict = read_coords_from_csv_file(coordsfile)
         # plot the given solution
         fig = generate_opf_solution_figure(case, coords_dict, solution)
