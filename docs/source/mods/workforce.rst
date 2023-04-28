@@ -5,9 +5,23 @@ A little background on the proud history of mathprog in workforce scheduling.
 
 Also data science.
 
-- Convert cost minimization to preference maximisation
-- Add an optional rolling time window constraint (rotating roster?)
-- Mention bipartite and weighted matching as simple cases of the problem. Here we add more interesting practical constraints
+Todo:
+
+- Add a ceiling on the number of shifts fper worker (worker data or fixed value)
+- Add an optional rolling time window constraint (rotating roster)
+
+Note that simplified versions of this model can be solved as graph matching
+problems:
+
+* If we ignore all worker preferences and impose no limits on the number of
+  shifts assigned to any given worker, then the problem of assigning available
+  workers to shifts can be solved by maximum cardinality bipartite matching.
+* If we include preferences, the problem can be solved using weighted
+
+Once side constraints (e.g. total shifts per worker) get involved, we need to
+move away from these simplified models. However the same basic formulation
+approach of declaring a binary variable for every possible worker-shift
+assignment can be used throughout.
 
 Problem Specification
 ---------------------
