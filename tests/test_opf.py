@@ -292,7 +292,7 @@ class TestOpf(unittest.TestCase):
 class TestOpfGraphics(unittest.TestCase):
 
     # Currently, this is just a convenience setting while working on OptiMod
-    plot_graphics = True
+    plot_graphics = False
 
     # graphics test values
     graphics_9_x = [1129.2, 980.2, 977.6, 1182.8, 480.6, 85.4, 1079.6, 528.0, 0.0]
