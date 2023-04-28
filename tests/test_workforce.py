@@ -17,17 +17,14 @@ def read_csv(text):
 class TestWorkforceScheduling(unittest.TestCase):
     def test_dataset(self):
         data = load_workforce()
+        self.assertEqual(set(data.keys()), {"preferences", "shift_requirements"})
+
         self.assertEqual(
-            set(data.keys()), {"availability", "pay_rates", "shift_requirements"}
+            set(data.preferences.columns), {"Worker", "Shift", "Preference"}
         )
-
-        self.assertEqual(set(data.availability.columns), {"Worker", "Shift"})
-        self.assertTrue(is_object_dtype(data.availability["Worker"]))
-        self.assertTrue(is_datetime64_any_dtype(data.availability["Shift"]))
-
-        self.assertEqual(set(data.pay_rates.columns), {"Worker", "PayRate"})
-        self.assertTrue(is_object_dtype(data.pay_rates["Worker"]))
-        self.assertTrue(is_numeric_dtype(data.pay_rates["PayRate"]))
+        self.assertTrue(is_object_dtype(data.preferences["Worker"]))
+        self.assertTrue(is_numeric_dtype(data.preferences["Preference"]))
+        self.assertTrue(is_datetime64_any_dtype(data.preferences["Shift"]))
 
         self.assertEqual(set(data.shift_requirements.columns), {"Shift", "Required"})
         self.assertTrue(is_datetime64_any_dtype(data.shift_requirements["Shift"]))
