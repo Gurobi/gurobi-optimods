@@ -1,5 +1,6 @@
 import collections
 import logging
+from typing import Optional, overload
 
 import numpy as np
 import pandas as pd
@@ -19,8 +20,64 @@ from gurobi_optimods.utils import optimod
 logger = logging.getLogger(__name__)
 
 
+@overload
+def maximum_bipartite_matching(
+    graph: sp.spmatrix,
+    nodes1: np.ndarray,
+    nodes2: np.ndarray,
+    silent: bool = False,
+    logfile: Optional[str] = None,
+) -> sp.spmatrix:
+    ...
+
+
+@overload
+def maximum_bipartite_matching(
+    graph: pd.DataFrame,
+    nodes1: str,
+    nodes2: str,
+    silent: bool = False,
+    logfile: Optional[str] = None,
+) -> pd.DataFrame:
+    ...
+
+
+if nx is not None:
+
+    @overload
+    def maximum_bipartite_matching(
+        graph: nx.Graph,
+        nodes1: np.ndarray,
+        nodes2: np.ndarray,
+        silent: bool = False,
+        logfile: Optional[str] = None,
+    ) -> nx.Graph:
+        ...
+
+
 @optimod()
 def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
+    """Solve a maximum cardinality bipartite matching problem on the
+    given graph.
+
+    :param graph: A graph, specified either as a scipy.sparse adjacency matrix, networkx
+        graph, or pandas dataframe
+    :type graph: :class:`sp.sparray|nx.Graph|pd.DataFrame`
+    :param nodes1: Nodes in the first bipartite set. If ``graph`` is a pandas dataframe,
+        nodes1 must be a column name. Otherwise, it is a numpy array of nodes in the first
+        bipartite set.
+    :type nodes1: :class:`np.array|str`
+    :param nodes2: Nodes in the second bipartite set. If ``graph`` is a pandas dataframe,
+        nodes2 must be a column name. Otherwise, it is a numpy array of nodes in the second
+        bipartite set.
+    :type nodes2: :class:`np.array|str`
+    :param silent: silent=True suppresses all console output (defaults to False)
+    :type silent: bool
+    :param logfile: Write all mod output to the given file path (defaults to None: no log)
+    :type logfile: str
+    :return: A subgraph of the original graph specifying the maximum matching
+    :rtype: :class:`sp.sparray|nx.Graph|pd.DataFrame`
+    """
     if isinstance(graph, sp.spmatrix):
         return _maximum_bipartite_matching_scipy(graph, nodes1, nodes2, create_env)
     elif isinstance(graph, pd.DataFrame):
