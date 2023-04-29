@@ -4,8 +4,6 @@ Optimal Power Flow
 The operation of power systems relies on a number of optimization tasks, known as 'optimal power flow' of OPF problems.  Here we assume basic familiarity with concepts such as 'voltage' (potential energy), 'current' (charge flow) and 'power' (instantaneous energy generation or consumption).  The engineering community also
 uses the term 'bus' (nodes in a network, with some simplification) and 'branch' (a connection between two buses, typically a line or a transformer).
 
-
-
 To learn more
 ---------------------
 
@@ -23,7 +21,6 @@ To learn more
 
 - :footcite:t:`overbyebook`
       - Textbook on power systems.
-
 
 
 Problem Specification
@@ -69,8 +66,8 @@ More complete descriptions
    acopf
    dcopf
 
-Give examples of the various input data structures. These inputs should be fixed,
-so use doctests where possible.
+Basic use examples
+------------------
 
 .. testsetup:: mod
 
@@ -80,98 +77,33 @@ so use doctests where possible.
 
 .. tabs::
 
-    .. tab:: ``availability``
+    .. tab:: ``Reading a case``
 
-        Give interpretation of input data.
+        Here we show how to read in a 'case' based on the NY State network.
 
         .. doctest:: mod
             :options: +NORMALIZE_WHITESPACE
 
-            >>> from gurobi_optimods import datasets
-            >>> data = datasets.load_workforce()
-            >>> data.availability
-               Worker      Shift
-            0     Amy 2022-07-02
-            1     Amy 2022-07-03
-            2     Amy 2022-07-05
-            3     Amy 2022-07-07
-            4     Amy 2022-07-09
-            ..    ...        ...
-            67     Gu 2022-07-10
-            68     Gu 2022-07-11
-            69     Gu 2022-07-12
-            70     Gu 2022-07-13
-            71     Gu 2022-07-14
-            <BLANKLINE>
-            [72 rows x 2 columns]
+	       >>> import gurobipy as gp
+	       >>> from gurobi_optimods.opf import read_case_from_mat_file
+	       # This is a basic module used to read a casefile
+	       >>> casefile = 'caseNY.mat' #make sure you have the right path
+	       >>> case = read_case_from_mat_file(casefile)  #creates main dictionary
 
-        In the model, this corresponds to ...
-
-    .. tab:: ``shift_requirements``
-
-        Another bit of input data (perhaps a secondary table)
-
-|
-
-Code
-----
-
-Self contained code example to run the mod from an example dataset. Example
-datasets should bd included in the ``gurobi_optimods.datasets`` module for
-easy access by users.
-
-.. testcode:: mod
-
-    from gurobi_optimods.opf import solve_opf_model, read_case_from_mat_file
-    from gurobi_optimods.datasets import load_caseopfmat
+	       #example of a bus:
+	       >>> buses = case['bus']
+	       >>> buses[101]
+	       {'bus_i': 3600, 'type': 2, 'Pd': 2.14, 'Qd': 1.16, 'Gs': 0.0, 'Bs': 0.0, 'area': 24.0, 'Vm': 1.0163928, 'Va': -91.575965, 'baseKV': 138.0, 'zone': 1.0, 'Vmax': 1.1, 'Vmin': 0.9}
 
 
-    # load path to .mat case file
-    casefile = load_caseopfmat("9")
-    # read case file and return a case dictionary
-    case = read_case_from_mat_file(casefile)
-    # solve opf model and return a solution and the final objective value
-    solution = solve_opf_model(case, opftype="AC")
+	       #example of a branch:
+	       >>> branches = case['branch']
+	       >>> branches[10]
+	       {'fbus': 3362.0, 'tbus': 3542.0, 'r': 0.000676, 'x': 0.012043, 'b': 0.12494, 'rateA': 1046.0, 'rateB': 1098.3, 'rateC': 1150.6, 'ratio': 1.0, 'angle': 0.0, 'status': 1.0, 'angmin': 0.0, 'angmax': 0.0}
 
-..  A snippet of the Gurobi log output here won't show in the rendered page,
-    but serves as a doctest to make sure the code example runs. The ... lines
-    are meaningful here, they will match anything in the output test.
-
-.. testoutput:: mod
-    :hide:
-
-    ...
-    Optimize a model with 73 rows, 107 columns and 208 nonzeros
-    ...
-    Optimal solution found (tolerance 1.00e-03)
-    ...
-
-The model is solved as an LP/MIP/QP by Gurobi.
-
-..  You can include the full Gurobi log output here for the curious reader.
-    It will be visible as a collapsible section.
-
-.. collapse:: View Gurobi Logs
-
-    .. code-block:: text
-
-        Gurobi Optimizer version 9.5.1 build v9.5.1rc2 (mac64[x86])
-        Optimize a model with ...
-        Best obj ... Best bound ...
-
-|
-
-Solution
---------
-
-Show the solution. One way is to use doctests to display simple shell outputs
-(see the workforce example). This can be done simply by pasting outputs
-directly from a python shell. Another option is to include and display figures
-(see the graph matching examples).
-
-.. doctest:: mod
-    :options: +NORMALIZE_WHITESPACE
-
-    >>>
+	       #example of a generator
+	       >>> generators = case['gen']
+	       >>> gens[5]
+	       {'bus': 3505, 'Pg': 487.92, 'Qg': 0.0, 'Qmax': 0.0, 'Qmin': 0.0, 'Vg': 1.02, 'mBase': 100.0, 'status': 1, 'Pmax': 883.0, 'Pmin': 1.0, 'Pc1': 0.0, 'Pc2': 0.0, 'Qc1min': 0.0, 'Qc1max': 0.0, 'Qc2min': 0.0, 'Qc2max': 0.0, 'ramp_agc': 0.0, 'ramp_10': 0.0, 'ramp_30': 0.0, 'ramp_q': 0.0, 'apf': 883.0}
 
 .. footbibliography::

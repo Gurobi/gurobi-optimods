@@ -384,5 +384,23 @@ class TestOpfGraphics(unittest.TestCase):
         self.assertLess(abs(fig.data[1].y[0] - 1203.5), 1e-9)
         self.assertLess(abs(fig.data[1].x[-1] - 837.2), 1e-9)
         self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
+        self.plot_graphics = True
         if self.plot_graphics:
             fig.show()
+
+    def test_NY_branchswitching(self):
+        settings = {"dodc": True}
+        # load path to case file
+        casefile = load_caseNYopf()
+        # read case file and return a case dictionary
+        case = read_case_from_mat_file(casefile)
+
+        # get path to csv file holding the coordinates for NY
+        coordsfile = load_filepath("nybuses.csv")
+        coords_dict = read_coords_from_csv_file(coordsfile)
+
+        # solve opf model and return a solution
+        solution = solve_opf_model(case, opftype="DC", branchswitching=True)
+        self.assertTrue(solution is not None)
+        self.assertTrue(solution["success"] == 1)
+        self.assertTrue(solution["f"] is not None)
