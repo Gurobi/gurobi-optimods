@@ -8,6 +8,7 @@ import scipy.sparse as sp
 
 import gurobipy as gp
 from gurobipy import GRB
+import gurobipy_pandas as gppd
 
 try:
     import networkx as nx
@@ -89,31 +90,53 @@ def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
 
 
 def _maximum_bipartite_matching_pandas(frame, n1_column, n2_column, create_env):
-    # Turn categorical labels into disjoint sets in 0..N
-    row = frame[n1_column].astype("category").cat.codes.to_numpy()
-    col = frame[n2_column].astype("category").cat.codes.to_numpy() + row.max() + 1
-    degree = col.max() + 1
+    """This implementation uses gurobipy-pandas, which suits the input data
+    already in a pandas dataframe."""
 
-    # Construct sparse matrix and solve
-    data = np.ones(row.shape)
-    adjacency = sp.coo_array((data, (row, col)), shape=(degree, degree))
-    nodes1 = np.unique(row)
-    nodes2 = np.unique(col)
-    matching = _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env)
+    with create_env() as env, gp.Model(env=env) as model:
+        df = (
+            pd.concat(
+                [
+                    frame.assign(_original_edge=True),
+                    pd.DataFrame(
+                        {
+                            n1_column: "source",
+                            n2_column: frame[n1_column].unique(),
+                            "_original_edge": False,
+                        }
+                    ),
+                    pd.DataFrame(
+                        {
+                            n1_column: frame[n2_column].unique(),
+                            n2_column: "sink",
+                            "_original_edge": False,
+                        }
+                    ),
+                ]
+            )
+            .set_index([n1_column, n2_column])
+            .gppd.add_vars(model, ub=1, name="flow")
+        )
+        df.loc[("sink", "source"), "flow"] = model.addVar(
+            obj=1, name="flow[sink,source]"
+        )
+        df.loc[("sink", "source"), "_original_edge"] = False
+        model.ModelSense = GRB.MAXIMIZE
 
-    # Join the original matrix to get the matching subset
-    adj = sp.triu(matching)
-    original = frame.assign(_n1_codes=row, _n2_codes=col)
-    selected = pd.DataFrame({"n1": adj.row, "n2": adj.col})
-    result = pd.merge(
-        original,
-        selected,
-        left_on=["_n1_codes", "_n2_codes"],
-        right_on=["n1", "n2"],
-        suffixes=("", "_joined"),
-    )
-    # TODO gurobipy-pandas would definitely be cleaner!
-    return result[frame.columns]
+        balance = gppd.add_constrs(
+            model,
+            df["flow"].groupby(n1_column).sum(),
+            GRB.EQUAL,
+            df["flow"].groupby(n2_column).sum(),
+            name="balance",
+        )
+        model.optimize()
+
+        return (
+            df[df["flow"].gppd.X.gt(0.1) & df._original_edge]
+            .drop(columns=["flow", "_original_edge"])
+            .reset_index()
+        )
 
 
 def _maximum_bipartite_matching_networkx(graph, nodes1, nodes2, create_env):
