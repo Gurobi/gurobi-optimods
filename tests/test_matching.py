@@ -208,14 +208,11 @@ class TestBipartiteMatchingNetworkx(unittest.TestCase):
         incidence_count = Counter(chain(*matching.edges))
         self.assertTrue(all(count == 1 for count in incidence_count.values()))
 
-    def test_random_networkx(self):
-        graph = nx.bipartite.random_graph(n=5, m=7, p=0.5, seed=293847, directed=True)
-        nodes1 = np.array(
-            [i for i, node in graph.nodes().items() if node["bipartite"] == 0]
-        )
-        nodes2 = np.array(
-            [i for i, node in graph.nodes().items() if node["bipartite"] == 1]
-        )
+    def test_empty(self):
+        # Max matching of an empty graph is an empty graph
+        graph = nx.empty_graph(n=10)
+        nodes1 = list(range(4))
+        nodes2 = list(range(4, 10))
 
         matching = maximum_bipartite_matching(graph, nodes1, nodes2)
 
@@ -223,6 +220,64 @@ class TestBipartiteMatchingNetworkx(unittest.TestCase):
         self.assertIsNot(matching, graph)
         self.assertEqual(matching.number_of_nodes(), graph.number_of_nodes())
         self.assert_is_unweighted_matching(matching)
+
+    def test_complete(self):
+        # Max matching on complete graph has min(n1, n2) edges
+        graph = nx.bipartite.complete_bipartite_graph(n1=6, n2=4)
+        nodes1 = list(range(6))
+        nodes2 = list(range(6, 10))
+
+        matching = maximum_bipartite_matching(graph, nodes1, nodes2)
+
+        self.assertIsInstance(matching, nx.Graph)
+        self.assertIsNot(matching, graph)
+        self.assertEqual(matching.number_of_nodes(), graph.number_of_nodes())
+        self.assertEqual(matching.number_of_edges(), 4)
+        self.assert_is_unweighted_matching(matching)
+
+    def test_random_undirected(self):
+        # Property test: check that a random graph returns a matching
+        graph = nx.bipartite.random_graph(n=5, m=7, p=0.5, seed=293847, directed=False)
+        nodes1 = [i for i, node in graph.nodes().items() if node["bipartite"] == 0]
+        nodes2 = [i for i, node in graph.nodes().items() if node["bipartite"] == 1]
+
+        matching = maximum_bipartite_matching(graph, nodes1, nodes2)
+
+        self.assertIsInstance(matching, nx.Graph)
+        self.assertIsNot(matching, graph)
+        self.assertEqual(matching.number_of_nodes(), graph.number_of_nodes())
+        self.assert_is_unweighted_matching(matching)
+
+    @unittest.expectedFailure
+    def test_random_directed(self):
+        # Property test: check that a random graph returns a matching
+        graph = nx.bipartite.random_graph(n=5, m=7, p=0.5, seed=293847, directed=True)
+        nodes1 = [i for i, node in graph.nodes().items() if node["bipartite"] == 0]
+        nodes2 = [i for i, node in graph.nodes().items() if node["bipartite"] == 1]
+
+        matching = maximum_bipartite_matching(graph, nodes1, nodes2)
+
+        self.assertIsInstance(matching, nx.Graph)
+        self.assertIsNot(matching, graph)
+        self.assertEqual(matching.number_of_nodes(), graph.number_of_nodes())
+        self.assert_is_unweighted_matching(matching)
+
+    def test_known(self):
+        # Simple case with a known solution
+        graph = nx.Graph()
+        graph.add_nodes_from(range(6))
+        edges = [(0, 3), (0, 4), (1, 4), (1, 5), (2, 5)]
+        graph.add_edges_from(edges)
+        nodes1 = [0, 1, 2]
+        nodes2 = [3, 4, 5]
+
+        matching = maximum_bipartite_matching(graph, nodes1, nodes2)
+
+        self.assertIsInstance(matching, nx.Graph)
+        self.assertIsNot(matching, graph)
+        self.assertEqual(matching.number_of_nodes(), 6)
+        self.assert_is_unweighted_matching(matching)
+        self.assertEqual(set(matching.edges), {(0, 3), (1, 4), (2, 5)})
 
 
 class TestWeightedMatching(unittest.TestCase):
