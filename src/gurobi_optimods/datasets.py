@@ -4,7 +4,7 @@ as sklearn.datasets.
 """
 
 import pathlib
-
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -18,6 +18,8 @@ from gurobi_optimods.network_util import (
     _convert_pandas_to_digraph,
     _convert_pandas_to_scipy,
 )
+import networkx as nx
+
 
 DATA_FILE_DIR = pathlib.Path(__file__).parent / "data"
 
@@ -88,3 +90,30 @@ def load_diet():
         foods=pd.read_csv(DATA_FILE_DIR / "diet-foods.csv"),
         nutrition_values=pd.read_csv(DATA_FILE_DIR / "diet-values.csv"),
     )
+
+
+def load_commodities():
+    return pd.read_csv(DATA_FILE_DIR / "commodities.csv", index_col="Commodity")
+
+
+def load_network_design():
+    G = nx.DiGraph()
+    G.add_edge(0, 1, capacity=15, fixed_cost=4, flow_cost=3)
+    G.add_edge(0, 2, capacity=8, fixed_cost=4, flow_cost=5)
+    G.add_edge(1, 3, capacity=4, fixed_cost=2, flow_cost=1)
+    G.add_edge(1, 2, capacity=20, fixed_cost=2, flow_cost=2)
+    G.add_edge(1, 4, capacity=10, fixed_cost=6, flow_cost=1)
+    G.add_edge(2, 3, capacity=15, fixed_cost=1, flow_cost=5)
+    G.add_edge(3, 4, capacity=20, fixed_cost=2, flow_cost=4)
+    G.add_edge(2, 4, capacity=5, fixed_cost=3, flow_cost=6)
+    G.add_edge(4, 2, capacity=4, fixed_cost=3, flow_cost=6)
+    # nx.draw(G, with_labels=True)
+    # plt.draw()  # pyplot draw()
+    # plt.show()
+    # nx.write_gml(G, "network_design1.gml")
+    return G
+
+
+def _create_feasible_commodities():
+
+    return
