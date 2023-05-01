@@ -1,6 +1,6 @@
 import collections
 import logging
-from typing import Optional, overload
+from typing import List, Optional, overload
 
 import numpy as np
 import pandas as pd
@@ -47,8 +47,8 @@ if nx is not None:
     @overload
     def maximum_bipartite_matching(
         graph: nx.Graph,
-        nodes1: np.ndarray,
-        nodes2: np.ndarray,
+        nodes1: List,
+        nodes2: List,
         silent: bool = False,
         logfile: Optional[str] = None,
     ) -> nx.Graph:
@@ -66,11 +66,11 @@ def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
     :param nodes1: Nodes in the first bipartite set. If ``graph`` is a pandas dataframe,
         nodes1 must be a column name. Otherwise, it is a numpy array of nodes in the first
         bipartite set.
-    :type nodes1: :class:`np.array|str`
+    :type nodes1: :class:`np.array|List|str`
     :param nodes2: Nodes in the second bipartite set. If ``graph`` is a pandas dataframe,
         nodes2 must be a column name. Otherwise, it is a numpy array of nodes in the second
         bipartite set.
-    :type nodes2: :class:`np.array|str`
+    :type nodes2: :class:`np.array|List|str`
     :param silent: silent=True suppresses all console output (defaults to False)
     :type silent: bool
     :param logfile: Write all mod output to the given file path (defaults to None: no log)
@@ -117,9 +117,64 @@ def _maximum_bipartite_matching_pandas(frame, n1_column, n2_column, create_env):
 
 
 def _maximum_bipartite_matching_networkx(graph, nodes1, nodes2, create_env):
-    adjacency = nx.convert_matrix.to_scipy_sparse_array(graph)
-    matching = _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env)
-    return nx.convert_matrix.from_scipy_sparse_array(matching)
+    """This implementation uses gurobipy's term-based API, which suits the
+    iterator-based API for reading data from networkx graphs."""
+
+    logger.info(
+        f"Solving maximum matching n1={len(nodes1)} "
+        f"n2={len(nodes2)} |E|={graph.number_of_edges()}"
+    )
+
+    nodes1 = set(nodes1)
+    nodes2 = set(nodes2)
+
+    with create_env() as env, gp.Model(env=env) as model:
+        # Add variables for each layer of edges in the max flow graph
+        source_layer = {i: model.addVar(name=f"flow[source,{i}]", ub=1) for i in nodes1}
+        graph_layer = {
+            (i, j): model.addVar(name=f"flow[{i},{j}]", ub=1)
+            for i, j in graph.edges
+            if i in nodes1 and j in nodes2
+        }
+        sink_layer = {j: model.addVar(name=f"flow[{j},sink]", ub=1) for j in nodes2}
+        sink_source = model.addVar(name="flow[sink,source]")
+
+        # At the source node, sink -> source flow balances source -> nodes1 flow
+        model.addConstr(
+            gp.quicksum(source_layer.values()) == sink_source, name="source_balance"
+        )
+
+        # In the nodes1 layer, flows from source balance flows to nodes2
+        for i in nodes1:
+            model.addConstr(
+                source_layer[i] == gp.quicksum(graph_layer[i, j] for j in graph[i]),
+                name=f"n1_balance[{i}]",
+            )
+
+        # In the nodes1 layer, flows from nodes2 balance flows to sink
+        for j in nodes2:
+            model.addConstr(
+                sink_layer[j] == gp.quicksum(graph_layer[i, j] for i in graph[j]),
+                name=f"n2_balance[{j}]",
+            )
+
+        # At the sink node, sink -> source flow balances nodes2 -> sink flow
+        model.addConstr(
+            gp.quicksum(sink_layer.values()) == sink_source, name="sink_balance"
+        )
+
+        # Maximize flow through the uncapacitated sink->source edge
+        model.setObjective(sink_source, sense=GRB.MAXIMIZE)
+        model.optimize()
+
+        # Create a new Graph with selected edges in the matching
+        matching = nx.Graph()
+        matching.add_nodes_from(graph.nodes)
+        matching.add_edges_from(edge for edge, x in graph_layer.items() if x.X > 0.1)
+
+        logger.info(f"Max bipartite matching |E|={matching.number_of_edges()}")
+
+        return matching
 
 
 def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
