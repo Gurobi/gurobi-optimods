@@ -201,6 +201,9 @@ def _maximum_bipartite_matching_networkx(graph, nodes1, nodes2, create_env):
 
 
 def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
+    """This implementation uses the gurobipy matrix-friendly API, which suits
+    the input data in numpy/scipy data structures."""
+
     logger.info(
         f"Solving maximum matching n1={nodes1.shape[0]} "
         f"n2={nodes2.shape[0]} |E|={adjacency.data.shape[0]}"
@@ -230,8 +233,22 @@ def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
     )
 
     # Solve min-cost flow problem
-    with create_env() as env:
-        _, flows = solve_min_cost_flow(env, from_arc, to_arc, capacity, cost, balance)
+    with create_env() as env, gp.Model(env=env) as model:
+        # Create incidence matrix from edge lists.
+        indices = np.column_stack((from_arc, to_arc)).reshape(-1, order="C")
+        indptr = np.arange(0, 2 * from_arc.shape[0] + 2, 2)
+        ones = np.ones(from_arc.shape)
+        data = np.column_stack((ones * -1.0, ones)).reshape(-1, order="C")
+        A = sp.csc_array((data, indices, indptr))
+
+        # Solve model with gurobi, return cost and flows
+        model.ModelSense = GRB.MINIMIZE
+        x = model.addMVar(A.shape[1], lb=0, ub=capacity, obj=cost)
+        model.addMConstr(A, x, GRB.EQUAL, balance)
+        model.optimize()
+        if model.Status == GRB.INFEASIBLE:
+            raise ValueError("Unsatisfiable flows")
+        flows = x.X
 
     # Choose the arcs corresponding to the original graph with non-zero
     # flow. Note that the last var is the sink->source connection (drop it).
