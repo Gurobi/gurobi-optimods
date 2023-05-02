@@ -531,3 +531,12 @@ In this example, we were allowed five trades:
 * Sell existing positions in "BB", "CC", and "JJ".
 * Open a short position in "CC".
 * Buy "AA".
+
+Restricting the number of open positions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It is possible to compute an optimal portfolio under the additional restriction
+that only a limited number of positions can be open.  This can be set through
+the ``max_positions`` keyword parameter. Without a starting portfolio, this is
+equivalent to limiting the number of trades (via ``max_trades``). However, while the
+number of trades counts changes relative to the previous portfolio holdings,
+``max_positions`` limits the total number of open positions in the portfolio.

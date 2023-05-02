@@ -322,3 +322,52 @@ class TestMod(unittest.TestCase):
             x.sum() + sell_trades.sum() * fees + double_sell_trades.sum() * fees,
             1 + 1e-6,
         )
+
+    def test_max_positions(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x = mvp.efficient_portfolio(gamma, max_positions=3)
+        self.assertLessEqual((x > 1e-4).sum(), 3)
+
+    def test_max_positions_start_portfolio(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = 1.0 / mu.size * np.ones(mu.size)
+
+        x = mvp.efficient_portfolio(
+            gamma,
+            initial_holdings=x0,
+            max_positions=6,
+            max_trades=5,
+        )
+
+        self.assertLessEqual((x > 1e-4).sum(), 6)
+        # In order to satisfy max_positions=6 with max_trades=5,
+        # we need to sell 4 positions and invest the surplus into one of the remaining open positions.
+        self.assertGreaterEqual((x > 1.0 / mu.size).sum(), 1)
+
+    def test_max_positions_infeasible(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = 1.0 / mu.size * np.ones(mu.size)
+
+        x = mvp.efficient_portfolio(
+            gamma,
+            initial_holdings=x0,
+            max_positions=6,
+            max_trades=3,
+        )
+        # This needs to be infeasible.
+        self.assertIsNone(x)

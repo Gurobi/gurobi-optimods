@@ -107,6 +107,7 @@ class MeanVariancePortfolio:
         self,
         gamma,
         max_trades=None,
+        max_positions=None,
         fees_buy=None,
         fees_sell=None,
         fees_sell_short=None,
@@ -125,6 +126,8 @@ class MeanVariancePortfolio:
         :type gamma: :class:`float` >= 0
         :param max_trades: Upper limit on the number of trades
         :type max_trades: :class:`int` >= 0
+        :param max_positions: Upper limit on the number of open positions
+        :type max_positions: :class:`int` >= 0
         :param fees_buy: Fixed-charge buy cost for each traded long position, relative
             to total portfolio value
         :type fees_buy: :class:`float` >= 0
@@ -183,6 +186,7 @@ class MeanVariancePortfolio:
         #      sum(x_short) <= max_total_short   (Bound total leverage)
         #
         #      sum(b_short_buy) + sum(b_short_sell) + sum(b_long_buy) + sum(b_long_sell) <= max_trades  (Trade limit)
+        #      sum(b_long) + sum(b_short) <= max_positions
         #
         #      x_<y>_buy >= min_long * b_<y>_buy (y in {long, short}, minimum buy position)
         #
@@ -273,7 +277,12 @@ class MeanVariancePortfolio:
                     + b_long_sell.sum()
                     + b_short_buy.sum()
                     + b_short_sell.sum()
-                    <= max_trades
+                    <= max_trades,
+                    name="max_trades",
+                )
+            if max_positions is not None:
+                m.addConstr(
+                    b_long.sum() + b_short.sum() <= max_positions, name="max_positions"
                 )
 
             if fees_buy is not None:
