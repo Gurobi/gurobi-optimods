@@ -575,6 +575,8 @@ def grbgetgraphattr(alldata, value):
     valuesset = False
     numfeatures = 0  # alldata['graphical']['numfeatures']
 
+    # Currently unused, may be added if we decide to allow users to provide
+    # their own graph attributes
     if numfeatures > 0:
         sizeval = alldata["graphical"]["sizeval"]
         colorstring = alldata["graphical"]["colorstring"]

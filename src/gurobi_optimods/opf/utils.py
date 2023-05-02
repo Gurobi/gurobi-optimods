@@ -136,10 +136,9 @@ def check_settings_for_correct_type(settings):
         if (
             settingname
             in [
-                "voltsfilename",
                 "lpfilename",
                 "gurobiparamfile",
-                "ivtype" "graphattrsfilename",
+                "ivtype",
             ]
             and settingval != None
             and not isinstance(settingval, str)
@@ -149,7 +148,6 @@ def check_settings_for_correct_type(settings):
             break
         # Check boolean settings
         if settingname in [
-            "strictcheckvoltagesolution",
             "fixcs",
             "skipjabr",
             "usemipstart",
