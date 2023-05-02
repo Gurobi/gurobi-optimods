@@ -121,8 +121,6 @@ def solve_opf_model(
         additional_settings,
     )
 
-    print("BRANCH is", branchswitching)
-
     # Initilize data dictionary
     alldata = initialize_data_dict(logfile)
 
