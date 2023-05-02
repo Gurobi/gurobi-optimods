@@ -1421,7 +1421,7 @@ def lpformulator_ac_strictchecker(alldata, model):
     for j in range(1, numbuses + 1):
         bus = buses[j]
         if bus.inputV > bus.Vmax:
-            logger.warning(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+            logger.warning(
                 f">>> Warning: bus # {j} has input voltage {bus.inputV} which is larger than Vmax {bus.Vmax}."
             )
             thisviol = bus.inputV - bus.Vmax
@@ -1429,7 +1429,7 @@ def lpformulator_ac_strictchecker(alldata, model):
                 max_violation_string = "bus_" + str(bus.nodeID) + "_Vmax"
                 max_violation_value = thisviol
         if bus.inputV < bus.Vmin:
-            logger.warning(  # TODO-Dan If it's an error why do we proceed? Shouldn't it rather be a warning?
+            logger.warning(
                 f">>> Warning: bus # {j} has input voltage {bus.inputV} which is smaller than Vmin {bus.Vmin}."
             )
             thisviol = bus.Vmin - bus.inputV

@@ -22,12 +22,6 @@ def generate_opf_solution_figure(case, coords, solution):
     :param solution: Dictionary holding solution data following the MATPOWER notation as returned
                       by the ``solve_opf_model`` function
     :type solution: dict
-    :param graphattrsfile: Name of and possibly full path to a file holding additional graph attributes,
-                           defaults to "". #TODO will be very likely removed
-    :type graphattrsfile: str, optional
-    :param voltsfile: Name of and possibly full path to a file holding voltage solution information,
-                      defaults to "". #TODO will be very likely removed
-    :type voltsfile: str, optional
 
     :return: A plotly figure objects which can be displayed via the show() function,
              see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
