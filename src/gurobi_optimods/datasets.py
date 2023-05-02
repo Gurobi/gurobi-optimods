@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
+import csv
 
 try:
     import networkx as nx
@@ -93,7 +94,7 @@ def load_diet():
 
 
 def load_commodities():
-    return pd.read_csv(DATA_FILE_DIR / "commodities.csv", index_col="Commodity")
+    return pd.read_csv(DATA_FILE_DIR / "commodities.csv")
 
 
 def load_network_design():

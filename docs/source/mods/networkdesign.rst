@@ -1,6 +1,6 @@
 .. This template should be copied to docs/source/mods/<mod_name>.rst
 
-My New Mod
+Network Design
 ==========
 
 A little background on the proud history of mathprog in this field.
@@ -12,16 +12,72 @@ Problem Specification
 
 Give a brief overview of the problem being solved.
 
+
 .. tabs::
 
-    .. tab:: Domain-Specific Description
+    .. tab:: Graph Theory
 
-        Give a definition of the problem in the language of the domain expert.
+        For a given graph :math:`G` with set of vertices :math:`V` and potential edges
+        :math:`E` as well as a set of commodities :math:`K`.
+
+        Each potential edge :math:`(i,j)\in E` has the following attributes:
+
+        - flow cost: :math:`c_{ij}\in \mathbb{R}`;
+        - fixed cost for building the arc: :math:`f_{ij} \in \mathbb{R}`;
+        - and capacity: :math:`B_{ij}\in\mathbb{R}`.
+
+        Each commodity :math:`k \in K` has the following attributes:
+
+        - origin :math:`o_k \in V`;
+        - destination: :math:`d_k \in V`;
+        - and demand: :math:`D_k \in \mathbb{R}`
+
+
+        Also, each vertex :math:`i\in V` has a demand :math:`d_i\in\mathbb{R}`.
+        This value can be positive (requesting flow), negative (supplying
+        flow), or 0.
+
+        The problem can be stated as finding a the flow with minimal total cost
+        such that:
+
+        - the demand at each vertex is met;
+        - and, the flow is capacity feasible.
 
     .. tab:: Optimization Model
 
-        Give the mathematical programming formulation of the problem here.
+        Let us define a set of continuous variables :math:`x_{ij}` to represent
+        the amount of non-negative (:math:`\geq 0`) flow going through an edge
+        :math:`(i,j)\in E`.
 
+
+        The mathematical formulation can be stated as follows:
+
+        .. math::
+
+
+            \begin{alignat}{2}
+            \min \quad &\sum_k \sum_{(i,j)\in A} W^k c_{ij} x^k_{ij} + \sum_{(i,j)\in A} f_{ij} y_{ij}\\
+            \text{s.t.} \quad &\sum_{j\in \delta^+(i)} x^k_{ij} - \sum_{j\in \delta^-(i)} x^k_{ji} =\begin{cases}1 &\text{if }i=o_k\\-1 &\text{if }i=d_k\\0&\text{otherwise}\end{cases} \quad&\forall\ i\in N,\ k\in K\\
+            &\sum_{k\in K} W^k x^k_{ij} \le C_{ij} y_{ij} & \forall\ (i,j)\in A\\
+            & x^k_{ij}\geq 0,\ \ y_{ij}\in\{0,1\} &\forall\ (i,j)\in A,\ k\in K
+            \end{alignat}
+
+        Where :math:`\delta^+(\cdot)` (:math:`\delta^-(\cdot)`) denotes the
+        outgoing (incoming) neighours.
+
+        The objective minimises the total cost over all edges.
+
+        The first constraints ensure flow balance for all vertices. That is, for
+        a given node, the incoming flow (sum over all incoming edges to this
+        node) minus the outgoing flow (sum over all outgoing edges from this
+        node) is equal to the demand. Clearly, in the case when the demand is 0,
+        the outgoing flow must be equal to the incoming flow. When the demand is
+        negative, this node can supply flow to the network (outgoing term is
+        larger), and conversely when the demand is negative, this node can
+        request flow from the network (incoming term is larger).
+
+        The last constraints ensure non-negativity of the variables and that the
+        capacity per edge is not exceeded.
 Give examples of the various input data structures. These inputs should be fixed,
 so use doctests where possible.
 

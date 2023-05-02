@@ -4,9 +4,6 @@
 
 import unittest
 
-import scipy.sparse as sp
-import networkx as nx
-
 from gurobi_optimods.network_design import solve_network_design
 from gurobi_optimods.datasets import load_network_design, load_commodities
 
@@ -14,24 +11,19 @@ from gurobi_optimods.datasets import load_network_design, load_commodities
 class TestNetworkDesign(unittest.TestCase):
     def setUp(self):
         self.G = load_network_design()
-        self.commodities = load_commodities()
+        self.commodities = {
+            0: {"Origin": 0, "Destination": 4, "Demand": 10},
+            1: {"Origin": 2, "Destination": 4, "Demand": 15},
+        }
 
     def test_network_dataset(self):
         self.assertEqual(self.G.number_of_nodes(), 5)
         self.assertEqual(self.G.number_of_edges(), 9)
 
+    def test_commodities(self):
+        for k in self.commodities.keys():
+            assert k in self.G.nodes()
+
     def test_network_flow(self):
-        sol, cost = solve_network_design(self.G, self.commodities)
-        self.assertEqual(cost, 150)
-        self.assertEqual(
-            sol,
-            {
-                (0, 1): 12.0,
-                (0, 2): 8.0,
-                (1, 3): 4.0,
-                (1, 2): 8.0,
-                (2, 3): 11.0,
-                (2, 4): 5.0,
-                (3, 4): 10.0,
-            },
-        )
+        sol, graph = solve_network_design(self.G, self.commodities)
+        self.assertEqual(sol, 176)

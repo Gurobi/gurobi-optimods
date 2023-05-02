@@ -8,9 +8,10 @@
 import gurobipy as gp
 from gurobipy import GRB
 import networkx as nx
+from typing import Dict
 
 
-def solve_network_design(G: nx.DiGraph, commodities):
+def solve_network_design(G: nx.DiGraph, commodities: Dict):
     """
     A sphinx-compatible docstring
 
@@ -18,60 +19,63 @@ def solve_network_design(G: nx.DiGraph, commodities):
     :type data1: pd.DataFrame
     """
     print(commodities)
-    with gp.Env() as env, gp.Model(env=env) as model:
+    with gp.Env() as env, gp.Model(env=env) as m:
 
-        m = gp.Model()
         x = {
-            (i, j, k): m.addVar(name=f"flow-{i},{j},{k}")
+            (i, j, k): m.addVar(vtype=GRB.CONTINUOUS, name=f"flow-{i},{j},{k}")
             for (i, j) in G.edges()
             for k in commodities
         }
-        nodes = G.nodes()
-        arcs = G.edges()
+        y = {
+            (i, j): m.addVar(vtype=GRB.BINARY, name=f"arc-{i},{j}")
+            for (i, j) in G.edges()
+        }
 
-        return
-        # x = m.addVars(A, C, vtype=GRB.CONTINUOUS, name="flow")
-        # y = m.addVars(A, vtype=GRB.BINARY, name="open")
+        m.setObjective(
+            gp.quicksum(
+                gp.quicksum(
+                    edge["flow_cost"] * commodity["Demand"] * x[i, j, k]
+                    for k, commodity in commodities.items()
+                )
+                + edge["fixed_cost"] * y[i, j]
+                for (i, j, edge) in G.edges(data=True)
+            )
+        )
 
-        # m.setObjective(
-        #     gp.quicksum(
-        #         gp.quicksum(
-        #             arc.flow_cost * commodity.demand * x[i, j, k]
-        #             for k, commodity in data.commodities.items()
-        #         )
-        #         + arc.fixed_cost * y[i, j]
-        #         for (i, j), arc in G.data.arcs.items()
-        #     )
-        # )
+        path_constraints = {
+            (i, k): m.addConstr(
+                gp.quicksum([x[i, j, k] for j in G.successors(i)])
+                - gp.quicksum([x[j, i, k] for j in G.predecessors(i)])
+                == (
+                    1
+                    if i == commodity["Origin"]
+                    else (-1 if i == commodity["Destination"] else 0)
+                ),
+                name=f"path-{i}-{k}",
+            )
+            for i in G.nodes()
+            for k, commodity in commodities.items()
+        }
 
-        # path_constraints = {
-        #     (i, k): m.addConstr(
-        #         gp.quicksum([x[i, j, k] for j in node.succecessors])
-        #         - gp.quicksum([x[j, i, k] for j in node.predecessors])
-        #         == (
-        #             1
-        #             if i == commodity.origin
-        #             else (-1 if i == commodity.destination else 0)
-        #         ),
-        #         name=f"path-{i}-{k}",
-        #     )
-        #     for i, node in data.nodes.items()
-        #     for k, commodity in data.commodities.items()
-        # }
+        capacity_constraints = {
+            (i, j): m.addConstr(
+                gp.quicksum(
+                    commodity["Demand"] * x[i, j, k]
+                    for k, commodity in commodities.items()
+                )
+                <= arc["capacity"] * y[i, j],
+                name=f"capacity-{i}-{j}",
+            )
+            for (i, j, arc) in G.edges(data=True)
+        }
+        m.optimize()
+        if m.Status == GRB.INFEASIBLE:
+            raise ValueError("Unsatisfiable flows")
 
-        # capacity_constraints = {
-        #     (i, j): m.addConstr(
-        #         gp.quicksum(
-        #             commodity.demand * x[i, j, k]
-        #             for k, commodity in data.commodities.items()
-        #         )
-        #         <= arc.capacity * y[i, j],
-        #         name=f"capacity-{i}-{j}",
-        #     )
-        #     for (i, j), arc in data.arcs.items()
-        # }
+        G_new = nx.DiGraph()
+        for (i, j) in G.edges():
+            if y[(i, j)].X > 0.5:
+                print(y[(i, j)].X)
+                G_new.add_edge(i, j, flow={k: x[i, j, k].X for k in commodities})
 
-        # build model
-        model.optimize()
-        # post-process and return solution
-        return None
+        return m.ObjVal, G_new
