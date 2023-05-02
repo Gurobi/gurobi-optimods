@@ -1,4 +1,4 @@
-Optimal mean-variance portfolios
+Optimal Mean-Variance Portfolios
 ================================
 
 Portfolio optimization is concerned with the allocation of wealth into assets (such as stocks, bonds, commodities, etc.). This mod returns portfolios on the efficient frontier given expected returns and variances.
@@ -348,7 +348,7 @@ Minimum position constraints
 
 A minimum fraction of investment can be enforced upon each individual position,
 preventing trades at negligible volume.  Use the keyword parameters
-``min_long`` and ``min_short`` to set a thresholds for trading long and short
+``min_long`` and ``min_short`` to set thresholds for trading long and short
 positions.  For example, here we enforce that at least 5% of the wealth are
 allocated to each trade:
 
@@ -397,3 +397,137 @@ the latter portfolio is free of "tiny" transactions.
     HH  0.240992  0.244677
     II  0.066809  0.063517
     JJ -0.030588  0.000000
+
+Starting portfolio
+~~~~~~~~~~~~~~~~~~
+
+To model multi-period portfolios, a starting portfolio can be specified via the ``initital_holdings`` parameter.
+If this is done, all limits enforced for trades are relative to this starting portfolio.
+
+The initial holdings :math:`x^0` need to satisfy :math:`\sum_i x^0_i \geq 1`.
+
+.. testcode:: mod
+
+    import pandas as pd
+    import numpy as np
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+    data = load_portfolio()
+    Sigma = data.cov()
+    mu = data.mean()
+    gamma = 100.0
+    mvp = MeanVariancePortfolio(Sigma, mu)
+    x0 = 1.0 / mu.size * np.ones(mu.size)
+
+    x_without = mvp.efficient_portfolio(gamma, initial_holdings=None)
+    x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0)
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 122 rows, 130 columns and 260 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+    Optimize a model with 122 rows, 130 columns and 260 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> pd.concat([x_without, x_with], keys=["without", "with"], axis=1)
+            without      with
+    AA  4.236507e-01  0.423651
+    BB  1.743570e-07  0.000000
+    CC  7.573610e-10  0.000000
+    DD  2.430104e-01  0.243011
+    EE  1.017732e-07  0.000000
+    FF  2.760531e-09  0.000000
+    GG  2.937307e-02  0.029373
+    HH  2.350833e-01  0.235083
+    II  6.888222e-02  0.068882
+    JJ  1.248442e-08  0.000000
+
+Note that without limitations to the trades, it does not make a difference whether or not we specify a starting portfolio
+since we can then always change our positions to match the optimal portfolio at this point in time.
+Gurobi does not fall victim to the sunk-cost-fallacy.
+
+If transaction costs or cardinality constraints are present, the starting portfolio does make a difference:
+
+.. testcode:: mod
+
+    import pandas as pd
+    import numpy as np
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+    data = load_portfolio()
+    Sigma = data.cov()
+    mu = data.mean()
+    gamma = 100.0
+    mvp = MeanVariancePortfolio(Sigma, mu)
+    x0 = 1.0 / mu.size * np.ones(mu.size)
+
+    x = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=3)
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> x
+    AA    0.1
+    BB    0.0
+    CC    0.0
+    DD    0.1
+    EE    0.1
+    FF    0.1
+    GG    0.1
+    HH    0.3
+    II    0.1
+    JJ    0.1
+    dtype: float64
+
+Since we limited the number of trades, only three trades were executed: "BB" and "CC" were sold and more "HH" was bought.
+
+
+Note that going from a long to a short position (or the other way around) for the same asset is counted as two trades.
+(We close one position and open another.)
+Let us look at an example with leverage:
+
+.. testcode:: mod
+
+    import pandas as pd
+    import numpy as np
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+    data = load_portfolio()
+    Sigma = data.cov()
+    mu = data.mean()
+    gamma = 100.0
+    mvp = MeanVariancePortfolio(Sigma, mu)
+    x0 = 1.0 / mu.size * np.ones(mu.size)
+
+    x = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=5, max_total_short=0.1)
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> x
+    AA    0.5
+    BB    0.0
+    CC   -0.1
+    DD    0.1
+    EE    0.1
+    FF    0.1
+    GG    0.1
+    HH    0.1
+    II    0.1
+    JJ    0.0
+    dtype: float64
+
+In this example, we were allowed five trades:
+
+* Sell existing positions in "BB", "CC", and "JJ".
+* Open a short position in "CC".
+* Buy "AA".
