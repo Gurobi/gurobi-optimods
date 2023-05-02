@@ -311,13 +311,9 @@ def lpformulator_ac_create_vars(alldata, model):
             branch = branches[j]
             f = branch.f
             t = branch.t
-            lbound = 0
-            ubound = 1
             zvar[branch] = model.addVar(
-                lb=lbound,
-                ub=ubound,
                 obj=0.0,
-                vtype=GRB.INTEGER,
+                vtype=GRB.BINARY,
                 name="z_%d_%d_%d" % (j, f, t),
             )
 
@@ -847,10 +843,10 @@ def lpformulator_ac_create_constraints(alldata, model):
             doquad = True
             # product of binary and powerflow
             for branchid in bus.frombranchids.values():
-                qexpr.add((1 - zvar[branches[branchid]]) * Pvar_f[branches[branchid]])
+                qexpr.add(zvar[branches[branchid]] * Pvar_f[branches[branchid]])
 
             for branchid in bus.tobranchids.values():
-                qexpr.add((1 - zvar[branches[branchid]]) * Pvar_t[branches[branchid]])
+                qexpr.add(zvar[branches[branchid]] * Pvar_t[branches[branchid]])
 
         if doquad:
             model.addConstr(
@@ -881,10 +877,10 @@ def lpformulator_ac_create_constraints(alldata, model):
             qexpr = gp.QuadExpr()
 
             for branchid in bus.frombranchids.values():
-                qexpr.add((1 - zvar[branches[branchid]]) * Qvar_f[branches[branchid]])
+                qexpr.add(zvar[branches[branchid]] * Qvar_f[branches[branchid]])
 
             for branchid in bus.tobranchids.values():
-                qexpr.add((1 - zvar[branches[branchid]]) * Qvar_t[branches[branchid]])
+                qexpr.add(zvar[branches[branchid]] * Qvar_t[branches[branchid]])
 
             model.addConstr(
                 expr + qexpr == Qinjvar[bus], name="QBaldef%d_%d" % (j, bus.nodeID)

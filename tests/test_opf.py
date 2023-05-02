@@ -107,6 +107,7 @@ class TestOpf(unittest.TestCase):
                 branchswitching,
                 usemipstart,
                 useactivelossineqs,
+                minactivebranches,
             )
             for type in ["AC", "DC", "IV"]
             for polar in [False, True]
@@ -116,6 +117,7 @@ class TestOpf(unittest.TestCase):
             for branchswitching in [0, 1, 2]
             for usemipstart in [False, True]
             for useactivelossineqs in [False, True]
+            for minactivebranches in [0, 0.5, 0.95]
         ]
         # load path to case file
         casefile = load_caseopfmat("9")
@@ -123,12 +125,7 @@ class TestOpf(unittest.TestCase):
         case = read_case_from_mat_file(casefile)
         # solve opf model and return a solution
         for s in settingslist:
-            print(
-                f"running setting opftype={s[0]}, polar={s[1]}, useef={s[2]}, usejabr={s[3]}, ivtype={s[4]}, branchswitching={s[5]}, usemipstart={s[6]}, useactivelossineqs={s[7]}"
-            )
-            print(s)
             # gurobi param.prm file should read
-            # TimeLimit 2
             # SolutionLimit 1
             # MIPGap 0.01
             solution = solve_opf_model(
@@ -142,10 +139,18 @@ class TestOpf(unittest.TestCase):
                 branchswitching=s[5],
                 usemipstart=s[6],
                 useactivelossineqs=s[7],
+                minactivebranches=s[8],
                 additional_settings={"gurobiparamfile": "param.prm"},
             )
+            print(
+                f"running setting opftype={s[0]}, polar={s[1]}, useef={s[2]}, usejabr={s[3]}, ivtype={s[4]},\n"
+                f"branchswitching={s[5]}, usemipstart={s[6]}, useactivelossineqs={s[7]}, minactivebranches={s[8]}"
+            )
+            print(s)
             self.assertTrue(solution is not None)
-            self.assertTrue(solution["success"] in [0, 1])
+            self.assertTrue(
+                solution["success"] == 1
+            )  # the model has to be feasible for every setting combination
 
     def test_infeasible(self):
         case = load_opfdictcase()
@@ -363,7 +368,6 @@ class TestOpfGraphics(unittest.TestCase):
     # test a real data set for New York
     @unittest.skipIf(size_limited_license(), "size-limited-license")
     def test_NY_graphics(self):
-        settings = {"dodc": True}
         # load path to case file
         casefile = load_caseNYopf()
         # read case file and return a case dictionary
@@ -384,23 +388,30 @@ class TestOpfGraphics(unittest.TestCase):
         self.assertLess(abs(fig.data[1].y[0] - 1203.5), 1e-9)
         self.assertLess(abs(fig.data[1].x[-1] - 837.2), 1e-9)
         self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
-        self.plot_graphics = True
         if self.plot_graphics:
             fig.show()
 
+    @unittest.skip(
+        "Skipping test_NY_branchswitching, because it takes too much time. It should be run manually.\
+        Or we have to pass gurobi settings with a TimeLimit via a .prm file."
+    )
     def test_NY_branchswitching(self):
-        settings = {"dodc": True}
         # load path to case file
         casefile = load_caseNYopf()
         # read case file and return a case dictionary
         case = read_case_from_mat_file(casefile)
 
-        # get path to csv file holding the coordinates for NY
-        coordsfile = load_filepath("nybuses.csv")
-        coords_dict = read_coords_from_csv_file(coordsfile)
-
         # solve opf model and return a solution
-        solution = solve_opf_model(case, opftype="DC", branchswitching=True)
+        solution = solve_opf_model(
+            case, opftype="DC", branchswitching=True, minactivebranches=0.999
+        )
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
+
+        # get path to csv file holding the coordinates for NY
+        coordsfile = load_filepath("nybuses.csv")
+        coords_dict = read_coords_from_csv_file(coordsfile)
+        fig = generate_opf_solution_figure(case, coords_dict, solution)
+        if self.plot_graphics:
+            fig.show()
