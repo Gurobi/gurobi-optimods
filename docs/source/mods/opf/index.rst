@@ -8,10 +8,10 @@ To learn more
 ---------------------
 
 - :footcite:t:`andersson1`
-      - Thorough survey of relaxations for power flow problems.
+      - Basic textbook.
 
 - :footcite:t:`bergenvittal`
-      - Thorough survey of relaxations for power flow problems.
+      - Basic textbook.
 
 - :footcite:t:`bienstockpower`
       - Introduction to various power related problems with emphasis on modeling and optimization.

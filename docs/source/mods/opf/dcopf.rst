@@ -4,11 +4,10 @@ DCOPF
 Problem Specification
 ---------------------
 
-Give a brief overview of the problem being solved.
 
 .. tabs::
 
-    .. tab:: Domain-Specific Description
+   .. tab:: Domain-Specific Description
 
         In the so-called DC approximation to the standard ACOPF problem it is assumed that all voltage magnitudes are equal to :math:`1.0` and that across all branches the phase angle difference is very small.  The active power flow equations are linearized, using these assumptions, and the reactive power flow constraints are ignored.  The objective function is the same as for ACOPF. In summary we obtain a linear approximation (not a relaxation) to standard ACOPF which is very commonly used in energy markets.
 
@@ -63,8 +62,7 @@ Give a brief overview of the problem being solved.
        .. math::
 	  \min \sum_{\text{generators} \, i} F_i(P^g_i).
 
-
-    .. tab:: DCOPF with branch-switching
+   .. tab:: Branch-switching
 
        An important binary MILP extension of DCOPF is that where a binary variable :math:`z_{km}` is used to decide if a branch :math:`km` is "on" (:math:`z_{km} = 1`) or not.  To achive this goal, we simply reformulate the power flow definition as
 
