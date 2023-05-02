@@ -46,6 +46,7 @@ def solve_opf_model(
     - ``result["f"]`` solution objective value
     - ``result["bus"][i]["Vm"]`` for voltage magnitude value at bus `i`
     - ``result["bus"][i]["Va"]`` for voltage angle value at bus `i`
+    - ``result["bus"][i]["mu"]`` for shadow prices of balance constraints at bus `i` (only available for DC without branchswitching)
     - ``result["gen"][i]["Pg"]`` for real power injection at generator `i`
     - ``result["gen"][i]["Qg"]`` for reactive power injection at generator `i`
     - ``result["branch"][i]["Pf"]`` for real power injected into "from" end of branch at branch `i`
@@ -85,7 +86,7 @@ def solve_opf_model(
     :param minactivebranches: Controls the minimum number of branches that has to be turned on when branchswitching is active, i.e.,
                               the minimum number of turned on branches is equal to ``numbranches * minactivebranches``. Defaults to
                               0.95, i.e., at least 95% of branches have to be turned on
-    :type minactivebranches: float
+    :type minactivebranches: float, optional
     :param useactivelossineqs: Controls whether active loss constraints are used. These are linear outer approximation of the JABR
                               constraints. Usually, they provide a very good lower bound while still being linear.
                               Defaults to `False`.

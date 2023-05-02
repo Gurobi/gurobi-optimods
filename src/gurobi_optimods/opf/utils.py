@@ -152,7 +152,6 @@ def check_settings_for_correct_type(settings):
             "skipjabr",
             "usemipstart",
             "useactivelossineqs",
-            "useconvexformulation",
             "usemaxdispersion",
             "usemaxphasediff",
             "use_ef",
