@@ -11,8 +11,8 @@ QUBO is :math:`\mathcal{NP}`-hard and for many classical problems such as
 maximum cut, graph coloring, and the partition problem,
 embeddings into QUBO have been formulated (:footcite:t:`glover2018tutorial`).
 
-QUBO models are also related to Ising models and therefore used in adiabatic
-quantum computation, where a physical process called quantum annealing solves them.
+QUBO models are also related to Ising models and used in adiabatic
+quantum computation, where a physical process called quantum annealing solves the models.
 As a consequence, there is a trend to convert arbitrary combinatorial
 optimization problems to QUBO models (which is a non-trivial procedure) to solve them
 finally with a quantum annealer.
@@ -70,17 +70,17 @@ Problem Specification
         correctly considered in the objective function since :math:`x_i x_i = x_i` holds
         for binary variables.
 
-The input data consisting of the item (pair) weights is defined as a matrix as detailed
-in the domain-specific description,
-either as a NumPy array :class:`numpy.ndarray` or as a SciPy sparse matrix :class:`scipy.sparse`.
+The input data consisting of the item (pair) weights is defined as a matrix (see the
+domain-specific description), either as a NumPy array :class:`numpy.ndarray`
+or as a SciPy sparse matrix :class:`scipy.sparse`.
 
 Code
 ----
 
 The example below solves a QUBO problem instance based on 3 items
-with single-item weights :math:`q_1 = 0,~ q_2 = -3,~ q_3 = 2` and
+with single-item weights :math:`q_1 = 0,~ q_2 = -3,~ q_3 = 2`, and
 item-pair weights :math:`q_{12} = -1,~ q_{13} = -2,~ q_{23} = 3`,
-resulting in item weight matrix
+resulting in the following item weight matrix:
 
 .. math::
     Q = \begin{pmatrix}

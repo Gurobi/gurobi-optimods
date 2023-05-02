@@ -41,13 +41,13 @@ def solve_qubo(
 
     :param coeffMatrix: Quadratic coefficient matrix
     :type coeffMatrix: :class:`numpy.ndarray` or :class:`scipy.sparse`
-    :param timeLimit: Solution time limit in seconds
+    :param timeLimit: Time limit in seconds
     :type timeLimit: :class:`int`
     :param output: Enable progress output
     :type output: :class:`bool`
-    :param logFile: Log Gurobi output to file
+    :param logFile: Filename for Gurobi log output
     :type logFile: :class:`string`
-    :return: Binary solution array and objective value
+    :return: 0/1 solution array, objective value
     :rtype: :class:`QuboResult`
     """
 
@@ -63,20 +63,21 @@ def solve_qubo(
 
     n = shape[0]
 
-    with gp.Env() as env, gp.Model(env=env) as model:
+    params = {"TimeLimit": timeLimit, "LogToConsole": 0, "LogFile": logFile}
+
+    with gp.Env(params=params) as env, gp.Model(env=env) as model:
 
         x = model.addMVar(n, vtype=GRB.BINARY)
         model.setObjective(x @ coeffMatrix @ x, GRB.MINIMIZE)
 
-        model._nextOutputTime = 5
-
-        model.params.TimeLimit = timeLimit
-        model.params.LogToConsole = 0
-        model.params.LogFile = logFile
-
         if output:
+            model._nextOutputTime = 5
             model.optimize(callback)
         else:
             model.optimize()
 
-        return QuboResult(solution=x.X.round(), objective_value=model.ObjVal)
+        result = None
+        if model.SolCount > 0:
+            result = QuboResult(solution=x.X.round(), objective_value=model.ObjVal)
+
+        return result
