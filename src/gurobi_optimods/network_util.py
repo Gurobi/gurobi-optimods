@@ -97,7 +97,7 @@ def solve_min_cost_flow(
     # Solve model with gurobi, return cost and flows
     with gp.Model(env=env) as m:
         m.ModelSense = GRB.MINIMIZE
-        x = m.addMVar(A.shape[1], lb=0, ub=capacity, obj=cost)
+        x = m.addMVar(A.shape[1], lb=0, ub=capacity, obj=cost, name="x")
         m.addMConstr(A, x, GRB.EQUAL, demand)
         m.optimize()
         if m.Status == GRB.INFEASIBLE:
