@@ -222,7 +222,7 @@ portfolio value, you can do:
     ...
 
 With leverage allowed we now obtain an optimal portfolio with three short
-positions, totaling to about 14% of the wealth:
+positions, totalling to about 14% of the wealth:
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -242,56 +242,6 @@ positions, totaling to about 14% of the wealth:
 
     >>> x[x<0].sum()
     -0.141226...
-
-Restricting the number of trades
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-It is possible to compute an optimal portfolio under the additional restriction
-that only a limited number of positions can be traded.  This can be set through
-the ``max_trades`` keyword parameter.  For the example above, restricting the
-total number of trades to three we get the following optimal portfolio.
-
-.. testcode:: mod
-
-    import pandas as pd
-
-    from gurobi_optimods.datasets import load_portfolio
-    from gurobi_optimods.portfolio import MeanVariancePortfolio
-
-    data = load_portfolio()
-    Sigma = data.cov()
-    mu = data.mean()
-    gamma = 100.0
-
-    mvp = MeanVariancePortfolio(Sigma, mu)
-    x = mvp.efficient_portfolio(gamma, max_trades=3)
-
-.. testoutput:: mod
-    :hide:
-
-    ...
-    Optimize a model with 123 rows, 130 columns and 300 nonzeros
-    ...
-    Model has 55 quadratic objective terms
-    ...
-
-The returned solution now suggests to trade only the assets AA, DD, HH.
-
-.. doctest:: mod
-    :options: +NORMALIZE_WHITESPACE
-
-    >>> x
-	AA    0.482084
-	BB    0.000000
-	CC    0.000000
-	DD    0.282683
-	EE    0.000000
-	FF    0.000000
-	GG    0.000000
-	HH    0.235233
-	II    0.000000
-	JJ    0.000000
-    dtype: float64
 
 Transaction fees
 ~~~~~~~~~~~~~~~~
@@ -398,6 +348,69 @@ the latter portfolio is free of "tiny" transactions.
     II  0.066809  0.063517
     JJ -0.030588  0.000000
 
+Restricting the number of open positions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It is possible to compute an optimal portfolio under the additional restriction
+that only a limited number of positions can be open.  This can be set through
+the ``max_positions`` keyword parameter.
+
+For the example above, restricting the
+total number of positions to three we get the following optimal portfolio.
+
+.. testcode:: mod
+
+    import pandas as pd
+
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+
+    data = load_portfolio()
+    Sigma = data.cov()
+    mu = data.mean()
+    gamma = 100.0
+
+    mvp = MeanVariancePortfolio(Sigma, mu)
+    x = mvp.efficient_portfolio(gamma, max_positions=3)
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 123 rows, 130 columns and 300 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+
+The returned solution now suggests to trade only the assets "AA", "DD", "HH".
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> x
+	AA    0.482084
+	BB    0.000000
+	CC    0.000000
+	DD    0.282683
+	EE    0.000000
+	FF    0.000000
+	GG    0.000000
+	HH    0.235233
+	II    0.000000
+	JJ    0.000000
+    dtype: float64
+
+Restricting the number of trades
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is possible to compute an optimal portfolio under the additional restriction
+that only a limited number of positions can be traded.  This can be set through
+the ``max_trades`` keyword parameter.  Without a starting portfolio, this is
+equivalent to limiting the number of positions (via ``max_positions``).
+However, while ``max_positions`` limits the total number of open positions in
+the portfolio, the number of trades counts changes relative to the previous portfolio
+holdings.
+
+
 Starting portfolio
 ~~~~~~~~~~~~~~~~~~
 
@@ -405,6 +418,9 @@ To model multi-period portfolios, a starting portfolio can be specified via the 
 If this is done, all limits enforced for trades are relative to this starting portfolio.
 
 The initial holdings :math:`x^0` need to satisfy :math:`\sum_i x^0_i \geq 1`.
+
+In the following examples we will often work with an equally distributed starting portfolio, *i.e.,*
+each initial allocation is :math:`\tfrac 1n`.
 
 .. testcode:: mod
 
@@ -453,7 +469,7 @@ The initial holdings :math:`x^0` need to satisfy :math:`\sum_i x^0_i \geq 1`.
 
 Note that without limitations to the trades, it does not make a difference whether or not we specify a starting portfolio
 since we can then always change our positions to match the optimal portfolio at this point in time.
-Gurobi does not fall victim to the sunk-cost-fallacy.
+Gurobi does not fall victim to the *sunk-cost-fallacy*.
 
 If transaction costs or cardinality constraints are present, the starting portfolio does make a difference:
 
@@ -531,12 +547,3 @@ In this example, we were allowed five trades:
 * Sell existing positions in "BB", "CC", and "JJ".
 * Open a short position in "CC".
 * Buy "AA".
-
-Restricting the number of open positions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-It is possible to compute an optimal portfolio under the additional restriction
-that only a limited number of positions can be open.  This can be set through
-the ``max_positions`` keyword parameter. Without a starting portfolio, this is
-equivalent to limiting the number of trades (via ``max_trades``). However, while the
-number of trades counts changes relative to the previous portfolio holdings,
-``max_positions`` limits the total number of open positions in the portfolio.
