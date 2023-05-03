@@ -13,7 +13,9 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def _convert_pandas_to_digraph(edge_data, node_data):
+def _convert_pandas_to_digraph(
+    edge_data, node_data, capacity=True, cost=True, demand=True
+):
     """
     Convert from a pandas DataFrame to a networkx.DiGraph with the appropriate
     attributes. For edges: `capacity`, and `cost`. For nodes: `demand`.
@@ -21,12 +23,15 @@ def _convert_pandas_to_digraph(edge_data, node_data):
     G = nx.from_pandas_edgelist(
         edge_data.reset_index(), create_using=nx.DiGraph(), edge_attr=True
     )
-    for i, d in node_data.iterrows():
-        G.add_node(i, demand=d.demand)
+    if demand:
+        for i, d in node_data.iterrows():
+            G.add_node(i, demand=d.demand)
     return G
 
 
-def _convert_pandas_to_scipy(edge_data, node_data):
+def _convert_pandas_to_scipy(
+    edge_data, node_data, capacity=True, cost=True, demand=True
+):
     """
     Convert from a pandas DataFrame to several scipy.sparse.coo_matrix contain
     the graph structure, the capacity and cost values per edge, and the demand
@@ -40,13 +45,21 @@ def _convert_pandas_to_scipy(edge_data, node_data):
     data = np.ones(len(coords), dtype=np.int64)
     G = sp.coo_matrix((data, (a0, a1)))
 
-    data = edge_data["capacity"].values
-    cap = sp.coo_matrix((data, (a0, a1)))
+    costs = None
+    if cost:
+        data = edge_data["cost"].values
+        costs = sp.coo_matrix((data, (a0, a1)))
 
-    data = edge_data["cost"].values
-    costs = sp.coo_matrix((data, (a0, a1)))
+    cap = None
+    if capacity:
+        data = edge_data["capacity"].values
+        cap = sp.coo_matrix((data, (a0, a1)))
 
-    return G, cap, costs, node_data["demand"].values
+    dem = None
+    if demand:
+        dem = node_data["demand"].values
+
+    return G, cap, costs, dem
 
 
 def solve_min_cost_flow(

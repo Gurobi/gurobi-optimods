@@ -17,7 +17,7 @@ import gurobi_optimods.min_cost_flow as mcf
 
 class TestMinCostFlow(unittest.TestCase):
     def test_pandas(self):
-        edge_data, node_data = datasets.load_min_cost_flow()
+        edge_data, node_data = datasets.load_graph()
         cost, sol = mcf.min_cost_flow(edge_data, node_data)
         sol = sol[sol > 0]
         self.assertEqual(cost, 31)
@@ -25,14 +25,14 @@ class TestMinCostFlow(unittest.TestCase):
         self.assertEqual(sol.index.tolist(), [(0, 1), (0, 2), (1, 3), (2, 4), (4, 5)])
 
     def test_infeasible(self):
-        edge_data, node_data = datasets.load_min_cost_flow()
+        edge_data, node_data = datasets.load_graph()
         # Add a node requesting more flow than is available.
         node_data["demand"].values[-1] = 10.0
         with self.assertRaisesRegex(ValueError, "Unsatisfiable flows"):
             obj, sol = mcf.min_cost_flow(edge_data, node_data)
 
     def test_scipy(self):
-        G, cap, cost, demands = datasets.load_min_cost_flow_scipy()
+        G, cap, cost, demands = datasets.load_graph_scipy()
         cost, sol = mcf.min_cost_flow_scipy(G, cap, cost, demands)
         self.assertEqual(cost, 31)
         expected = np.array(
@@ -48,7 +48,7 @@ class TestMinCostFlow(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        G = datasets.load_min_cost_flow_networkx()
+        G = datasets.load_graph_networkx()
         cost, sol = mcf.min_cost_flow_networkx(G)
         self.assertEqual(cost, 31)
         self.assertEqual(
@@ -58,7 +58,7 @@ class TestMinCostFlow(unittest.TestCase):
 
 class TestMinCostFlow2(unittest.TestCase):
     def test_pandas(self):
-        edge_data, node_data = datasets.load_min_cost_flow2()
+        edge_data, node_data = datasets.load_graph2()
         cost, sol = mcf.min_cost_flow(edge_data, node_data)
         sol = sol[sol > 0]
         self.assertEqual(cost, 150)
@@ -69,7 +69,7 @@ class TestMinCostFlow2(unittest.TestCase):
         )
 
     def test_scipy(self):
-        G, cap, cost, demands = datasets.load_min_cost_flow2_scipy()
+        G, cap, cost, demands = datasets.load_graph2_scipy()
         cost, sol = mcf.min_cost_flow_scipy(G, cap, cost, demands)
         self.assertEqual(cost, 150)
         expected = np.array(
@@ -85,7 +85,7 @@ class TestMinCostFlow2(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        G = datasets.load_min_cost_flow2_networkx()
+        G = datasets.load_graph2_networkx()
         cost, sol = mcf.min_cost_flow_networkx(G)
         self.assertEqual(cost, 150)
         self.assertEqual(

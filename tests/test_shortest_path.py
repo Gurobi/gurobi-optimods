@@ -17,7 +17,7 @@ import gurobi_optimods.shortest_path as mcf
 
 class TestShortestPath(unittest.TestCase):
     def test_pandas(self):
-        edge_data, _ = datasets.load_min_cost_flow()
+        edge_data, _ = datasets.load_graph()
         cost, sol = mcf.shortest_path(edge_data, 0, 5)
         self.assertEqual(cost, 11)
         sol = sol[sol > 0]
@@ -25,12 +25,12 @@ class TestShortestPath(unittest.TestCase):
         self.assertEqual(sol.index.tolist(), [(0, 1), (1, 3), (3, 5)])
 
     def test_infeasible(self):
-        G, _, _, _ = datasets.load_min_cost_flow_scipy()
+        G, _, _, _ = datasets.load_graph_scipy()
         with self.assertRaisesRegex(ValueError, "Unsatisfiable flows"):
             obj, sol = mcf.shortest_path(G, 0, 0)
 
     def test_scipy(self):
-        G, _, cost, _ = datasets.load_min_cost_flow_scipy()
+        G, _, cost, _ = datasets.load_graph_scipy()
         G.data = cost.data
         cost, sol = mcf.shortest_path(G, 0, 5)
         self.assertEqual(cost, 11.0)
@@ -47,7 +47,7 @@ class TestShortestPath(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        G = datasets.load_min_cost_flow_networkx()
+        G = datasets.load_graph_networkx()
         m = nx.to_scipy_sparse_array(G).tocsr()
         cost, sol_graph = mcf.shortest_path(G, 0, 5)
         self.assertEqual(cost, 11)
@@ -56,7 +56,7 @@ class TestShortestPath(unittest.TestCase):
 
 class TestShortestPath2(unittest.TestCase):
     def test_pandas(self):
-        edge_data, _ = datasets.load_min_cost_flow2()
+        edge_data, _ = datasets.load_graph2()
         cost, sol = mcf.shortest_path(edge_data, 0, 4)
         sol = sol[sol > 0]
         self.assertEqual(cost, 7.0)
@@ -67,7 +67,7 @@ class TestShortestPath2(unittest.TestCase):
         )
 
     def test_sp(self):
-        G, _, cost, _ = datasets.load_min_cost_flow2_scipy()
+        G, _, cost, _ = datasets.load_graph2_scipy()
         G.data = cost.data
         cost, sol = mcf.shortest_path(G, 0, 4)
         self.assertEqual(cost, 7.0)
@@ -84,7 +84,7 @@ class TestShortestPath2(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        G = datasets.load_min_cost_flow2_networkx()
+        G = datasets.load_graph2_networkx()
         cost, sol = mcf.shortest_path(G, 0, 4)
         self.assertEqual(cost, 7.0)
         self.assertEqual(list(sol.edges()), [(0, 2), (2, 3), (3, 4)])

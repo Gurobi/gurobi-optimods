@@ -43,27 +43,37 @@ def load_workforce():
     )
 
 
-def load_min_cost_flow(drop_pos=True):
+def load_graph(drop_pos=True, capacity=True, cost=True, demand=True):
     edge_data = pd.read_csv(DATA_FILE_DIR / "graphs/edge_data1.csv").set_index(
         ["source", "target"]
     )
     node_data = pd.read_csv(DATA_FILE_DIR / "graphs/node_data1.csv", index_col=0)
     if drop_pos:
         node_data.drop(columns=["posx", "posy"], inplace=True)
+    if not capacity:
+        edge_data.drop(columns=["capacity"], inplace=True)
+    if not cost:
+        edge_data.drop(columns=["cost"], inplace=True)
+    if not demand:
+        node_data.drop(columns=["demand"], inplace=True)
     return edge_data, node_data
 
 
-def load_min_cost_flow_networkx():
-    edge_data, node_data = load_min_cost_flow()
-    return _convert_pandas_to_digraph(edge_data, node_data)
+def load_graph_networkx(capacity=True, cost=True, demand=True):
+    edge_data, node_data = load_graph(capacity=capacity, cost=cost, demand=demand)
+    return _convert_pandas_to_digraph(
+        edge_data, node_data, capacity=capacity, cost=cost, demand=demand
+    )
 
 
-def load_min_cost_flow_scipy():
-    edge_data, node_data = load_min_cost_flow()
-    return _convert_pandas_to_scipy(edge_data, node_data)
+def load_graph_scipy(capacity=True, cost=True, demand=True):
+    edge_data, node_data = load_graph(capacity=capacity, cost=cost, demand=demand)
+    return _convert_pandas_to_scipy(
+        edge_data, node_data, capacity=capacity, cost=cost, demand=demand
+    )
 
 
-def load_min_cost_flow2():
+def load_graph2():
     return (
         pd.read_csv(DATA_FILE_DIR / "graphs/edge_data2.csv").set_index(
             ["source", "target"]
@@ -72,13 +82,13 @@ def load_min_cost_flow2():
     )
 
 
-def load_min_cost_flow2_networkx():
-    edge_data, node_data = load_min_cost_flow2()
+def load_graph2_networkx():
+    edge_data, node_data = load_graph2()
     return _convert_pandas_to_digraph(edge_data, node_data)
 
 
-def load_min_cost_flow2_scipy():
-    edge_data, node_data = load_min_cost_flow2()
+def load_graph2_scipy():
+    edge_data, node_data = load_graph2()
     return _convert_pandas_to_scipy(edge_data, node_data)
 
 
