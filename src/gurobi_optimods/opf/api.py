@@ -7,7 +7,6 @@ from gurobi_optimods.opf.grbcasereader import (
     read_case_file_mat,
     turn_opf_dict_into_mat_file,
 )
-
 from gurobi_optimods.opf.grbfile import (
     initialize_data_dict,
     construct_settings_dict,
@@ -19,7 +18,8 @@ from gurobi_optimods.opf.grbformulator import (
     construct_and_solve_model,
     compute_violations_from_voltages,
 )
-from gurobi_optimods.opf.utils import initialize_logger, remove_and_close_handlers
+
+logger = logging.getLogger(__name__)
 
 
 def solve_opf_model(
@@ -105,9 +105,6 @@ def solve_opf_model(
     :rtype: dict
     """
 
-    # Initialize output and file handler and start logging
-    logger, handlers = initialize_logger("OpfLogger", logfile, True)
-
     # Initialize settings dictionary
     settings = construct_settings_dict(
         opftype,
@@ -133,9 +130,6 @@ def solve_opf_model(
 
     # Construct and solve model using given case data and user settings
     solution = construct_and_solve_model(alldata)
-
-    # Remove and close all logging handlers
-    remove_and_close_handlers(logger, handlers)
 
     return solution
 
@@ -172,9 +166,6 @@ def compute_violations_from_given_voltages(case, voltages, polar=False):
     :rtype: dict
     """
 
-    # Initialize output and file handler and start logging
-    logger, handlers = initialize_logger("OpfLogger")
-
     # Initialize fixed settings dictionary
     # We need the settings to construct a correct model
     settings = construct_settings_dict(
@@ -204,9 +195,6 @@ def compute_violations_from_given_voltages(case, voltages, polar=False):
 
     # Compute model violations based on user input voltages
     violations = compute_violations_from_voltages(alldata)
-
-    # Remove and close all logging handlers
-    remove_and_close_handlers(logger, handlers)
 
     return violations
 
@@ -244,9 +232,6 @@ def turn_result_into_mat_file(result, matfilename=""):
     :type matfilename: str, optional
     """
 
-    # Initialize output and file handler and start logging
-    logger, handlers = initialize_logger("OpfLogger")
-
     # Set a default output file name
     if matfilename == "":
         matfilename = "result.mat"
@@ -260,9 +245,6 @@ def turn_result_into_mat_file(result, matfilename=""):
 
     # Generate .mat file out of result
     turn_opf_dict_into_mat_file(result, matfilename)
-
-    # Remove and close all logging handlers
-    remove_and_close_handlers(logger, handlers)
 
 
 def read_coords_from_csv_file(coordsfile):

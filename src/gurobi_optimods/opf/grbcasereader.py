@@ -5,7 +5,7 @@ import logging
 import scipy
 import numpy as np
 
-from gurobi_optimods.opf.utils import initialize_logger, remove_and_close_handlers
+logger = logging.getLogger(__name__)
 
 
 class Bus:
@@ -641,7 +641,6 @@ def read_case_file_mat(casefile):
     :rtype: dict
     """
 
-    logger, handlers = initialize_logger("CaseReadingLogger")
     starttime = time.time()
     case_dict = {}
     case_dict["refbus"] = -1
@@ -766,8 +765,6 @@ def read_case_file_mat(casefile):
 
     endtime = time.time()
     logger.info(f"Reading and building time: {endtime - starttime} s.")
-    logger.info("")
-    remove_and_close_handlers(logger, handlers)
 
     return case_dict
 

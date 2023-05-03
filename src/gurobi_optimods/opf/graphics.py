@@ -2,7 +2,6 @@ from gurobi_optimods.opf.grbgraphical import (
     generate_solution_figure,
     generate_violations_figure,
 )
-from gurobi_optimods.opf.utils import initialize_logger, remove_and_close_handlers
 from gurobi_optimods.opf.grbfile import (
     initialize_data_dict,
     grbmap_coords_from_dict,
@@ -28,9 +27,6 @@ def generate_opf_solution_figure(case, coords, solution):
     :rtype: :class:`plotly.graph_objects.Figure`
     """
 
-    # Initialize output and file handler and start logging
-    logger, handlers = initialize_logger("OpfLogger")
-
     # Initilize data dictionary
     alldata = initialize_data_dict()
 
@@ -46,9 +42,6 @@ def generate_opf_solution_figure(case, coords, solution):
 
     # Generate a plotly figure object representing the given solution for the network
     fig = generate_solution_figure(alldata, solution)
-
-    # Remove and close all logging handlers
-    remove_and_close_handlers(logger, handlers)
 
     return fig
 
@@ -71,9 +64,6 @@ def generate_opf_violations_figure(case, coords, violations):
     :rtype: :class:`plotly.graph_objects.Figure`
     """
 
-    # Initialize output and file handler and start logging
-    logger, handlers = initialize_logger("OpfLogger")
-
     # Initilize data dictionary
     alldata = initialize_data_dict()
 
@@ -89,8 +79,5 @@ def generate_opf_violations_figure(case, coords, violations):
 
     # Generate a plotly figure object representing the given violations for the network
     fig = generate_violations_figure(alldata, violations)
-
-    # Remove and close all logging handlers
-    remove_and_close_handlers(logger, handlers)
 
     return fig

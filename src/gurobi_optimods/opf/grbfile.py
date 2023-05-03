@@ -5,10 +5,10 @@ import logging
 
 from gurobi_optimods.opf.utils import (
     get_default_optimization_settings,
-    initialize_logger,
-    remove_and_close_handlers,
     check_settings_for_correct_type,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def initialize_data_dict(logfile=""):
@@ -197,7 +197,6 @@ def read_file_csv(filename, data):
     :rtype: dict
     """
 
-    logger, handlers = initialize_logger("CoordsReadingLogger")
     logger.info(f"Reading csv {data} file {filename} and building dictionary.")
 
     with open(filename, mode="r") as infile:
@@ -222,7 +221,6 @@ def read_file_csv(filename, data):
             )
 
     logger.info(f"Done reading {data}.\n")
-    remove_and_close_handlers(logger, handlers)
 
     return data_dict
 
