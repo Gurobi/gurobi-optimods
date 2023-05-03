@@ -13,6 +13,8 @@ from gurobi_optimods.opf.grbformulator_ac import (
 from gurobi_optimods.opf.grbformulator_dc import lpformulator_dc_body
 from gurobi_optimods.opf.grbformulator_iv import lpformulator_iv_body
 
+logger = logging.getLogger(__name__)
+
 
 def construct_and_solve_model(alldata):
     """
@@ -27,7 +29,6 @@ def construct_and_solve_model(alldata):
     :rtype: dict
     """
 
-    logger = logging.getLogger("OpfLogger")
     opftype = None
     if alldata["doac"]:
         opftype = OpfType.AC
@@ -122,7 +123,6 @@ def compute_violations_from_voltages(alldata):
     :rtype: dict
     """
 
-    logger = logging.getLogger("OpfLogger")
     logger.info("Computing violations from given voltage inputs.")
     violations = None
     # Create model
@@ -165,7 +165,6 @@ def lpformulator_optimize(alldata, model, opftype):
     :rtype: int
     """
 
-    logger = logging.getLogger("OpfLogger")
     # Disable logging handler to get Gurobi output
     logging.disable(logging.INFO)
     model.params.LogFile = alldata["logfile"]
@@ -278,7 +277,6 @@ def lpformulator_setup(alldata, opftype):
     :type opftype: :enum: `OpfType`
     """
 
-    logger = logging.getLogger("OpfLogger")
     logger.info("Auxiliary setup.")
     if opftype == OpfType.DC:
         if alldata["branchswitching_comp"]:
@@ -745,7 +743,6 @@ def writemipstart(alldata):
     :type alldata: dict
     """
 
-    logger = logging.getLogger("OpfLogger")
     filename = "mipstart.mst"
     f = open(filename, "w")
     logger.info(f"Writing mipstart in file {filename}.")

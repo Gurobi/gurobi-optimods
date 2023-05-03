@@ -139,7 +139,6 @@ def read_optimization_settings(alldata, settings):
             "Illegal option combination. Have to use exactly 1 of options [doac, dodc, doiv]."
         )
 
-    logger = logging.getLogger("OpfLogger")
     logger.info("All settings:")
     for s in defaults.keys():
         if s == "skipjabr":

@@ -5,6 +5,8 @@ from gurobipy import GRB
 
 from gurobi_optimods.opf.grbformulator_ac import computebalbounds
 
+logger = logging.getLogger(__name__)
+
 
 def lpformulator_dc_body(alldata, model):
     """
@@ -32,7 +34,6 @@ def lpformulator_dc_create_vars(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
-    logger = logging.getLogger("OpfLogger")
     logger.info("Creating variables.")
 
     fixtolerance = alldata["fixtolerance"]
@@ -173,7 +174,6 @@ def lpformulator_dc_create_constraints(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
-    logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     numbranches = alldata["numbranches"]

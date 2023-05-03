@@ -5,6 +5,8 @@ import numpy as np
 from gurobi_optimods.opf.grbgraph import Grbgraph
 from gurobi_optimods.opf.plotlyhandler import Plotlyhandler
 
+logger = logging.getLogger(__name__)
+
 
 def generate_solution_figure(alldata, solution):
     """
@@ -22,7 +24,6 @@ def generate_solution_figure(alldata, solution):
     :rtype: :class: `plotly.graph_objects.Figure`
     """
 
-    logger = logging.getLogger("OpfLogger")
     logger.info(
         f"Generating solution figure with objective value {solution['f']:.3f}. Coordinates given."
     )
@@ -79,7 +80,6 @@ def generate_violations_figure(alldata, violations):
     :rtype: :class: `plotly.graph_objects.Figure`
     """
 
-    logger = logging.getLogger("OpfLogger")
     logger.info(f"Generating violations figure.")
 
     alldata["violation"] = {}
@@ -146,7 +146,6 @@ def grbgraphical(alldata, plottype, textlist):
     :rtype: :class: `plotly.graph_objects.Figure`
     """
 
-    logger = logging.getLogger("OpfLogger")
     buses = alldata["buses"]
     numbuses = alldata["numbuses"]
     branches = alldata["branches"]
@@ -359,8 +358,6 @@ def graphplot(
     :rtype: :class: `plotly.graph_objects.Figure`
     """
 
-    logger = logging.getLogger("OpfLogger")
-
     n = graph_dict["N"]
     m = graph_dict["M"]
 
@@ -528,7 +525,6 @@ def scangraph(alldata, graph_dict):
     :rtype: list, list, dict, dict, dict, int
     """
 
-    logger = logging.getLogger("OpfLogger")
     logger.info("Scanning graph.")
     logger.info("Using given lat, lon coordinates.\n")
     N = alldata["numbuses"]

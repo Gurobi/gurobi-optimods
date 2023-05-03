@@ -1,5 +1,7 @@
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 class Grbgraph:
     """
@@ -11,7 +13,6 @@ class Grbgraph:
         self.edges = {}
         self.n = 0  # number of vertices
         self.m = 0  # number of edges
-        logger = logging.getLogger("OpfLogger")
         logger.info("Created Grbgraph object.")
 
     def addvertex(self, i):
@@ -47,5 +48,4 @@ class Grbgraph:
         """
         Prints graph statistics
         """
-        logger = logging.getLogger("OpfLogger")
         logger.info(f"Graph object has {self.n} vertices {self.m} edges.")

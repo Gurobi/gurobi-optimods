@@ -4,6 +4,8 @@ from gurobipy import GRB
 
 from gurobi_optimods.opf.grbformulator_ac import lpformulator_ac_create_efvars
 
+logger = logging.getLogger(__name__)
+
 
 def lpformulator_iv_body(alldata, model):
     """
@@ -31,7 +33,6 @@ def lpformulator_iv_create_vars(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
-    logger = logging.getLogger("OpfLogger")
     logger.info("Creating variables.")
 
     # fixtolerance = alldata["fixtolerance"] # Currently not used
@@ -270,7 +271,6 @@ def lpformulator_iv_create_constraints(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
-    logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     numbranches = alldata["numbranches"]

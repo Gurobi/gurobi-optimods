@@ -97,7 +97,6 @@ class Bus:
         :parameter generator: Generator to be added to the bus
         :type generator: Gen
         """
-        logger = logging.getLogger("OpfLogger")
         self.genidsbycount.append(generatorcount)
 
     def addfrombranch(self, id):
@@ -263,7 +262,6 @@ class Branch:
         """
         Prints a branch. Could be useful for debugging
         """
-        logger = logging.getLogger("OpfLogger")
         logger.info(f" < {self.f} , {self.t} > ")
         logger.info(f" r {self.r} x {self.x} bc {self.bc}")
         logger.info(f" ra {self.ratio} ang {self.angle}")
@@ -400,7 +398,6 @@ class Gen:
         """
         Prints the generator cost vector. Could be useful for debugging.
         """
-        logger = logging.getLogger("OpfLogger")
         logger.info(self.costvector)
         for i in range(0, self.costdegree + 1):
             logger.info(i, self.costvector[i], " ", end="")
@@ -419,7 +416,6 @@ def read_case(alldata, case_dict):
                         non-existent generator
     """
 
-    logger = logging.getLogger("OpfLogger")
     logger.info("Building case data structures from dictionary.")
     baseMVA = alldata["baseMVA"] = case_dict["baseMVA"]
     # Buses

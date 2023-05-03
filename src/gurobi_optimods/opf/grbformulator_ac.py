@@ -3,6 +3,8 @@ import logging
 import gurobipy as gp
 from gurobipy import GRB
 
+logger = logging.getLogger(__name__)
+
 
 def lpformulator_ac_body(alldata, model):
     """
@@ -30,7 +32,6 @@ def lpformulator_ac_create_vars(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
-    logger = logging.getLogger("OpfLogger")
     logger.info("Creating variables.")
 
     fixtolerance = alldata["fixtolerance"]
@@ -384,7 +385,6 @@ def lpformulator_ac_create_polar_vars(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
-    logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     IDtoCountmap = alldata["IDtoCountmap"]
@@ -496,7 +496,6 @@ def lpformulator_ac_create_efvars(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
-    logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     IDtoCountmap = alldata["IDtoCountmap"]
@@ -547,7 +546,6 @@ def lpformulator_ac_create_constraints(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
-    logger = logging.getLogger("OpfLogger")
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     numbranches = alldata["numbranches"]
@@ -1057,7 +1055,6 @@ def lpformulator_ac_add_polarconstraints(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
-    logger = logging.getLogger("OpfLogger")
     buses = alldata["buses"]
     numbuses = alldata["numbuses"]
     branches = alldata["branches"]
@@ -1125,7 +1122,6 @@ def lpformulator_ac_add_nonconvexconstraints(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
-    logger = logging.getLogger("OpfLogger")
     buses = alldata["buses"]
     numbuses = alldata["numbuses"]
     branches = alldata["branches"]
@@ -1187,7 +1183,6 @@ def computebalbounds(alldata, bus):
     :rtype: float, float, float, float
     """
 
-    logger = logging.getLogger("OpfLogger")
     # First let's get max/min generations
     gens = alldata["gens"]
     Pubound = Plbound = 0
@@ -1228,8 +1223,6 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
     :param model: Gurobi model
     :type model: :class: `gurobipy.Model`
     """
-
-    logger = logging.getLogger("OpfLogger")
 
     model.update()
 
@@ -1380,8 +1373,6 @@ def lpformulator_ac_strictchecker(alldata, model):
     :param model: Gurobi model
     :type model: :class: `gurobipy.Model`
     """
-
-    logger = logging.getLogger("OpfLogger")
 
     # Derive additional violation information before proceeding
     grbderive_xtra_sol_values_from_voltages(alldata, model)
@@ -1754,7 +1745,6 @@ def lpformulator_checkviol_simple(
     :type max_violation_string: str
     """
 
-    logger = logging.getLogger("OpfLogger")
     ub = grbvariable.ub
     lb = grbvariable.lb
 
@@ -1813,7 +1803,6 @@ def worstboundviol_report(badvar, maxviol, boundtype):
     :type boundtype: str
     """
 
-    logger = logging.getLogger("OpfLogger")
     if badvar != None:
         logger.info(
             f"Worst {boundtype} bound violation by {badvar.Varname} viol {maxviol}."

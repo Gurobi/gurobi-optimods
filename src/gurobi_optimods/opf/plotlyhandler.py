@@ -8,6 +8,8 @@ import plotly.graph_objects as go
 
 from gurobi_optimods.opf.grbgraph import Grbgraph
 
+logger = logging.getLogger(__name__)
+
 
 class Plotlyhandler:
     """
