@@ -50,7 +50,7 @@ Show the code required to run the model from the store vs how to implement direc
 
     import scipy.sparse as sp
 
-    from gurobi_optimods.matching import maximum_weighted_matching
+    from gurobi_optimods.general_matching import maximum_weighted_matching
 
     # Weighted graph as a sparse matrix.
     row = [0, 1, 1, 2, 2, 3]

@@ -14,10 +14,7 @@ try:
 except ImportError:
     nx = None
 
-from gurobi_optimods.matching import (
-    maximum_bipartite_matching,
-    maximum_weighted_matching,
-)
+from gurobi_optimods.bipartite_matching import maximum_bipartite_matching
 
 
 def random_bipartite(n1, n2, p, seed):
@@ -278,32 +275,3 @@ class TestBipartiteMatchingNetworkx(unittest.TestCase):
         self.assertEqual(matching.number_of_nodes(), 6)
         self.assert_is_unweighted_matching(matching)
         self.assertEqual(set(matching.edges), {(0, 3), (1, 4), (2, 5)})
-
-
-class TestWeightedMatching(unittest.TestCase):
-    def test_coo_array(self):
-        G, *_ = random_bipartite(5, 5, 0.8, 0)
-        matching = maximum_weighted_matching(G)
-        self.assertEqual(len(matching.data), 5)
-
-    def test_csr_array(self):
-        G, *_ = random_bipartite(5, 5, 0.8, 0)
-        matching = maximum_weighted_matching(G.tocsr())
-        self.assertEqual(len(matching.data), 5)
-
-    def test_not_bipartite(self):
-        # Complete graph not bipartite, general matching handles this
-        data = [1, 2, 3]
-        row = [0, 0, 1]
-        col = [1, 2, 2]
-        G = sp.coo_array((data, (row, col)), shape=(3, 3))
-        matching = maximum_weighted_matching(G)
-        self.assertEqual(len(matching.data), 1)
-        expected = np.array(
-            [
-                [0, 0, 0],
-                [0, 0, 3],
-                [0, 0, 0],
-            ]
-        )
-        assert_array_equal(matching.toarray(), expected)

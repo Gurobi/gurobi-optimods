@@ -1,4 +1,3 @@
-import collections
 import logging
 from typing import List, Optional, overload
 
@@ -15,7 +14,6 @@ try:
 except ImportError:
     nx = None
 
-from gurobi_optimods.network_util import solve_min_cost_flow
 from gurobi_optimods.utils import optimod
 
 logger = logging.getLogger(__name__)
@@ -123,7 +121,7 @@ def _maximum_bipartite_matching_pandas(frame, n1_column, n2_column, create_env):
         df.loc[("sink", "source"), "_original_edge"] = False
         model.ModelSense = GRB.MAXIMIZE
 
-        balance = gppd.add_constrs(
+        gppd.add_constrs(
             model,
             df["flow"].groupby(n1_column).sum(),
             GRB.EQUAL,
@@ -262,42 +260,3 @@ def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
     arg = (np.ones(from_arc_result.shape), (from_arc_result, to_arc_result))
     matching = sp.coo_matrix(arg, dtype=float, shape=G.shape)
     return matching + matching.T
-
-
-@optimod()
-def maximum_weighted_matching(G, *, create_env):
-    """Return a subgraph which is the maximum weighted matching of G.
-
-    :param G: Adjacency matrix of a unweighted graph.
-    :type G: :class:`sp.sparray`
-    :return: Adjacency matrix of the maximum weighted matching subgraph
-    :rtype: :class:`sp.sparray`
-    """
-
-    logger.info(
-        f"Solving weighted matching model with {G.shape[0]} nodes and "
-        f"{int(G.nnz/2)} edges"
-    )
-
-    with create_env() as env, gp.Model(env=env) as m:
-        G = G.tocoo()
-        edges = list(zip(G.row, G.col))
-        x = m.addVars(edges, name="x", vtype=GRB.BINARY)
-
-        clashes = collections.defaultdict(set)
-        for edge in edges:
-            clashes[edge[0]].add(edge)
-            clashes[edge[1]].add(edge)
-
-        for edgepair in clashes.values():
-            m.addConstr(gp.quicksum(x[edge] for edge in edgepair) <= 1)
-
-        weights = dict(zip(edges, G.data))
-        m.setObjective(x.prod(weights), sense=GRB.MAXIMIZE)
-        m.optimize()
-
-        row, col, data = zip(*[(i, j, v.Obj) for (i, j), v in x.items() if v.X > 0.5])
-
-        logger.info(f"Max weighted matching has {len(data)} edges")
-
-        return sp.coo_array((data, (row, col)), shape=G.shape)

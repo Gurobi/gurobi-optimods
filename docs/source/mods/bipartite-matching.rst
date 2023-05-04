@@ -48,7 +48,7 @@ Code
             import numpy as np
             import scipy.sparse as sp
 
-            from gurobi_optimods.matching import maximum_bipartite_matching
+            from gurobi_optimods.bipartite_matching import maximum_bipartite_matching
 
             # Create a simple bipartite graph as a sparse matrix
             nodes1 = np.array([0, 1, 2, 3, 4])
@@ -75,7 +75,7 @@ Code
 
             import networkx as nx
             import numpy as np
-            from gurobi_optimods.matching import maximum_bipartite_matching
+            from gurobi_optimods.bipartite_matching import maximum_bipartite_matching
 
             # Create a random bipartite graph
             graph = nx.bipartite.random_graph(n=5, m=4, p=0.2, seed=123)
@@ -89,7 +89,7 @@ Code
             :hide:
 
             ...
-            Optimal objective -2.000000000e+00
+            Optimal objective  2.000000000e+00
 
     .. group-tab:: pandas
 
@@ -98,7 +98,7 @@ Code
         .. testcode:: bipartite_matching_pd
 
             import pandas as pd
-            from gurobi_optimods.matching import maximum_bipartite_matching
+            from gurobi_optimods.bipartite_matching import maximum_bipartite_matching
 
             # Read in some task-worker assignment data
             frame = pd.DataFrame([
@@ -114,7 +114,7 @@ Code
             :hide:
 
             ...
-            Optimal objective -2.000000000e+00
+            Optimal objective  2.000000000e+00
 
 
 The ``maximum_bipartite_matching`` function formulates a linear program for the
@@ -149,7 +149,7 @@ solves this model using a network primal simplex algorithm.
                1   -3.0000000e+00   0.000000e+00   0.000000e+00      0s
 
         Solved in 1 iterations and 0.00 seconds (0.00 work units)
-        Optimal objective -3.000000000e+00
+        Optimal objective 3.000000000e+00
         Done: max bipartite matching has 3 edges
 
 |
