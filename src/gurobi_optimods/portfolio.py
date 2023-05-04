@@ -138,7 +138,7 @@ class MeanVariancePortfolio:
             to total portfolio value, use fees_buy, fees_sell, fees_buy_short, fees_sell_short for more fine-grained control
         :type fees: :class:`float` >= 0
         :param costs: Transaction cost for each traded position, relative
-            to total portfolio value, use costs_buy, costs_sell, costs_buy_short, costs_sell_short for more fine-grained control
+            to trade value, use costs_buy, costs_sell, costs_buy_short, costs_sell_short for more fine-grained control
         :type costs: :class:`float` >= 0
         :param fees_buy: Fixed-charge buy cost for each traded long position, relative
             to total portfolio value
@@ -153,16 +153,16 @@ class MeanVariancePortfolio:
             to total portfolio value
         :type fees_buy_short: :class:`float` >= 0
         :param costs_buy: Buy transaction cost for each traded long position, relative
-            to total portfolio value
+            to trade value
         :type costs_buy: :class:`float` >= 0
         :param costs_sell: Sell transaction cost for each traded long position, relative
-            to total portfolio value
+            to trade value
         :type costs_sell: :class:`float` >= 0
         :param costs_buy_short: Buy transaction cost for each traded short position, relative
-            to total portfolio value
+            to trade value
         :type costs_buy_short: :class:`float` >= 0
         :param costs_sell_short: Sell transaction cost for each traded short position, relative
-            to total portfolio value
+            to trade value
         :type costs_sell_short: :class:`float` >= 0
         :param min_long: Lower bound on the volume on a traded long position,
             relative to total portfolio value
