@@ -10,6 +10,8 @@ def solve_workforce_scheduling(
     availability: pd.DataFrame,
     shift_requirements: pd.DataFrame,
     worker_data: Optional[pd.DataFrame] = None,
+    rolling_window=None,
+    rolling_limit=None,
 ) -> pd.DataFrame:
     """Solve a workforce scheduling model.
 
@@ -48,6 +50,20 @@ def solve_workforce_scheduling(
                 worker_data.set_index("Worker")["MinShifts"],
                 name="min_shifts",
             )
+
+        if rolling_window:
+            # This is uglier than it should be, but pandas rolling() only
+            # handles numeric data
+            for _, df in assignments.reset_index().groupby("Worker"):
+                df = df.set_index("Shift")["assign"]
+                for entry in df.index:
+                    # Hack! Surely there is a open/closed interval available?
+                    expr = df.loc[
+                        entry : entry + rolling_window - pd.Timedelta(seconds=1)
+                    ].sum()
+                    m.addConstr(expr <= rolling_limit)
+
+            # TODO need another option to specify a rolling roster (wraparound)
 
         m.optimize()
         return (

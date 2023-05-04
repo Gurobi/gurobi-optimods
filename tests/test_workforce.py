@@ -178,3 +178,51 @@ class TestWorkforceScheduling(unittest.TestCase):
                 assignments.sort_values(["Shift"]).reset_index(drop=True),
                 expected,
             )
+
+    def test_rolling(self):
+
+        availability = read_csv(
+            """
+            Worker,Shift,Preference
+            Alice,2022-07-01,1.0
+            Alice,2022-07-02,2.0
+            Alice,2022-07-03,3.0
+            Alice,2022-07-04,4.0
+            Bob,2022-07-01,5.1
+            Bob,2022-07-02,6.2
+            Bob,2022-07-03,7.3
+            Bob,2022-07-04,8.4
+            """
+        ).assign(Shift=lambda df: pd.to_datetime(df["Shift"]))
+        shift_requirements = read_csv(
+            """
+            Shift,Required
+            2022-07-01,1
+            2022-07-02,1
+            2022-07-03,1
+            2022-07-04,1
+            """
+        ).assign(Shift=lambda df: pd.to_datetime(df["Shift"]))
+
+        assignments = solve_workforce_scheduling(
+            availability=availability,
+            shift_requirements=shift_requirements,
+            rolling_window=pd.Timedelta(days=2),
+            rolling_limit=1,
+        )
+
+        expected = read_csv(
+            """
+            Worker,Shift,Preference
+            Alice,2022-07-01,1.0
+            Bob,2022-07-02,6.2
+            Alice,2022-07-03,3.0
+            Bob,2022-07-04,8.4
+            """
+        ).assign(Shift=lambda df: pd.to_datetime(df["Shift"]))
+        self.assertIsInstance(assignments, pd.DataFrame)
+        self.assertIsNot(assignments, availability)
+        assert_frame_equal(
+            assignments.sort_values(["Shift"]).reset_index(drop=True),
+            expected,
+        )
