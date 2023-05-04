@@ -108,6 +108,8 @@ class MeanVariancePortfolio:
         gamma,
         max_trades=None,
         max_positions=None,
+        fees=None,
+        costs=None,
         fees_buy=None,
         fees_sell=None,
         fees_sell_short=None,
@@ -132,6 +134,12 @@ class MeanVariancePortfolio:
         :type max_trades: :class:`int` >= 0
         :param max_positions: Upper limit on the number of open positions
         :type max_positions: :class:`int` >= 0
+        :param fees: Fixed-charge cost for each traded position, relative
+            to total portfolio value, use fees_buy, fees_sell, fees_buy_short, fees_sell_short for more fine-grained control
+        :type fees: :class:`float` >= 0
+        :param costs: Transaction cost for each traded position, relative
+            to total portfolio value, use costs_buy, costs_sell, costs_buy_short, costs_sell_short for more fine-grained control
+        :type costs: :class:`float` >= 0
         :param fees_buy: Fixed-charge buy cost for each traded long position, relative
             to total portfolio value
         :type fees_buy: :class:`float` >= 0
@@ -309,6 +317,25 @@ class MeanVariancePortfolio:
                     b_long.sum() + b_short.sum() <= max_positions, name="max_positions"
                 )
 
+            if fees is not None:
+                if fees_buy is None:
+                    fees_buy = fees
+                if fees_sell is None:
+                    fees_sell = fees
+                if fees_buy_short is None:
+                    fees_buy_short = fees
+                if fees_sell_short is None:
+                    fees_sell_short = fees
+            if costs is not None:
+                if costs_buy is None:
+                    costs_buy = costs
+                if costs_sell is None:
+                    costs_sell = costs
+                if costs_buy_short is None:
+                    costs_buy_short = costs
+                if costs_sell_short is None:
+                    costs_sell_short = costs
+
             if fees_buy is not None:
                 investment += b_long_buy.sum() * fees_buy
             if fees_buy_short is not None:
@@ -318,6 +345,15 @@ class MeanVariancePortfolio:
                 investment += b_long_sell.sum() * fees_sell
             if fees_sell_short is not None:
                 investment += b_short_sell.sum() * fees_sell_short
+
+            if costs_buy is not None:
+                investment += x_long_buy.sum() * costs_buy
+            if costs_sell is not None:
+                investment += x_long_sell.sum() * costs_sell
+            if costs_buy_short is not None:
+                investment += x_short_buy.sum() * costs_buy_short
+            if costs_sell_short is not None:
+                investment += x_short_sell.sum() * costs_sell_short
 
             if costs_buy is not None:
                 investment += x_long_buy.sum() * costs_buy

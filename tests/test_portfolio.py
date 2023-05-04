@@ -422,3 +422,54 @@ class TestMod(unittest.TestCase):
         self.assertLessEqual(
             x.sum(), 1 - n_trades * fees_sell - value_trades * costs + 1e-8
         )
+
+    def test_transaction_fees_costs_all(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        fees = 1e-4
+        costs = 0.0025
+        mvp = MeanVariancePortfolio(Sigma, mu)
+
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.3, fees=fees, costs=costs)
+        trades = (x < -1e-6) | (x > 1e-6)
+        n_trades = trades.sum()
+        long_trades_value = x.loc[x > 0].sum()
+        short_trades_value = -x.loc[x < 0].sum()
+        self.assertLessEqual(
+            x.sum(),
+            1
+            - n_trades * fees
+            - (long_trades_value + short_trades_value) * costs
+            + 1e-8,
+        )
+
+    def test_start_portfolio_transaction_fees_costs_all(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        fees = 1e-4
+        costs = 0.0025
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x0 = 1.0 / mu.size * np.ones(mu.size)
+
+        x = mvp.efficient_portfolio(
+            gamma,
+            max_total_short=0.1,
+            initial_holdings=x0,
+            fees=fees,
+            costs=costs,
+            min_long=0.02,
+            min_short=0.02,
+            max_trades=6,
+        )
+        trades = x - x0
+        buy_trades = trades > 1e-4
+        sell_trades = trades < -1e-4
+        n_trades = buy_trades.sum() + sell_trades.sum()
+        buy_trades_value = x.loc[trades > 1e-4].sum()
+        sell_trades_value = -x.loc[trades < -1e-4].sum()
+        trades_value = buy_trades_value + sell_trades_value
+        self.assertLessEqual(x.sum(), 1 - n_trades * fees - trades_value * costs + 1e-8)
