@@ -271,3 +271,26 @@ Further transform
     2022-07-12   Y   -     Y   Y  -    Y  Y
     2022-07-13   Y   Y     Y   Y  Y    Y  Y
     2022-07-14   Y   -     Y   Y  Y    Y  -
+
+Further Constraints
+-------------------
+
+In order to satisfy employee agreements, we implement some simple constraints
+for this two-week period. Namely, each worker will have a minimum number of
+shifts they are entitled to, and will not be allocated more shifts than a given
+maximum.
+
+Some additional data needs to be provided to achieve this, in the form of a
+``worker_data`` dataframe ...
+
+Rolling Rosters
+---------------
+
+Let's now assume that the above requirements must be satisfied on a rolling
+basis. So, instead of providing upper and lower limits on the number of shifts
+assigned in this 14 day period, we enforce similar limits on a rolling basis.
+
+This is a stricter constraint: in `any` 14 day window defined by starting at
+a given day in the roster, enforce the upper and lower limits.
+
+The constraint to add is no more complex, we just need to implement the code.
