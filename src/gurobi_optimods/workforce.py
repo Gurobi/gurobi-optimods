@@ -1,3 +1,5 @@
+from typing import Optional
+
 import gurobipy as gp
 import gurobipy_pandas as gppd
 import pandas as pd
@@ -5,7 +7,9 @@ from gurobipy import GRB
 
 
 def solve_workforce_scheduling(
-    availability: pd.DataFrame, shift_requirements: pd.DataFrame
+    availability: pd.DataFrame,
+    shift_requirements: pd.DataFrame,
+    worker_data: Optional[pd.DataFrame] = None,
 ) -> pd.DataFrame:
     """Solve a workforce scheduling model.
 
@@ -28,6 +32,23 @@ def solve_workforce_scheduling(
             shift_requirements.set_index("Shift")["Required"],
             name="requirements",
         )
+
+        if worker_data is not None:
+            gppd.add_constrs(
+                m,
+                assignments.groupby("Worker")["assign"].sum(),
+                GRB.LESS_EQUAL,
+                worker_data.set_index("Worker")["MaxShifts"],
+                name="max_shifts",
+            )
+            gppd.add_constrs(
+                m,
+                assignments.groupby("Worker")["assign"].sum(),
+                GRB.GREATER_EQUAL,
+                worker_data.set_index("Worker")["MinShifts"],
+                name="min_shifts",
+            )
+
         m.optimize()
         return (
             assignments.assign(assign=lambda df: df["assign"].gppd.X)
