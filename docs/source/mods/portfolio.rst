@@ -293,6 +293,7 @@ thus reducing the total sum of the returned optimal portfolio:
 
     assert math.isclose(x.sum(), 0.95)
 
+
 Minimum position constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -376,7 +377,7 @@ total number of positions to three we get the following optimal portfolio.
     :hide:
 
     ...
-    Optimize a model with 123 rows, 130 columns and 300 nonzeros
+    Optimize a model with 123 rows, 130 columns and 280 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -488,6 +489,15 @@ If transaction costs or cardinality constraints are present, the starting portfo
 
     x = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=3)
 
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 123 rows, 130 columns and 300 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
@@ -525,6 +535,16 @@ Let us look at an example with leverage:
     x0 = 1.0 / mu.size * np.ones(mu.size)
 
     x = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=5, max_total_short=0.1)
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 123 rows, 130 columns and 330 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE

@@ -295,8 +295,8 @@ class MeanVariancePortfolio:
 
             # A position/trade can only by short or long, not both
             m.addConstr(b_long + b_short <= 1, name="long_or_short_position")
-            m.addConstr(b_long_buy + b_long_sell <= 1, name="long_or_short_trade")
-            m.addConstr(b_short_buy + b_short_sell <= 1, name="long_or_short_trade")
+            m.addConstr(b_long_buy + b_long_sell <= 1, name="long_buy_or_sell")
+            m.addConstr(b_short_buy + b_short_sell <= 1, name="short_buy_or_sell")
 
             # Bound total leverage
             m.addConstr(x_short.sum() <= max_total_short, name="total_short")
@@ -345,15 +345,6 @@ class MeanVariancePortfolio:
                 investment += b_long_sell.sum() * fees_sell
             if fees_sell_short is not None:
                 investment += b_short_sell.sum() * fees_sell_short
-
-            if costs_buy is not None:
-                investment += x_long_buy.sum() * costs_buy
-            if costs_sell is not None:
-                investment += x_long_sell.sum() * costs_sell
-            if costs_buy_short is not None:
-                investment += x_short_buy.sum() * costs_buy_short
-            if costs_sell_short is not None:
-                investment += x_short_sell.sum() * costs_sell_short
 
             if costs_buy is not None:
                 investment += x_long_buy.sum() * costs_buy
