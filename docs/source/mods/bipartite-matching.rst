@@ -1,11 +1,22 @@
 Maximum Bipartite Matching
 ==========================
 
-- Application: assigning workers to tasks
-- Using bipartite matching, we can solve a really simple aspect of workforce
-  scheduling: covering as many tasks as possible, and giving work to as many
-  people as possible
-- Show example figure showing the matching of a graph
+The maximum matching problem is a fundamental problem in graph theory (ref).
+
+TODO briefly describe what a matching is (without repeating the math definition)
+
+In this mod we consider the special case of maximum cardinality matching on
+bipartite graphs. This problem can be applied to solve exclusive assignment
+problems in practice, such as the assignment of workers or resources to tasks.
+
+To give a brief example, if we construct a bipartite graph where one of the
+bipartite sets represents tasks, and the other workers, then a matching is a
+set of edges each of which assigns one worker to one task. By the properties
+of a matching, each worker is assigned at most one task and each task is
+completed by at most one worker. The maximum cardinality matching is one which
+maximises the number of completed tasks (and workers given work).
+
+TODO figure showing a bipartite matching edge selection
 
 Problem Specification
 ---------------------
@@ -16,6 +27,9 @@ joins only between, not within, the sets. A matching on this graph is any
 subset of edges such that no vertex is incident to more than one edge. A
 maximum matching is the largest possible matching on :math:`G`.
 
+Algorithm
+---------
+
 The bipartite matching problem can be reduced to a maximum flow problem by
 introducing a source vertex as a predecessor to all vertices in :math:`U`,
 and a sink vertex as a successor to all vertices in :math:`V`. Giving every
@@ -23,12 +37,20 @@ edge unit capacity, a maximum matching is found by maximizing flow from the
 source to the sink. All edges with non-zero flow in the max flow solution
 are part of the matching.
 
-Note that we need a basic solution! TU and all that.
+TODO diagram showing the flow network equivalent
 
-Something about specific graph algorithms vs mathprog formulations?
+We do not describe the mathematical formulation here, see the max flow mod (ref)
+for details. The important point to note is that when this continuous model is
+solved using the simplex algorithm, we are guaranteed to get an integral solution
+and thus the solution can be used to select a set of edges for the matching.
 
-Code
-----
+Interface
+---------
+
+The ``maximum_bipartite_matching`` function supports scipy sparse arrays, pandas
+dataframes, and networkx graphs as possible inputs. The user must also provide
+the bipartite partitioning of the input graph. In all cases, the matching is
+returned as a sub-graph of the input data structure.
 
 - Possible inputs representing edges on a graph:
 - scipy sparse array (show a directed edgelist as input and output; static input data)
@@ -40,8 +62,10 @@ Code
 
     .. group-tab:: scipy
 
-        When using scipy, create a sparse array as the graph adjacency matrix.
-        You also need to pass the bipartite node sets as numpy arrays.
+        When given a scipy sparse array representing the adjacency matrix of
+        the graph, the user must also provide the two disjoint node sets as
+        numpy arrays. The mod will return the adjacency matrix of the matching
+        as a scipy sparse array.
 
         .. testcode:: bipartite_matching_sp
 
@@ -69,7 +93,9 @@ Code
 
     .. group-tab:: networkx
 
-        To find a maximum bipartite matching on a networkx graph ...
+        When given a networkx graph as input, the user must also provide the
+        two disjoint node sets as numpy arrays. The mod will return the matching
+        as a networkx graph (a subgraph of the input).
 
         .. testcode:: bipartite_matching_nx
 
@@ -93,7 +119,12 @@ Code
 
     .. group-tab:: pandas
 
-        To use pandas, pass a dataframe with two columns specifying the edges
+        The mod accepts pandas dataframes as input, where two columns in the
+        dataframe describe the source and target vertices of an edge. The user
+        must also provide the target column names as inputs. The matching will
+        be returned as a selection of rows in the original dataframe, including
+        all additional columns present in the original dataframe, but only those
+        rows corresponding to the matching.
 
         .. testcode:: bipartite_matching_pd
 
