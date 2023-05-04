@@ -112,17 +112,17 @@ Data examples
             >>> data = datasets.load_workforce()
             >>> data.preferences
                Worker      Shift  Preference
-            0     Amy 2022-07-02         3.0
-            1     Amy 2022-07-03         3.0
-            2     Amy 2022-07-05         3.0
+            0     Amy 2022-07-02         2.0
+            1     Amy 2022-07-03         2.0
+            2     Amy 2022-07-05         5.0
             3     Amy 2022-07-07         3.0
-            4     Amy 2022-07-09         3.0
+            4     Amy 2022-07-09         2.0
             ..    ...        ...         ...
-            67     Gu 2022-07-10         2.0
-            68     Gu 2022-07-11         2.0
+            67     Gu 2022-07-10         4.0
+            68     Gu 2022-07-11         5.0
             69     Gu 2022-07-12         2.0
-            70     Gu 2022-07-13         2.0
-            71     Gu 2022-07-14         2.0
+            70     Gu 2022-07-13         4.0
+            71     Gu 2022-07-14         3.0
             <BLANKLINE>
             [72 rows x 3 columns]
 
@@ -186,7 +186,7 @@ Show the code required to run the mod. Users interact with the 'solver' by passi
     ...
     Optimize a model with 14 rows, 72 columns and 72 nonzeros
     ...
-    Best objective 1.960000000000e+02, best bound 1.960000000000e+02, gap 0.0000%
+    Best objective 1.890000000000e+02, best bound 1.890000000000e+02, gap 0.0000%
 
 The model is solved as a linear program by Gurobi.
 
@@ -194,25 +194,31 @@ The model is solved as a linear program by Gurobi.
 
     .. code-block:: text
 
-        Gurobi Optimizer version 9.5.1 build v9.5.1rc2 (mac64[x86])
+        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+        CPU model: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
         Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
+
         Optimize a model with 14 rows, 72 columns and 72 nonzeros
-        Model fingerprint: 0x494be3a7
+        Model fingerprint: 0xe3ed72b2
+        Variable types: 0 continuous, 72 integer (72 binary)
         Coefficient statistics:
-        Matrix range     [1e+00, 1e+00]
-        Objective range  [8e+00, 1e+01]
-        Bounds range     [1e+00, 1e+00]
-        RHS range        [2e+00, 7e+00]
+          Matrix range     [1e+00, 1e+00]
+          Objective range  [1e+00, 5e+00]
+          Bounds range     [1e+00, 1e+00]
+          RHS range        [2e+00, 7e+00]
+        Found heuristic solution: objective 167.0000000
         Presolve removed 14 rows and 72 columns
         Presolve time: 0.00s
         Presolve: All rows and columns removed
-        Iteration    Objective       Primal Inf.    Dual Inf.      Time
-            0    4.8000000e+02   0.000000e+00   1.480000e+02      0s
-        Extra simplex iterations after uncrush: 5
-            5    4.8000000e+02   0.000000e+00   0.000000e+00      0s
 
-        Solved in 5 iterations and 0.00 seconds (0.00 work units)
-        Optimal objective  4.800000000e+02
+        Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+        Thread count was 1 (of 8 available processors)
+
+        Solution count 2: 189 167
+
+        Optimal solution found (tolerance 1.00e-04)
+        Best objective 1.890000000000e+02, best bound 1.890000000000e+02, gap 0.0000%
 
 |
 
@@ -228,17 +234,17 @@ normal pandas code (no gurobipy interaction).
 
     >>> assigned_shifts
        Worker      Shift  Preference
-    0     Amy 2022-07-03         3.0
-    1     Amy 2022-07-05         3.0
-    2     Amy 2022-07-07         3.0
-    3     Amy 2022-07-10         3.0
-    4     Amy 2022-07-11         3.0
+    0     Amy 2022-07-05         5.0
+    1     Amy 2022-07-07         3.0
+    2     Amy 2022-07-11         5.0
+    3     Amy 2022-07-12         3.0
+    4     Amy 2022-07-13         4.0
     ..    ...        ...         ...
-    47     Gu 2022-07-05         2.0
-    48     Gu 2022-07-06         2.0
-    49     Gu 2022-07-07         2.0
-    50     Gu 2022-07-12         2.0
-    51     Gu 2022-07-13         2.0
+    47     Gu 2022-07-10         4.0
+    48     Gu 2022-07-11         5.0
+    49     Gu 2022-07-12         2.0
+    50     Gu 2022-07-13         4.0
+    51     Gu 2022-07-14         3.0
     <BLANKLINE>
     [52 rows x 3 columns]
 
@@ -257,20 +263,20 @@ Further transform
     >>> shifts_table
     Worker     Amy Bob Cathy Dan Ed Fred Gu
     Shift
-    2022-07-01   -   -     -   -  Y    Y  Y
+    2022-07-01   -   Y     -   -  -    Y  Y
     2022-07-02   -   -     -   Y  Y    -  -
-    2022-07-03   Y   -     -   Y  Y    Y  -
+    2022-07-03   -   -     Y   Y  Y    -  Y
     2022-07-04   -   -     Y   -  Y    -  -
     2022-07-05   Y   -     Y   Y  Y    -  Y
     2022-07-06   -   Y     -   Y  -    Y  Y
     2022-07-07   Y   -     Y   -  Y    -  Y
-    2022-07-08   -   -     -   Y  Y    -  -
-    2022-07-09   -   -     -   Y  Y    -  -
-    2022-07-10   Y   -     Y   Y  -    -  -
-    2022-07-11   Y   -     Y   Y  Y    -  -
+    2022-07-08   -   -     -   -  Y    -  Y
+    2022-07-09   -   -     -   -  Y    Y  -
+    2022-07-10   -   -     Y   Y  -    -  Y
+    2022-07-11   Y   Y     -   Y  -    -  Y
     2022-07-12   Y   -     Y   Y  -    Y  Y
     2022-07-13   Y   Y     Y   Y  Y    Y  Y
-    2022-07-14   Y   -     Y   Y  Y    Y  -
+    2022-07-14   Y   -     Y   -  Y    Y  Y
 
 Further Constraints
 -------------------
@@ -282,6 +288,40 @@ maximum.
 
 Some additional data needs to be provided to achieve this, in the form of a
 ``worker_data`` dataframe ...
+
+.. doctest:: workforce
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
+
+    >>> assigned_shifts = solve_workforce_scheduling(
+    ...     availability=data.preferences,
+    ...     shift_requirements=data.shift_requirements,
+    ...     worker_data=data.worker_limits,
+    ...     silent=True,
+    ... )
+    >>> shifts_table = pd.pivot_table(
+    ...     assigned_shifts.assign(value=1),
+    ...     values="value",
+    ...     index="Shift",
+    ...     columns="Worker",
+    ...     fill_value="-",
+    ... ).replace({1.0: "Y"})
+    >>> shifts_table
+    Worker     Amy Bob Cathy Dan Ed Fred Gu
+    Shift
+    2022-07-01   -   Y     -   -  -    Y  Y
+    2022-07-02   -   -     -   Y  Y    -  -
+    2022-07-03   Y   -     Y   Y  Y    -  -
+    2022-07-04   -   -     Y   -  Y    -  -
+    2022-07-05   Y   Y     Y   Y  -    -  Y
+    2022-07-06   -   Y     -   Y  -    Y  Y
+    2022-07-07   Y   -     Y   -  Y    -  Y
+    2022-07-08   -   Y     -   -  Y    -  -
+    2022-07-09   -   -     -   -  Y    Y  -
+    2022-07-10   Y   -     Y   Y  -    -  -
+    2022-07-11   Y   Y     -   Y  -    -  Y
+    2022-07-12   Y   -     Y   Y  -    Y  Y
+    2022-07-13   Y   Y     Y   Y  Y    Y  Y
+    2022-07-14   Y   -     Y   -  Y    Y  Y
 
 Rolling Rosters
 ---------------

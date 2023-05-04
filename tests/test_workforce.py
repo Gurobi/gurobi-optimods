@@ -17,7 +17,9 @@ def read_csv(text):
 class TestWorkforceScheduling(unittest.TestCase):
     def test_dataset(self):
         data = load_workforce()
-        self.assertEqual(set(data.keys()), {"preferences", "shift_requirements"})
+        self.assertEqual(
+            set(data.keys()), {"preferences", "shift_requirements", "worker_limits"}
+        )
 
         self.assertEqual(
             set(data.preferences.columns), {"Worker", "Shift", "Preference"}
@@ -29,6 +31,13 @@ class TestWorkforceScheduling(unittest.TestCase):
         self.assertEqual(set(data.shift_requirements.columns), {"Shift", "Required"})
         self.assertTrue(is_datetime64_any_dtype(data.shift_requirements["Shift"]))
         self.assertTrue(is_numeric_dtype(data.shift_requirements["Required"]))
+
+        self.assertEqual(
+            set(data.worker_limits.columns),
+            {"Worker", "MinShifts", "MaxShifts"},
+        )
+        self.assertTrue(is_numeric_dtype(data.worker_limits["MinShifts"]))
+        self.assertTrue(is_numeric_dtype(data.worker_limits["MaxShifts"]))
 
     def test_no_option(self):
         # Simple example where there is only one way to cover requirements

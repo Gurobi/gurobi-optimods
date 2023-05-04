@@ -40,6 +40,9 @@ def load_workforce():
         shift_requirements=pd.read_csv(
             DATA_FILE_DIR / "workforce/shift_requirements.csv", parse_dates=["Shift"]
         ),
+        worker_limits=pd.read_csv(
+            DATA_FILE_DIR / "workforce/worker_limits.csv",
+        ),
     )
 
 
