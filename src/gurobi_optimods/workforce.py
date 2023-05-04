@@ -5,13 +5,18 @@ import gurobipy_pandas as gppd
 import pandas as pd
 from gurobipy import GRB
 
+from gurobi_optimods.utils import optimod
 
+
+@optimod()
 def solve_workforce_scheduling(
     availability: pd.DataFrame,
     shift_requirements: pd.DataFrame,
     worker_data: Optional[pd.DataFrame] = None,
     rolling_window=None,
     rolling_limit=None,
+    *,
+    create_env,
 ) -> pd.DataFrame:
     """Solve a workforce scheduling model.
 
@@ -22,7 +27,7 @@ def solve_workforce_scheduling(
         specifying the number of staff required for every shift
     :type shift_requirements: :class:`pd.DataFrame`
     """
-    with gp.Env() as env, gp.Model(env=env) as m:
+    with create_env() as env, gp.Model(env=env) as m:
         m.ModelSense = GRB.MAXIMIZE
         assignments = availability.set_index(["Worker", "Shift"]).gppd.add_vars(
             m, obj="Preference", vtype=GRB.BINARY, name="assign"
