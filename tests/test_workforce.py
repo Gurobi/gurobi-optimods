@@ -41,7 +41,7 @@ class TestWorkforceScheduling(unittest.TestCase):
 
     def test_no_option(self):
         # Simple example where there is only one way to cover requirements
-        availability = read_csv(
+        preferences = read_csv(
             """
             Worker,Shift,Preference
             Bob,2022-07-02,1.0
@@ -57,16 +57,16 @@ class TestWorkforceScheduling(unittest.TestCase):
         )
 
         assignments = solve_workforce_scheduling(
-            availability=availability, shift_requirements=shift_requirements
+            preferences=preferences, shift_requirements=shift_requirements
         )
 
         self.assertIsInstance(assignments, pd.DataFrame)
-        self.assertIsNot(assignments, availability)
-        assert_frame_equal(assignments, availability)
+        self.assertIsNot(assignments, preferences)
+        assert_frame_equal(assignments, preferences)
 
     def test_preferences(self):
         # Choose an assignment which maximises sum of preferences
-        availability = read_csv(
+        preferences = read_csv(
             """
             Worker,Shift,Preference
             Alice,2022-07-02,1.0
@@ -84,7 +84,7 @@ class TestWorkforceScheduling(unittest.TestCase):
         )
 
         assignments = solve_workforce_scheduling(
-            availability=availability, shift_requirements=shift_requirements
+            preferences=preferences, shift_requirements=shift_requirements
         )
 
         expected = read_csv(
@@ -95,7 +95,7 @@ class TestWorkforceScheduling(unittest.TestCase):
             """
         )
         self.assertIsInstance(assignments, pd.DataFrame)
-        self.assertIsNot(assignments, availability)
+        self.assertIsNot(assignments, preferences)
         assert_frame_equal(
             assignments.sort_values(["Worker", "Shift"]).reset_index(drop=True),
             expected,
@@ -103,7 +103,7 @@ class TestWorkforceScheduling(unittest.TestCase):
 
     def test_constrained(self):
         # Test min/max shift constraints
-        availability = read_csv(
+        preferences = read_csv(
             """
             Worker,Shift,Preference
             Alice,2022-07-01,1.0
@@ -128,7 +128,7 @@ class TestWorkforceScheduling(unittest.TestCase):
 
         with self.subTest("upperlimits"):
 
-            worker_data = read_csv(
+            worker_limits = read_csv(
                 """
                 Worker,MinShifts,MaxShifts
                 Alice,0,3
@@ -138,9 +138,9 @@ class TestWorkforceScheduling(unittest.TestCase):
             )
 
             assignments = solve_workforce_scheduling(
-                availability=availability,
+                preferences=preferences,
                 shift_requirements=shift_requirements,
-                worker_data=worker_data,
+                worker_limits=worker_limits,
             )
             expected = read_csv(
                 """
@@ -151,7 +151,7 @@ class TestWorkforceScheduling(unittest.TestCase):
                 """
             )
             self.assertIsInstance(assignments, pd.DataFrame)
-            self.assertIsNot(assignments, availability)
+            self.assertIsNot(assignments, preferences)
             assert_frame_equal(
                 assignments.sort_values(["Shift"]).reset_index(drop=True),
                 expected,
@@ -159,7 +159,7 @@ class TestWorkforceScheduling(unittest.TestCase):
 
         with self.subTest("lowerlimits"):
 
-            worker_data = read_csv(
+            worker_limits = read_csv(
                 """
                 Worker,MinShifts,MaxShifts
                 Alice,1,3
@@ -169,9 +169,9 @@ class TestWorkforceScheduling(unittest.TestCase):
             )
 
             assignments = solve_workforce_scheduling(
-                availability=availability,
+                preferences=preferences,
                 shift_requirements=shift_requirements,
-                worker_data=worker_data,
+                worker_limits=worker_limits,
             )
             expected = read_csv(
                 """
@@ -182,7 +182,7 @@ class TestWorkforceScheduling(unittest.TestCase):
                 """
             )
             self.assertIsInstance(assignments, pd.DataFrame)
-            self.assertIsNot(assignments, availability)
+            self.assertIsNot(assignments, preferences)
             assert_frame_equal(
                 assignments.sort_values(["Shift"]).reset_index(drop=True),
                 expected,
@@ -190,7 +190,7 @@ class TestWorkforceScheduling(unittest.TestCase):
 
     def test_rolling(self):
 
-        availability = read_csv(
+        preferences = read_csv(
             """
             Worker,Shift,Preference
             Alice,2022-07-01,1.0
@@ -214,7 +214,7 @@ class TestWorkforceScheduling(unittest.TestCase):
         ).assign(Shift=lambda df: pd.to_datetime(df["Shift"]))
 
         assignments = solve_workforce_scheduling(
-            availability=availability,
+            preferences=preferences,
             shift_requirements=shift_requirements,
             rolling_window=pd.Timedelta(days=2),
             rolling_limit=1,
@@ -230,7 +230,7 @@ class TestWorkforceScheduling(unittest.TestCase):
             """
         ).assign(Shift=lambda df: pd.to_datetime(df["Shift"]))
         self.assertIsInstance(assignments, pd.DataFrame)
-        self.assertIsNot(assignments, availability)
+        self.assertIsNot(assignments, preferences)
         assert_frame_equal(
             assignments.sort_values(["Shift"]).reset_index(drop=True),
             expected,

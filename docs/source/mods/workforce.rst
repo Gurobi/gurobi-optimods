@@ -26,7 +26,7 @@ assignment can be used throughout.
 Problem Specification
 ---------------------
 
-Consider a service business, like a restaurant, that develops its workforce plans for the next two weeks (considering a 7-day week). The service requires only one set of skills. There are a number of employed workers with the same set of skills and with identical productivity that are available to work on some of the days during the two-week planning horizon. There is only one shift per workday. Each shift may have different resource (worker) requirements on each workday. The service business wants to minimize the cost of covering all shifts with available workers, based on their rates of pay and availability.
+Consider a service business, like a restaurant, that develops its workforce plans for the next two weeks (considering a 7-day week). The service requires only one set of skills. There are a number of employed workers with the same set of skills and with identical productivity that are available to work on some of the days during the two-week planning horizon. There is only one shift per workday. Each shift may have different resource (worker) requirements on each workday. The service business wants to minimize the cost of covering all shifts with available workers, based on their rates of pay and preferences.
 
 .. tabs::
 
@@ -34,20 +34,20 @@ Consider a service business, like a restaurant, that develops its workforce plan
 
         The workforce scheduling model takes the following inputs:
 
-        * The ``availability`` dataframe has three columns: ``Worker``, ``Shift``,
+        * The ``preferences`` dataframe has three columns: ``Worker``, ``Shift``,
           and ``Preference``. Each row in dataframe specifies that the given worker
           is available to work the given shift.
         * The ``shift_requirements`` dataframe has two columns: ``Shift`` and
           ``Required``. Each row specifies the number of workers required for a
           given shift. There should be one row for every unique worker in
-          ``availability["Workers"]``.
+          ``preferences["Workers"]``.
 
         When ``solve_workforce_scheduling`` is called, a model is formulated and
         solved immediately using Gurobi. Workers will be assigned only to shifts
         they are available for, in such a way that all requirements are covered while
         total sum of worker preference scores is maximised.
 
-        The returned assignment dataframe is a subset of the availability dataframe,
+        The returned assignment dataframe is a subset of the preferences dataframe,
         with the same columns. Each row specifies that the given worker has been
         assigned to the given shift.
 
@@ -176,7 +176,7 @@ Show the code required to run the mod. Users interact with the 'solver' by passi
 
     # Get winning results.
     assigned_shifts = solve_workforce_scheduling(
-        availability=data.preferences,
+        preferences=data.preferences,
         shift_requirements=data.shift_requirements,
     )
 
@@ -226,7 +226,7 @@ Solution
 --------
 
 Solution is a selection of shift assignments. The returned dataframe is just a
-subset of the availability dataframe, so we can transform the results using
+subset of the preferences dataframe, so we can transform the results using
 normal pandas code (no gurobipy interaction).
 
 .. doctest:: workforce
@@ -287,15 +287,15 @@ shifts they are entitled to, and will not be allocated more shifts than a given
 maximum.
 
 Some additional data needs to be provided to achieve this, in the form of a
-``worker_data`` dataframe ...
+``worker_limits`` dataframe ...
 
 .. doctest:: workforce
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
 
     >>> assigned_shifts = solve_workforce_scheduling(
-    ...     availability=data.preferences,
+    ...     preferences=data.preferences,
     ...     shift_requirements=data.shift_requirements,
-    ...     worker_data=data.worker_limits,
+    ...     worker_limits=data.worker_limits,
     ...     silent=True,
     ... )
     >>> shifts_table = pd.pivot_table(
