@@ -235,3 +235,16 @@ class TestWorkforceScheduling(unittest.TestCase):
             assignments.sort_values(["Shift"]).reset_index(drop=True),
             expected,
         )
+
+    def test_infeasibility(self):
+        # Should raise an exception
+        data = load_workforce()
+
+        with self.assertRaises(ValueError):
+            solve_workforce_scheduling(
+                data.preferences,
+                data.shift_requirements,
+                data.worker_limits,
+                rolling_window=pd.Timedelta("4D"),
+                rolling_limit=3,
+            )

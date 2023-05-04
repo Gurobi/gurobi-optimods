@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 import gurobipy as gp
@@ -6,6 +7,8 @@ import pandas as pd
 from gurobipy import GRB
 
 from gurobi_optimods.utils import optimod
+
+logger = logging.getLogger(__name__)
 
 
 @optimod()
@@ -59,18 +62,24 @@ def solve_workforce_scheduling(
         if rolling_window:
             # This is uglier than it should be, but pandas rolling() only
             # handles numeric data
-            for _, df in assignments.reset_index().groupby("Worker"):
+            for worker, df in assignments.reset_index().groupby("Worker"):
                 df = df.set_index("Shift")["assign"]
                 for entry in df.index:
                     # Hack! Surely there is a open/closed interval available?
                     expr = df.loc[
                         entry : entry + rolling_window - pd.Timedelta(seconds=1)
                     ].sum()
-                    m.addConstr(expr <= rolling_limit)
+                    m.addConstr(
+                        expr <= rolling_limit, name=f"rolling[{worker},{entry}]"
+                    )
 
             # TODO need another option to specify a rolling roster (wraparound)
 
         m.optimize()
+
+        if m.Status == GRB.INFEASIBLE:
+            raise ValueError("Infeasible roster")
+
         return (
             assignments.assign(assign=lambda df: df["assign"].gppd.X)
             .query("assign > 0.9")
