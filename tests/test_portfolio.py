@@ -371,3 +371,54 @@ class TestMod(unittest.TestCase):
         )
         # This needs to be infeasible.
         self.assertIsNone(x)
+
+    def test_transaction_costs_long(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        costs = 0.0025
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x = mvp.efficient_portfolio(gamma, costs_buy=costs)
+        value_trades = x.loc[x > 1e-4].sum()
+        self.assertAlmostEqual(x.sum(), 1 - costs * value_trades, delta=1e-6)
+
+    def test_transaction_fees_costs_long(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        costs = 0.0025
+        fees = 1e-4
+
+        mvp = MeanVariancePortfolio(Sigma, mu)
+        x = mvp.efficient_portfolio(gamma, costs_buy=costs, fees_buy=fees)
+        n_trades = (x > 1e-4).sum()
+        value_trades = x.loc[x > 1e-4].sum()
+        self.assertLessEqual(x.sum(), 1 - n_trades * fees - value_trades * costs)
+
+    def test_transaction_fees_costs_short(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        fees_sell = 1e-4
+        costs = 0.0025
+        mvp = MeanVariancePortfolio(Sigma, mu)
+
+        x = mvp.efficient_portfolio(
+            gamma,
+            max_total_short=0.3,
+            fees_sell_short=fees_sell,
+            costs_sell_short=costs,
+        )
+        n_trades = (x < 0).sum()
+        value_trades = -x.loc[x < 0].sum()
+
+        # Ensure that we go short somewhere
+        self.assertGreater(n_trades, 0)
+        # Ensure that transaction fees and costs are paid out of the portfolio
+        self.assertLessEqual(
+            x.sum(), 1 - n_trades * fees_sell - value_trades * costs + 1e-8
+        )

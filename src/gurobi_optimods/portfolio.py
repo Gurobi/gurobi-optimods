@@ -112,6 +112,10 @@ class MeanVariancePortfolio:
         fees_sell=None,
         fees_sell_short=None,
         fees_buy_short=None,
+        costs_buy=None,
+        costs_sell=None,
+        costs_buy_short=None,
+        costs_sell_short=None,
         min_long=None,
         min_short=None,
         max_total_short=0.0,
@@ -140,6 +144,18 @@ class MeanVariancePortfolio:
         :param fees_buy_short: Fixed-charge buy cost for each traded short position, relative
             to total portfolio value
         :type fees_buy_short: :class:`float` >= 0
+        :param costs_buy: Buy transaction cost for each traded long position, relative
+            to total portfolio value
+        :type costs_buy: :class:`float` >= 0
+        :param costs_sell: Sell transaction cost for each traded long position, relative
+            to total portfolio value
+        :type costs_sell: :class:`float` >= 0
+        :param costs_buy_short: Buy transaction cost for each traded short position, relative
+            to total portfolio value
+        :type costs_buy_short: :class:`float` >= 0
+        :param costs_sell_short: Sell transaction cost for each traded short position, relative
+            to total portfolio value
+        :type costs_sell_short: :class:`float` >= 0
         :param min_long: Lower bound on the volume on a traded long position,
             relative to total portfolio value
         :type min_long: :class:`float` >= 0
@@ -166,8 +182,16 @@ class MeanVariancePortfolio:
         #      x_long = initial_holdings_long + x_long_buy - x_long_sell
         #      x_short == initial_holdings_short - x_short_buy + x_short_sell
         #
-        #      sum(x) + sum(b_long_buy) * fees_buy + sum(b_long_sell) * fees_sell + sum(b_short_buy) * fees_buy_short + sum(b_short_sell) * fees_sell_short = 1
-        #                             (Fully invested, minus transaction fees)
+        #      sum(x)   + sum(b_long_buy) * fees_buy
+        #               + sum(b_long_sell) * fees_sell
+        #               + sum(b_short_buy) * fees_buy_short
+        #               + sum(b_short_sell) * fees_sell_short
+        #               + sum(x_long_buy) * costs_buy_long
+        #               + sum(x_long_sell) * costs_sell_long
+        #               + sum(x_short_buy) * costs_buy_short
+        #               + sum(x_short_sell) * costs_sell_short
+        #      = 1
+        #                             (Fully invested, minus transaction costs and fees)
         #
         #      x_long  <= M b_long    (force x_long to zero if not traded long)
         #                             (M >= 1 + max_total_short)
@@ -294,6 +318,15 @@ class MeanVariancePortfolio:
                 investment += b_long_sell.sum() * fees_sell
             if fees_sell_short is not None:
                 investment += b_short_sell.sum() * fees_sell_short
+
+            if costs_buy is not None:
+                investment += x_long_buy.sum() * costs_buy
+            if costs_sell is not None:
+                investment += x_long_sell.sum() * costs_sell
+            if costs_buy_short is not None:
+                investment += x_short_buy.sum() * costs_buy_short
+            if costs_sell_short is not None:
+                investment += x_short_sell.sum() * costs_sell_short
 
             if min_long is not None:
                 m.addConstr(x_long_buy >= min_long * b_long_buy, name="min_long_buy")
