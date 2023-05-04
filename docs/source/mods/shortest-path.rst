@@ -3,12 +3,20 @@
 Shortest Path
 =============
 
-A little background on the proud history of mathprog in this field.
+The shortest path is a problem in graph theory where the aim is to find a path
+between two nodes with the lowest cost.
+
+This problem can be solved efficiently using the famous algorithm by
+:footcite:t:`dijkstra1959graph`. This particular algorithm belongs to the field
+of dynamic programming, however, we can also solve this problem using other
+methods, including mathematical programming.
+
 
 Problem Specification
 ---------------------
 
-Give a brief overview of the problem being solved.
+We provide two specifications of the problem using graph theory and using
+mathematical programming.
 
 .. tabs::
 
@@ -47,14 +55,17 @@ Give a brief overview of the problem being solved.
         The first constraints ensure flow balance for all vertices. That is, for
         a given node, the incoming flow (sum over all incoming edges to this
         node) minus the outgoing flow (sum over all outgoing edges from this
-        node) is equal to :math:`b_i`. For most nodes, this value is 0, hence,
-        the outgoing flow must be equal to the incoming flow. At the source,
-        this value is negative, hence flow must begin here (outgoing term is
-        larger). At the sink, this value is positive so flow must end here
-        (incoming term is larger).
+        node) is equal to :math:`b_i`. As defined above, for most nodes, this
+        value is 0, so, the outgoing flow must be equal to the incoming flow,
+        (hence the use of the term "flow balance").
+
+        At the source node (:math:`s`), this value is :math:`-1`, so the flow
+        must begin here (outgoing term must be :math:`1`). At the sink node
+        (:math:`t`), this value is :math:`+1` so flow must end here (incoming
+        term must be :math:`1`).
 
         The last constraints ensure non-negativity of the variables and that the
-        flow per edge is at most 1.
+        flow per edge is at most :math:`1`.
 
 |
 
@@ -64,8 +75,8 @@ Code and Inputs
 For this mod, one can use input graphs of different types:
 
 * pandas: using a ``pd.DataFrame``;
-* Networkx: using a ``nx.DiGraph`` or ``nx.Graph``;
-* SciPy.sparse: using some ``sp.sparray`` matrices and NumPy's ``np.ndarray``.
+* NetworkX: using a ``nx.DiGraph`` or ``nx.Graph``;
+* SciPy.sparse: using a ``sp.sparray`` matrix.
 
 An example of these inputs with their respective requirements is shown below.
 
@@ -94,7 +105,7 @@ An example of these inputs with their respective requirements is shown below.
 
       We assume that nodes labels are integers from :math:`0,\dots,|V|-1`.
 
-  .. group-tab:: Networkx
+  .. group-tab:: NetworkX
 
       .. doctest:: load_graph_networkx
           :options: +NORMALIZE_WHITESPACE
@@ -115,6 +126,12 @@ An example of these inputs with their respective requirements is shown below.
       Edges have an attribute ``cost``.
 
       We assume that nodes labels are integers from :math:`0,\dots,|V|-1`.
+      NetworkX has a handy function for this
+      `nx.convert_node_labels_to_integers`_.
+
+      .. _nx.convert_node_labels_to_integers: https://networkx.org/documentation/stable/reference/generated/networkx.relabel.convert_node_labels_to_integers.html
+
+
 
   .. group-tab:: scipy.sparse
 
@@ -184,7 +201,7 @@ formats.
       `0->1->3->5` with a total cost of 11.
 
 
-  .. group-tab:: Networkx
+  .. group-tab:: NetworkX
 
       .. doctest:: shortest_path_networkx
           :options: +NORMALIZE_WHITESPACE
@@ -233,11 +250,10 @@ formats.
       `0->1->3->5` with a total cost of 11.
 
 The solution for this example is shown in the figure below. The edge labels
-denote the edge capacity, cost and resulting flow: :math:`(B_{ij}, c_{ij},
-x^*_{ij})`. Edges with non-zero flow are highlighted in red. Also the demand for
-each vertex is shown on top of the vertex in red.
+denote the edge cost (:math:`c_{ij}`). Edges in the shortest path are
+highlighted in red.
 
-.. image:: figures/min-cost-flow-result.png
+.. image:: figures/shortest-path-result.png
   :width: 600
   :alt: Sample network.
 
@@ -270,3 +286,8 @@ In all these cases, the model is solved as an LP by Gurobi.
 
       Solved in 0 iterations and 0.00 seconds (0.00 work units)
       Optimal objective  1.100000000e+01
+
+----
+
+
+.. footbibliography::

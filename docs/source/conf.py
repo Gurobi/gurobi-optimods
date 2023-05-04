@@ -58,4 +58,4 @@ epub_show_urls = "footnote"
 
 # -- Bibfiles
 
-bibtex_bibfiles = ["refs/regression.bib"]
+bibtex_bibfiles = ["refs/regression.bib", "refs/graphs.bib"]
