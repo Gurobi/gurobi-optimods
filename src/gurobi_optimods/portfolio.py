@@ -112,12 +112,8 @@ class MeanVariancePortfolio:
         costs=None,
         fees_buy=None,
         fees_sell=None,
-        fees_sell_short=None,
-        fees_buy_short=None,
         costs_buy=None,
         costs_sell=None,
-        costs_buy_short=None,
-        costs_sell_short=None,
         min_long=None,
         min_short=None,
         max_total_short=0.0,
@@ -146,24 +142,12 @@ class MeanVariancePortfolio:
         :param fees_sell: Fixed-charge sell cost for each traded long position, relative
             to total portfolio value
         :type fees_sell: :class:`float` >= 0
-        :param fees_sell_short: Fixed-charge sell cost for each traded short position, relative
-            to total portfolio value
-        :type fees_sell_short: :class:`float` >= 0
-        :param fees_buy_short: Fixed-charge buy cost for each traded short position, relative
-            to total portfolio value
-        :type fees_buy_short: :class:`float` >= 0
         :param costs_buy: Buy transaction cost for each traded long position, relative
             to trade value
         :type costs_buy: :class:`float` >= 0
         :param costs_sell: Sell transaction cost for each traded long position, relative
             to trade value
         :type costs_sell: :class:`float` >= 0
-        :param costs_buy_short: Buy transaction cost for each traded short position, relative
-            to trade value
-        :type costs_buy_short: :class:`float` >= 0
-        :param costs_sell_short: Sell transaction cost for each traded short position, relative
-            to trade value
-        :type costs_sell_short: :class:`float` >= 0
         :param min_long: Lower bound on the volume on a traded long position,
             relative to total portfolio value
         :type min_long: :class:`float` >= 0
@@ -192,12 +176,12 @@ class MeanVariancePortfolio:
         #
         #      sum(x)   + sum(b_long_buy) * fees_buy
         #               + sum(b_long_sell) * fees_sell
-        #               + sum(b_short_buy) * fees_buy_short
-        #               + sum(b_short_sell) * fees_sell_short
-        #               + sum(x_long_buy) * costs_buy_long
-        #               + sum(x_long_sell) * costs_sell_long
-        #               + sum(x_short_buy) * costs_buy_short
-        #               + sum(x_short_sell) * costs_sell_short
+        #               + sum(b_short_buy) * fees_buy
+        #               + sum(b_short_sell) * fees_sell
+        #               + sum(x_long_buy) * costs_buy
+        #               + sum(x_long_sell) * costs_sell
+        #               + sum(x_short_buy) * costs_buy
+        #               + sum(x_short_sell) * costs_sell
         #      = 1
         #                             (Fully invested, minus transaction costs and fees)
         #
@@ -263,22 +247,17 @@ class MeanVariancePortfolio:
             m.addConstr(x_long == initial_holdings_long + x_long_buy - x_long_sell)
             m.addConstr(x_short == initial_holdings_short - x_short_buy + x_short_sell)
 
+            x_buy = m.addMVar(shape=self.mu.shape, name="x_buy")
+            x_sell = m.addMVar(shape=self.mu.shape, name="x_sell")
+            m.addConstr(x_buy == x_long_buy + x_short_buy)
+            m.addConstr(x_sell == x_long_sell + x_short_sell)
+
             # Binaries used to enforce VUB and minimum position/trade size
             b_long = m.addMVar(shape=self.mu.shape, vtype="B", name="position_long")
             b_short = m.addMVar(shape=self.mu.shape, vtype="B", name="position_short")
 
-            b_long_buy = m.addMVar(
-                shape=self.mu.shape, vtype="B", name="trade_long_buy"
-            )
-            b_short_buy = m.addMVar(
-                shape=self.mu.shape, vtype="B", name="trade_short_buy"
-            )
-            b_long_sell = m.addMVar(
-                shape=self.mu.shape, vtype="B", name="trade_long_sell"
-            )
-            b_short_sell = m.addMVar(
-                shape=self.mu.shape, vtype="B", name="trade_short_sell"
-            )
+            b_buy = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_buy")
+            b_sell = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_sell")
 
             # Define VUB constraints for x_long and x_short.
             #
@@ -288,15 +267,12 @@ class MeanVariancePortfolio:
             m.addConstr(x_long <= (1.0 + max_total_short) * b_long)
             m.addConstr(x_short <= max_total_short * b_short)
 
-            m.addConstr(x_long_buy <= (1.0 + max_total_short) * b_long_buy)
-            m.addConstr(x_long_sell <= (1.0 + max_total_short) * b_long_sell)
-            m.addConstr(x_short_buy <= max_total_short * b_short_buy)
-            m.addConstr(x_short_sell <= max_total_short * b_short_sell)
+            m.addConstr(x_buy <= (1.0 + max_total_short) * b_buy)
+            m.addConstr(x_sell <= (1.0 + max_total_short) * b_sell)
 
             # A position/trade can only by short or long, not both
             m.addConstr(b_long + b_short <= 1, name="long_or_short_position")
-            m.addConstr(b_long_buy + b_long_sell <= 1, name="long_buy_or_sell")
-            m.addConstr(b_short_buy + b_short_sell <= 1, name="short_buy_or_sell")
+            m.addConstr(b_buy + b_sell <= 1, name="boy")
 
             # Bound total leverage
             m.addConstr(x_short.sum() <= max_total_short, name="total_short")
@@ -304,14 +280,8 @@ class MeanVariancePortfolio:
             investment = x.sum()
 
             if max_trades is not None:
-                m.addConstr(
-                    b_long_buy.sum()
-                    + b_long_sell.sum()
-                    + b_short_buy.sum()
-                    + b_short_sell.sum()
-                    <= max_trades,
-                    name="max_trades",
-                )
+                m.addConstr(b_buy.sum() + b_sell.sum() <= max_trades, name="max_trades")
+
             if max_positions is not None:
                 m.addConstr(
                     b_long.sum() + b_short.sum() <= max_positions, name="max_positions"
@@ -322,50 +292,28 @@ class MeanVariancePortfolio:
                     fees_buy = fees
                 if fees_sell is None:
                     fees_sell = fees
-                if fees_buy_short is None:
-                    fees_buy_short = fees
-                if fees_sell_short is None:
-                    fees_sell_short = fees
             if costs is not None:
                 if costs_buy is None:
                     costs_buy = costs
                 if costs_sell is None:
                     costs_sell = costs
-                if costs_buy_short is None:
-                    costs_buy_short = costs
-                if costs_sell_short is None:
-                    costs_sell_short = costs
 
             if fees_buy is not None:
-                investment += b_long_buy.sum() * fees_buy
-            if fees_buy_short is not None:
-                investment += b_short_buy.sum() * fees_buy_short
+                investment += b_buy.sum() * fees_buy
 
             if fees_sell is not None:
-                investment += b_long_sell.sum() * fees_sell
-            if fees_sell_short is not None:
-                investment += b_short_sell.sum() * fees_sell_short
+                investment += b_sell.sum() * fees_sell
 
             if costs_buy is not None:
-                investment += x_long_buy.sum() * costs_buy
+                investment += x_buy.sum() * costs_buy
             if costs_sell is not None:
-                investment += x_long_sell.sum() * costs_sell
-            if costs_buy_short is not None:
-                investment += x_short_buy.sum() * costs_buy_short
-            if costs_sell_short is not None:
-                investment += x_short_sell.sum() * costs_sell_short
+                investment += x_sell.sum() * costs_sell
 
             if min_long is not None:
-                m.addConstr(x_long_buy >= min_long * b_long_buy, name="min_long_buy")
-                m.addConstr(x_short_buy >= min_long * b_short_buy, name="min_short_buy")
+                m.addConstr(x_buy >= min_long * b_buy, name="min_buy")
 
             if min_short is not None:
-                m.addConstr(
-                    x_short_sell >= min_short * b_short_sell, name="min_short_sell"
-                )
-                m.addConstr(
-                    x_long_sell >= min_short * b_long_sell, name="min_long_sell"
-                )
+                m.addConstr(x_sell >= min_short * b_sell, name="min_sell")
 
             m.addConstr(investment == 1, name="fully_invested")
 

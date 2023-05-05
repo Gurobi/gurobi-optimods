@@ -73,9 +73,7 @@ class TestMod(unittest.TestCase):
         self.assertAlmostEqual(x.sum(), 1)
 
         # Ensure that transaction fees are paid out of the portfolio
-        x = mvp.efficient_portfolio(
-            gamma, max_total_short=0.3, fees_sell_short=fees_sell
-        )
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.3, fees_sell=fees_sell)
         n_trades = (x < 0).sum()
         self.assertGreater(n_trades, 0)
         self.assertLessEqual(x.sum(), 1 - n_trades * fees_sell + 1e-8)
@@ -200,11 +198,17 @@ class TestMod(unittest.TestCase):
 
         mvp = MeanVariancePortfolio(Sigma, mu)
         x0 = 1.0 / mu.size * np.ones(mu.size)
-        x1 = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=3)
-        trades = ((x1 - x0) > 1e-4) | ((x1 - x0) < -1e-4)
+        # Ensure that we use more than 3 trades if there is no limit
+        x1_nomaxtrades = mvp.efficient_portfolio(gamma, initial_holdings=x0)
+        trades = ((x1_nomaxtrades - x0) > 1e-4) | ((x1_nomaxtrades - x0) < -1e-4)
+        self.assertGreater(trades.sum(), 3)
+
+        # Ensure that we only use 3 trades with the limit
+        x1_maxtrades = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=3)
+        trades = ((x1_maxtrades - x0) > 1e-4) | ((x1_maxtrades - x0) < -1e-4)
         self.assertLessEqual(trades.sum(), 3)
 
-    def test_start_portfolio_max_total_short(self):
+    def test_start_portfolio_max_total_short_max_trades(self):
         data = load_portfolio()
         Sigma = data.cov()
         mu = data.mean()
@@ -218,17 +222,12 @@ class TestMod(unittest.TestCase):
             gamma, initial_holdings=x0, max_trades=6, max_total_short=0.1
         )
 
-        self.assertGreaterEqual((x.loc[x < 0]).sum(), -0.1 - 1e-6)
-        self.assertLess(x.loc[x < 0].sum(), -1e-3)
+        self.assertGreaterEqual((x[x < 0]).sum(), -0.1 - 1e-6)
+        self.assertLess(x[x < 0].sum(), -1e-3)
         self.assertAlmostEqual(x.sum(), 1.0)
-        self.assertAlmostEqual(np.abs(x).sum(), 1.0 + 2 * 0.1)
 
         trades = ((x - x0) > 1e-4) | ((x - x0) < -1e-4)
-        # Trades where we went from a long to a short position (or the other way) need to be counted twice
-        double_trades = x * x0 < -1e-4
-        self.assertLessEqual(trades.sum() + double_trades.sum(), 6)
-        # Since we started with long only, there needs to be at least one double trade
-        self.assertGreaterEqual(double_trades.sum(), 1)
+        self.assertLessEqual(trades.sum(), 6)
 
     def test_start_portfolio_min_buy(self):
         data = load_portfolio()
@@ -237,16 +236,15 @@ class TestMod(unittest.TestCase):
         gamma = 100.0
 
         mvp = MeanVariancePortfolio(Sigma, mu)
-        x0 = 1.0 / mu.size * np.ones(mu.size)
-
+        x0 = np.array([0.4, 0, 0, 0.2, 0, 0.1, 0.03, 0.2, 0.07, 0])
         # Ensure that we _do_ have a small trade w/o minimum buy
         x = mvp.efficient_portfolio(gamma, min_long=0.0, initial_holdings=x0)
         trades = x - x0
         small_trades = (trades > 1e-6) & (trades < (0.03 - 1e-6))
-        self.assertGreaterEqual(small_trades.sum(), 0)
+        self.assertGreater(small_trades.sum(), 0)
 
         # Ensure that we _don't_ have a small trade w/ minimum buy
-        x = mvp.efficient_portfolio(gamma, min_long=0.03)
+        x = mvp.efficient_portfolio(gamma, min_long=0.03, initial_holdings=x0)
         trades = x - x0
         small_trades = (trades > 1e-6) & (trades < (0.03 - 1e-6))
         self.assertEqual(small_trades.sum(), 0)
@@ -259,16 +257,18 @@ class TestMod(unittest.TestCase):
         fees = 1e-4
 
         mvp = MeanVariancePortfolio(Sigma, mu)
+        # Determine efficient portfolio without fees
         x0 = mvp.efficient_portfolio(gamma, max_total_short=0.1)
-
+        # Ensure that this is not changed when we compute the portfolio again
+        # with x0 as start and fees
+        # We need min_long and min_short to avoid that paying fees is seen as a "risk-free loss"
+        # which might improve our objective
         x = mvp.efficient_portfolio(
             gamma,
             max_total_short=0.1,
             initial_holdings=x0.to_numpy(),
             fees_buy=fees,
-            fees_buy_short=fees,
             fees_sell=fees,
-            fees_sell_short=fees,
             min_long=0.02,
             min_short=0.02,
         )
@@ -289,12 +289,13 @@ class TestMod(unittest.TestCase):
             max_total_short=0.1,
             initial_holdings=x0,
             fees_buy=fees,
-            fees_buy_short=fees,
             min_long=0.02,
             min_short=0.02,
         )
         buy_trades = (x - x0) > 1e-4
-        self.assertLessEqual(x.sum() + buy_trades.sum() * fees, 1 + 1e-6)
+        # Ensure that there have been buy trades
+        self.assertGreater(buy_trades.sum(), 0)
+        self.assertLessEqual(x.sum(), 1 - buy_trades.sum() * fees + 1e-6)
 
     def test_start_portfolio_fees_sell(self):
         data = load_portfolio()
@@ -311,17 +312,13 @@ class TestMod(unittest.TestCase):
             max_total_short=0.1,
             initial_holdings=x0,
             fees_sell=fees,
-            fees_sell_short=fees,
             min_long=0.02,
             min_short=0.02,
         )
         sell_trades = (x0 - x) > 1e-4
-        # Since we started long only, all positions that are short now need to be counted twice
-        double_sell_trades = x < -1e-4
-        self.assertLessEqual(
-            x.sum() + sell_trades.sum() * fees + double_sell_trades.sum() * fees,
-            1 + 1e-6,
-        )
+        # Ensure that there have been sell trades
+        self.assertGreater(sell_trades.sum(), 0)
+        self.assertLessEqual(x.sum(), 1 - sell_trades.sum() * fees + 1e-6)
 
     def test_max_positions(self):
         data = load_portfolio()
@@ -352,7 +349,7 @@ class TestMod(unittest.TestCase):
         self.assertLessEqual((x > 1e-4).sum(), 6)
         # In order to satisfy max_positions=6 with max_trades=5,
         # we need to sell 4 positions and invest the surplus into one of the remaining open positions.
-        self.assertGreaterEqual((x > 1.0 / mu.size).sum(), 1)
+        self.assertEqual((x >= (5.0 / mu.size - 1e-6)).sum(), 1)
 
     def test_max_positions_infeasible(self):
         data = load_portfolio()
@@ -381,7 +378,7 @@ class TestMod(unittest.TestCase):
 
         mvp = MeanVariancePortfolio(Sigma, mu)
         x = mvp.efficient_portfolio(gamma, costs_buy=costs)
-        value_trades = x.loc[x > 1e-4].sum()
+        value_trades = x.sum()
         self.assertAlmostEqual(x.sum(), 1 - costs * value_trades, delta=1e-6)
 
     def test_transaction_fees_costs_long(self):
@@ -395,33 +392,33 @@ class TestMod(unittest.TestCase):
         mvp = MeanVariancePortfolio(Sigma, mu)
         x = mvp.efficient_portfolio(gamma, costs_buy=costs, fees_buy=fees)
         n_trades = (x > 1e-4).sum()
-        value_trades = x.loc[x > 1e-4].sum()
-        self.assertLessEqual(x.sum(), 1 - n_trades * fees - value_trades * costs)
+        value_trades = x.sum()
+        self.assertAlmostEqual(
+            x.sum(), 1 - n_trades * fees - value_trades * costs, delta=1e-3
+        )
 
     def test_transaction_fees_costs_short(self):
         data = load_portfolio()
         Sigma = data.cov()
         mu = data.mean()
         gamma = 100.0
-        fees_sell = 1e-4
+        fees = 1e-4
         costs = 0.0025
         mvp = MeanVariancePortfolio(Sigma, mu)
 
         x = mvp.efficient_portfolio(
             gamma,
             max_total_short=0.3,
-            fees_sell_short=fees_sell,
-            costs_sell_short=costs,
+            fees_sell=fees,
+            costs_sell=costs,
         )
         n_trades = (x < 0).sum()
-        value_trades = -x.loc[x < 0].sum()
+        value_trades = -x[x < 0].sum()
 
         # Ensure that we go short somewhere
         self.assertGreater(n_trades, 0)
         # Ensure that transaction fees and costs are paid out of the portfolio
-        self.assertLessEqual(
-            x.sum(), 1 - n_trades * fees_sell - value_trades * costs + 1e-8
-        )
+        self.assertAlmostEqual(x.sum(), 1 - n_trades * fees - value_trades * costs)
 
     def test_transaction_fees_costs_all(self):
         data = load_portfolio()
@@ -432,17 +429,21 @@ class TestMod(unittest.TestCase):
         costs = 0.0025
         mvp = MeanVariancePortfolio(Sigma, mu)
 
-        x = mvp.efficient_portfolio(gamma, max_total_short=0.3, fees=fees, costs=costs)
+        x = mvp.efficient_portfolio(
+            gamma,
+            max_total_short=0.3,
+            fees_buy=fees,
+            fees_sell=fees,
+            costs_buy=costs,
+            costs_sell=costs,
+        )
         trades = (x < -1e-6) | (x > 1e-6)
         n_trades = trades.sum()
-        long_trades_value = x.loc[x > 0].sum()
-        short_trades_value = -x.loc[x < 0].sum()
-        self.assertLessEqual(
+        long_trades_value = x[x > 0].sum()
+        short_trades_value = -x[x < 0].sum()
+        self.assertAlmostEqual(
             x.sum(),
-            1
-            - n_trades * fees
-            - (long_trades_value + short_trades_value) * costs
-            + 1e-8,
+            1 - n_trades * fees - (long_trades_value + short_trades_value) * costs,
         )
 
     def test_start_portfolio_transaction_fees_costs_all(self):
@@ -459,8 +460,10 @@ class TestMod(unittest.TestCase):
             gamma,
             max_total_short=0.1,
             initial_holdings=x0,
-            fees=fees,
-            costs=costs,
+            fees_buy=fees,
+            fees_sell=fees,
+            costs_buy=costs,
+            costs_sell=costs,
             min_long=0.02,
             min_short=0.02,
             max_trades=6,
@@ -469,7 +472,7 @@ class TestMod(unittest.TestCase):
         buy_trades = trades > 1e-4
         sell_trades = trades < -1e-4
         n_trades = buy_trades.sum() + sell_trades.sum()
-        buy_trades_value = x.loc[trades > 1e-4].sum()
-        sell_trades_value = -x.loc[trades < -1e-4].sum()
+        buy_trades_value = trades[buy_trades].sum()
+        sell_trades_value = -trades[sell_trades].sum()
         trades_value = buy_trades_value + sell_trades_value
-        self.assertLessEqual(x.sum(), 1 - n_trades * fees - trades_value * costs + 1e-8)
+        self.assertAlmostEqual(x.sum(), 1 - n_trades * fees - trades_value * costs)
