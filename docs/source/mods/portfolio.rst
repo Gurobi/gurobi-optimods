@@ -1,7 +1,9 @@
 Optimal Mean-Variance Portfolios
 ================================
 
-Portfolio optimization is concerned with the allocation of wealth into assets (such as stocks, bonds, commodities, etc.). This mod returns portfolios on the efficient frontier given expected returns and variances.
+Portfolio optimization is concerned with the allocation of wealth into assets
+(such as stocks, bonds, commodities, etc.). This mod returns portfolios on the
+efficient frontier given expected returns and variances.
 
 
 Problem Specification
@@ -13,7 +15,11 @@ Our methods use risk and return estimators.
 
     .. tab:: Domain-Specific Description
 
-        We consider a single-period portfolio optimization problem where want to allocate wealth into :math:`n` risky assets. The returned portfolio :math:`x` is an efficient mean-variance portfolio given returns :math:`\mu`, covariance :math:`\Sigma` and risk aversion :math:`\gamma`.
+        We consider a single-period portfolio optimization problem where want
+        to allocate wealth into :math:`n` risky assets. The returned portfolio
+        :math:`x` is an efficient mean-variance portfolio given returns
+        :math:`\mu`, covariance :math:`\Sigma` and risk aversion
+        :math:`\gamma`.
 
 
     .. tab:: Mathematical Description
@@ -27,7 +33,8 @@ Our methods use risk and return estimators.
 
         * :math:`\mu` is the vector of expected returns.
         * :math:`\Sigma` is the return covariance matrix.
-        * :math:`x` is the portfolio where :math:`x_i` denotes the fraction of wealth invested in the risky asset :math:`i`.
+        * :math:`x` is the portfolio where :math:`x_i` denotes the fraction of
+          wealth invested in the risky asset :math:`i`.
         * :math:`\gamma\geq0` is the risk aversion coefficient.
 
 
@@ -41,17 +48,21 @@ Data Specification
 
 The mean-variance portfolio optimization model takes the following inputs:
 
-* The covariance matrix :math:`\Sigma` can be given as a pandas Dataframe or a numpy array.
-* The return estimator :math:`\mu` can be given as a pandas Series or a numpy array.
+* The covariance matrix :math:`\Sigma` can be given as a pandas Dataframe or a
+  numpy array.
+* The return estimator :math:`\mu` can be given as a pandas Series or a numpy
+  array.
 
 
-The returned allocation vector :math:`x` is a pandas Series or a numpy ndarray (depending on the input types).
+The returned allocation vector :math:`x` is a pandas Series or a numpy ndarray
+(depending on the input types).
 
 
 Example
 -------
 
-Here we derive the matrix :math:`\Sigma` and the vector :math:`\mu` from a time series of logarithmic historic returns:
+Here we derive the matrix :math:`\Sigma` and the vector :math:`\mu` from a time
+series of logarithmic historic returns:
 
 .. testsetup:: mod
 
@@ -82,7 +93,10 @@ Here we derive the matrix :math:`\Sigma` and the vector :math:`\mu` from a time 
     <BLANKLINE>
     [245 rows x 10 columns]
 
-The columns of this dataframe represent the individual assets ("AA", "BB", ..., "JJ") while the rows represent the historic time steps. We use pandas functionality to compute a simple mean estimator and corresponding covariance from this dataframe:
+The columns of this dataframe represent the individual assets ("AA", "BB", ...,
+"JJ") while the rows represent the historic time steps. We use pandas
+functionality to compute a simple mean estimator and corresponding covariance
+from this dataframe:
 
 
 .. testcode:: mod
@@ -247,9 +261,10 @@ Transaction fees
 ~~~~~~~~~~~~~~~~
 
 In order to define fixed costs per transaction suggested by the optimal
-portfolio :math:`x`, you can use the ``fees`` keyword parameter.
-You can also use the parameters ``fees_buy`` and ``fees_sell`` (for long positions) and
-``fees_buy_short`` and ``fees_sell_short`` (for short positions) for more fine-grained control.
+portfolio :math:`x`, you can use the ``fees`` keyword parameter.  You can also
+use the parameters ``fees_buy`` and ``fees_sell`` (for long positions) and
+``fees_buy_short`` and ``fees_sell_short`` (for short positions) for more
+fine-grained control.
 
 .. testcode:: mod
 
@@ -297,9 +312,10 @@ thus reducing the total sum of the returned optimal portfolio:
 Transaction costs
 ~~~~~~~~~~~~~~~~~
 
-In order to define relative transaction costs, you can use the ``costs`` keyword parameter.
-You can also use the parameters ``costs_buy`` and ``costs_sell`` (for long positions) and
-``costs_buy_short`` and ``costs_sell_short`` (for short positions) for more fine-grained control.
+In order to define relative transaction costs, you can use the ``costs``
+keyword parameter.  You can also use the parameters ``costs_buy`` and
+``costs_sell`` (for long positions) and ``costs_buy_short`` and
+``costs_sell_short`` (for short positions) for more fine-grained control.
 
 .. testcode:: mod
 
@@ -326,8 +342,8 @@ You can also use the parameters ``costs_buy`` and ``costs_sell`` (for long posit
     ...
 
 Note that these parameters prescribe the transaction costs relative to the
-trade value.  In the above example we used ``costs_buy=0.0025``,
-meaning that each buy transaction for a long position incurs transaction costs of 0.25% of
+trade value.  In the above example we used ``costs_buy=0.0025``, meaning that
+each buy transaction for a long position incurs transaction costs of 0.25% of
 the traded value.
 
 All transaction costs are assumed to be covered by the portfolio itself,
@@ -467,13 +483,14 @@ holdings.
 Starting portfolio
 ~~~~~~~~~~~~~~~~~~
 
-To model multi-period portfolios, a starting portfolio can be specified via the ``initital_holdings`` parameter.
-If this is done, all limits enforced for trades are relative to this starting portfolio.
+To model multi-period portfolios, a starting portfolio can be specified via the
+``initital_holdings`` parameter.  If this is done, all limits enforced for
+trades are relative to this starting portfolio.
 
 The initial holdings :math:`x^0` need to satisfy :math:`\sum_i x^0_i \geq 1`.
 
-In the following examples we will often work with an equally distributed starting portfolio, *i.e.,*
-each initial allocation is :math:`\tfrac 1n`.
+In the following examples we will often work with an equally distributed
+starting portfolio, *i.e.,* each initial allocation is :math:`\tfrac 1n`.
 
 .. testcode:: mod
 
@@ -520,11 +537,13 @@ each initial allocation is :math:`\tfrac 1n`.
     II  6.888222e-02  0.068882
     JJ  1.248442e-08  0.000000
 
-Note that without limitations to the trades, it does not make a difference whether or not we specify a starting portfolio
-since we can then always change our positions to match the optimal portfolio at this point in time.
-Gurobi does not fall victim to the *sunk-cost-fallacy*.
+Note that without limitations to the trades, it does not make a difference
+whether or not we specify a starting portfolio since we can then always change
+our positions to match the optimal portfolio at this point in time.  Gurobi
+does not fall victim to the *sunk-cost-fallacy*.
 
-If transaction costs or cardinality constraints are present, the starting portfolio does make a difference:
+If transaction costs or cardinality constraints are present, the starting
+portfolio does make a difference:
 
 .. testcode:: mod
 
@@ -566,12 +585,13 @@ If transaction costs or cardinality constraints are present, the starting portfo
     JJ    0.1
     dtype: float64
 
-Since we limited the number of trades, only three trades were executed: "BB" and "CC" were sold and more "HH" was bought.
+Since we limited the number of trades, only three trades were executed: "BB"
+and "CC" were sold and more "HH" was bought.
 
 
-Note that going from a long to a short position (or the other way around) for the same asset is counted as two trades.
-(We close one position and open another.)
-Let us look at an example with leverage:
+Note that going from a long to a short position (or the other way around) for
+the same asset is counted as two trades.  (We close one position and open
+another.) Let us look at an example with leverage:
 
 .. testcode:: mod
 
