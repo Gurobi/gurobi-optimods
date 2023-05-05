@@ -260,11 +260,9 @@ positions, totalling to about 14% of the wealth:
 Transaction fees
 ~~~~~~~~~~~~~~~~
 
-In order to define fixed costs per transaction suggested by the optimal
-portfolio :math:`x`, you can use the ``fees`` keyword parameter.  You can also
-use the parameters ``fees_buy`` and ``fees_sell`` (for long positions) and
-``fees_buy_short`` and ``fees_sell_short`` (for short positions) for more
-fine-grained control.
+In order to take into account fixed costs per transaction suggested by the
+optimal portfolio :math:`x`, you can use the keyword parameters ``fees_buy``
+(for long positions) and ``fees_sell`` (for short positions):
 
 .. testcode:: mod
 
@@ -309,13 +307,12 @@ thus reducing the total sum of the returned optimal portfolio:
 
     assert math.isclose(x.sum(), 0.95)
 
-Transaction costs
-~~~~~~~~~~~~~~~~~
+Proportional transaction costs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In order to define relative transaction costs, you can use the ``costs``
-keyword parameter.  You can also use the parameters ``costs_buy`` and
-``costs_sell`` (for long positions) and ``costs_buy_short`` and
-``costs_sell_short`` (for short positions) for more fine-grained control.
+You can define transaction costs *proportional to the transaction value* by
+using the ``costs_buy`` (for long positions) and ``costs_sell` (for short
+positions) keyword parameters as follows:
 
 .. testcode:: mod
 
@@ -343,7 +340,7 @@ keyword parameter.  You can also use the parameters ``costs_buy`` and
 
 Note that these parameters prescribe the transaction costs relative to the
 trade value.  In the above example we used ``costs_buy=0.0025``, meaning that
-each buy transaction for a long position incurs transaction costs of 0.25% of
+each transaction for a long position incurs transaction costs of 0.25% of
 the traded value.
 
 All transaction costs are assumed to be covered by the portfolio itself,
@@ -359,8 +356,6 @@ thus reducing the total sum of the returned optimal portfolio:
     :hide:
 
     assert math.isclose(x.sum(), 1/(1+0.0025))
-
-
 
 Minimum position constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
