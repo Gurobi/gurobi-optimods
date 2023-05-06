@@ -222,6 +222,9 @@ class MeanVariancePortfolio:
         #    b_long_sell \in {0,1} (indicator variable for x_long_sell)
         #    b_short_sell \in {0,1} (indicator variable for x_short_sell)
 
+        if isinstance(initial_holdings, pd.Series):
+            initial_holdings = initial_holdings.to_numpy()
+
         with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
             # Set default for initial_holdings and split into long/positive and short/negative part
             if initial_holdings is None:
