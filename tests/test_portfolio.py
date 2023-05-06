@@ -110,8 +110,8 @@ class TestMod(unittest.TestCase):
 
         # Ensure that we take advantage of leverage
         x = mvp.efficient_portfolio(gamma, max_total_short=0.1)
-        self.assertGreaterEqual(x.loc[x < 0].sum(), -0.1 + 1e-6)
-        self.assertLess(x.loc[x < 0].sum(), -1e-3)
+        self.assertGreaterEqual(x[x < 0].sum(), -0.1 - 1e-6)
+        self.assertLess(x[x < 0].sum(), -1e-3)
         self.assertAlmostEqual(x.sum(), 1.0)
         self.assertAlmostEqual(np.abs(x).sum(), 1.0 + 2 * 0.1)
 
