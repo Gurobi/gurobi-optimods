@@ -257,8 +257,8 @@ positions, totalling to about 14% of the wealth:
     >>> x[x<0].sum()
     -0.141226...
 
-Transaction fees
-~~~~~~~~~~~~~~~~
+One-time transaction fees
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to take into account fixed costs per transaction suggested by the
 optimal portfolio :math:`x`, you can use the keyword parameters ``fees_buy``
@@ -307,11 +307,12 @@ thus reducing the total sum of the returned optimal portfolio:
 
     assert math.isclose(x.sum(), 0.95)
 
+
 Proportional transaction costs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can define transaction costs *proportional to the transaction value* by
-using the ``costs_buy`` (for long positions) and ``costs_sell` (for short
+using the ``costs_buy`` (for long positions) and ``costs_sell`` (for short
 positions) keyword parameters as follows:
 
 .. testcode:: mod
@@ -356,6 +357,7 @@ thus reducing the total sum of the returned optimal portfolio:
     :hide:
 
     assert math.isclose(x.sum(), 1/(1+0.0025))
+
 
 Minimum position constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -412,14 +414,14 @@ the latter portfolio is free of "tiny" transactions.
     II  0.066809  0.063517
     JJ -0.030588  0.000000
 
+
 Restricting the number of open positions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 It is possible to compute an optimal portfolio under the additional restriction
 that only a limited number of positions can be open.  This can be set through
-the ``max_positions`` keyword parameter.
-
-For the example above, restricting the
-total number of positions to three we get the following optimal portfolio.
+the ``max_positions`` keyword parameter.  For example, restricting the
+total number of open positions to three can be achieved as follows:
 
 .. testcode:: mod
 
@@ -463,29 +465,36 @@ The returned solution now suggests to trade only the assets "AA", "DD", "HH".
 	JJ    0.000000
     dtype: float64
 
+
 Restricting the number of trades
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible to compute an optimal portfolio under the additional restriction
 that only a limited number of positions can be traded.  This can be set through
-the ``max_trades`` keyword parameter.  Without a starting portfolio, this is
-equivalent to limiting the number of positions (via ``max_positions``).
-However, while ``max_positions`` limits the total number of open positions in
-the portfolio, the number of trades counts changes relative to the previous portfolio
-holdings.
+the ``max_trades`` keyword parameter.  Without a starting portfolio (see
+`Starting portfolio & rebalancing`_) this is equivalent to limiting the number
+of positions (via ``max_positions``).  But with a starting portfolio defined,
+this parameter will limit the number of trades changing it.
 
 
-Starting portfolio
-~~~~~~~~~~~~~~~~~~
+Starting portfolio & rebalancing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To model multi-period portfolios, a starting portfolio can be specified via the
-``initital_holdings`` parameter.  If this is done, all limits enforced for
-trades are relative to this starting portfolio.
+Alternatively to computing an optimal portfolio out of an all-cash position,
+one can specify a *starting portfolio* via the ``initital_holdings`` keyword
+parameter, effectively rebalancing this initial portfolio.  All limits and
+constraints enforced for trades are relative to the holdings in this starting
+portfolio.
 
 The initial holdings :math:`x^0` need to satisfy :math:`\sum_i x^0_i \geq 1`.
 
-In the following examples we will often work with an equally distributed
-starting portfolio, *i.e.,* each initial allocation is :math:`\tfrac 1n`.
+Note that without any additional constraints on the portfolio or trades, it
+does not make a difference whether or not you specify a starting portfolio: In
+that case any given portfolio will be changed to match the optimal allocations
+(no *sunk-cost-fallacy*).
+
+In the following example we ask for rebalancing a given startion portfolio
+using at most two trades:
 
 .. testcode:: mod
 
@@ -498,10 +507,15 @@ starting portfolio, *i.e.,* each initial allocation is :math:`\tfrac 1n`.
     mu = data.mean()
     gamma = 100.0
     mvp = MeanVariancePortfolio(Sigma, mu)
-    x0 = 1.0 / mu.size * np.ones(mu.size)
 
-    x_without = mvp.efficient_portfolio(gamma, initial_holdings=None)
-    x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0)
+    # A random starting portfolio
+    x0 = pd.Series(
+        [0.06, 0.  , 0.  , 0.23, 0.37, 0.18, 0.  , 0.09, 0.07, 0.],
+        index=mu.index
+    )
+
+    x = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=2,
+        fees_buy=0.001, fees_sell=0.002)
 
 .. testoutput:: mod
     :hide:
@@ -519,118 +533,26 @@ starting portfolio, *i.e.,* each initial allocation is :math:`\tfrac 1n`.
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>> pd.concat([x_without, x_with], keys=["without", "with"], axis=1)
-            without      with
-    AA  4.236507e-01  0.423651
-    BB  1.743570e-07  0.000000
-    CC  7.573610e-10  0.000000
-    DD  2.430104e-01  0.243011
-    EE  1.017732e-07  0.000000
-    FF  2.760531e-09  0.000000
-    GG  2.937307e-02  0.029373
-    HH  2.350833e-01  0.235083
-    II  6.888222e-02  0.068882
-    JJ  1.248442e-08  0.000000
+    >>> pd.concat([x0, x, (x-x0).abs() > 1e-8], keys=["start", "optimal", "traded"], axis=1)
+        start  optimal  traded
+    AA   0.06     0.43    True
+    BB   0.00     0.00   False
+    CC   0.00     0.00   False
+    DD   0.23     0.23   False
+    EE   0.37     0.00    True
+    FF   0.18     0.18   False
+    GG   0.00     0.00   False
+    HH   0.09     0.09   False
+    II   0.07     0.07   False
+    JJ   0.00     0.00   False
 
-Note that without limitations to the trades, it does not make a difference
-whether or not we specify a starting portfolio since we can then always change
-our positions to match the optimal portfolio at this point in time.  Gurobi
-does not fall victim to the *sunk-cost-fallacy*.
-
-If transaction costs or cardinality constraints are present, the starting
-portfolio does make a difference:
-
-.. testcode:: mod
-
-    import pandas as pd
-    import numpy as np
-    from gurobi_optimods.datasets import load_portfolio
-    from gurobi_optimods.portfolio import MeanVariancePortfolio
-    data = load_portfolio()
-    Sigma = data.cov()
-    mu = data.mean()
-    gamma = 100.0
-    mvp = MeanVariancePortfolio(Sigma, mu)
-    x0 = 1.0 / mu.size * np.ones(mu.size)
-
-    x = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=3)
-
-.. testoutput:: mod
-    :hide:
-
-    ...
-    Optimize a model with 123 rows, 130 columns and 300 nonzeros
-    ...
-    Model has 55 quadratic objective terms
-    ...
+The traded positions are "AA" and "EE", resulting in one-time fees for one
+long, and one short transaction (in total 0.3% of the total investment).  As
+explained in the Section `One-time transaction fees`_, these fees are accounted
+by the portfolio itself, reducing the total portfolio value as needed:
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>> x
-    AA    0.1
-    BB    0.0
-    CC    0.0
-    DD    0.1
-    EE    0.1
-    FF    0.1
-    GG    0.1
-    HH    0.3
-    II    0.1
-    JJ    0.1
-    dtype: float64
-
-Since we limited the number of trades, only three trades were executed: "BB"
-and "CC" were sold and more "HH" was bought.
-
-
-Note that going from a long to a short position (or the other way around) for
-the same asset is counted as two trades.  (We close one position and open
-another.) Let us look at an example with leverage:
-
-.. testcode:: mod
-
-    import pandas as pd
-    import numpy as np
-    from gurobi_optimods.datasets import load_portfolio
-    from gurobi_optimods.portfolio import MeanVariancePortfolio
-    data = load_portfolio()
-    Sigma = data.cov()
-    mu = data.mean()
-    gamma = 100.0
-    mvp = MeanVariancePortfolio(Sigma, mu)
-    x0 = 1.0 / mu.size * np.ones(mu.size)
-
-    x = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=5, max_total_short=0.1)
-
-.. testoutput:: mod
-    :hide:
-
-    ...
-    Optimize a model with 123 rows, 130 columns and 330 nonzeros
-    ...
-    Model has 55 quadratic objective terms
-    ...
-
-
-.. doctest:: mod
-    :options: +NORMALIZE_WHITESPACE
-
-    >>> x
-    AA    0.5
-    BB    0.0
-    CC   -0.1
-    DD    0.1
-    EE    0.1
-    FF    0.1
-    GG    0.1
-    HH    0.1
-    II    0.1
-    JJ    0.0
-    dtype: float64
-
-In this example, we were allowed five trades:
-
-* Sell existing positions in "BB", "CC", and "JJ".
-* Open a short position in "CC".
-* Buy "AA".
+    >>> print(rount(x.sum(), ndigits=6))
+    0.997
