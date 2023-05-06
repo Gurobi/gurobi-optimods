@@ -118,11 +118,12 @@ from this dataframe:
     :hide:
 
     ...
-    Optimize a model with 122 rows, 130 columns and 260 nonzeros
+    Optimize a model with 112 rows, 130 columns and 280 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
-
+    Presolved: 1 rows, 10 columns, 10 nonzeros
+    ...
 
 
 ..  You can include the full Gurobi log output here for the curious reader.
@@ -230,9 +231,11 @@ portfolio value, you can do:
     :hide:
 
     ...
-    Optimize a model with 122 rows, 130 columns and 290 nonzeros
+    Optimize a model with 112 rows, 130 columns and 290 nonzeros
     ...
     Model has 55 quadratic objective terms
+    ...
+    Presolved: 32 rows, 40 columns, 90 nonzeros
     ...
 
 With leverage allowed we now obtain an optimal portfolio with three short
@@ -283,9 +286,11 @@ optimal portfolio :math:`x`, you can use the keyword parameters ``fees_buy``
     :hide:
 
     ...
-    Optimize a model with 122 rows, 130 columns and 270 nonzeros
+    Optimize a model with 112 rows, 130 columns and 290 nonzeros
     ...
     Model has 55 quadratic objective terms
+    ...
+    Presolved: 26 rows, 25 columns, 65 nonzeros
     ...
 
 Note that these parameters prescribe the transaction fees *relative* to the
@@ -334,9 +339,11 @@ positions) keyword parameters as follows:
     :hide:
 
     ...
-    Optimize a model with 122 rows, 130 columns and 270 nonzeros
+    Optimize a model with 112 rows, 130 columns and 290 nonzeros
     ...
     Model has 55 quadratic objective terms
+    ...
+    Presolved: 1 rows, 10 columns, 10 nonzeros
     ...
 
 Note that these parameters prescribe the transaction costs relative to the
@@ -385,13 +392,17 @@ allocated to each trade:
     :hide:
 
     ...
-    Optimize a model with 122 rows, 130 columns and 290 nonzeros
+    Optimize a model with 112 rows, 130 columns and 290 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
-    Optimize a model with 162 rows, 130 columns and 370 nonzeros
+    Presolved: 32 rows, 40 columns, 90 nonzeros
+    ...
+    Optimize a model with 132 rows, 130 columns and 330 nonzeros
     ...
     Model has 55 quadratic objective terms
+    ...
+    Presolved: 72 rows, 50 columns, 190 nonzeros
     ...
 
 Comparing the two portfolios ``x_plain``, which has no minimum position
@@ -442,9 +453,11 @@ total number of open positions to three can be achieved as follows:
     :hide:
 
     ...
-    Optimize a model with 123 rows, 130 columns and 280 nonzeros
+    Optimize a model with 113 rows, 130 columns and 300 nonzeros
     ...
     Model has 55 quadratic objective terms
+    ...
+    Presolved: 27 rows, 25 columns, 65 nonzeros
     ...
 
 The returned solution now suggests to trade only the assets "AA", "DD", "HH".
@@ -521,13 +534,11 @@ using at most two trades:
     :hide:
 
     ...
-    Optimize a model with 122 rows, 130 columns and 260 nonzeros
+    Optimize a model with 113 rows, 130 columns and 320 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
-    Optimize a model with 122 rows, 130 columns and 260 nonzeros
-    ...
-    Model has 55 quadratic objective terms
+    Presolved: 37 rows, 43 columns, 125 nonzeros
     ...
 
 .. doctest:: mod
@@ -535,16 +546,16 @@ using at most two trades:
 
     >>> pd.concat([x0, x, (x-x0).abs() > 1e-8], keys=["start", "optimal", "traded"], axis=1)
         start  optimal  traded
-    AA   0.06     0.43    True
-    BB   0.00     0.00   False
-    CC   0.00     0.00   False
-    DD   0.23     0.23   False
-    EE   0.37     0.00    True
-    FF   0.18     0.18   False
-    GG   0.00     0.00   False
-    HH   0.09     0.09   False
-    II   0.07     0.07   False
-    JJ   0.00     0.00   False
+    AA   0.06    0.427    True
+    BB   0.00    0.000   False
+    CC   0.00    0.000   False
+    DD   0.23    0.230   False
+    EE   0.37    0.000    True
+    FF   0.18    0.180   False
+    GG   0.00    0.000   False
+    HH   0.09    0.090   False
+    II   0.07    0.070   False
+    JJ   0.00    0.000   False
 
 The traded positions are "AA" and "EE", resulting in one-time fees for one
 long, and one short transaction (in total 0.3% of the total investment).  As
@@ -554,5 +565,5 @@ by the portfolio itself, reducing the total portfolio value as needed:
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>> print(rount(x.sum(), ndigits=6))
+    >>> print(round(x.sum(), ndigits=6))
     0.997
