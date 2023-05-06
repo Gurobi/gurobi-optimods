@@ -108,8 +108,6 @@ class MeanVariancePortfolio:
         gamma,
         max_trades=None,
         max_positions=None,
-        fees=None,
-        costs=None,
         fees_buy=None,
         fees_sell=None,
         costs_buy=None,
@@ -130,22 +128,16 @@ class MeanVariancePortfolio:
         :type max_trades: :class:`int` >= 0
         :param max_positions: Upper limit on the number of open positions
         :type max_positions: :class:`int` >= 0
-        :param fees: Fixed-charge cost for each traded position, relative
-            to total portfolio value, use fees_buy, fees_sell, fees_buy_short, fees_sell_short for more fine-grained control
-        :type fees: :class:`float` >= 0
-        :param costs: Transaction cost for each traded position, relative
-            to trade value, use costs_buy, costs_sell, costs_buy_short, costs_sell_short for more fine-grained control
-        :type costs: :class:`float` >= 0
-        :param fees_buy: Fixed-charge buy cost for each traded long position, relative
+        :param fees_buy: Fixed-charge fee for each buy transaction, relative
             to total portfolio value
         :type fees_buy: :class:`float` >= 0
-        :param fees_sell: Fixed-charge sell cost for each traded long position, relative
+        :param fees_sell: Fixed-charge fee for each sell transaction, relative
             to total portfolio value
         :type fees_sell: :class:`float` >= 0
-        :param costs_buy: Buy transaction cost for each traded long position, relative
+        :param costs_buy: Variable transaction costs for each buy transaction, relative
             to trade value
         :type costs_buy: :class:`float` >= 0
-        :param costs_sell: Sell transaction cost for each traded long position, relative
+        :param costs_sell: Variable transaction costs for each sell transaction, relative
             to trade value
         :type costs_sell: :class:`float` >= 0
         :param min_long: Lower bound on the volume on a traded long position,
@@ -173,54 +165,38 @@ class MeanVariancePortfolio:
         #
         #      x_long = initial_holdings_long + x_long_buy - x_long_sell
         #      x_short == initial_holdings_short - x_short_buy + x_short_sell
+        #      x - initial_holdings == x_buy - x_sell
         #
-        #      sum(x)   + sum(b_long_buy) * fees_buy
-        #               + sum(b_long_sell) * fees_sell
-        #               + sum(b_short_buy) * fees_buy
-        #               + sum(b_short_sell) * fees_sell
-        #               + sum(x_long_buy) * costs_buy
-        #               + sum(x_long_sell) * costs_sell
-        #               + sum(x_short_buy) * costs_buy
-        #               + sum(x_short_sell) * costs_sell
+        #      sum(x)   + sum(b_buy) * fees_buy
+        #               + sum(b_sell) * fees_sell
+        #               + sum(x_buy) * costs_buy
+        #               + sum(x_sell) * costs_sell
         #      = 1
         #                             (Fully invested, minus transaction costs and fees)
         #
         #      x_long  <= M b_long    (force x_long to zero if not traded long)
         #                             (M >= 1 + max_total_short)
-        #      x_long_<y>  <= M b_long_<y>    (y in {buy, sell}, force x_long_<y> to zero if not traded)
-        #                                     (M >= 1 + max_total_short)
-        #
-        #      x_short <= M b_short    (force x_short to zero if not traded short)
-        #                              (M >= max_total_short)
-        #      x_short_<y> <= M b_short_<y>    (y in {buy, sell} force x_short_<y> to zero if not traded)
-        #                                      (M >= max_total_short)
         #
         #      b_short + b_long <= 1  (Cannot go long and short at the same time)
-        #      b_long_buy + b_long_sell <= 1  (Cannot buy and sell at the same time)
-        #      b_short_buy + b_short_sell <= 1  (Cannot buy and sell at the same time)
         #
         #      sum(x_short) <= max_total_short   (Bound total leverage)
         #
-        #      sum(b_short_buy) + sum(b_short_sell) + sum(b_long_buy) + sum(b_long_sell) <= max_trades  (Trade limit)
+        #      sum(b_buy) + sum(b_sell) <= max_trades  (Trade limit)
         #      sum(b_long) + sum(b_short) <= max_positions
         #
-        #      x_<y>_buy >= min_long * b_<y>_buy (y in {long, short}, minimum buy position)
+        #      x_buy >= min_long * b_buy (minimum buy position)
         #
-        #      x_<y>_sell >= min_short * b_<y>_sell (y in {long, short}, minimum sell position)
+        #      x_sell >= min_short * b_sell (minimum sell position)
         #
         #    x free       (relative portfolio holdings)
         #    x_long  >= 0 (relative long holdings)
         #    x_short >= 0 (relative short holdings)
-        #    x_long_buy >=0 (relative buy on long side)
-        #    x_long_sell >=0 (relative sell on long side)
-        #    x_short_buy >=0 (relative buy on short side -> reduce short position)
-        #    x_short_sell >=0 (relative sell on short side -> increase short position)
+        #    x_buy >=0 (relative buy)
+        #    x_sell >=0 (relative sell)
         #    b_long \in {0,1} (indicator variable for x_long)
         #    b_short \in {0,1} (indicator variable for x_short)
-        #    b_long_buy \in {0,1} (indicator variable for x_long_buy)
-        #    b_short_buy \in {0,1} (indicator variable for x_short_buy)
-        #    b_long_sell \in {0,1} (indicator variable for x_long_sell)
-        #    b_short_sell \in {0,1} (indicator variable for x_short_sell)
+        #    b_buy \in {0,1} (indicator variable for x_buy)
+        #    b_sell \in {0,1} (indicator variable for x_sell)
 
         if isinstance(initial_holdings, pd.Series):
             initial_holdings = initial_holdings.to_numpy()
@@ -229,12 +205,6 @@ class MeanVariancePortfolio:
             # Set default for initial_holdings and split into long/positive and short/negative part
             if initial_holdings is None:
                 initial_holdings = np.zeros(self.mu.shape)
-            initial_holdings_long = np.maximum(
-                initial_holdings, np.zeros(self.mu.shape)
-            )
-            initial_holdings_short = np.maximum(
-                -initial_holdings, np.zeros(self.mu.shape)
-            )
 
             # Portfolio vector x is split into long and short positions
             x = m.addMVar(shape=self.mu.shape, lb=-float("inf"), name="x")
@@ -242,18 +212,9 @@ class MeanVariancePortfolio:
             x_short = m.addMVar(shape=self.mu.shape, name="x_short")
             m.addConstr(x == x_long - x_short)
 
-            # The difference between existing holdings and new portfolio is split into four parts
-            x_long_buy = m.addMVar(shape=self.mu.shape, name="x_long_buy")
-            x_long_sell = m.addMVar(shape=self.mu.shape, name="x_long_sell")
-            x_short_buy = m.addMVar(shape=self.mu.shape, name="x_short_buy")
-            x_short_sell = m.addMVar(shape=self.mu.shape, name="x_short_sell")
-            m.addConstr(x_long == initial_holdings_long + x_long_buy - x_long_sell)
-            m.addConstr(x_short == initial_holdings_short - x_short_buy + x_short_sell)
-
             x_buy = m.addMVar(shape=self.mu.shape, name="x_buy")
             x_sell = m.addMVar(shape=self.mu.shape, name="x_sell")
-            m.addConstr(x_buy == x_long_buy + x_short_buy)
-            m.addConstr(x_sell == x_long_sell + x_short_sell)
+            m.addConstr(x - initial_holdings == x_buy - x_sell)
 
             # Binaries used to enforce VUB and minimum position/trade size
             b_long = m.addMVar(shape=self.mu.shape, vtype="B", name="position_long")
@@ -289,17 +250,6 @@ class MeanVariancePortfolio:
                 m.addConstr(
                     b_long.sum() + b_short.sum() <= max_positions, name="max_positions"
                 )
-
-            if fees is not None:
-                if fees_buy is None:
-                    fees_buy = fees
-                if fees_sell is None:
-                    fees_sell = fees
-            if costs is not None:
-                if costs_buy is None:
-                    costs_buy = costs
-                if costs_sell is None:
-                    costs_sell = costs
 
             if fees_buy is not None:
                 investment += b_buy.sum() * fees_buy
