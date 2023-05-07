@@ -40,7 +40,7 @@ Our methods use risk and return estimators.
 
 This description refers only to the simple base model.  Further down in Section
 `Enforcing more portfolio features`_ we explain how to enforce additional
-fatures, such as leverage or transaction fees.
+features, such as leverage or transaction fees.
 
 
 Data Specification
@@ -48,7 +48,7 @@ Data Specification
 
 The mean-variance portfolio optimization model takes the following inputs:
 
-* The covariance matrix :math:`\Sigma` can be given as a pandas Dataframe or a
+* The covariance matrix :math:`\Sigma` can be given as a pandas DataFrame or a
   numpy array.
 * The return estimator :math:`\mu` can be given as a pandas Series or a numpy
   array.
@@ -66,7 +66,7 @@ series of logarithmic historic returns:
 
 .. testsetup:: mod
 
-    # Set pandas options for displaying dataframes, if needed
+    # Set pandas options for displaying DataFrames, if needed
     import math
     import pandas as pd
     pd.options.display.max_rows = 10
@@ -93,10 +93,10 @@ series of logarithmic historic returns:
     <BLANKLINE>
     [245 rows x 10 columns]
 
-The columns of this dataframe represent the individual assets ("AA", "BB", ...,
+The columns of this DataFrame represent the individual assets ("AA", "BB", ...,
 "JJ") while the rows represent the historic time steps. We use pandas
 functionality to compute a simple mean estimator and corresponding covariance
-from this dataframe:
+from this DataFrame:
 
 
 .. testcode:: mod
@@ -211,8 +211,8 @@ Working with leverage
 ~~~~~~~~~~~~~~~~~~~~~
 
 By default all positions traded will be long positions. You can allow
-allocations in short positions by definining a nonzero limit on the total short
-allcocations.  For example, to allow short selling up to 30% of the
+allocations in short positions by defining a nonzero limit on the total short
+allocations.  For example, to allow short selling up to 30% of the
 portfolio value, you can do:
 
 .. testcode:: mod
@@ -495,7 +495,7 @@ Starting portfolio & rebalancing
 
 Alternatively to computing an optimal portfolio out of an all-cash position,
 one can specify a *starting portfolio*, referred to as :math:`x^0` in the
-following, via the ``initital_holdings`` keyword parameter.  In this case, an
+following, via the ``initial_holdings`` keyword parameter.  In this case, an
 optimal *rebalancing* of the given portfolio is computed.
 
 Each entry :math:`x^0_i` indicates the fraction of wealth that is currently
@@ -508,10 +508,10 @@ When specifying a starting portfolio, the following constraints target the
 * `One-time transaction fees`_ through the ``fees_buy`` and ``fees_sell``
   parameters
 
-* `Proportional transaction costs`_ throguh the ``costs_buy`` and ``costs_sell``
+* `Proportional transaction costs`_ through the ``costs_buy`` and ``costs_sell``
   parameters
 
-* `Minimum position constraints`_ throguh the ``min_short`` and ``min_long``
+* `Minimum position constraints`_ through the ``min_short`` and ``min_long``
   parameters
 
 * `Restricting the number of trades`_ through the ``max_trades`` parameter
@@ -522,7 +522,7 @@ does not make a difference whether or not you specify a starting portfolio: In
 that case any given portfolio will be changed to match the optimal allocations
 (no *sunk-cost-fallacy*).
 
-In the following example we ask for rebalancing a given starting gportfolio
+In the following example we ask for rebalancing a given starting portfolio
 using at most two trades:
 
 .. testcode:: mod
