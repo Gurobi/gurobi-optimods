@@ -474,3 +474,27 @@ class TestMeanVariancePortfolio(unittest.TestCase):
         sell_trades_value = -trades[sell_trades].sum()
         trades_value = buy_trades_value + sell_trades_value
         self.assertAlmostEqual(x.sum(), 1 - n_trades * fees - trades_value * costs)
+
+    def test_start_portfolio_max_total_short(self):
+        data = load_portfolio()
+        Sigma = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        mvp = MeanVariancePortfolio(Sigma, mu)
+
+        # Starting portfolio that is short in one position, matching the
+        # allowed leverage in the optimization
+        x0 = np.zeros(mu.size)
+        x0[2] = -0.1
+
+        x = mvp.efficient_portfolio(
+            gamma,
+            initial_holdings=x0,
+            min_short=0.01,
+            min_long=0.015,
+            max_total_short=0.1,
+            fees_buy=0.001,
+            fees_sell=0.002,
+        )
+
+        self.assertAlmostEqual(x[x < 0].sum(), -0.1)
