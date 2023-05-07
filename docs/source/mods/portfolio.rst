@@ -494,19 +494,35 @@ Starting portfolio & rebalancing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Alternatively to computing an optimal portfolio out of an all-cash position,
-one can specify a *starting portfolio* via the ``initital_holdings`` keyword
-parameter, effectively rebalancing this initial portfolio.  All limits and
-constraints enforced for trades are relative to the holdings in this starting
-portfolio.
+one can specify a *starting portfolio*, referred to as :math:`x^0` in the
+following, via the ``initital_holdings`` keyword parameter.  In this case, an
+optimal *rebalancing* of the given portfolio is computed.
 
-The initial holdings :math:`x^0` need to satisfy :math:`\sum_i x^0_i \geq 1`.
+Each entry :math:`x^0_i` indicates the fraction of wealth that is currently
+invested in asset :math:`i`.  Consequently the initial holdings :math:`x^0`
+need to satisfy :math:`\sum_i x^0_i \leq 1`.
+
+When specifying a starting portfolio, the following constraints target the
+*difference* :math:`x - x^0` instead of the optimal portfolio :math:`x`:
+
+* `One-time transaction fees`_ through the ``fees_buy`` and ``fees_sell``
+  parameters
+
+* `Proportional transaction costs`_ throguh the ``costs_buy`` and ``costs_sell``
+  parameters
+
+* `Minimum position constraints`_ throguh the ``min_short`` and ``min_long``
+  parameters
+
+* `Restricting the number of trades`_ through the ``max_trades`` parameter
+
 
 Note that without any additional constraints on the portfolio or trades, it
 does not make a difference whether or not you specify a starting portfolio: In
 that case any given portfolio will be changed to match the optimal allocations
 (no *sunk-cost-fallacy*).
 
-In the following example we ask for rebalancing a given startion portfolio
+In the following example we ask for rebalancing a given starting gportfolio
 using at most two trades:
 
 .. testcode:: mod
