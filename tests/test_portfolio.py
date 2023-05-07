@@ -1,7 +1,3 @@
-# Unit tests for your mod. This is separate from the example tests, it should
-# test smaller pieces of functionality, and can also test multiple cases.
-# This template should be copied to tests/test_<mod-name>.py
-
 import unittest
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal
@@ -10,7 +6,7 @@ from gurobi_optimods.datasets import load_portfolio
 from gurobi_optimods.portfolio import MeanVariancePortfolio
 
 
-class TestMod(unittest.TestCase):
+class TestMeanVariancePortfolio(unittest.TestCase):
     def test_datasets(self):
         data = load_portfolio()
         self.assertEqual(
