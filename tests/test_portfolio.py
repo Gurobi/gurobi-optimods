@@ -164,8 +164,8 @@ class TestMeanVariancePortfolio(unittest.TestCase):
         mu = data.mean()
         gamma = 100.0
 
-        # If there are no additional restrictions, the resulting portfolio should be the same as without initial holdings
-        # sunk-cost-fallacy
+        # If there are no additional restrictions, the resulting portfolio
+        # should be the same as without initial holdings sunk-cost-fallacy
         mvp = MeanVariancePortfolio(Sigma, mu)
         x0 = 1.0 / mu.size * np.ones(mu.size)
         x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0)
@@ -178,8 +178,8 @@ class TestMeanVariancePortfolio(unittest.TestCase):
         mu = data.mean()
         gamma = 100.0
 
-        # If there are no additional restrictions, the resulting portfolio should be the same as without initial holdings
-        # sunk-cost-fallacy
+        # If there are no additional restrictions, the resulting portfolio
+        # should be the same as without initial holdings sunk-cost-fallacy
         mvp = MeanVariancePortfolio(Sigma, mu)
         x0 = 0.5 / mu.size * np.ones(mu.size)
         x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0)
@@ -253,12 +253,14 @@ class TestMeanVariancePortfolio(unittest.TestCase):
         fees = 1e-4
 
         mvp = MeanVariancePortfolio(Sigma, mu)
+
         # Determine efficient portfolio without fees
         x0 = mvp.efficient_portfolio(gamma, max_total_short=0.1)
+
         # Ensure that this is not changed when we compute the portfolio again
-        # with x0 as start and fees
-        # We need min_long and min_short to avoid that paying fees is seen as a "risk-free loss"
-        # which might improve our objective
+        # with x0 as start and fees.  We need min_long and min_short to avoid
+        # that paying fees is seen as a "risk-free loss" which might improve
+        # our objective
         x = mvp.efficient_portfolio(
             gamma,
             max_total_short=0.1,
