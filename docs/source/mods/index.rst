@@ -10,5 +10,4 @@ The Opti Mods
    l1-regression
    min-cost-flow
    mwis
-   weighted-matching
    workforce

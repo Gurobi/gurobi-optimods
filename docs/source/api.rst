@@ -7,9 +7,6 @@ API
 .. automodule:: gurobi_optimods.bipartite_matching
    :members: maximum_bipartite_matching
 
-.. automodule:: gurobi_optimods.general_matching
-   :members: maximum_weighted_matching
-
 .. automodule:: gurobi_optimods.min_cost_flow
    :members: min_cost_flow, min_cost_flow_networkx, min_cost_flow_scipy
 
