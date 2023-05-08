@@ -17,23 +17,35 @@ class MeanVariancePortfolio:
     :type mu: 1-d :class:`np.ndarray`
     :param cov_matrix: Covariance matrix
     :type cov_matrix: 2-d :class:`np.ndarray`
+    :param cov_factors: Covariance factors
+    :type cov_factors: 2-d :class:`tuple` of :class:`np.ndarray`
 
     """
 
     def __init__(
         self,
         mu,
-        cov_matrix,
+        cov_matrix=None,
+        cov_factors=None,
     ):
-        if isinstance(cov_matrix, pd.DataFrame):
-            self.resultType = "pandas"
-            self.index = cov_matrix.index
-            self.covariance = cov_matrix.to_numpy()
-        elif isinstance(cov_matrix, np.ndarray):
-            self.covariance = cov_matrix
-            self.resultType = "numpy"
+        if cov_matrix is not None and cov_factors is not None:
+            raise TypeError("Both cov_matrix and cov_factors given")
+
+        if cov_matrix is not None:
+            if isinstance(cov_matrix, pd.DataFrame):
+                self.resultType = "pandas"
+                self.index = cov_matrix.index
+                self.covariance = cov_matrix.to_numpy()
+            elif isinstance(cov_matrix, np.ndarray):
+                self.covariance = cov_matrix
+                self.resultType = "numpy"
+            else:
+                raise TypeError("Incompatible type of cov_matrix")
+        elif cov_factors is not None:
+            self.covariance = cov_factors
+            self.index = None
         else:
-            raise TypeError("Incompatible type of cov_matrix")
+            raise TypeError("No covariace data given")
 
         if isinstance(mu, pd.Series):
             self.resultType = "pandas"
@@ -244,10 +256,35 @@ class MeanVariancePortfolio:
 
             m.addConstr(investment == 1, name="fully_invested")
 
-            # Basic mean-variance weighted objective
-            m.setObjective(
-                self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)), GRB.MAXIMIZE
-            )
+            if not isinstance(self.covariance, tuple):
+                # Basic mean-variance weighted objective
+                m.setObjective(
+                    self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)),
+                    GRB.MAXIMIZE,
+                )
+            else:
+                # Idea:   We have given  Sigma =
+                #
+                #   factors[0] @ factors[0].T + ... + factors[l] @ factors[l].T
+                #   =: F_0 @ F_0.T + ... + F_l @ F_l
+                #
+                # so that for each contributing term we can set
+                #
+                #   (x.T @ F_i) @ (F_i.T @ x) =: y_i @ y_i
+                #
+                # giving
+                #
+                #   min ... + gamma * y_i @ y_i
+                #   s.t. y_i = F_i.T @ x
+
+                objexpr = self.mu @ x
+
+                for idx, F in enumerate(self.covariance):
+                    y = m.addMVar(F.shape[1], lb=-float("inf"), name=f"factor{idx:d}")
+                    m.addConstr(F.T @ x == y, name=f"link_factor{idx:d}_x")
+                    objexpr -= 0.5 * gamma * (y @ y)
+
+                m.setObjective(objexpr, GRB.MAXIMIZE)
 
             m.optimize()
             if m.Status == GRB.OPTIMAL:
