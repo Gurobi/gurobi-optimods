@@ -222,15 +222,13 @@ def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
     to_arc = np.concatenate([nodes1, G.col, np.repeat(sink, nodes2.shape), [source]])
     capacity = np.ones(from_arc.shape, dtype=float)
     capacity[-1] = GRB.INFINITY
-    cost = np.zeros(from_arc.shape, dtype=float)
-    cost[-1] = -1.0
     balance = np.zeros(G_nodes + 2)
     logger.info(
         "Maximum matching formulated as min-cost flow with "
         f"{balance.shape[0]} nodes and {from_arc.shape[0]} arcs"
     )
 
-    # Solve min-cost flow problem
+    # Solve min-cost flow problem (in this case, it's actually max-profit)
     with create_env() as env, gp.Model(env=env) as model:
         # Create incidence matrix from edge lists.
         indices = np.column_stack((from_arc, to_arc)).reshape(-1, order="C")
@@ -240,8 +238,8 @@ def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
         A = sp.csc_array((data, indices, indptr))
 
         # Solve model with gurobi, return cost and flows
-        model.ModelSense = GRB.MINIMIZE
-        x = model.addMVar(A.shape[1], lb=0, ub=capacity, obj=cost)
+        x = model.addMVar(A.shape[1], lb=0, ub=capacity)
+        model.setObjective(x[-1], sense=GRB.MAXIMIZE)
         model.addMConstr(A, x, GRB.EQUAL, balance)
         model.optimize()
         if model.Status == GRB.INFEASIBLE:
