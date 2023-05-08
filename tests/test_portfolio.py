@@ -24,6 +24,34 @@ class TestMVPBasic(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         x = mvp.efficient_portfolio(0.5)
 
+    def test_init_0(self):
+        # Specifying neither cov_matrix nor cov_factors is disallowed
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+
+        with self.assertRaises(TypeError):
+            mvp = MeanVariancePortfolio(mu)
+
+        with self.assertRaises(TypeError):
+            mvp = MeanVariancePortfolio(mu, cov_matrix=None)
+
+        with self.assertRaises(TypeError):
+            mvp = MeanVariancePortfolio(mu, cov_factors=None)
+
+        with self.assertRaises(TypeError):
+            mvp = MeanVariancePortfolio(mu, cov_matrix=None, cov_factors=None)
+
+    def test_init_0(self):
+        # Specifying both cov_matrix and cov_factors is disallowed
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        L = np.linalg.cholesky(cov_matrix)
+
+        with self.assertRaises(TypeError):
+            mvp = MeanVariancePortfolio(mu, cov_matrix=cov_matrix, cov_factors=(L,))
+
 
 class TestMVPFeatures(unittest.TestCase):
     # All tests that focus portfolio feature correctness go here
@@ -504,3 +532,47 @@ class TestMVPFeatures(unittest.TestCase):
         )
 
         self.assertAlmostEqual(x[x < 0].sum(), -0.1)
+
+    def test_risk_factors_0(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        L = np.linalg.cholesky(cov_matrix)
+        mu = data.mean()
+        gamma = 100.0
+
+        # Two equivalent setups: Sigma itself, and its Cholesky factor
+        mvp_factors = MeanVariancePortfolio(mu, None, cov_factors=(L,))
+        mvp_Sigma = MeanVariancePortfolio(mu, cov_matrix)
+
+        x_factors = mvp_factors.efficient_portfolio(gamma)
+        x_Sigma = mvp_Sigma.efficient_portfolio(gamma)
+
+        assert_allclose(x_factors, x_Sigma, atol=1e-6)
+
+    def test_risk_factors_1(self):
+        # Use case: Data that would emerge from a Single factor model
+        # R = alpha + beta * R_m + e.
+        #
+        # Letting s = beta * R_m, the resulting covariance matrix would then
+        # become Sigma = s @ s.T + diag(...) where the second term captures the
+        # variances of the specific returns.
+        #
+        # We don't bother simulating any such data, we just make up the data.
+
+        n = 3
+
+        mu = 0.2 + (0.2 * np.random.rand(3) - 0.1)
+        s = (0.1 + 0.2 * np.random.rand(3)).reshape((3, 1))
+        d = 0.05 + 0.3 * np.random.rand(3)
+        D = np.diag(d)
+        cov_matrix = s @ s.T + np.diag(d**2)
+
+        # Two equivalent setups: Sigma itself, and its Cholesky factor
+        gamma = 20
+        mvp_factors = MeanVariancePortfolio(mu, None, cov_factors=(s, D))
+        mvp_Sigma = MeanVariancePortfolio(mu, cov_matrix)
+
+        x_factors = mvp_factors.efficient_portfolio(gamma)
+        x_Sigma = mvp_Sigma.efficient_portfolio(gamma)
+
+        assert_allclose(x_factors, x_Sigma, atol=1e-6)
