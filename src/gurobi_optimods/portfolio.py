@@ -5,32 +5,6 @@ import scipy.sparse as sp
 import pandas as pd
 
 
-class Portfolio:
-    def __init__(
-        self,
-        H,
-        Sigma,
-        mu,
-        initial_holdings=None,
-        maxnum_transactions=0,
-        maxnum_assets=0,
-        min_invest_long=0,
-        min_invest_short=0,
-        leverage=0,
-    ) -> None:
-        self.factor_matrix = H  # H.T@H is the covariance matrix
-        self.covariance = Sigma  # Sigma is the covariance matrix
-        self.mu = mu  # estimated first moments of return function
-        self.initial_holdings = initial_holdings  # existing allocation
-        self.maxnum_transactions = maxnum_transactions  # No more than 20 trades
-        self.maxnum_assets = (
-            maxnum_assets  # No more than 50 assets at a time (e.g., online problem)
-        )
-        self.min_invest_long = min_invest_long  # For long allocations, need at least 5% of total investment
-        self.min_invest_short = min_invest_short  # For short allocations, need at least 1% of total investment
-        self.leverage = leverage  # Maximum 10% short selling
-
-
 class MeanVariancePortfolio:
     """Optimal mean-variance portfolio solver.
 
