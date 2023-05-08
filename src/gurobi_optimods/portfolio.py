@@ -13,8 +13,8 @@ class MeanVariancePortfolio:
     :meth:`MeanVariancePortfolio.efficient_portfolio` to solve for efficient
     portfolios with given parameters.
 
-    :param Sigma: Covariance matrix
-    :type Sigma: 2-d :class:`np.ndarray`
+    :param cov_matrix: Covariance matrix
+    :type cov_matrix: 2-d :class:`np.ndarray`
     :param mu: Return vector
     :type mu: 1-d :class:`np.ndarray`
 
@@ -22,18 +22,18 @@ class MeanVariancePortfolio:
 
     def __init__(
         self,
-        Sigma,
+        cov_matrix,
         mu,
     ) -> None:
-        if isinstance(Sigma, pd.DataFrame):
+        if isinstance(cov_matrix, pd.DataFrame):
             self.resultType = "pandas"
-            self.index = Sigma.index
-            self.covariance = Sigma.to_numpy()
-        elif isinstance(Sigma, np.ndarray):
-            self.covariance = Sigma
+            self.index = cov_matrix.index
+            self.covariance = cov_matrix.to_numpy()
+        elif isinstance(cov_matrix, np.ndarray):
+            self.covariance = cov_matrix
             self.resultType = "numpy"
         else:
-            raise TypeError("Incompatible type of Sigma")
+            raise TypeError("Incompatible type of cov_matrix")
 
         if isinstance(mu, pd.Series):
             self.resultType = "pandas"
@@ -96,7 +96,7 @@ class MeanVariancePortfolio:
 
         :param gamma: Risk aversion cofficient for balancing risk and return;
             the resulting objective functions is
-            :math:`\mu^T x - 0.5 \gamma x^T \Sigma x`
+            :math:`\mu^T x - 0.5 \gamma x^T \cov_matrix x`
         :type gamma: :class:`float` >= 0
         :param max_trades: Upper limit on the number of trades
         :type max_trades: :class:`int` >= 0
@@ -133,7 +133,7 @@ class MeanVariancePortfolio:
         of these parameters.
         """
 
-        # max x' * mu + x' * Sigma * x
+        # max x' * mu + x' * cov_matrix * x
         # s.t.
         #      x = x_long - x_short  (x is split in positive/negative parts)
         #

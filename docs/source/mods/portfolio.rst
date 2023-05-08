@@ -18,7 +18,7 @@ Our methods use risk and return estimators.
         We consider a single-period portfolio optimization problem where want
         to allocate wealth into :math:`n` risky assets. The returned portfolio
         :math:`x` is an efficient mean-variance portfolio given returns
-        :math:`\mu`, covariance :math:`\Sigma` and risk aversion
+        :math:`\mu`, covariance matrix :math:`\Sigma` and risk aversion
         :math:`\gamma`.
 
 
@@ -107,11 +107,11 @@ from this DataFrame:
     from gurobi_optimods.portfolio import MeanVariancePortfolio
 
     data = load_portfolio()
-    Sigma = data.cov()
+    cov_matrix = data.cov()
     mu = data.mean()
     gamma = 100.0
 
-    mvp = MeanVariancePortfolio(Sigma, mu)
+    mvp = MeanVariancePortfolio(cov_matrix, mu)
     x = mvp.efficient_portfolio(gamma)
 
 .. testoutput:: mod
@@ -221,10 +221,10 @@ portfolio value, you can do:
     from gurobi_optimods.datasets import load_portfolio
     from gurobi_optimods.portfolio import MeanVariancePortfolio
     data = load_portfolio()
-    Sigma = data.cov()
+    cov_matrix = data.cov()
     mu = data.mean()
     gamma = 100.0
-    mvp = MeanVariancePortfolio(Sigma, mu)
+    mvp = MeanVariancePortfolio(cov_matrix, mu)
     x = mvp.efficient_portfolio(gamma, max_total_short=0.3)
 
 .. testoutput:: mod
@@ -275,11 +275,11 @@ optimal portfolio :math:`x`, you can use the keyword parameters ``fees_buy``
     from gurobi_optimods.portfolio import MeanVariancePortfolio
 
     data = load_portfolio()
-    Sigma = data.cov()
+    cov_matrix = data.cov()
     mu = data.mean()
     gamma = 100.0
 
-    mvp = MeanVariancePortfolio(Sigma, mu)
+    mvp = MeanVariancePortfolio(cov_matrix, mu)
     x = mvp.efficient_portfolio(gamma, fees_buy=0.005)
 
 .. testoutput:: mod
@@ -328,11 +328,11 @@ positions) keyword parameters as follows:
     from gurobi_optimods.portfolio import MeanVariancePortfolio
 
     data = load_portfolio()
-    Sigma = data.cov()
+    cov_matrix = data.cov()
     mu = data.mean()
     gamma = 100.0
 
-    mvp = MeanVariancePortfolio(Sigma, mu)
+    mvp = MeanVariancePortfolio(cov_matrix, mu)
     x = mvp.efficient_portfolio(gamma, costs_buy=0.0025)
 
 .. testoutput:: mod
@@ -381,10 +381,10 @@ allocated to each trade:
     from gurobi_optimods.datasets import load_portfolio
     from gurobi_optimods.portfolio import MeanVariancePortfolio
     data = load_portfolio()
-    Sigma = data.cov()
+    cov_matrix = data.cov()
     mu = data.mean()
     gamma = 100.0
-    mvp = MeanVariancePortfolio(Sigma, mu)
+    mvp = MeanVariancePortfolio(cov_matrix, mu)
     x_plain = mvp.efficient_portfolio(gamma, max_total_short=0.3)
     x_minpos = mvp.efficient_portfolio(gamma, max_total_short=0.3, min_long=0.05, min_short=0.05)
 
@@ -442,11 +442,11 @@ total number of open positions to three can be achieved as follows:
     from gurobi_optimods.portfolio import MeanVariancePortfolio
 
     data = load_portfolio()
-    Sigma = data.cov()
+    cov_matrix = data.cov()
     mu = data.mean()
     gamma = 100.0
 
-    mvp = MeanVariancePortfolio(Sigma, mu)
+    mvp = MeanVariancePortfolio(cov_matrix, mu)
     x = mvp.efficient_portfolio(gamma, max_positions=3)
 
 .. testoutput:: mod
@@ -532,10 +532,10 @@ using at most two trades:
     from gurobi_optimods.datasets import load_portfolio
     from gurobi_optimods.portfolio import MeanVariancePortfolio
     data = load_portfolio()
-    Sigma = data.cov()
+    cov_matrix = data.cov()
     mu = data.mean()
     gamma = 100.0
-    mvp = MeanVariancePortfolio(Sigma, mu)
+    mvp = MeanVariancePortfolio(cov_matrix, mu)
 
     # A random starting portfolio
     x0 = pd.Series(
