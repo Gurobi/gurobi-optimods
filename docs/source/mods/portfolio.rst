@@ -199,6 +199,80 @@ here the solution suggests to spread the investments over five positions
     JJ    1.248442e-08
     dtype: float64
 
+
+Using factor models as input
+----------------------------
+
+In the preceding discussion we have assumed that we the covariance matrix
+:math:`Sigma` was explicitly given.  In many cases, however, the covariance is
+naturally given through a *factor model*.  Mathematically this means that a
+decomposition
+
+.. math::
+
+    \begin{align*}
+    \Sigma = F_1 F_1^T + F_2 F_2^T + \cdots + F_l F_l^T
+    \end{align*}
+
+is known.  Examples for this are single- or multi-factor models that divide
+the individual covariances into a general market movement, and an
+idiosyncratic risk component for each asset.  See Section TODO for an example.
+
+Rather than computing the covariance matrix explcitly from the decomposition,
+it is adivised to input the individual factor matrices directly through the
+``cov_factors`` keyward argurment as in the following example:
+
+.. testcode:: mod
+
+    import numpy as np
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+
+    mu = np.array([0.23987036, 0.24402181, 0.15069203])
+    market_variance = 0.25
+    # Factors relating market variance to assets
+    beta = np.array([[0.93797928], [1.71942161], [1.15652896]])
+    # Idiosyncratic risk
+    asset_risk = np.array([0.23745675, 0.19140259, 0.34325066])
+
+    # Full covariance matrix according to single factor model
+    Sigma = beta @ beta.T * market_variance**2 + np.diag(asset_risk**2)
+    mvp_matrix = MeanVariancePortfolio(mu, cov_matrix=Sigma)
+    x_matrix = mvp_matrix.efficient_portfolio(20)
+
+    # Better use known factorization
+    F1 = beta * market_variance
+    F2 = np.diag(asset_risk)
+    mvp_factors = MeanVariancePortfolio(mu, cov_factors=(F1, F2))
+    x_factors = mvp_factors.efficient_portfolio(20)
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 26 rows, 27 columns and 57 nonzeros
+    ...
+    Model has 6 quadratic objective terms
+    ...
+    Presolved: 1 rows, 3 columns, 3 nonzeros
+    ...
+    Optimize a model with 30 rows, 31 columns and 67 nonzeros
+    ...
+    Model has 4 quadratic objective terms
+    ...
+    Presolved: 2 rows, 4 columns, 6 nonzeros
+    ...
+
+The two computed portfolios are the same, up to numerical noise due to
+different formulations:
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> np.round(np.hstack((x_matrix[:, None], x_factors[:, None])), decimals=4)
+    array([[0.7793, 0.7793],
+           [0.    , 0.    ],
+           [0.2207, 0.2207]])
+
 .. _portfolio features:
 
 Enforcing more portfolio features
