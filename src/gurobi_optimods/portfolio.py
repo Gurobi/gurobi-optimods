@@ -89,6 +89,156 @@ class MeanVariancePortfolio:
             if m.Status == GRB.OPTIMAL:
                 return self._convert_result(x.X)
 
+    def _populate_model(
+        self,
+        m,
+        gamma,
+        max_trades,
+        max_positions,
+        fees_buy,
+        fees_sell,
+        costs_buy,
+        costs_sell,
+        min_long,
+        min_short,
+        max_total_short,
+        initial_holdings,
+    ):
+        # max x' * mu + x' * cov_matrix * x
+        # s.t.
+        #      x = x_long - x_short  (x is split in positive/negative parts)
+        #
+        #      x_long = initial_holdings_long + x_long_buy - x_long_sell
+        #      x_short == initial_holdings_short - x_short_buy + x_short_sell
+        #      x - initial_holdings == x_buy - x_sell
+        #
+        #      sum(x)   + sum(b_buy) * fees_buy
+        #               + sum(b_sell) * fees_sell
+        #               + sum(x_buy) * costs_buy
+        #               + sum(x_sell) * costs_sell
+        #      = 1
+        #                             (Fully invested, minus transaction costs and fees)
+        #
+        #      x_long  <= M b_long    (force x_long to zero if not traded long)
+        #                             (M >= 1 + max_total_short)
+        #
+        #      b_short + b_long <= 1  (Cannot go long and short at the same time)
+        #
+        #      sum(x_short) <= max_total_short   (Bound total leverage)
+        #
+        #      sum(b_buy) + sum(b_sell) <= max_trades  (Trade limit)
+        #      sum(b_long) + sum(b_short) <= max_positions
+        #
+        #      x_buy >= min_long * b_buy (minimum buy position)
+        #
+        #      x_sell >= min_short * b_sell (minimum sell position)
+        #
+        #    x free       (relative portfolio holdings)
+        #    x_long  >= 0 (relative long holdings)
+        #    x_short >= 0 (relative short holdings)
+        #    x_buy >=0 (relative buy)
+        #    x_sell >=0 (relative sell)
+        #    b_long \in {0,1} (indicator variable for x_long)
+        #    b_short \in {0,1} (indicator variable for x_short)
+        #    b_buy \in {0,1} (indicator variable for x_buy)
+        #    b_sell \in {0,1} (indicator variable for x_sell)
+
+        # Portfolio vector x is split into long and short positions
+        x = m.addMVar(shape=self.mu.shape, lb=-float("inf"), name="x")
+        x_long = m.addMVar(shape=self.mu.shape, name="x_long")
+        x_short = m.addMVar(shape=self.mu.shape, name="x_short")
+        m.addConstr(x == x_long - x_short)
+
+        x_buy = m.addMVar(shape=self.mu.shape, name="x_buy")
+        x_sell = m.addMVar(shape=self.mu.shape, name="x_sell")
+        m.addConstr(x - initial_holdings == x_buy - x_sell)
+
+        # Binaries used to enforce VUB and minimum position/trade size
+        b_long = m.addMVar(shape=self.mu.shape, vtype="B", name="position_long")
+        b_short = m.addMVar(shape=self.mu.shape, vtype="B", name="position_short")
+
+        b_buy = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_buy")
+        b_sell = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_sell")
+
+        # Define VUB constraints for x_long and x_short.
+        #
+        # Going short by alpha means that each long position is upper
+        # bounded by 1 + alpha, and each short position by alpha.
+        # This is implied by the sum(x) == 1 constraint.
+        m.addConstr(x_long <= (1.0 + max_total_short) * b_long)
+        m.addConstr(x_short <= max_total_short * b_short)
+
+        m.addConstr(x_buy <= (1.0 + max_total_short) * b_buy)
+        m.addConstr(x_sell <= (1.0 + max_total_short) * b_sell)
+
+        # A position/trade can only by short or long, not both
+        m.addConstr(b_long + b_short <= 1, name="long_or_short_position")
+        m.addConstr(b_buy + b_sell <= 1, name="boy")
+
+        # Bound total leverage
+        m.addConstr(x_short.sum() <= max_total_short, name="total_short")
+
+        investment = x.sum()
+
+        if max_trades is not None:
+            m.addConstr(b_buy.sum() + b_sell.sum() <= max_trades, name="max_trades")
+
+        if max_positions is not None:
+            m.addConstr(
+                b_long.sum() + b_short.sum() <= max_positions, name="max_positions"
+            )
+
+        if fees_buy is not None:
+            investment += b_buy.sum() * fees_buy
+
+        if fees_sell is not None:
+            investment += b_sell.sum() * fees_sell
+
+        if costs_buy is not None:
+            investment += x_buy.sum() * costs_buy
+        if costs_sell is not None:
+            investment += x_sell.sum() * costs_sell
+
+        if min_long is not None:
+            m.addConstr(x_buy >= min_long * b_buy, name="min_buy")
+
+        if min_short is not None:
+            m.addConstr(x_sell >= min_short * b_sell, name="min_sell")
+
+        m.addConstr(investment == 1, name="fully_invested")
+
+        if not isinstance(self.covariance, tuple):
+            # Basic mean-variance weighted objective
+            m.setObjective(
+                self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)),
+                GRB.MAXIMIZE,
+            )
+        else:
+            # Idea:   We have given  Sigma =
+            #
+            #   factors[0] @ factors[0].T + ... + factors[l] @ factors[l].T
+            #   =: F_0 @ F_0.T + ... + F_l @ F_l
+            #
+            # so that for each contributing term we can set
+            #
+            #   (x.T @ F_i) @ (F_i.T @ x) =: y_i @ y_i
+            #
+            # giving
+            #
+            #   min ... + gamma * y_i @ y_i
+            #   s.t. y_i = F_i.T @ x
+
+            objexpr = self.mu @ x
+
+            for idx, F in enumerate(self.covariance):
+                y = m.addMVar(F.shape[1], lb=-float("inf"), name=f"factor{idx:d}")
+                m.addConstr(F.T @ x == y, name=f"link_factor{idx:d}_x")
+                objexpr -= 0.5 * gamma * (y @ y)
+
+            m.setObjective(objexpr, GRB.MAXIMIZE)
+
+        return x
+
     def efficient_portfolio(
         self,
         gamma,
@@ -145,45 +295,6 @@ class MeanVariancePortfolio:
         of these parameters.
         """
 
-        # max x' * mu + x' * cov_matrix * x
-        # s.t.
-        #      x = x_long - x_short  (x is split in positive/negative parts)
-        #
-        #      x_long = initial_holdings_long + x_long_buy - x_long_sell
-        #      x_short == initial_holdings_short - x_short_buy + x_short_sell
-        #      x - initial_holdings == x_buy - x_sell
-        #
-        #      sum(x)   + sum(b_buy) * fees_buy
-        #               + sum(b_sell) * fees_sell
-        #               + sum(x_buy) * costs_buy
-        #               + sum(x_sell) * costs_sell
-        #      = 1
-        #                             (Fully invested, minus transaction costs and fees)
-        #
-        #      x_long  <= M b_long    (force x_long to zero if not traded long)
-        #                             (M >= 1 + max_total_short)
-        #
-        #      b_short + b_long <= 1  (Cannot go long and short at the same time)
-        #
-        #      sum(x_short) <= max_total_short   (Bound total leverage)
-        #
-        #      sum(b_buy) + sum(b_sell) <= max_trades  (Trade limit)
-        #      sum(b_long) + sum(b_short) <= max_positions
-        #
-        #      x_buy >= min_long * b_buy (minimum buy position)
-        #
-        #      x_sell >= min_short * b_sell (minimum sell position)
-        #
-        #    x free       (relative portfolio holdings)
-        #    x_long  >= 0 (relative long holdings)
-        #    x_short >= 0 (relative short holdings)
-        #    x_buy >=0 (relative buy)
-        #    x_sell >=0 (relative sell)
-        #    b_long \in {0,1} (indicator variable for x_long)
-        #    b_short \in {0,1} (indicator variable for x_short)
-        #    b_buy \in {0,1} (indicator variable for x_buy)
-        #    b_sell \in {0,1} (indicator variable for x_sell)
-
         if isinstance(initial_holdings, pd.Series):
             initial_holdings = initial_holdings.to_numpy()
 
@@ -191,105 +302,32 @@ class MeanVariancePortfolio:
             if initial_holdings.sum() > 1.0:
                 raise ValueError("Initial holding's sum must not exceed 1.0")
 
+        # Set default for initial_holdings and split into long/positive and short/negative part
+        if initial_holdings is None:
+            initial_holdings = np.zeros(self.mu.shape)
+
         with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
-            # Set default for initial_holdings and split into long/positive and short/negative part
-            if initial_holdings is None:
-                initial_holdings = np.zeros(self.mu.shape)
-
-            # Portfolio vector x is split into long and short positions
-            x = m.addMVar(shape=self.mu.shape, lb=-float("inf"), name="x")
-            x_long = m.addMVar(shape=self.mu.shape, name="x_long")
-            x_short = m.addMVar(shape=self.mu.shape, name="x_short")
-            m.addConstr(x == x_long - x_short)
-
-            x_buy = m.addMVar(shape=self.mu.shape, name="x_buy")
-            x_sell = m.addMVar(shape=self.mu.shape, name="x_sell")
-            m.addConstr(x - initial_holdings == x_buy - x_sell)
-
-            # Binaries used to enforce VUB and minimum position/trade size
-            b_long = m.addMVar(shape=self.mu.shape, vtype="B", name="position_long")
-            b_short = m.addMVar(shape=self.mu.shape, vtype="B", name="position_short")
-
-            b_buy = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_buy")
-            b_sell = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_sell")
-
-            # Define VUB constraints for x_long and x_short.
-            #
-            # Going short by alpha means that each long position is upper
-            # bounded by 1 + alpha, and each short position by alpha.
-            # This is implied by the sum(x) == 1 constraint.
-            m.addConstr(x_long <= (1.0 + max_total_short) * b_long)
-            m.addConstr(x_short <= max_total_short * b_short)
-
-            m.addConstr(x_buy <= (1.0 + max_total_short) * b_buy)
-            m.addConstr(x_sell <= (1.0 + max_total_short) * b_sell)
-
-            # A position/trade can only by short or long, not both
-            m.addConstr(b_long + b_short <= 1, name="long_or_short_position")
-            m.addConstr(b_buy + b_sell <= 1, name="boy")
-
-            # Bound total leverage
-            m.addConstr(x_short.sum() <= max_total_short, name="total_short")
-
-            investment = x.sum()
-
-            if max_trades is not None:
-                m.addConstr(b_buy.sum() + b_sell.sum() <= max_trades, name="max_trades")
-
-            if max_positions is not None:
-                m.addConstr(
-                    b_long.sum() + b_short.sum() <= max_positions, name="max_positions"
-                )
-
-            if fees_buy is not None:
-                investment += b_buy.sum() * fees_buy
-
-            if fees_sell is not None:
-                investment += b_sell.sum() * fees_sell
-
-            if costs_buy is not None:
-                investment += x_buy.sum() * costs_buy
-            if costs_sell is not None:
-                investment += x_sell.sum() * costs_sell
-
-            if min_long is not None:
-                m.addConstr(x_buy >= min_long * b_buy, name="min_buy")
-
-            if min_short is not None:
-                m.addConstr(x_sell >= min_short * b_sell, name="min_sell")
-
-            m.addConstr(investment == 1, name="fully_invested")
-
-            if not isinstance(self.covariance, tuple):
-                # Basic mean-variance weighted objective
-                m.setObjective(
-                    self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)),
-                    GRB.MAXIMIZE,
-                )
-            else:
-                # Idea:   We have given  Sigma =
-                #
-                #   factors[0] @ factors[0].T + ... + factors[l] @ factors[l].T
-                #   =: F_0 @ F_0.T + ... + F_l @ F_l
-                #
-                # so that for each contributing term we can set
-                #
-                #   (x.T @ F_i) @ (F_i.T @ x) =: y_i @ y_i
-                #
-                # giving
-                #
-                #   min ... + gamma * y_i @ y_i
-                #   s.t. y_i = F_i.T @ x
-
-                objexpr = self.mu @ x
-
-                for idx, F in enumerate(self.covariance):
-                    y = m.addMVar(F.shape[1], lb=-float("inf"), name=f"factor{idx:d}")
-                    m.addConstr(F.T @ x == y, name=f"link_factor{idx:d}_x")
-                    objexpr -= 0.5 * gamma * (y @ y)
-
-                m.setObjective(objexpr, GRB.MAXIMIZE)
+            x = self._populate_model(
+                m,
+                gamma,
+                max_trades,
+                max_positions,
+                fees_buy,
+                fees_sell,
+                costs_buy,
+                costs_sell,
+                min_long,
+                min_short,
+                max_total_short,
+                initial_holdings,
+            )
 
             m.optimize()
-            if m.Status == GRB.OPTIMAL:
-                return self._convert_result(x.X)
+            status = m.Status
+            if status == GRB.OPTIMAL:
+                xvals = x.X
+
+        if status == GRB.OPTIMAL:
+            return self._convert_result(xvals)
+        else:
+            return None
