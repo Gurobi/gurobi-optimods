@@ -13,8 +13,7 @@ Problem Specification
 
 	The network data requirements are likewise limited.  For each branch :math:`km` the models require the branch reactance :math:`x_{km}` as well as a ratio :math:`\tau_{km}` and angle :math:`\phi_{km}`; the latter two are relevant only in the case of transformers.  In the non-transformer case we assume :math:`\tau_{km} = 1` and :math:`\phi_{km} = 0`.
 
-
-    .. tab:: Optimization Model
+   .. tab:: Optimization Model
        The following variables are used in the DCOPF problem.
 
        1. For each bus :math:`k` we have a phase angle :math:`\theta_k`.
