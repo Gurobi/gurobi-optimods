@@ -111,7 +111,7 @@ from this DataFrame:
     mu = data.mean()
     gamma = 100.0
 
-    mvp = MeanVariancePortfolio(cov_matrix, mu)
+    mvp = MeanVariancePortfolio(mu, cov_matrix)
     x = mvp.efficient_portfolio(gamma)
 
 .. testoutput:: mod
@@ -224,7 +224,7 @@ portfolio value, you can do:
     cov_matrix = data.cov()
     mu = data.mean()
     gamma = 100.0
-    mvp = MeanVariancePortfolio(cov_matrix, mu)
+    mvp = MeanVariancePortfolio(mu, cov_matrix)
     x = mvp.efficient_portfolio(gamma, max_total_short=0.3)
 
 .. testoutput:: mod
@@ -279,7 +279,7 @@ optimal portfolio :math:`x`, you can use the keyword parameters ``fees_buy``
     mu = data.mean()
     gamma = 100.0
 
-    mvp = MeanVariancePortfolio(cov_matrix, mu)
+    mvp = MeanVariancePortfolio(mu, cov_matrix)
     x = mvp.efficient_portfolio(gamma, fees_buy=0.005)
 
 .. testoutput:: mod
@@ -332,7 +332,7 @@ positions) keyword parameters as follows:
     mu = data.mean()
     gamma = 100.0
 
-    mvp = MeanVariancePortfolio(cov_matrix, mu)
+    mvp = MeanVariancePortfolio(mu, cov_matrix)
     x = mvp.efficient_portfolio(gamma, costs_buy=0.0025)
 
 .. testoutput:: mod
@@ -384,7 +384,7 @@ allocated to each trade:
     cov_matrix = data.cov()
     mu = data.mean()
     gamma = 100.0
-    mvp = MeanVariancePortfolio(cov_matrix, mu)
+    mvp = MeanVariancePortfolio(mu, cov_matrix)
     x_plain = mvp.efficient_portfolio(gamma, max_total_short=0.3)
     x_minpos = mvp.efficient_portfolio(gamma, max_total_short=0.3, min_long=0.05, min_short=0.05)
 
@@ -446,7 +446,7 @@ total number of open positions to three can be achieved as follows:
     mu = data.mean()
     gamma = 100.0
 
-    mvp = MeanVariancePortfolio(cov_matrix, mu)
+    mvp = MeanVariancePortfolio(mu, cov_matrix)
     x = mvp.efficient_portfolio(gamma, max_positions=3)
 
 .. testoutput:: mod
@@ -535,7 +535,7 @@ using at most two trades:
     cov_matrix = data.cov()
     mu = data.mean()
     gamma = 100.0
-    mvp = MeanVariancePortfolio(cov_matrix, mu)
+    mvp = MeanVariancePortfolio(mu, cov_matrix)
 
     # A random starting portfolio
     x0 = pd.Series(

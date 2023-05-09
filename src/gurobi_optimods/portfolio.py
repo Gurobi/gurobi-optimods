@@ -22,8 +22,8 @@ class MeanVariancePortfolio:
 
     def __init__(
         self,
-        cov_matrix,
         mu,
+        cov_matrix,
     ) -> None:
         if isinstance(cov_matrix, pd.DataFrame):
             self.resultType = "pandas"
