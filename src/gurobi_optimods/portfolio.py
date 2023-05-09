@@ -24,7 +24,7 @@ class MeanVariancePortfolio:
         self,
         mu,
         cov_matrix,
-    ) -> None:
+    ):
         if isinstance(cov_matrix, pd.DataFrame):
             self.resultType = "pandas"
             self.index = cov_matrix.index
