@@ -6,7 +6,9 @@ from gurobi_optimods.datasets import load_portfolio
 from gurobi_optimods.portfolio import MeanVariancePortfolio
 
 
-class TestMeanVariancePortfolio(unittest.TestCase):
+class TestMVPBasic(unittest.TestCase):
+    # All tests that focus on construction, data checks etc. go here
+
     def test_datasets(self):
         data = load_portfolio()
         self.assertEqual(
@@ -21,6 +23,10 @@ class TestMeanVariancePortfolio(unittest.TestCase):
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         x = mvp.efficient_portfolio(0.5)
+
+
+class TestMVPFeatures(unittest.TestCase):
+    # All tests that focus portfolio feature correctness go here
 
     def test_two_assets(self):
         cov_matrix = np.array([[3, 0.5], [0.5, 2]])
