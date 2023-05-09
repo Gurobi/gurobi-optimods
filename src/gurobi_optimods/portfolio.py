@@ -13,10 +13,10 @@ class MeanVariancePortfolio:
     :meth:`MeanVariancePortfolio.efficient_portfolio` to solve for efficient
     portfolios with given parameters.
 
-    :param cov_matrix: Covariance matrix
-    :type cov_matrix: 2-d :class:`np.ndarray`
     :param mu: Return vector
     :type mu: 1-d :class:`np.ndarray`
+    :param cov_matrix: Covariance matrix
+    :type cov_matrix: 2-d :class:`np.ndarray`
 
     """
 
