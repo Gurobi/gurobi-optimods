@@ -192,6 +192,18 @@ class TestMVPFeatures(unittest.TestCase):
         x_without = mvp.efficient_portfolio(gamma, initial_holdings=None)
         assert_array_equal(x_with, x_without)
 
+    def test_start_portfolio_invalid(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+        x0 = np.ones(mu.shape)
+
+        with self.assertRaises(ValueError):
+            x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0)
+
     def test_start_portfolio_without_restrictions(self):
         data = load_portfolio()
         cov_matrix = data.cov()
@@ -267,6 +279,7 @@ class TestMVPFeatures(unittest.TestCase):
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         x0 = np.array([0.4, 0, 0, 0.2, 0, 0.1, 0.03, 0.2, 0.07, 0])
+        x0 /= x0.sum()  # To avoid 1+eps results due to rounding
         # Ensure that we _do_ have a small trade w/o minimum buy
         x = mvp.efficient_portfolio(gamma, min_long=0.0, initial_holdings=x0)
         trades = x - x0
