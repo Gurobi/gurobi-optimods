@@ -378,17 +378,18 @@ class TestOpfGraphics(unittest.TestCase):
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
 
-        # get path to csv file holding the coordinates for NY
-        coordsfile = load_filepath("nybuses.csv")
-        coords_dict = read_coords_from_csv_file(coordsfile)
-        # plot the given solution
-        fig = generate_opf_solution_figure(case, coords_dict, solution)
-        # test a few coordinates
-        self.assertLess(abs(fig.data[1].x[0] - 1381.2), 1e-9)
-        self.assertLess(abs(fig.data[1].y[0] - 1203.5), 1e-9)
-        self.assertLess(abs(fig.data[1].x[-1] - 837.2), 1e-9)
-        self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
+        self.plot_graphics = True
         if self.plot_graphics:
+            # get path to csv file holding the coordinates for NY
+            coordsfile = load_filepath("nybuses.csv")
+            coords_dict = read_coords_from_csv_file(coordsfile)
+            # plot the given solution
+            fig = generate_opf_solution_figure(case, coords_dict, solution)
+            # test a few coordinates
+            self.assertLess(abs(fig.data[1].x[0] - 1381.2), 1e-9)
+            self.assertLess(abs(fig.data[1].y[0] - 1203.5), 1e-9)
+            self.assertLess(abs(fig.data[1].x[-1] - 837.2), 1e-9)
+            self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
             fig.show()
 
     @unittest.skip(

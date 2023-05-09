@@ -50,7 +50,8 @@ def generate_solution_figure(alldata, solution):
 
     textlist = []
     textlist.append(f"OBJ: {solution['f']:10.2f}")
-    textlist.append(f"Lines off: {numzeros}")
+    if "branchswitching_mip" in alldata.keys() and alldata["branchswitching_mip"]:
+        textlist.append(f"Lines off: {numzeros}")
     return grbgraphical(alldata, "branchswitching", textlist)
 
 
@@ -152,6 +153,7 @@ def grbgraphical(alldata, plottype, textlist):
     mynode_size = {}
     mynode_color = {}
     mynode_border_width = {}
+    edge_text = {}
     myedge_width = {}
     myedge_color = {}
 
@@ -238,6 +240,8 @@ def grbgraphical(alldata, plottype, textlist):
             count_of_f = IDtoCountmap[f]
             count_of_t = IDtoCountmap[t]
 
+            edge_text[j] = "Branch {}   f {}  t {}".format(j, f, t)
+
             if zholder[j - 1] < 0.5:  # turned off
                 myedge_width[j] = 5
                 myedge_color[j] = "red"
@@ -275,6 +279,7 @@ def grbgraphical(alldata, plottype, textlist):
         mynode_size,
         mynode_color,
         mynode_border_width,
+        edge_text,
         myedge_width,
         myedge_color,
         myedge_ends,
@@ -291,6 +296,7 @@ def graphplot(
     myvertex_size,
     myvertex_color,
     myvertex_border_width,
+    myedge_text,
     myedge_width,
     myedge_color,
     myedge_ends,
@@ -374,6 +380,7 @@ def graphplot(
 
     local_reordered_width = {}
     local_reordered_color = {}
+    local_reordered_text = {}
 
     for j in range(scanned_num_unique):
         scannedordpair = scanned_unique_ordered_pairs[j]
@@ -390,15 +397,18 @@ def graphplot(
 
         local_reordered_color[scannedordpair] = {}
         local_reordered_width[scannedordpair] = {}
+        local_reordered_text[scannedordpair] = {}
 
         for k in range(degmine):
             j = myedge_list_consolidated[scannedordpair][k]
             jprime = scanned_list_consolidated[scannedordpair][k]
             color = myedge_color[j]
             width = myedge_width[j]
+            text = myedge_text[j]
 
             local_reordered_color[scannedordpair][k] = color
             local_reordered_width[scannedordpair][k] = width
+            local_reordered_text[scannedordpair][k] = text
 
     vertexx -= np.min(vertexx)
     vertexy -= np.min(vertexy)
@@ -432,6 +442,7 @@ def graphplot(
     reordered_width = {}
     reordered_color = {}
     reordered_position = {}
+    reordered_text = {}
 
     for j in range(m):
         small = min(adj[j][0], adj[j][1])
@@ -451,6 +462,7 @@ def graphplot(
 
         reordered_width[j] = local_reordered_width[pair][deg]
         reordered_color[j] = local_reordered_color[pair][deg]
+        reordered_text[j] = local_reordered_text[pair][deg]
         reordered_position[(fbus, tbus, deg)] = j
 
     gG.getmetrics()
@@ -464,8 +476,9 @@ def graphplot(
         vertex_color=myvertex_color,
         edge_width=reordered_width,
         edge_color=reordered_color,
-        edge_map=reordered_position,
-        vertex_text=myvertex_text,
+        edge_position=reordered_position,
+        edge_text=myedge_text,
+        vertex_text=myvertex_text,  # should be reordered, for both?
         vertex_border_width=myvertex_border_width,
     )
 

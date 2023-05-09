@@ -26,9 +26,9 @@ class Plotlyhandler:
     :type edge_width: list, optional
     :param edge_color: List of edge colors, defaults to None
     :type edge_color: list, optional
-    :param edge_map: List of edge positions accessed by tuples of vertices and degree, defaults to None
-    :type edge_map: list, optional
-    :param vertex_text: List of texts for each vertex
+    :param edge_position: List of edge positions accessed by tuples of vertices and degree, defaults to None
+    :type edge_position: list, optional
+    :param vertex_text: text list for each node
     :type vertex_text: list, optional
     :param vertex_text_position: Position of text shown for each vertex, defaults to None
     :type vertex_text_position: str, optional
@@ -42,10 +42,6 @@ class Plotlyhandler:
     :type vertex_border_width: float, optional
     :param vertex_border_color: Color of vertex border, defaults to None
     :type vertex_border_color: #TODO-Dan what is the type here? A tuple?
-    :param vertex_opacity: Vertex opacity, defaults to None
-    :type vertex_opacity: float, optional
-    :param edge_opacity: Edge opacity, defaults to None
-    :type edge_opacity: float, optional
     """
 
     def __init__(
@@ -55,32 +51,20 @@ class Plotlyhandler:
         annotation_list,
         vertex_size=None,
         vertex_color=None,
+        vertex_border_width=None,
         edge_width=None,
         edge_color=None,
-        edge_map=None,
+        edge_position=None,
+        edge_text=None,
         vertex_text=None,
-        vertex_text_position=None,
-        vertex_text_font_color=None,
-        vertex_text_font_family=None,
-        vertex_text_font_size=None,
-        vertex_border_width=None,
-        vertex_border_color=None,
-        vertex_opacity=None,
-        edge_opacity=None,
     ):
 
-        if vertex_opacity == None:
-            vertex_opacity = 0.8
-        if edge_opacity == None:
-            edge_opacity = 0.8
-        if vertex_text_position == None:
-            vertex_text_position = "middle center"
-        if vertex_text_font_color == None:
-            vertex_text_font_color = ("#000000",)
-        if vertex_text_font_family == None:
-            vertex_text_font_family = "Arial"
-        if vertex_text_font_size == None:
-            vertex_text_font_size = 14
+        vertex_opacity = 0.8
+        edge_opacity = 0.8
+        vertex_text_position = "middle center"
+        vertex_text_font_color = ("#000000",)
+        vertex_text_font_family = "Arial"
+        vertex_text_font_size = 14
 
         self.gG = gG
         self.pos = pos
@@ -93,16 +77,17 @@ class Plotlyhandler:
         self.vertex_size = vertex_size
         self.vertex_color = vertex_color
         self.vertex_border_width = vertex_border_width
-        self.vertex_border_color = vertex_border_color
+        self.vertex_border_color = "Black"
         self.vertex_opacity = vertex_opacity
+        self.edge_text = edge_text
         self.edge_width = edge_width
         self.edge_color = edge_color
         self.input_edge_width = edge_width
         self.input_edge_color = edge_color
         self.edge_opacity = edge_opacity
-        self.edge_map = edge_map
+        self.edge_position = edge_position
 
-    def generate_edge_traces(self):  # -> List[Union[go.Scatter, go.Scatter3d]]:
+    def generate_edge_traces(self):
         """
         TODO-Dan add description
 
@@ -127,7 +112,7 @@ class Plotlyhandler:
             small = min(edge[0] + 1, edge[1] + 1)
             large = max(edge[0] + 1, edge[1] + 1)
             thedeg = localdeg[small, large]
-            position = self.edge_map[(small, large, thedeg)]
+            position = self.edge_position[(small, large, thedeg)]
 
             width = self.input_edge_width[position]
             color = self.input_edge_color[position]
