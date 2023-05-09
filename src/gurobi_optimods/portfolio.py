@@ -301,9 +301,7 @@ class MeanVariancePortfolio:
         if initial_holdings is not None:
             if initial_holdings.sum() > 1.0:
                 raise ValueError("Initial holding's sum must not exceed 1.0")
-
-        # Set default for initial_holdings and split into long/positive and short/negative part
-        if initial_holdings is None:
+        else:
             initial_holdings = np.zeros(self.mu.shape)
 
         with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
