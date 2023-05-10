@@ -252,6 +252,7 @@ class MeanVariancePortfolio:
         min_short=None,
         max_total_short=0.0,
         initial_holdings=None,
+        gurobi_params=None,
     ):
         """
         Compute efficient portfolio for given paramters
@@ -290,6 +291,8 @@ class MeanVariancePortfolio:
         :type max_total_short: :class:`float` >= 0
         :param initial_holdings: Initial portfolio holdings (sum needs to be <= 1)
         :type initial_holdings: 1-d :class:`np.ndarray`
+        :param gurobi_params: Gurobi parameters to be passed to the solver
+        :type gurobi_params: class:`dict`
 
         Refer to the Section :ref:`portfolio features` for a detailed discussion
         of these parameters.
@@ -304,7 +307,9 @@ class MeanVariancePortfolio:
         else:
             initial_holdings = np.zeros(self.mu.shape)
 
-        with gp.Env() as env, gp.Model("efficient_portfolio", env=env) as m:
+        with gp.Env(params=gurobi_params) as env, gp.Model(
+            "efficient_portfolio", env=env
+        ) as m:
             x = self._populate_model(
                 m,
                 gamma,

@@ -1,3 +1,5 @@
+from contextlib import redirect_stdout
+import io
 import unittest
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal
@@ -27,7 +29,6 @@ class TestMVPBasic(unittest.TestCase):
     def test_init_0(self):
         # Specifying neither cov_matrix nor cov_factors is disallowed
         data = load_portfolio()
-        cov_matrix = data.cov()
         mu = data.mean()
 
         with self.assertRaises(TypeError):
@@ -51,6 +52,37 @@ class TestMVPBasic(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             mvp = MeanVariancePortfolio(mu, cov_matrix=cov_matrix, cov_factors=(L,))
+
+    def test_outputflag(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        with redirect_stdout(io.StringIO()) as console:
+            x = mvp.efficient_portfolio(0.5, gurobi_params={})
+        consoleContent = console.getvalue()
+        self.assertIn("Gurobi Optimizer", consoleContent)
+
+        gurobi_params = {"OutputFlag": 0}
+        with redirect_stdout(io.StringIO()) as console:
+            x = mvp.efficient_portfolio(0.5, gurobi_params=gurobi_params)
+        consoleContent = console.getvalue()
+        self.assertEqual(consoleContent, "")
+
+    def test_params(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        gurobi_params = {"MIPFocus": 1}
+        with redirect_stdout(io.StringIO()) as console:
+            x = mvp.efficient_portfolio(0.5, gurobi_params=gurobi_params)
+        consoleContent = console.getvalue()
+        self.assertIn("Set parameter MIPFocus to value 1", consoleContent)
 
 
 class TestMVPFeatures(unittest.TestCase):
