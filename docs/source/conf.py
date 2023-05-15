@@ -20,6 +20,7 @@ extensions = [
     "sphinx_toolbox.collapse",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.extlinks",
     "sphinx.ext.doctest",
     "sphinx.ext.duration",
     "sphinx.ext.intersphinx",
@@ -55,6 +56,11 @@ sys.path.pop()
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
+
+extlinks_detect_hardcoded_links = True
+extlinks = {
+    "pypi": ("https://pypi.org/project/%s/", "%s"),
+}
 
 # -- Bibfiles
 

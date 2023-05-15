@@ -1,5 +1,5 @@
-The Opti Mods
-=============
+The Opti Mods Gallery
+=====================
 
 .. toctree::
    :maxdepth: 1

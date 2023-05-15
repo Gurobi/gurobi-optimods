@@ -1,5 +1,5 @@
-API
-===
+API Reference
+=============
 
 .. automodule:: gurobi_optimods.diet
    :members: solve_diet_problem
