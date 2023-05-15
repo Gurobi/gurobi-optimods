@@ -1,7 +1,13 @@
+import logging
+from dataclasses import dataclass
+
 import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
-from dataclasses import dataclass
+
+from gurobi_optimods.utils import optimod
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -17,7 +23,7 @@ def callback(model, where):
         if runtime >= model._next_output_time:
             primal_bound = model.cbGet(GRB.Callback.MIP_OBJBST)
             dual_bound = model.cbGet(GRB.Callback.MIP_OBJBND)
-            print(
+            logger.info(
                 f"Time: {runtime:.0f}s, "
                 f"best objective: {primal_bound:.2f}, "
                 f"best bound: {dual_bound:.2f}, "
@@ -28,12 +34,11 @@ def callback(model, where):
 
     elif where == GRB.Callback.MIPSOL:
         obj = model.cbGet(GRB.Callback.MIPSOL_OBJ)
-        print(f"New QUBO solution found with objective {obj}")
+        logger.info(f"New QUBO solution found with objective {obj}")
 
 
-def solve_qubo(
-    coeff_matrix, time_limit=GRB.INFINITY, output=False, log_file=""
-) -> QuboResult:
+@optimod()
+def solve_qubo(coeff_matrix, time_limit=GRB.INFINITY, *, create_env) -> QuboResult:
     """
     Solve a quadratic unconstrained binary optimization (QUBO) problem,
     i.e., minimize quadratic function :math:`x'Qx` defined by coefficient matrix :math:`Q`
@@ -60,18 +65,15 @@ def solve_qubo(
 
     n = shape[0]
 
-    params = {"TimeLimit": time_limit, "LogToConsole": 0, "LogFile": log_file}
+    params = {"TimeLimit": time_limit, "LogToConsole": 0}
 
-    with gp.Env(params=params) as env, gp.Model(env=env) as model:
+    with create_env(params=params) as env, gp.Model(env=env) as model:
 
         x = model.addMVar(n, vtype=GRB.BINARY)
         model.setObjective(x @ coeff_matrix @ x, GRB.MINIMIZE)
 
-        if output:
-            model._next_output_time = 5
-            model.optimize(callback)
-        else:
-            model.optimize()
+        model._next_output_time = 5
+        model.optimize(callback)
 
         if model.SolCount == 0:
             raise ValueError(
