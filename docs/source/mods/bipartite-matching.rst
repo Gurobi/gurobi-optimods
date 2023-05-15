@@ -112,7 +112,7 @@ returned as a sub-graph of the input data structure.
             from gurobi_optimods.bipartite_matching import maximum_bipartite_matching
 
             # Create a random bipartite graph
-            graph = nx.bipartite.random_graph(n=5, m=4, p=0.2, seed=123)
+            graph = nx.bipartite.random_graph(n=5, m=4, p=0.4, seed=123)
             nodes1 = np.arange(5)
             nodes2 = np.arange(5, 5 + 4)
 
@@ -165,32 +165,30 @@ using a network primal simplex algorithm.
 
     .. code-block:: text
 
-        Solving maximum matching n1=5 n2=3 |E|=6
-        Maximum matching formulated as min-cost flow with 10 nodes and 15 arcs
-        Restricted license - for non-production use only - expires 2024-10-28
+        Solving maximum matching n1=5 n2=4 |E|=11
         Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
 
         CPU model: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
         Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
 
-        Optimize a model with 10 rows, 15 columns and 30 nonzeros
-        Model fingerprint: 0xb08809c2
+        Optimize a model with 11 rows, 21 columns and 42 nonzeros
+        Model fingerprint: 0x6966afa3
         Coefficient statistics:
           Matrix range     [1e+00, 1e+00]
           Objective range  [1e+00, 1e+00]
           Bounds range     [1e+00, 1e+00]
           RHS range        [0e+00, 0e+00]
-        Presolve removed 4 rows and 4 columns
+        Presolve removed 2 rows and 3 columns
         Presolve time: 0.00s
-        Presolved: 6 rows, 11 columns, 22 nonzeros
+        Presolved: 9 rows, 18 columns, 36 nonzeros
 
         Iteration    Objective       Primal Inf.    Dual Inf.      Time
-               0   -3.0000000e+00   1.000000e+00   0.000000e+00      0s
-               1   -3.0000000e+00   0.000000e+00   0.000000e+00      0s
+               0    4.0000000e+00   8.000000e+00   0.000000e+00      0s
+               6    4.0000000e+00   0.000000e+00   0.000000e+00      0s
 
-        Solved in 1 iterations and 0.00 seconds (0.00 work units)
-        Optimal objective 3.000000000e+00
-        Done: max bipartite matching has 3 edges
+        Solved in 6 iterations and 0.00 seconds (0.00 work units)
+        Optimal objective  4.000000000e+00
+        Max bipartite matching |E|=4
 
 |
 
@@ -224,15 +222,14 @@ Solution
         .. testcode:: bipartite_matching_nx
 
             import matplotlib.pyplot as plt
+
             fig, (ax1, ax2) = plt.subplots(1, 2)
             layout = nx.bipartite_layout(graph, nodes1)
             nx.draw(graph, layout, ax=ax1)
             nx.draw(matching, layout, ax=ax2)
 
-        FIXME this is not the right figure
-
-        .. image:: figures/bipartite-result.png
-          :width: 600
+        .. image:: figures/bipartite-matching-result.png
+          :width: 400
           :alt: Bipartite matching result
 
     .. group-tab:: pandas
