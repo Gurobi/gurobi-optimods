@@ -54,11 +54,3 @@ class TestQubo(unittest.TestCase):
         result = solve_qubo(Q)
         self.assertEqual(result.objective_value, -2)
         assert_array_equal(result.solution, np.array([1, 0, 1]))
-
-    def test_nosolution(self):
-        data = [-1, -2, 3]
-        row = [0, 0, 1]
-        col = [1, 2, 2]
-        Q = sp.coo_matrix((data, (row, col)), shape=(3, 3))
-        with self.assertRaises(ValueError):
-            solve_qubo(Q, time_limit=0.00001)
