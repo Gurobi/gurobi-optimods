@@ -16,6 +16,9 @@ API
 .. automodule:: gurobi_optimods.network_util
    :members: solve_min_cost_flow
 
+.. automodule:: gurobi_optimods.qubo
+   :members: solve_qubo
+
 .. automodule:: gurobi_optimods.regression
    :members: L1Regression
 

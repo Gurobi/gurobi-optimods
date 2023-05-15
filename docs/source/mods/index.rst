@@ -10,5 +10,6 @@ The Opti Mods
    l1-regression
    min-cost-flow
    mwis
+   qubo
    shortest-path
    workforce
