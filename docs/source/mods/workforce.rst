@@ -328,11 +328,20 @@ every rolling window of the given time period, instead of over the entire roster
 .. doctest:: workforce
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
 
-    >>> worker_limits = (
-    ...     data.worker_limits
-    ...     .assign(MinShifts=0)
-    ...     .assign(MaxShifts=4)
-    ... )
+    >>> worker_limits = pd.DataFrame(dict(
+    ...     Worker=data.worker_limits["Worker"],
+    ...     MinShifts=0,
+    ...     MaxShifts=4,
+    ... ))
+    >>> worker_limits
+      Worker  MinShifts  MaxShifts
+    0    Amy          0          4
+    1    Bob          0          4
+    2  Cathy          0          4
+    3    Dan          0          4
+    4     Ed          0          4
+    5   Fred          0          4
+    6     Gu          0          4
     >>> assigned_shifts = solve_workforce_scheduling(
     ...     preferences=data.preferences,
     ...     shift_requirements=data.shift_requirements,
