@@ -23,9 +23,9 @@ from typing import Optional
 
 import gurobipy as gp
 
-global_mod_logger = logging.getLogger("gurobi_optimods")
-grb_logger = logging.getLogger("gurobipy")
-re_module_base_name = re.compile("gurobipy\.|gurobi_optimods\.")
+global_mod_logger = logging.getLogger(r"gurobi_optimods")
+grb_logger = logging.getLogger(r"gurobipy")
+re_module_base_name = re.compile(r"gurobipy\.|gurobi_optimods\.")
 
 
 class ShortFormatter(logging.Formatter):
@@ -86,6 +86,7 @@ def _mod_context(
         if log_to_file:
             mod_logger.removeHandler(fh)
             grb_logger.removeHandler(fh)
+            fh.close()
 
 
 def optimod(mod_logger=None):
