@@ -18,6 +18,7 @@
 import functools
 import logging
 import re
+import sys
 from contextlib import contextmanager
 from typing import Dict, Optional
 
@@ -57,7 +58,7 @@ def _mod_context(
         decorator_params["OutputFlag"] = 1
 
         # Send mod logs to console
-        ch = logging.StreamHandler()
+        ch = logging.StreamHandler(stream=sys.stdout)
         ch.setLevel(logging.INFO)
         ch.setFormatter(logging.Formatter("%(message)s"))
         mod_logger.setLevel(logging.INFO)

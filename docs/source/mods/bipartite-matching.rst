@@ -98,6 +98,7 @@ returned as a sub-graph of the input data structure.
 
             ...
             Optimal objective  3.000000000e+00
+            ...
 
     .. group-tab:: networkx
 
@@ -124,6 +125,7 @@ returned as a sub-graph of the input data structure.
 
             ...
             Optimal objective  4.000000000e+00
+            ...
 
     .. group-tab:: pandas
 
