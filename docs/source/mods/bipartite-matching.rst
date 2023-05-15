@@ -123,7 +123,7 @@ returned as a sub-graph of the input data structure.
             :hide:
 
             ...
-            Optimal objective  2.000000000e+00
+            Optimal objective  4.000000000e+00
 
     .. group-tab:: pandas
 
