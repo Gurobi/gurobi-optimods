@@ -11,5 +11,4 @@ The Opti Mods
    min-cost-flow
    mwis
    shortest-path
-   weighted-matching
    workforce

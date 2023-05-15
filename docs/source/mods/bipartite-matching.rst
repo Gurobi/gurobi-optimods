@@ -1,11 +1,28 @@
 Maximum Bipartite Matching
 ==========================
 
-- Application: assigning workers to tasks
-- Using bipartite matching, we can solve a really simple aspect of workforce
-  scheduling: covering as many tasks as possible, and giving work to as many
-  people as possible
-- Show example figure showing the matching of a graph
+The maximum matching problem is a fundamental problem in graph theory (ref).
+Given a graph, as a set of nodes connected to one another by edges, a matching
+is any subset of those edges which have no vertex in common. The goal of
+maximum matching is to find the largest possible such matching of a given
+graph.
+
+In this mod we consider the special case of maximum cardinality matching on
+bipartite graphs. This problem can be applied to solve exclusive assignment
+problems in practice, such as the assignment of workers or resources to tasks.
+To give a brief example, if we construct a bipartite graph where one of the
+bipartite sets represents tasks, and the other workers, then a matching is a
+set of edges each of which assigns one worker to one task. By the properties
+of a matching, each worker is assigned at most one task and each task is
+completed by at most one worker. The maximum cardinality matching is one which
+maximises the number of completed tasks (and workers given work).
+
+.. Figure generated using networkx, see bipartite-matching-figs.py
+.. figure:: figures/bipartite-matching-example.png
+    :width: 400
+    :alt: Bipartite matching example
+
+    A bipartite graph (left) and its maximum matching (right)
 
 Problem Specification
 ---------------------
@@ -13,8 +30,13 @@ Problem Specification
 Consider a bipartite graph :math:`G(U, V, E)`, where :math:`U` and :math:`V`
 are disjoint vertex sets, and the edge set :math:`E \subseteq U \times V`
 joins only between, not within, the sets. A matching on this graph is any
-subset of edges such that no vertex is incident to more than one edge. A
-maximum matching is the largest possible matching on :math:`G`.
+subset of edges such that no vertex is incident to more than one edge.
+Equivalently, the matching is a subgraph of :math:`G` where all vertices
+have degree at most one. A maximum matching is the largest possible matching
+on :math:`G`.
+
+Algorithm
+---------
 
 The bipartite matching problem can be reduced to a maximum flow problem by
 introducing a source vertex as a predecessor to all vertices in :math:`U`,
@@ -23,32 +45,42 @@ edge unit capacity, a maximum matching is found by maximizing flow from the
 source to the sink. All edges with non-zero flow in the max flow solution
 are part of the matching.
 
-Note that we need a basic solution! TU and all that.
+.. Figure generated using networkx, see bipartite-matching-figs.py
+.. figure:: figures/bipartite-matching-flow.png
+    :width: 400
+    :alt: Bipartite matching flow network
 
-Something about specific graph algorithms vs mathprog formulations?
+    A maximum flow network for the bipartite matching problem
 
-Code
-----
 
-- Possible inputs representing edges on a graph:
-- scipy sparse array (show a directed edgelist as input and output; static input data)
-- networkx graph (show plots as inputs and outputs; input data nx.random_bipartite)
-- pandas dataframe (show frames as inputs and outputs; input data = workforce problem)
-- Output is a subgraph; so has the same type as the input
+We do not describe the mathematical formulation here, see the max flow mod (ref)
+for details. The important point to note is that when this continuous model is
+solved using the simplex algorithm, we are guaranteed to get an integral solution
+and thus the solution can be used to select a set of edges for the matching.
+
+Interface
+---------
+
+The ``maximum_bipartite_matching`` function supports scipy sparse arrays, pandas
+dataframes, and networkx graphs as possible inputs. The user must also provide
+the bipartite partitioning of the input graph. In all cases, the matching is
+returned as a sub-graph of the input data structure.
 
 .. tabs::
 
     .. group-tab:: scipy
 
-        When using scipy, create a sparse array as the graph adjacency matrix.
-        You also need to pass the bipartite node sets as numpy arrays.
+        When given a scipy sparse array representing the adjacency matrix of
+        the graph, the user must also provide the two disjoint node sets as
+        numpy arrays. The mod will return the adjacency matrix of the matching
+        as a scipy sparse array.
 
         .. testcode:: bipartite_matching_sp
 
             import numpy as np
             import scipy.sparse as sp
 
-            from gurobi_optimods.matching import maximum_bipartite_matching
+            from gurobi_optimods.bipartite_matching import maximum_bipartite_matching
 
             # Create a simple bipartite graph as a sparse matrix
             nodes1 = np.array([0, 1, 2, 3, 4])
@@ -65,17 +97,19 @@ Code
             :hide:
 
             ...
-            Optimal objective -3.000000000e+00
+            Optimal objective  3.000000000e+00
 
     .. group-tab:: networkx
 
-        To find a maximum bipartite matching on a networkx graph ...
+        When given a networkx graph as input, the user must also provide the
+        two disjoint node sets as numpy arrays. The mod will return the matching
+        as a networkx graph (a subgraph of the input).
 
         .. testcode:: bipartite_matching_nx
 
             import networkx as nx
             import numpy as np
-            from gurobi_optimods.matching import maximum_bipartite_matching
+            from gurobi_optimods.bipartite_matching import maximum_bipartite_matching
 
             # Create a random bipartite graph
             graph = nx.bipartite.random_graph(n=5, m=4, p=0.2, seed=123)
@@ -89,16 +123,21 @@ Code
             :hide:
 
             ...
-            Optimal objective -2.000000000e+00
+            Optimal objective  2.000000000e+00
 
     .. group-tab:: pandas
 
-        To use pandas, pass a dataframe with two columns specifying the edges
+        The mod accepts pandas dataframes as input, where two columns in the
+        dataframe describe the source and target vertices of an edge. The user
+        must also provide the source and target column names as inputs to the
+        mode. The matching will be returned as a subset of the rows in the
+        original dataframe, including all columns present in the original
+        dataframe, but only those rows corresponding to the maximum matching.
 
         .. testcode:: bipartite_matching_pd
 
             import pandas as pd
-            from gurobi_optimods.matching import maximum_bipartite_matching
+            from gurobi_optimods.bipartite_matching import maximum_bipartite_matching
 
             # Read in some task-worker assignment data
             frame = pd.DataFrame([
@@ -114,12 +153,13 @@ Code
             :hide:
 
             ...
-            Optimal objective -2.000000000e+00
+            Optimal objective  2.000000000e+00
 
 
 The ``maximum_bipartite_matching`` function formulates a linear program for the
-the network flow model corresponding to the given bipartite graph. Gurobi
-solves this model using a network primal simplex algorithm.
+the network flow model corresponding to the given bipartite graph. Since the
+model is formulated as a network flow, Gurobi will in most cases solve the model
+using a network primal simplex algorithm.
 
 .. collapse:: View Gurobi logs
 
@@ -149,7 +189,7 @@ solves this model using a network primal simplex algorithm.
                1   -3.0000000e+00   0.000000e+00   0.000000e+00      0s
 
         Solved in 1 iterations and 0.00 seconds (0.00 work units)
-        Optimal objective -3.000000000e+00
+        Optimal objective 3.000000000e+00
         Done: max bipartite matching has 3 edges
 
 |

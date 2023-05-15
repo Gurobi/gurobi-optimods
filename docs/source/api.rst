@@ -4,8 +4,8 @@ API
 .. automodule:: gurobi_optimods.diet
    :members: solve_diet_problem
 
-.. automodule:: gurobi_optimods.matching
-   :members: maximum_bipartite_matching, maximum_weighted_matching
+.. automodule:: gurobi_optimods.bipartite_matching
+   :members: maximum_bipartite_matching
 
 .. automodule:: gurobi_optimods.min_cost_flow
    :members: min_cost_flow, min_cost_flow_networkx, min_cost_flow_scipy
