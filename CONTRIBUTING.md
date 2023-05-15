@@ -55,3 +55,23 @@ To build and view the docs:
 2. Change to `docs` directory
 3. Run `make livehtml`. This will build the docs and (after a little while) open up a browser window at the index page
 4. Any change to the documentation source files will automatically rebuild the docs and trigger an update in your browser
+
+### Motivation
+
+The idea in one sentence: we will create open-source Python repository of
+implemented optimization use cases, each with clear, informative, and pretty
+documentation that explains how to use it, the mathematical model behind it,
+and the implementation in code.
+
+- A plethora of useful optimization models, in- and outside classical OR
+- Data driven APIs
+- Intuitive for Python users
+
+A good mod:
+
+1. provides background information for the topic and a formal statement
+of the problem in the domain language of the target user
+2. has a simple interface which shields the user from interacting with
+gurobipy, a clean data-in data-out style using sensible data types, and demos
+usage via a runnable example in the documentation
+3. documentation presents results of an example using familiar packages:
