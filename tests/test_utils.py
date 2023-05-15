@@ -77,7 +77,7 @@ class TestOptimodDecorator(unittest.TestCase):
         # Ensure no resource warnings due to files left open
 
         with warnings.catch_warnings(
-            record=True, category=ResourceWarning
+            record=True
         ) as w, tempfile.TemporaryDirectory() as tempdir:
 
             logfile = os.path.join(tempdir, "tmp.log")
