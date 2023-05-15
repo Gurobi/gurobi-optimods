@@ -2,6 +2,7 @@ from contextlib import redirect_stdout
 import io
 import unittest
 import numpy as np
+import pandas as pd
 from numpy.testing import assert_allclose, assert_array_equal
 
 from gurobi_optimods.datasets import load_portfolio
@@ -621,3 +622,128 @@ class TestMVPFeatures(unittest.TestCase):
         x_Sigma = mvp_Sigma.efficient_portfolio(gamma)
 
         assert_allclose(x_factors, x_Sigma, atol=1e-6)
+
+    def test_costs_per_asset_long(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        costs = np.array(
+            [0.01, 0.01, 0.01, 0.02, 0.02, 0.02, 0.0025, 0.0025, 0.0025, 0.0025]
+        )
+        x = mvp.efficient_portfolio(gamma, costs_buy=costs)
+
+        self.assertAlmostEqual(x.sum(), 1 - (costs * x.to_numpy()).sum(), delta=1e-6)
+
+    def test_costs_per_asset_long_random(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        costs = np.random.rand(mu.size) * 0.05
+        x = mvp.efficient_portfolio(gamma, costs_buy=costs)
+
+        self.assertAlmostEqual(x.sum(), 1 - (costs * x.to_numpy()).sum(), delta=1e-6)
+
+    def test_costs_per_asset_long_and_short(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        costs_buy = np.array(
+            [0.01, 0.01, 0.01, 0.02, 0.02, 0.02, 0.0025, 0.0025, 0.0025, 0.0025]
+        )
+        costs_sell = np.array(
+            [0.01, 0.01, 0.01, 0.02, 0.02, 0.02, 0.0025, 0.0025, 0.0025, 0.0025]
+        )
+        x = mvp.efficient_portfolio(
+            gamma, costs_buy=costs_buy, costs_sell=costs_sell, max_total_short=0.1
+        )
+
+        df_buy = pd.Series(costs_buy, index=mu.index)
+        df_sell = pd.Series(costs_sell, index=mu.index)
+        total_costs_buy = (df_buy[x > 1e-6] * x[x > 1e-6]).sum()
+        total_costs_sell = -(df_sell[x < -1e-6] * x[x < -1e-6]).sum()
+        self.assertAlmostEqual(
+            x.sum(), 1 - total_costs_buy - total_costs_sell, delta=1e-6
+        )
+
+    def test_costs_per_asset_long_and_short_random(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        # costs = np.array([0.00832292, 0.00295583, 0.00353887, 0.0044858 , 0.00337871, 0.00924592, 0.00339121, 0.00391734, 0.00773179, 0.00425846])
+        costs_buy = np.random.rand(mu.size) * 0.05
+        costs_sell = np.random.rand(mu.size) * 0.05
+        x = mvp.efficient_portfolio(
+            gamma, costs_buy=costs_buy, costs_sell=costs_sell, max_total_short=0.1
+        )
+
+        df_buy = pd.Series(costs_buy, index=mu.index)
+        df_sell = pd.Series(costs_sell, index=mu.index)
+        total_costs_buy = (df_buy[x > 1e-6] * x[x > 1e-6]).sum()
+        total_costs_sell = -(df_sell[x < -1e-6] * x[x < -1e-6]).sum()
+        self.assertAlmostEqual(
+            x.sum(), 1 - total_costs_buy - total_costs_sell, delta=1e-6
+        )
+
+    def test_fees_per_asset_long(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        fees = np.array(
+            [0.01, 0.003, 0.01, 0.004, 0.001, 0.0002, 0.002, 0.006, 0.005, 0.004]
+        )
+        x = mvp.efficient_portfolio(gamma, fees_buy=fees, max_trades=4)
+        df_buy = pd.Series(fees, index=mu.index)
+        total_fees = df_buy[x > 1e-6].sum()
+
+        self.assertAlmostEqual(x.sum(), 1 - total_fees, delta=1e-6)
+
+    def test_fees_per_asset_long_random(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        fees = np.random.rand(10) * 0.01
+        x = mvp.efficient_portfolio(gamma, fees_buy=fees, max_trades=4)
+        df_buy = pd.Series(fees, index=mu.index)
+        total_fees = df_buy[x > 1e-6].sum()
+
+        self.assertAlmostEqual(x.sum(), 1 - total_fees, delta=1e-6)
+
+    def test_fees_per_asset_long_and_short_random(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        fees_buy = np.random.rand(10) * 0.01
+        fees_sell = np.random.rand(10) * 0.01
+        x = mvp.efficient_portfolio(
+            gamma,
+            fees_buy=fees_buy,
+            fees_sell=fees_sell,
+            max_trades=4,
+            max_total_short=0.1,
+        )
+        df_buy = pd.Series(fees_buy, index=mu.index)
+        df_sell = pd.Series(fees_sell, index=mu.index)
+        total_fees = df_buy[x > 1e-6].sum() + df_sell[x < -1e-6].sum()
+
+        self.assertAlmostEqual(x.sum(), 1 - total_fees, delta=1e-6)

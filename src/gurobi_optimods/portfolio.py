@@ -189,15 +189,14 @@ class MeanVariancePortfolio:
             )
 
         if fees_buy is not None:
-            investment += b_buy.sum() * fees_buy
-
+            investment += (b_buy * fees_buy).sum()
         if fees_sell is not None:
-            investment += b_sell.sum() * fees_sell
+            investment += (b_sell * fees_sell).sum()
 
         if costs_buy is not None:
-            investment += x_buy.sum() * costs_buy
+            investment += (x_buy * costs_buy).sum()
         if costs_sell is not None:
-            investment += x_sell.sum() * costs_sell
+            investment += (x_sell * costs_sell).sum()
 
         if min_long is not None:
             m.addConstr(x_buy >= min_long * b_buy, name="min_buy")
@@ -300,6 +299,15 @@ class MeanVariancePortfolio:
 
         if isinstance(initial_holdings, pd.Series):
             initial_holdings = initial_holdings.to_numpy()
+
+        if isinstance(fees_buy, pd.Series):
+            fees_buy = fees_buy.to_numpy()
+        if isinstance(fees_sell, pd.Series):
+            fees_sell = fees_sell.to_numpy()
+        if isinstance(costs_buy, pd.Series):
+            costs_buy = costs_buy.to_numpy()
+        if isinstance(costs_sell, pd.Series):
+            costs_sell = costs_sell.to_numpy()
 
         if initial_holdings is not None:
             if initial_holdings.sum() > 1.0:
