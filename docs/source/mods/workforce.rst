@@ -102,7 +102,7 @@ the Data Specification above. The tabs below show example data for each frame.
     .. tab:: ``preferences``
 
         The following example table lists worker availability and preferences.
-        For example, Amy is available on July 2nd, 3rd, 5th, and so on, with a
+        For example, Siva is available on July 2nd, 3rd, 5th, and so on, with a
         stronger preference to be assigned the shift on the 5th.
 
         .. doctest:: workforce
@@ -111,18 +111,18 @@ the Data Specification above. The tabs below show example data for each frame.
             >>> from gurobi_optimods import datasets
             >>> data = datasets.load_workforce()
             >>> data.preferences
-               Worker      Shift  Preference
-            0     Amy 2022-07-02         2.0
-            1     Amy 2022-07-03         2.0
-            2     Amy 2022-07-05         5.0
-            3     Amy 2022-07-07         3.0
-            4     Amy 2022-07-09         2.0
-            ..    ...        ...         ...
-            67     Gu 2022-07-10         4.0
-            68     Gu 2022-07-11         5.0
-            69     Gu 2022-07-12         2.0
-            70     Gu 2022-07-13         4.0
-            71     Gu 2022-07-14         3.0
+                 Worker      Shift  Preference
+            0      Siva 2023-05-02         2.0
+            1      Siva 2023-05-03         2.0
+            2      Siva 2023-05-05         5.0
+            3      Siva 2023-05-07         3.0
+            4      Siva 2023-05-09         2.0
+            ..      ...        ...         ...
+            67  Pauline 2023-05-10         4.0
+            68  Pauline 2023-05-11         5.0
+            69  Pauline 2023-05-12         2.0
+            70  Pauline 2023-05-13         4.0
+            71  Pauline 2023-05-14         3.0
             <BLANKLINE>
             [72 rows x 3 columns]
 
@@ -142,17 +142,17 @@ the Data Specification above. The tabs below show example data for each frame.
             >>> data = datasets.load_workforce()
             >>> data.shift_requirements
                     Shift  Required
-            0  2022-07-01         3
-            1  2022-07-02         2
-            2  2022-07-03         4
-            3  2022-07-04         2
-            4  2022-07-05         5
+            0  2023-05-01         3
+            1  2023-05-02         2
+            2  2023-05-03         4
+            3  2023-05-04         2
+            4  2023-05-05         5
             ..        ...       ...
-            9  2022-07-10         3
-            10 2022-07-11         4
-            11 2022-07-12         5
-            12 2022-07-13         7
-            13 2022-07-14         5
+            9  2023-05-10         3
+            10 2023-05-11         4
+            11 2023-05-12         5
+            12 2023-05-13         7
+            13 2023-05-14         5
             <BLANKLINE>
             [14 rows x 2 columns]
 
@@ -169,14 +169,14 @@ the Data Specification above. The tabs below show example data for each frame.
             >>> from gurobi_optimods import datasets
             >>> data = datasets.load_workforce()
             >>> data.worker_limits
-              Worker  MinShifts  MaxShifts
-            0    Amy          6          8
-            1    Bob          6          7
-            2  Cathy          6          8
-            3    Dan          5          8
-            4     Ed          6          8
-            5   Fred          5          8
-            6     Gu          6          8
+                Worker  MinShifts  MaxShifts
+            0     Siva          6          8
+            1  Ziqiang          6          7
+            2  Matsumi          6          8
+            3    Femke          5          8
+            4  Vincent          6          8
+            5   Marisa          5          8
+            6  Pauline          6          8
 
         In the mathematical model, this table provides the values :math:`l_w`
         and :math:`u_w`.
@@ -263,18 +263,18 @@ dataframe.
     :options: +NORMALIZE_WHITESPACE
 
     >>> assigned_shifts
-       Worker      Shift  Preference
-    0     Amy 2022-07-03         2.0
-    1     Amy 2022-07-05         5.0
-    2     Amy 2022-07-07         3.0
-    3     Amy 2022-07-10         4.0
-    4     Amy 2022-07-11         5.0
-    ..    ...        ...         ...
-    47     Gu 2022-07-07         2.0
-    48     Gu 2022-07-11         5.0
-    49     Gu 2022-07-12         2.0
-    50     Gu 2022-07-13         4.0
-    51     Gu 2022-07-14         3.0
+          Worker      Shift  Preference
+    0       Siva 2023-05-03         2.0
+    1       Siva 2023-05-05         5.0
+    2       Siva 2023-05-07         3.0
+    3       Siva 2023-05-10         4.0
+    4       Siva 2023-05-11         5.0
+    ..       ...        ...         ...
+    47   Pauline 2023-05-07         2.0
+    48   Pauline 2023-05-11         5.0
+    49   Pauline 2023-05-12         2.0
+    50   Pauline 2023-05-13         4.0
+    51   Pauline 2023-05-14         3.0
     <BLANKLINE>
     [52 rows x 3 columns]
 
@@ -287,6 +287,7 @@ for further processing.
 .. doctest:: workforce
     :options: +NORMALIZE_WHITESPACE
 
+    >>> import pandas as pd
     >>> shifts_table = pd.pivot_table(
     ...     assigned_shifts.assign(value=1),
     ...     values="value",
@@ -296,22 +297,22 @@ for further processing.
     ... ).replace({1.0: "Y"})
     >>> with pd.option_context('display.max_rows', 15):
     ...     print(shifts_table)
-    Worker     Amy Bob Cathy Dan Ed Fred Gu
+    Worker     Femke Marisa Matsumi Pauline Siva Vincent Ziqiang
     Shift
-    2022-07-01   -   Y     -   -  -    Y  Y
-    2022-07-02   -   -     -   Y  Y    -  -
-    2022-07-03   Y   -     Y   Y  Y    -  -
-    2022-07-04   -   -     Y   -  Y    -  -
-    2022-07-05   Y   Y     Y   Y  -    -  Y
-    2022-07-06   -   Y     -   Y  -    Y  Y
-    2022-07-07   Y   -     Y   -  Y    -  Y
-    2022-07-08   -   Y     -   -  Y    -  -
-    2022-07-09   -   -     -   -  Y    Y  -
-    2022-07-10   Y   -     Y   Y  -    -  -
-    2022-07-11   Y   Y     -   Y  -    -  Y
-    2022-07-12   Y   -     Y   Y  -    Y  Y
-    2022-07-13   Y   Y     Y   Y  Y    Y  Y
-    2022-07-14   Y   -     Y   -  Y    Y  Y
+    2023-05-01     -      Y       -       Y    -       -       Y
+    2023-05-02     Y      -       -       -    -       Y       -
+    2023-05-03     Y      -       Y       -    Y       Y       -
+    2023-05-04     -      -       Y       -    -       Y       -
+    2023-05-05     Y      -       Y       Y    Y       -       Y
+    2023-05-06     Y      Y       -       Y    -       -       Y
+    2023-05-07     -      -       Y       Y    Y       Y       -
+    2023-05-08     -      -       -       -    -       Y       Y
+    2023-05-09     -      Y       -       -    -       Y       -
+    2023-05-10     Y      -       Y       -    Y       -       -
+    2023-05-11     Y      -       -       Y    Y       -       Y
+    2023-05-12     Y      Y       Y       Y    Y       -       -
+    2023-05-13     Y      Y       Y       Y    Y       Y       Y
+    2023-05-14     -      Y       Y       Y    Y       Y       -
 
 Enforcing Breaks
 ----------------
@@ -331,23 +332,24 @@ duration.
 
     >>> worker_limits = pd.DataFrame(dict(
     ...     Worker=data.worker_limits["Worker"],
+    ...     Window=pd.Timedelta("5D"),
     ...     MinShifts=0,
     ...     MaxShifts=4,
     ... ))
     >>> worker_limits
-      Worker  MinShifts  MaxShifts
-    0    Amy          0          4
-    1    Bob          0          4
-    2  Cathy          0          4
-    3    Dan          0          4
-    4     Ed          0          4
-    5   Fred          0          4
-    6     Gu          0          4
+        Worker Window  MinShifts  MaxShifts
+    0     Siva 5 days          0          4
+    1  Ziqiang 5 days          0          4
+    2  Matsumi 5 days          0          4
+    3    Femke 5 days          0          4
+    4  Vincent 5 days          0          4
+    5   Marisa 5 days          0          4
+    6  Pauline 5 days          0          4
 
-The above data specifies that all workers have identical requirements to work
-at most four shifts in any given period, with no minimum requirement. When
-re-solving the problem, ``limit_windows`` is set to 5 days to enforce the new
-requirement.
+The above data specifies that all workers have identical requirements to work at
+most four shifts in any given 5 day period, with no minimum number of shifts
+required. When solving this variant of the problem, ``rolling_limits`` must be
+set to ``True`` to enforce the new requirement.
 
 .. doctest:: workforce
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -368,22 +370,22 @@ requirement.
     ... ).replace({1.0: "Y"})
     >>> with pd.option_context('display.max_rows', 15):
     ...     print(shifts_table)
-    Worker     Amy Bob Cathy Dan Ed Fred Gu
+    Worker     Femke Marisa Matsumi Pauline Siva Vincent Ziqiang
     Shift
-    2022-07-01   -   Y     -   -  -    Y  Y
-    2022-07-02   -   -     -   Y  Y    -  -
-    2022-07-03   -   -     Y   Y  Y    -  Y
-    2022-07-04   -   -     Y   -  Y    -  -
-    2022-07-05   Y   -     Y   Y  Y    -  Y
-    2022-07-06   -   Y     -   Y  -    Y  Y
-    2022-07-07   Y   -     Y   -  Y    -  Y
-    2022-07-08   -   -     -   -  Y    -  Y
-    2022-07-09   -   -     -   -  Y    Y  -
-    2022-07-10   Y   -     Y   Y  -    -  -
-    2022-07-11   -   Y     -   Y  Y    -  Y
-    2022-07-12   Y   -     Y   Y  -    Y  Y
-    2022-07-13   Y   Y     Y   Y  Y    Y  Y
-    2022-07-14   Y   -     Y   -  Y    Y  Y
+    2023-05-01     -      Y       -       Y    -       -       Y
+    2023-05-02     Y      -       -       -    -       Y       -
+    2023-05-03     Y      -       Y       Y    -       Y       -
+    2023-05-04     -      -       Y       -    -       Y       -
+    2023-05-05     Y      -       Y       Y    Y       Y       -
+    2023-05-06     Y      Y       -       Y    -       -       Y
+    2023-05-07     -      -       Y       Y    Y       Y       -
+    2023-05-08     -      -       -       Y    -       Y       -
+    2023-05-09     -      Y       -       -    -       Y       -
+    2023-05-10     Y      -       Y       -    Y       -       -
+    2023-05-11     Y      -       -       Y    -       Y       Y
+    2023-05-12     Y      Y       Y       Y    Y       -       -
+    2023-05-13     Y      Y       Y       Y    Y       Y       Y
+    2023-05-14     -      Y       Y       Y    Y       Y       -
 
-Notice that Amy's shifts have been adjusted so as to avoid any worker working
+Notice that Siva's shifts have been adjusted so as to avoid any worker working
 more than 5 consecutive days.
