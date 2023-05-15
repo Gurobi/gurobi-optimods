@@ -16,6 +16,7 @@ def read_csv(text):
 
 class TestWorkforceScheduling(unittest.TestCase):
     def test_dataset(self):
+        # Check that the example dataset has the expected structure
         data = load_workforce()
         self.assertEqual(
             set(data.keys()), {"preferences", "shift_requirements", "worker_limits"}
@@ -55,9 +56,18 @@ class TestWorkforceScheduling(unittest.TestCase):
             2022-07-03,1
             """
         )
+        worker_limits = read_csv(
+            """
+            Worker,MinShifts,MaxShifts
+            Bob,1,1
+            Alice,1,1
+            """
+        )
 
         assignments = solve_workforce_scheduling(
-            preferences=preferences, shift_requirements=shift_requirements
+            preferences=preferences,
+            shift_requirements=shift_requirements,
+            worker_limits=worker_limits,
         )
 
         self.assertIsInstance(assignments, pd.DataFrame)
@@ -65,7 +75,8 @@ class TestWorkforceScheduling(unittest.TestCase):
         assert_frame_equal(assignments, preferences)
 
     def test_preferences(self):
-        # Choose an assignment which maximises sum of preferences
+        # Choose an assignment which maximises sum of preferences (worker
+        # limits are redundant in this example)
         preferences = read_csv(
             """
             Worker,Shift,Preference
@@ -82,9 +93,18 @@ class TestWorkforceScheduling(unittest.TestCase):
             2022-07-03,1
             """
         )
+        worker_limits = read_csv(
+            """
+            Worker,MinShifts,MaxShifts
+            Bob,0,2
+            Alice,0,2
+            """
+        )
 
         assignments = solve_workforce_scheduling(
-            preferences=preferences, shift_requirements=shift_requirements
+            preferences=preferences,
+            shift_requirements=shift_requirements,
+            worker_limits=worker_limits,
         )
 
         expected = read_csv(
@@ -102,7 +122,7 @@ class TestWorkforceScheduling(unittest.TestCase):
         )
 
     def test_constrained(self):
-        # Test min/max shift constraints
+        # Test min/max shifts per worker constraints
         preferences = read_csv(
             """
             Worker,Shift,Preference
@@ -188,7 +208,8 @@ class TestWorkforceScheduling(unittest.TestCase):
                 expected,
             )
 
-    def test_rolling(self):
+    def test_limit_window(self):
+        # Test enforcement of limits on a rolling window basis
 
         preferences = read_csv(
             """
@@ -212,12 +233,19 @@ class TestWorkforceScheduling(unittest.TestCase):
             2022-07-04,1
             """
         ).assign(Shift=lambda df: pd.to_datetime(df["Shift"]))
+        worker_limits = read_csv(
+            """
+            Worker,MinShifts,MaxShifts
+            Alice,0,1
+            Bob,0,1
+            """
+        )
 
         assignments = solve_workforce_scheduling(
             preferences=preferences,
             shift_requirements=shift_requirements,
-            rolling_window=pd.Timedelta(days=2),
-            rolling_limit=1,
+            worker_limits=worker_limits,
+            limit_window=pd.Timedelta(days=2),
         )
 
         expected = read_csv(
@@ -237,14 +265,30 @@ class TestWorkforceScheduling(unittest.TestCase):
         )
 
     def test_infeasibility(self):
-        # Should raise an exception
-        data = load_workforce()
+        # Infeasibility should raise an exception
+
+        preferences = read_csv(
+            """
+            Worker,Shift,Preference
+            Bob,2022-07-02,1.0
+            """
+        )
+        shift_requirements = read_csv(
+            """
+            Shift,Required
+            2022-07-02,2
+            """
+        )
+        worker_limits = read_csv(
+            """
+            Worker,MinShifts,MaxShifts
+            Bob,1,1
+            """
+        )
 
         with self.assertRaises(ValueError):
             solve_workforce_scheduling(
-                data.preferences,
-                data.shift_requirements,
-                data.worker_limits,
-                rolling_window=pd.Timedelta("4D"),
-                rolling_limit=3,
+                preferences=preferences,
+                shift_requirements=shift_requirements,
+                worker_limits=worker_limits,
             )

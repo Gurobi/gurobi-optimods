@@ -15,9 +15,8 @@ logger = logging.getLogger(__name__)
 def solve_workforce_scheduling(
     preferences: pd.DataFrame,
     shift_requirements: pd.DataFrame,
-    worker_limits: Optional[pd.DataFrame] = None,
-    rolling_window=None,
-    rolling_limit=None,
+    worker_limits: pd.DataFrame,
+    limit_window: Optional[pd.Timedelta] = None,
     *,
     create_env,
 ) -> pd.DataFrame:
@@ -29,12 +28,25 @@ def solve_workforce_scheduling(
     :param shift_requirements: Dataframe with columns 'Shift' and 'Required'
         specifying the number of staff required for every shift
     :type shift_requirements: :class:`pd.DataFrame`
+    :param worker_limits: Dataframe with columns 'Worker', 'MinShifts', and
+        'MaxShifts' specifying the maximum and minimum number of shifts each
+        worker may be assigned
+    :type worker_limits: :class:`pd.DataFrame`
+    :param limit_window: (Optional) Rolling window
+    :type limit_window: :class:`pd.Timedelta`
+    :return: Assigned shifts as a subset of the preferences dataframe
+    :rtype: :class:`pd.DataFrame`
     """
     with create_env() as env, gp.Model(env=env) as m:
+
+        # Create binary variables for all valid shift assignments and
+        # create preference maximization objective
         m.ModelSense = GRB.MAXIMIZE
         assignments = preferences.set_index(["Worker", "Shift"]).gppd.add_vars(
             m, obj="Preference", vtype=GRB.BINARY, name="assign"
         )
+
+        # Enforce shift coverage requirements
         gppd.add_constrs(
             m,
             assignments.groupby("Shift")["assign"].sum(),
@@ -43,7 +55,27 @@ def solve_workforce_scheduling(
             name="requirements",
         )
 
-        if worker_limits is not None:
+        if limit_window:
+            # If limit_window is specified, min/max shift limits are interpreted
+            # as limits on rolling windows of the roster, where windows length
+            # is dictated by the limit_window value
+            for worker, df in assignments.reset_index().groupby("Worker"):
+                df = df.set_index("Shift")["assign"]
+                for entry in df.index:
+                    # TODO hacky! Surely there is a open/closed interval available?
+                    expr = df.loc[
+                        entry : entry + limit_window - pd.Timedelta(seconds=1)
+                    ].sum()
+                    m.addConstr(
+                        expr
+                        <= worker_limits.set_index("Worker").loc[worker, "MaxShifts"],
+                        name=f"rolling[{worker},{entry}]",
+                    )
+                    # TODO test and implement lower limit
+
+        else:
+            # If limit_window is not specified, min/max shift limits are
+            # interpreted as limits on the roster as a whole
             gppd.add_constrs(
                 m,
                 assignments.groupby("Worker")["assign"].sum(),
@@ -59,24 +91,11 @@ def solve_workforce_scheduling(
                 name="min_shifts",
             )
 
-        if rolling_window:
-            # This is uglier than it should be, but pandas rolling() only
-            # handles numeric data
-            for worker, df in assignments.reset_index().groupby("Worker"):
-                df = df.set_index("Shift")["assign"]
-                for entry in df.index:
-                    # Hack! Surely there is a open/closed interval available?
-                    expr = df.loc[
-                        entry : entry + rolling_window - pd.Timedelta(seconds=1)
-                    ].sum()
-                    m.addConstr(
-                        expr <= rolling_limit, name=f"rolling[{worker},{entry}]"
-                    )
-
-            # TODO need another option to specify a rolling roster (wraparound)
+        # Solve the model and return the shift assignments as a subset of the
+        # input preferences dataframe. Raise an exception if a feasible schedule
+        # does not exist.
 
         m.optimize()
-
         if m.Status == GRB.INFEASIBLE:
             raise ValueError("Infeasible roster")
 
