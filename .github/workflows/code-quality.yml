@@ -31,3 +31,5 @@ jobs:
       - name: Verify pre-commit checks passed
         run: |
           pre-commit run --all-files
+      - name: Spell Check
+        uses: crate-ci/typos@master
