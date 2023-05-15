@@ -3,16 +3,10 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import scipy.sparse as sp
 
-# from gurobi_optimods.datasets import load_mod_example_data
 from gurobi_optimods.qubo import solve_qubo
 
 
 class TestQubo(unittest.TestCase):
-    # def test_datasets(self):
-    #     # If you added something to optimods.datasets, test it here
-    #     data = load_mod_example_data()
-    #     self.assertEqual(set(data.keys()), {"a", "b", "c"})
-
     def test_none(self):
         Q = None
         result = solve_qubo(coeffMatrix=Q)
