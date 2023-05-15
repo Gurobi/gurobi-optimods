@@ -1,5 +1,5 @@
-L1 Regression
-=============
+Least Absolute Deviations Regression
+====================================
 
 Minimum sum of absolute errors (L1) regression is generally more robust than ordinary least squares (OLS, L2) in that it is more resistant to outliers in the response variable. The loss function can be expressed using linear program (LP), so fitting model coefficients is ideally suited to an LP solver.
 
@@ -17,7 +17,7 @@ Scikit-learn's documentation gives a general explanation of `Linear Models <http
 
     .. tab:: Loss Function
 
-        :code:`L1Regression` fits a linear model with coefficients :math:`w` to minimize the sum of absolute errors.
+        :code:`LADRegression` fits a linear model with coefficients :math:`w` to minimize the sum of absolute errors.
 
         .. math::
 
@@ -43,12 +43,12 @@ Code
 
 This mod implements the fit-predict interface of scikit-learn. The example below reads in the diabetes dataset from scikit-learn, performs a train-test split, fits the L1 regression model to the training data, and creates predictions for the testing data.
 
-.. testcode:: l1_regression
+.. testcode:: lad_regression
 
     from sklearn import datasets
     from sklearn.model_selection import train_test_split
 
-    from gurobi_optimods.regression import L1Regression
+    from gurobi_optimods.regression import LADRegression
 
     # Load the diabetes dataset
     diabetes_X, diabetes_y = datasets.load_diabetes(return_X_y=True)
@@ -59,11 +59,11 @@ This mod implements the fit-predict interface of scikit-learn. The example below
     )
 
     # Create and fit parameterised model
-    reg = L1Regression()
+    reg = LADRegression()
     reg.fit(X_train, y_train)
     y_pred = reg.predict(X_test)
 
-.. testoutput:: l1_regression
+.. testoutput:: lad_regression
     :hide:
 
     ...
@@ -101,7 +101,7 @@ Solution
 
 Here we extract the coefficients of the fitted model and compare them with the coefficients found using OLS. Not a super informative plot at this stage...
 
-.. testcode:: l1_regression
+.. testcode:: lad_regression
 
     import pandas as pd
     from sklearn.linear_model import LinearRegression
@@ -115,7 +115,7 @@ Here we extract the coefficients of the fitted model and compare them with the c
 
 To gasps of shock and awe, the L1 regression produces a *smaller mean absolute error* on the training set than the OLS model, while the OLS model does better in terms of mean squared error.
 
-.. doctest:: l1_regression
+.. doctest:: lad_regression
 
     >>> from sklearn.metrics import mean_absolute_error, mean_squared_error
     >>> round(mean_absolute_error(y_train, reg.predict(X_train)), 2)

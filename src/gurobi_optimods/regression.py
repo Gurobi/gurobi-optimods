@@ -3,8 +3,8 @@ import gurobipy as gp
 from gurobipy import GRB
 
 
-class L1Regression:
-    """L1-norm regressor with Lasso regularization"""
+class LADRegression:
+    """Least absolute deviations (L1-norm) regressor"""
 
     def fit(self, X_train, y_train):
         """Fit the model to training data.

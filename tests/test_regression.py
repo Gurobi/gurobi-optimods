@@ -2,12 +2,12 @@ import unittest
 
 import numpy as np
 
-from gurobi_optimods.regression import L1Regression
+from gurobi_optimods.regression import LADRegression
 
 
-class TestL1Regression(unittest.TestCase):
+class TestLADRegression(unittest.TestCase):
     def test_random(self):
-        reg = L1Regression()
+        reg = LADRegression()
         X_train = np.random.random((100, 5))
         y_train = np.random.random((100))
         reg.fit(X_train, y_train)
