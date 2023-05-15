@@ -24,8 +24,8 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-    "gurobipy",
-    "gurobipy-pandas",
+    "gurobipy>=10.0.0",
+    "gurobipy-pandas>=1.0.0",
     "numpy",
     "pandas",
     "scipy",
