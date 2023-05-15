@@ -1,5 +1,5 @@
 # One possible idea for handling output suppression/file logging. Mods need
-# to be decorated with @optimod and accept a create_env keyword arguemnt. This
+# to be decorated with @optimod and accept a create_env keyword argument. This
 # factory function should be used to create the mod's gurobi environments.
 #
 #   @optimod(mod_logger=logger)  # pass the mod's module logger

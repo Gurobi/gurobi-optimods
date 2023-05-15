@@ -57,7 +57,7 @@ We provide the graph theory and mathematical definition of this problem.
             \end{alignat}
 
         Where :math:`\delta^+(\cdot)` (:math:`\delta^-(\cdot)`) denotes the
-        outgoing (incoming) neighours.
+        outgoing (incoming) neighbours.
 
         The objective minimises the total cost over all edges.
 

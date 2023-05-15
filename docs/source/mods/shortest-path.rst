@@ -47,7 +47,7 @@ mathematical programming.
             \end{alignat}
 
         Where :math:`\delta^+(\cdot)` (:math:`\delta^-(\cdot)`) denotes the
-        outgoing (incoming) neighours, and :math:`b_i` is equal to :math:`-1` if
+        outgoing (incoming) neighbours, and :math:`b_i` is equal to :math:`-1` if
         :math:`i=s`, :math:`1` if :math:`i=t`, and :math:`0` otherwise.
 
         The objective minimises the total cost over all edges.
