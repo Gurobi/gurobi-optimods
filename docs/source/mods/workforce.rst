@@ -358,7 +358,7 @@ set to ``True`` to enforce the new requirement.
     ...     preferences=data.preferences,
     ...     shift_requirements=data.shift_requirements,
     ...     worker_limits=worker_limits,
-    ...     limit_window=pd.Timedelta("5D"),
+    ...     rolling_limits=True,
     ...     silent=True,
     ... )
     >>> shifts_table = pd.pivot_table(

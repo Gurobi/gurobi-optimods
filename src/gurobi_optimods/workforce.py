@@ -16,7 +16,7 @@ def solve_workforce_scheduling(
     preferences: pd.DataFrame,
     shift_requirements: pd.DataFrame,
     worker_limits: pd.DataFrame,
-    limit_window: Optional[pd.Timedelta] = None,
+    rolling_limits: bool = False,
     *,
     create_env,
 ) -> pd.DataFrame:
@@ -32,8 +32,10 @@ def solve_workforce_scheduling(
         'MaxShifts' specifying the maximum and minimum number of shifts each
         worker may be assigned
     :type worker_limits: :class:`pd.DataFrame`
-    :param limit_window: (Optional) Rolling window
-    :type limit_window: :class:`pd.Timedelta`
+    :param rolling_limits: Whether to enforce worker shift limits on a rolling
+        window basis. If True, worker_limits must contain an additional 'Window'
+        column specifying the rolling window for each worker
+    :type rolling_limits: :class:`bool`
     :return: Assigned shifts as a subset of the preferences dataframe
     :rtype: :class:`pd.DataFrame`
     """
@@ -55,11 +57,14 @@ def solve_workforce_scheduling(
             name="requirements",
         )
 
-        if limit_window:
-            # If limit_window is specified, min/max shift limits are interpreted
-            # as limits on rolling windows of the roster, where windows length
-            # is dictated by the limit_window value
+        if rolling_limits:
+            # If rolling_limits is true, min/max shift limits are interpreted
+            # as limits on rolling windows of the roster, where window length
+            # is dictated by the 'Window' column of worker_limits
+            worker_limits = worker_limits.set_index("Worker")
             for worker, df in assignments.reset_index().groupby("Worker"):
+                limit_window = worker_limits.loc[worker, "Window"]
+                max_shifts = worker_limits.loc[worker, "MaxShifts"]
                 df = df.set_index("Shift")["assign"]
                 for entry in df.index:
                     # TODO hacky! Surely there is a open/closed interval available?
@@ -67,8 +72,7 @@ def solve_workforce_scheduling(
                         entry : entry + limit_window - pd.Timedelta(seconds=1)
                     ].sum()
                     m.addConstr(
-                        expr
-                        <= worker_limits.set_index("Worker").loc[worker, "MaxShifts"],
+                        expr <= max_shifts,
                         name=f"rolling[{worker},{entry}]",
                     )
                     # TODO test and implement lower limit

@@ -208,7 +208,7 @@ class TestWorkforceScheduling(unittest.TestCase):
                 expected,
             )
 
-    def test_limit_window(self):
+    def test_rolling_limits(self):
         # Test enforcement of limits on a rolling window basis
 
         preferences = read_csv(
@@ -235,17 +235,17 @@ class TestWorkforceScheduling(unittest.TestCase):
         ).assign(Shift=lambda df: pd.to_datetime(df["Shift"]))
         worker_limits = read_csv(
             """
-            Worker,MinShifts,MaxShifts
-            Alice,0,1
-            Bob,0,1
+            Worker,Window,MinShifts,MaxShifts
+            Alice,2D,0,1
+            Bob,2D,0,1
             """
-        )
+        ).assign(Window=lambda df: pd.to_timedelta(df["Window"]))
 
         assignments = solve_workforce_scheduling(
             preferences=preferences,
             shift_requirements=shift_requirements,
             worker_limits=worker_limits,
-            limit_window=pd.Timedelta(days=2),
+            rolling_limits=True,
         )
 
         expected = read_csv(
