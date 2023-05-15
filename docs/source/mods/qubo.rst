@@ -105,7 +105,7 @@ definition as a SciPy sparse matrix in a comment).
     # col = [1, 2, 1, 2, 2]
     # Q = sp.coo_matrix((weights, (row, col)), shape=(3, 3))
 
-    result = solve_qubo(coeffMatrix=Q, output=True, logFile="gurobi.log")
+    result = solve_qubo(Q, output=True, log_file="gurobi.log")
 
 .. testoutput:: qubo
     :hide:

@@ -14,17 +14,17 @@ def callback(model, where):
 
     if where == GRB.Callback.MIP:
         runtime = model.cbGet(GRB.Callback.RUNTIME)
-        if runtime >= model._nextOutputTime:
-            primalBound = model.cbGet(GRB.Callback.MIP_OBJBST)
-            dualBound = model.cbGet(GRB.Callback.MIP_OBJBND)
+        if runtime >= model._next_output_time:
+            primal_bound = model.cbGet(GRB.Callback.MIP_OBJBST)
+            dual_bound = model.cbGet(GRB.Callback.MIP_OBJBND)
             print(
                 f"Time: {runtime:.0f}s, "
-                f"best objective: {primalBound:.2f}, "
-                f"best bound: {dualBound:.2f}, "
-                f"gap: {100.0*(primalBound - dualBound)/abs(primalBound):.2f}% "
+                f"best objective: {primal_bound:.2f}, "
+                f"best bound: {dual_bound:.2f}, "
+                f"gap: {100.0*(primal_bound - dual_bound)/abs(primal_bound):.2f}% "
                 f"(use Ctrl+C to interrupt)"
             )
-            model._nextOutputTime += 5
+            model._next_output_time += 5
 
     elif where == GRB.Callback.MIPSOL:
         obj = model.cbGet(GRB.Callback.MIPSOL_OBJ)
@@ -32,7 +32,7 @@ def callback(model, where):
 
 
 def solve_qubo(
-    coeffMatrix, timeLimit=GRB.INFINITY, output=False, logFile=""
+    coeff_matrix, time_limit=GRB.INFINITY, output=False, log_file=""
 ) -> QuboResult:
     """
     Solve a quadratic unconstrained binary optimization (QUBO) problem,
@@ -51,33 +51,31 @@ def solve_qubo(
     :rtype: :class:`QuboResult`
     """
 
-    if coeffMatrix is None:
-        return None
-
-    if coeffMatrix.ndim != 2:
+    if coeff_matrix.ndim != 2:
         raise ValueError("Matrix is not 2-dimensional.")
 
-    shape = coeffMatrix.shape
+    shape = coeff_matrix.shape
     if shape[0] != shape[1]:
         raise ValueError("Matrix is not quadratic.")
 
     n = shape[0]
 
-    params = {"TimeLimit": timeLimit, "LogToConsole": 0, "LogFile": logFile}
+    params = {"TimeLimit": time_limit, "LogToConsole": 0, "LogFile": log_file}
 
     with gp.Env(params=params) as env, gp.Model(env=env) as model:
 
         x = model.addMVar(n, vtype=GRB.BINARY)
-        model.setObjective(x @ coeffMatrix @ x, GRB.MINIMIZE)
+        model.setObjective(x @ coeff_matrix @ x, GRB.MINIMIZE)
 
         if output:
-            model._nextOutputTime = 5
+            model._next_output_time = 5
             model.optimize(callback)
         else:
             model.optimize()
 
-        result = None
-        if model.SolCount > 0:
-            result = QuboResult(solution=x.X.round(), objective_value=model.ObjVal)
+        if model.SolCount == 0:
+            raise ValueError(
+                "No solution found, potentially because of a very low time limit."
+            )
 
-        return result
+        return QuboResult(solution=x.X.round(), objective_value=model.ObjVal)
