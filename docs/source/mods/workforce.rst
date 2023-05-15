@@ -1,27 +1,17 @@
 Workforce Scheduling
 ====================
 
-A little background on the proud history of mathprog in workforce scheduling.
+Workforce scheduling is an extremely widely-used application of optimization in
+practice. It involves balancing many competing concerns, including worker
+availability and preferences, shift coverage requirements, conditions on
+consecutive shifts or rest breaks, and so on. Implementation can become quite
+involved as worker requirements and entitlements become more complex.
 
-Also data science.
-
-Todo:
-
-- Add a ceiling on the number of shifts fper worker (worker data or fixed value)
-- Add an optional rolling time window constraint (rotating roster)
-
-Note that simplified versions of this model can be solved as graph matching
-problems:
-
-* If we ignore all worker preferences and impose no limits on the number of
-  shifts assigned to any given worker, then the problem of assigning available
-  workers to shifts can be solved by maximum cardinality bipartite matching.
-* If we include preferences, the problem can be solved using weighted
-
-Once side constraints (e.g. total shifts per worker) get involved, we need to
-move away from these simplified models. However the same basic formulation
-approach of declaring a binary variable for every possible worker-shift
-assignment can be used throughout.
+This mod implements a relatively simple case. Workers provide their availability
+and preferences, while rest requirements and work entitlements are handled
+through lower and upper limits on the number of shifts a worker is rostered on
+for in a given period. The scheduler aims to maximize satisfaction by finding a
+feasible roster which maximizes the sum of preference scores.
 
 Problem Specification
 ---------------------
