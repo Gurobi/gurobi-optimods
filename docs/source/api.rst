@@ -19,5 +19,8 @@ API
 .. automodule:: gurobi_optimods.regression
    :members: L1Regression
 
+.. automodule:: gurobi_optimods.shortest_path
+   :members: shortest_path
+
 .. automodule:: gurobi_optimods.workforce
    :members: solve_workforce_scheduling

@@ -10,4 +10,5 @@ The Opti Mods
    l1-regression
    min-cost-flow
    mwis
+   shortest-path
    workforce

@@ -42,10 +42,10 @@ def min_cost_flow(arc_data: pd.DataFrame, demand_data: pd.DataFrame, *, create_e
     :type arc_data: :class:`pd.DataFrame`
     :param demand_data: DataFrame with node demand information. These must include indexed by `"node"`, and include the `"demand"`. This value can be positive (requesting flow) or negative (supplying flow).
     :type demand_data: :class:`pd.DataFrame`
-    :param silent: Optional. Boolean with whether output should be printed.
-    :type silent: :class:`bool`
-    :param logfile: Optional. String with file path with logger and Gurobi.
-    :type logfile: :class:`str`
+    :param silent: silent=True suppresses all console output (defaults to False)
+    :type silent: bool
+    :param logfile: Write all mod output to the given file path (defaults to None: no log)
+    :type logfile: str
     :return: Cost of the minimum cost flow.
     :rtype: :class:`float`
     :return: DataFrame with the flow for each edge.
@@ -99,10 +99,10 @@ def min_cost_flow_scipy(
     :type costs: :class:`sp.sparray`
     :param demands: Array containing the demand for each node.
     :type demands: :class:`np.ndarray`
-    :param silent: Optional. Boolean with whether output should be printed.
-    :type silent: :class:`bool`
-    :param logfile: Optional. String with file path with logger and Gurobi.
-    :type logfile: :class:`str`
+    :param silent: silent=True suppresses all console output (defaults to False)
+    :type silent: bool
+    :param logfile: Write all mod output to the given file path (defaults to None: no log)
+    :type logfile: str
     :return: Cost of the minimum cost flow.
     :rtype: :class:`float`
     :return: Adjacency matrix with flow in the solution
@@ -139,10 +139,10 @@ def min_cost_flow_networkx(G, *, create_env):
 
     :param G: Graph with edge attributes ``capacity`` and ``cost``, as well as node attributes ``demand``.
     :type G: :class:`nx.DiGraph`
-    :param silent: Optional. Boolean with whether output should be printed.
-    :type silent: :class:`bool`
-    :param logfile: Optional. String with file path with logger and Gurobi.
-    :type logfile: :class:`str`
+    :param silent: silent=True suppresses all console output (defaults to False)
+    :type silent: bool
+    :param logfile: Write all mod output to the given file path (defaults to None: no log)
+    :type logfile: str
     :return: Cost of the minimum cost flow.
     :rtype: :class:`float`
     :return: Dictionary indexed by edges with non-zero flow in the solution.
