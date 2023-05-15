@@ -76,8 +76,12 @@ class TestOptimodDecorator(unittest.TestCase):
     def test_logfile_closed(self):
         # Ensure no resource warnings due to files left open
 
-        with warnings.catch_warnings(record=True, category=ResourceWarning) as w:
-            self.mod(logfile="mod.log")
+        with warnings.catch_warnings(
+            record=True, category=ResourceWarning
+        ) as w, tempfile.TemporaryDirectory() as tempdir:
+
+            logfile = os.path.join(tempdir, "tmp.log")
+            self.mod(logfile=logfile)
             assert not w
 
 
