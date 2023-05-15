@@ -323,7 +323,8 @@ rolling basis, for example a worker may only be allowed to be assigned four
 shifts in any given five day period (i.e. one rostered-off day). This is
 enforced using the ``limit_window`` keyword argument. If this optional
 argument is provided, the ``worker_limits`` constraint will be enforced over
-every rolling window of the given time period, instead of over the entire roster.
+rolling window of the given time period, instead of over the entire roster
+duration.
 
 .. doctest:: workforce
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -342,6 +343,15 @@ every rolling window of the given time period, instead of over the entire roster
     4     Ed          0          4
     5   Fred          0          4
     6     Gu          0          4
+
+The above data specifies that all workers have identical requirements to work
+at most four shifts in any given period, with no minimum requirement. When
+re-solving the problem, ``limit_windows`` is set to 5 days to enforce the new
+requirement.
+
+.. doctest:: workforce
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
+
     >>> assigned_shifts = solve_workforce_scheduling(
     ...     preferences=data.preferences,
     ...     shift_requirements=data.shift_requirements,
@@ -375,5 +385,5 @@ every rolling window of the given time period, instead of over the entire roster
     2022-07-13   Y   Y     Y   Y  Y    Y  Y
     2022-07-14   Y   -     Y   -  Y    Y  Y
 
-Observe that the schedule has been adjusted to avoid any worker working
+Notice that Amy's shifts have been adjusted so as to avoid any worker working
 more than 5 consecutive days.
