@@ -299,6 +299,8 @@ class MeanVariancePortfolio:
         :type gurobi_params: class:`dict`
         :param silent: silent=True suppresses all console output (defaults to False)
         :type silent: bool
+        :param logfile: Write all mod output to the given file path (defaults to None: no log)
+        :type logfile: str
 
         Refer to the Section :ref:`portfolio features` for a detailed discussion
         of these parameters.
