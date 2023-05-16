@@ -225,17 +225,18 @@ class MeanVariancePortfolio:
         #               + sum(x_buy) * costs_buy
         #               + sum(x_sell) * costs_sell
         #      = 1
-        #                             (Fully invested, minus transaction costs and fees)
+        #                             (fully invested, minus transaction costs and fees)
         #
         #      x_long  <= M b_long    (force x_long to zero if not traded long)
         #                             (M >= 1 + max_total_short)
         #
-        #      b_short + b_long <= 1  (Cannot go long and short at the same time)
+        #      b_short + b_long <= 1  (cannot go long and short at the same time)
+        #      b_sell + b_buy <= 1  (cannot sell and buy at the same time)
         #
-        #      sum(x_short) <= max_total_short   (Bound total leverage)
+        #      sum(x_short) <= max_total_short   (bound total leverage)
         #
-        #      sum(b_buy) + sum(b_sell) <= max_trades  (Trade limit)
-        #      sum(b_long) + sum(b_short) <= max_positions
+        #      sum(b_buy) + sum(b_sell) <= max_trades  (trade limit)
+        #      sum(b_long) + sum(b_short) <= max_positions  (position limit)
         #
         #      x_buy >= min_long * b_buy (minimum buy position)
         #
@@ -279,9 +280,9 @@ class MeanVariancePortfolio:
         m.addConstr(x_buy <= (1.0 + max_total_short) * b_buy)
         m.addConstr(x_sell <= (1.0 + max_total_short) * b_sell)
 
-        # A position/trade can only by short or long, not both
+        # A position/trade cannot be both short and long
         m.addConstr(b_long + b_short <= 1, name="long_or_short_position")
-        m.addConstr(b_buy + b_sell <= 1, name="boy")
+        m.addConstr(b_buy + b_sell <= 1, name="buy_or_sell")
 
         # Bound total leverage
         m.addConstr(x_short.sum() <= max_total_short, name="total_short")
