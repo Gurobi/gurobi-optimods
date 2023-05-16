@@ -58,15 +58,120 @@ class MeanVariancePortfolio:
         else:
             raise TypeError("Incompatible type of mu")
 
-    def _convert_result(self, x):
-        if self.resultType == "numpy":
-            return x
-        elif self.resultType == "pandas":
-            return pd.Series(x, index=self.index)
-        else:
-            assert False
+    @optimod()
+    def efficient_portfolio(
+        self,
+        gamma,
+        max_trades=None,
+        max_positions=None,
+        fees_buy=None,
+        fees_sell=None,
+        costs_buy=None,
+        costs_sell=None,
+        min_long=None,
+        min_short=None,
+        max_total_short=0.0,
+        initial_holdings=None,
+        gurobi_params=None,
+        *,
+        create_env,
+    ):
+        """
+        Compute efficient portfolio for given paramters
 
-    def minimize_risk(self, expected_return):
+        :param gamma: Risk aversion cofficient for balancing risk and return;
+            the resulting objective functions is
+            :math:`\mu^T x - 0.5 \gamma x^T \cov_matrix x`
+        :type gamma: :class:`float` >= 0
+        :param max_trades: Upper limit on the number of trades
+        :type max_trades: :class:`int` >= 0
+        :param max_positions: Upper limit on the number of open positions
+        :type max_positions: :class:`int` >= 0
+        :param fees_buy: Fixed-charge fee for each buy transaction, relative
+            to total portfolio value
+        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
+        :param fees_sell: Fixed-charge fee for each sell transaction, relative
+            to total portfolio value
+        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
+        :param costs_buy: Variable transaction costs for each buy transaction, relative
+            to trade value
+        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
+        :param costs_sell: Variable transaction costs for each sell transaction, relative
+            to trade value
+        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
+        :param min_long: Lower bound on the volume on a traded long position,
+            relative to total portfolio value
+        :type min_long: :class:`float` >= 0
+        :param min_short: Lower bound on the volume on a traded short position,
+            relative to total portfolio value
+        :type min_long: :class:`float` >= 0
+        :param max_total_short: Maximum total short positions, relative to
+            total investment.
+        :type max_total_short: :class:`float` >= 0
+        :param max_total_short: Maximum total short positions, relative to
+            total investment.
+        :type max_total_short: :class:`float` >= 0
+        :param initial_holdings: Initial portfolio holdings (sum needs to be <= 1)
+        :type initial_holdings: 1-d :class:`np.ndarray`
+        :param gurobi_params: Gurobi parameters to be passed to the solver
+        :type gurobi_params: class:`dict`
+        :param silent: silent=True suppresses all console output (defaults to False)
+        :type silent: bool
+        :param logfile: Write all mod output to the given file path (defaults to None: no log)
+        :type logfile: str
+
+        Refer to the Section :ref:`portfolio features` for a detailed discussion
+        of these parameters.
+        """
+
+        if isinstance(initial_holdings, pd.Series):
+            initial_holdings = initial_holdings.to_numpy()
+
+        if isinstance(fees_buy, pd.Series):
+            fees_buy = fees_buy.to_numpy()
+        if isinstance(fees_sell, pd.Series):
+            fees_sell = fees_sell.to_numpy()
+        if isinstance(costs_buy, pd.Series):
+            costs_buy = costs_buy.to_numpy()
+        if isinstance(costs_sell, pd.Series):
+            costs_sell = costs_sell.to_numpy()
+
+        if initial_holdings is not None:
+            if initial_holdings.sum() > 1.0:
+                raise ValueError("Initial holding's sum must not exceed 1.0")
+        else:
+            initial_holdings = np.zeros(self.mu.shape)
+
+        with create_env(params=gurobi_params) as env, gp.Model(
+            "efficient_portfolio", env=env
+        ) as m:
+            x = self._populate_model(
+                m,
+                gamma,
+                max_trades,
+                max_positions,
+                fees_buy,
+                fees_sell,
+                costs_buy,
+                costs_sell,
+                min_long,
+                min_short,
+                max_total_short,
+                initial_holdings,
+            )
+
+            m.optimize()
+            status = m.Status
+            if status == GRB.OPTIMAL:
+                xvals = x.X
+
+        if status == GRB.OPTIMAL:
+            return self._convert_result(xvals)
+        else:
+            return None
+
+    # Just boilerplate, waiting to be filled with life
+    def _minimize_risk(self, expected_return):
         with gp.Env() as env, gp.Model("min_risk", env=env) as m:
             x = m.addMVar(shape=self.mu.shape, name="x")
 
@@ -79,7 +184,8 @@ class MeanVariancePortfolio:
             if m.Status == GRB.OPTIMAL:
                 return self._convert_result(x.X)
 
-    def maximize_return(self, max_risk):
+    # Just boilerplate, waiting to be filled with life
+    def _maximize_return(self, max_risk):
         with gp.Env() as env, gp.Model("max_return", env=env) as m:
             x = m.addMVar(shape=self.mu.shape, name="x")
             m.addConstr(x.sum() == 1, name="fully_invested")
@@ -240,114 +346,10 @@ class MeanVariancePortfolio:
 
         return x
 
-    @optimod()
-    def efficient_portfolio(
-        self,
-        gamma,
-        max_trades=None,
-        max_positions=None,
-        fees_buy=None,
-        fees_sell=None,
-        costs_buy=None,
-        costs_sell=None,
-        min_long=None,
-        min_short=None,
-        max_total_short=0.0,
-        initial_holdings=None,
-        gurobi_params=None,
-        *,
-        create_env,
-    ):
-        """
-        Compute efficient portfolio for given paramters
-
-        :param gamma: Risk aversion cofficient for balancing risk and return;
-            the resulting objective functions is
-            :math:`\mu^T x - 0.5 \gamma x^T \cov_matrix x`
-        :type gamma: :class:`float` >= 0
-        :param max_trades: Upper limit on the number of trades
-        :type max_trades: :class:`int` >= 0
-        :param max_positions: Upper limit on the number of open positions
-        :type max_positions: :class:`int` >= 0
-        :param fees_buy: Fixed-charge fee for each buy transaction, relative
-            to total portfolio value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param fees_sell: Fixed-charge fee for each sell transaction, relative
-            to total portfolio value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param costs_buy: Variable transaction costs for each buy transaction, relative
-            to trade value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param costs_sell: Variable transaction costs for each sell transaction, relative
-            to trade value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param min_long: Lower bound on the volume on a traded long position,
-            relative to total portfolio value
-        :type min_long: :class:`float` >= 0
-        :param min_short: Lower bound on the volume on a traded short position,
-            relative to total portfolio value
-        :type min_long: :class:`float` >= 0
-        :param max_total_short: Maximum total short positions, relative to
-            total investment.
-        :type max_total_short: :class:`float` >= 0
-        :param max_total_short: Maximum total short positions, relative to
-            total investment.
-        :type max_total_short: :class:`float` >= 0
-        :param initial_holdings: Initial portfolio holdings (sum needs to be <= 1)
-        :type initial_holdings: 1-d :class:`np.ndarray`
-        :param gurobi_params: Gurobi parameters to be passed to the solver
-        :type gurobi_params: class:`dict`
-        :param silent: silent=True suppresses all console output (defaults to False)
-        :type silent: bool
-        :param logfile: Write all mod output to the given file path (defaults to None: no log)
-        :type logfile: str
-
-        Refer to the Section :ref:`portfolio features` for a detailed discussion
-        of these parameters.
-        """
-
-        if isinstance(initial_holdings, pd.Series):
-            initial_holdings = initial_holdings.to_numpy()
-
-        if isinstance(fees_buy, pd.Series):
-            fees_buy = fees_buy.to_numpy()
-        if isinstance(fees_sell, pd.Series):
-            fees_sell = fees_sell.to_numpy()
-        if isinstance(costs_buy, pd.Series):
-            costs_buy = costs_buy.to_numpy()
-        if isinstance(costs_sell, pd.Series):
-            costs_sell = costs_sell.to_numpy()
-
-        if initial_holdings is not None:
-            if initial_holdings.sum() > 1.0:
-                raise ValueError("Initial holding's sum must not exceed 1.0")
+    def _convert_result(self, x):
+        if self.resultType == "numpy":
+            return x
+        elif self.resultType == "pandas":
+            return pd.Series(x, index=self.index)
         else:
-            initial_holdings = np.zeros(self.mu.shape)
-
-        with create_env(params=gurobi_params) as env, gp.Model(
-            "efficient_portfolio", env=env
-        ) as m:
-            x = self._populate_model(
-                m,
-                gamma,
-                max_trades,
-                max_positions,
-                fees_buy,
-                fees_sell,
-                costs_buy,
-                costs_sell,
-                min_long,
-                min_short,
-                max_total_short,
-                initial_holdings,
-            )
-
-            m.optimize()
-            status = m.Status
-            if status == GRB.OPTIMAL:
-                xvals = x.X
-
-        if status == GRB.OPTIMAL:
-            return self._convert_result(xvals)
-        else:
-            return None
+            assert False
