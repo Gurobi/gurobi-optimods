@@ -1,12 +1,14 @@
-import numpy as np
 import gurobipy as gp
 from gurobipy import GRB
+
+from gurobi_optimods.utils import optimod
 
 
 class LADRegression:
     """Least absolute deviations (L1-norm) regressor"""
 
-    def fit(self, X_train, y_train):
+    @optimod()
+    def fit(self, X_train, y_train, *, create_env):
         """Fit the model to training data.
 
         :param X_train: Training set feature values
@@ -19,37 +21,29 @@ class LADRegression:
         records, self.n_features_in_ = X_train.shape
 
         # Create model
-        with gp.Env() as env, gp.Model(env=env) as model:
+        with create_env() as env, gp.Model(env=env) as model:
 
             # Create unbounded variables for each column coefficient, and bound
             # magnitudes using additional variables. Keep intercept separate (no
             # regularization weight).
             intercept = model.addVar(lb=-GRB.INFINITY, name="intercept")
-            coeffs = np.array(
-                model.addVars(
-                    self.n_features_in_, lb=-GRB.INFINITY, name="coeff"
-                ).values()
-            )
-            pos_error = np.array(model.addVars(records, name="poserror").values())
-            neg_error = np.array(model.addVars(records, name="negerror").values())
+            coeff = model.addMVar(self.n_features_in_, lb=-GRB.INFINITY, name="coeff")
+            pos_error = model.addMVar(records, name="pos_error")
+            neg_error = model.addMVar(records, name="neg_error")
 
             # Create linear relationship with deviation variables
-            relation = (
-                (X_train * coeffs).sum(axis=1) + intercept + pos_error - neg_error
-            )
-            for i in range(records):
-                model.addConstr(relation[i] == y_train[i], name=f"fit_{i}")
+            relation = (X_train * coeff).sum(axis=1) + intercept + pos_error - neg_error
+            model.addConstr(relation == y_train, name="fit")
 
             # Minimize L1 norm
             abs_error = pos_error + neg_error
             mean_abs_error = abs_error.sum() / records
             model.setObjective(mean_abs_error, sense=GRB.MINIMIZE)
 
-            # Optimize
+            # Solve and store results
             model.optimize()
-
             self.intercept_ = intercept.X
-            self.coef_ = np.array([coeff.X for coeff in coeffs])
+            self.coef_ = coeff.X
 
     def predict(self, X_test):
         """Predict target value from test data
