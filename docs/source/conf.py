@@ -5,7 +5,7 @@ import gurobi_optimods
 # -- Project information
 
 project = "Gurobi OptiMods"
-copyright = "2022, Gurobi Optimization"
+copyright = "2023, Gurobi Optimization"
 author = "Gurobi Optimization"
 
 version = gurobi_optimods.__version__
@@ -40,19 +40,7 @@ templates_path = ["_templates"]
 html_theme = "sphinx_rtd_theme"
 
 # -- Include only prompts
-
 copybutton_prompt_text = ">>> "
-
-# -- Make examples importable for use in doctests
-
-doctest_global_setup = """
-import sys
-sys.path.append("")
-"""
-
-doctest_global_cleanup = """
-sys.path.pop()
-"""
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
