@@ -72,6 +72,35 @@ class TestMVPBasic(unittest.TestCase):
         consoleContent = console.getvalue()
         self.assertEqual(consoleContent, "")
 
+    def test_silent(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        with redirect_stdout(io.StringIO()) as console:
+            x = mvp.efficient_portfolio(0.5, gurobi_params={})
+        consoleContent = console.getvalue()
+        self.assertIn("Gurobi Optimizer", consoleContent)
+
+        with redirect_stdout(io.StringIO()) as console:
+            x = mvp.efficient_portfolio(0.5, silent=True)
+        consoleContent = console.getvalue()
+        self.assertEqual(consoleContent, "")
+
+    def test_logfile(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        x = mvp.efficient_portfolio(0.5, logfile="more_bananas.log")
+        with open("more_bananas.log", "rt") as fh:
+            content = fh.read()
+        self.assertIn("Gurobi Optimizer", content)
+
     def test_params(self):
         data = load_portfolio()
         cov_matrix = data.cov()
