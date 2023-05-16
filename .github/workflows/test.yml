@@ -1,8 +1,9 @@
 # Regular QA workflow (pull requests, main branch)
 
-name: tests
+name: Test
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main

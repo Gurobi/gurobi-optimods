@@ -1,7 +1,6 @@
-# Run the unit tests against python 3.8 + gurobipy 9.5/10.0,
-# from a direct installation.
+# Run the unit tests against python 3.8 + gurobipy 10.
 
-name: Unit tests and examples
+name: Unit tests
 
 on:
   workflow_call:

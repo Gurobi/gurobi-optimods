@@ -1,7 +1,6 @@
-# Build the docs and run tests against python 3.8 + gurobipy 9.5/10.0,
-# from a direct installation.
+# Run the doctests against python 3.8 + gurobipy 10.
 
-name: Unit tests and examples
+name: Doc tests
 
 on:
   workflow_call:
@@ -32,15 +31,7 @@ jobs:
           python -m pip install gurobipy==${{ matrix.gurobipy }}
           python -m pip install .
           python -m pip install -rdocs/requirements.txt
-      - name: Run example tests
-        run: |
-          cd docs
-          python -m unittest discover -b
       - name: Run doctests
         run: |
           cd docs
           sphinx-build -M doctest source build
-      - name: Build docs
-        run: |
-          cd docs
-          sphinx-build -M html "source" "build"

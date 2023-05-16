@@ -1,5 +1,6 @@
 # Run syntax checks against min python version (3.8).
-# Check that commit authors ran pre-commit hooks.
+# Verify that commit authors ran pre-commit hooks.
+# Check for typos in comments and documentation.
 
 name: Basic code quality checks
 
