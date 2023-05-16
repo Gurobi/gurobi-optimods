@@ -55,7 +55,7 @@ class LADRegression(RegressionBase):
 
             # Minimize least absolute deviations
             abs_error = pos_error + neg_error
-            mean_abs_error = abs_error.sum() / records
+            mean_abs_error = abs_error.sum()
             model.setObjective(mean_abs_error, sense=GRB.MINIMIZE)
 
             # Solve and store results
@@ -65,7 +65,7 @@ class LADRegression(RegressionBase):
 
 
 class CardinalityConstrainedRegression(RegressionBase):
-    """Cardinality constrained (limit #nonzeros) least-squares regression"""
+    """Cardinality constrained (limit #nonzeros) least squares regression"""
 
     def __init__(self, k):
         super().__init__()
@@ -89,8 +89,8 @@ class CardinalityConstrainedRegression(RegressionBase):
             # Create unbounded variables for each column coefficient, and
             # error terms. Keep intercept separate.
             intercept = model.addVar(lb=-GRB.INFINITY, name="intercept")
+            iszero = model.addMVar(n_features_in, vtype=GRB.BINARY, name="iszero")
             coeff = model.addMVar(n_features_in, lb=-GRB.INFINITY, name="coeff")
-            zero = model.addMVar(n_features_in, vtype=GRB.BINARY, name="zero")
             error = model.addMVar(records, name="error")
 
             # Create linear relationships with deviation variables
@@ -99,8 +99,8 @@ class CardinalityConstrainedRegression(RegressionBase):
 
             # Constrain model cardinality
             for i in range(n_features_in):
-                model.addSOS(GRB.SOS_TYPE1, [coeff[i].item(), zero[i].item()])
-            model.addConstr(zero.sum() >= n_features_in - self.cardinality)
+                model.addSOS(GRB.SOS_TYPE1, [coeff[i].item(), iszero[i].item()])
+            model.addConstr((1.0 - iszero).sum() <= self.cardinality)
 
             # Minimize sum of squares of deviations
             model.setObjective(error @ error, sense=GRB.MINIMIZE)

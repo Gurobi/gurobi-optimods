@@ -67,7 +67,9 @@ This mod implements the fit-predict interface of scikit-learn. The example below
     :hide:
 
     ...
-    Optimal objective  4.372590220e+01
+    Optimize a model with 331 rows, 673 columns and 4303 nonzeros
+    ...
+    Optimal objective  1.44...
 
 The model is solved as a linear program by Gurobi. Logs provided for interested parties:
 
@@ -75,24 +77,27 @@ The model is solved as a linear program by Gurobi. Logs provided for interested 
 
     .. code-block:: text
 
-        Gurobi Optimizer version 9.5.1 build v9.5.1rc2 (mac64[x86])
+        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
+
+        CPU model: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
         Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
+
         Optimize a model with 331 rows, 673 columns and 4303 nonzeros
-        Model fingerprint: 0x6983ca17
+        Model fingerprint: 0xb54fc171
         Coefficient statistics:
-        Matrix range     [6e-05, 1e+00]
-        Objective range  [3e-03, 3e-03]
-        Bounds range     [0e+00, 0e+00]
-        RHS range        [2e+01, 3e+02]
+          Matrix range     [6e-05, 1e+00]
+          Objective range  [1e+00, 1e+00]
+          Bounds range     [0e+00, 0e+00]
+          RHS range        [2e+01, 3e+02]
         Presolve time: 0.00s
         Presolved: 331 rows, 673 columns, 4303 nonzeros
 
         Iteration    Objective       Primal Inf.    Dual Inf.      Time
-            0      handle free variables                          0s
-            354    4.3725902e+01   0.000000e+00   0.000000e+00      0s
+               0      handle free variables                          0s
+             354    1.4473274e+04   0.000000e+00   0.000000e+00      0s
 
         Solved in 354 iterations and 0.01 seconds (0.01 work units)
-        Optimal objective  4.372590220e+01
+        Optimal objective  1.447327363e+04
 
 |
 
