@@ -226,8 +226,8 @@ class MeanVariancePortfolio:
             #
             # giving
             #
-            #   min ... + gamma * y_i @ y_i
-            #   s.t. y_i = F_i.T @ x
+            #   min \sum_i gamma * y_i @ y_i
+            #   s.t. y_i = F_i.T @ x  for all i
 
             objexpr = self.mu @ x
 
