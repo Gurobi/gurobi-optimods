@@ -8,6 +8,7 @@ pandas==2.0.0
 scikit-learn==1.2.2
 scipy==1.10.1
 sphinx-copybutton==0.5.1
+sphinx-design==0.4.1
 sphinx-rtd-theme==1.1.1
 sphinx-tabs==3.4.0
 sphinx-toolbox==3.1.2

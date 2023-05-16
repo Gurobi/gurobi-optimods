@@ -15,14 +15,15 @@ release = version
 
 extensions = [
     "sphinx_copybutton",
+    "sphinx_design",
     "sphinx_tabs.tabs",
     "sphinx_toolbox.code",
     "sphinx_toolbox.collapse",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.extlinks",
     "sphinx.ext.doctest",
     "sphinx.ext.duration",
+    "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinxcontrib.bibtex",
 ]

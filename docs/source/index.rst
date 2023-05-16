@@ -16,7 +16,7 @@ practical applications users will need to understand and extend the
 implementation of a mod to tailor it to their use-case. Read the :doc:`usage`
 section first for an overview of the design and use-case for the OptiMods.
 
-Check out the :doc:`mods/index` for a quick overview of the current set of
+Check out the :doc:`gallery` for a quick overview of the current set of
 implemented mods. We welcome contributions of use-cases you are interested in,
 or extensions to existing mods. See the :doc:`contributing` for more
 information on how to get involved in the project.
@@ -25,9 +25,6 @@ information on how to get involved in the project.
 
    This project is under active development, Gurobi-OptiMods has its
    documentation hosted on Read the Docs.
-
-Contents
---------
 
 .. toctree::
    :maxdepth: 1
@@ -40,7 +37,7 @@ Contents
    :maxdepth: 1
    :caption: User Guide
 
-   mods/index
+   gallery
    extending
    contributing
 
