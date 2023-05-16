@@ -21,7 +21,7 @@ jobs:
         python -m pip install build twine
     - name: Build package
       run: python -m build
-    # - name: Publish with twine
-    #   env:
-    #     PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-    #   run: twine upload -u __token__ -p $PYPI_TOKEN dist/*
+    - name: Publish with twine
+      env:
+        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      run: twine upload -u __token__ -p $PYPI_TOKEN dist/*
