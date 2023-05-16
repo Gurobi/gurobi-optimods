@@ -211,7 +211,7 @@ class MeanVariancePortfolio:
         if not isinstance(self.covariance, tuple):
             # Basic mean-variance weighted objective
             m.setObjective(
-                self.mu @ x - 0.5 * gamma * (x @ (self.covariance @ x)),
+                self.mu @ x - 0.5 * gamma * x @ self.covariance @ x,
                 GRB.MAXIMIZE,
             )
         else:
@@ -234,7 +234,7 @@ class MeanVariancePortfolio:
             for idx, F in enumerate(self.covariance):
                 y = m.addMVar(F.shape[1], lb=-float("inf"), name=f"factor{idx:d}")
                 m.addConstr(F.T @ x == y, name=f"link_factor{idx:d}_x")
-                objexpr -= 0.5 * gamma * (y @ y)
+                objexpr -= 0.5 * gamma * y @ y
 
             m.setObjective(objexpr, GRB.MAXIMIZE)
 
