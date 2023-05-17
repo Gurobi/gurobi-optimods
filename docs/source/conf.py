@@ -55,6 +55,7 @@ extlinks = {
 
 bibtex_bibfiles = [
     "refs/graphs.bib",
+    "refs/portfolio.bib",
     "refs/qubo.bib",
     "refs/regression.bib",
 ]

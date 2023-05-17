@@ -214,9 +214,10 @@ decomposition
     \Sigma = F_1 F_1^T + F_2 F_2^T + \cdots + F_l F_l^T
     \end{align*}
 
-is known.  Examples for this are single- or multi-factor models that divide
-the individual covariances into a general market movement, and an
-idiosyncratic risk component for each asset.  See Section TODO for an example.
+is known.  Examples for this are single- or multi-factor models that divide the
+individual covariances into a general market movement, and an idiosyncratic
+risk component for each asset.  See `Efficient frontier(s) with cardinality
+constraints`_ for an example.
 
 Rather than computing the covariance matrix explcitly from the decomposition,
 it is adivised to input the individual factor matrices directly through the
@@ -540,16 +541,16 @@ The returned solution now suggests to trade only the assets "AA", "DD", "HH".
     :options: +NORMALIZE_WHITESPACE
 
     >>> x
-	AA    0.482084
-	BB    0.000000
-	CC    0.000000
-	DD    0.282683
-	EE    0.000000
-	FF    0.000000
-	GG    0.000000
-	HH    0.235233
-	II    0.000000
-	JJ    0.000000
+        AA    0.482084
+        BB    0.000000
+        CC    0.000000
+        DD    0.282683
+        EE    0.000000
+        FF    0.000000
+        GG    0.000000
+        HH    0.235233
+        II    0.000000
+        JJ    0.000000
     dtype: float64
 
 
@@ -657,3 +658,146 @@ by the portfolio itself, reducing the total portfolio value as needed:
 
     >>> print(round(x.sum(), ndigits=6))
     0.997
+
+Efficient frontier(s) with cardinality constraints
+--------------------------------------------------
+
+In the classical mean-variance portfolio theory the *efficient frontier*
+consists of all portfolios that optimally balance risk and return for a range
+of values for :math:`\gamma` (see `Problem Specification`_).  When plotted in
+the risk-return plane the result is a smooth curve, see TODObelow.  In this
+example we will explore the effect of restricting the number of open positions
+on the efficient frontier.
+
+Multiple-Factor Data Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For this example we will use synthetic data from a random *multiple-factor
+model*.  In this setting the excess returns are supposed to follow the linear
+model
+
+.. math::
+
+    \begin{equation*}
+      r = Bf + u
+    \end{equation*}
+
+where
+
+* :math:`r \in \mathbf{R}^n` are the excess returns,
+* :math:`B \in \mathbf{R}^{n,k}` are the asset exposures to the market factors,
+* :math:`f \in \mathbf{R}^k` are the factor return rates, and
+* :math:`u \in \mathbf{R}^n` are the residual returns of the assets (uncorrelated).
+
+So this excess return of each asset can be attributed to weighted correlation
+with general market movement (:math:`Bf`) such as macroeconomic influence, and
+intrinsic, uncorrelated returns for each asset (:math:`u`).
+
+These model quantities allow for structured estimates of the first and second
+moments (return and risk); for The details of the derivation we refer to
+:footcite:t:`cornuéjols_peña_tütüncü_2018`, Sect. 6.6.  The important effect on the input
+data for the mean-variance model we want to point out though is that the
+covariance matrix decomposes algebraically as follows:
+
+.. math::
+
+    \begin{equation*}
+      \Sigma = F F^T + \mbox{cov}(u)
+    \end{equation*}
+
+That is, :math:`\Sigma` is given by the sum of a low rank term and a diagonal
+term; we will take advantage of this structure further below.  The following
+code snippet generates some synthetic data according to such a multiple-factor
+model:
+
+.. code-block:: Python
+
+    import numpy as np
+    np.random.seed(0xacac)  # Fix seed for reproducibility
+
+    num_assets = 16
+    num_factors = 4
+    timesteps = 24
+
+    # Generate random factor model parameters
+    sigma_factor = np.diag(np.sqrt(1 + np.arange(num_factors) + np.random.rand(num_factors)))
+    B = np.random.normal(size=(num_assets, num_factors))
+    alpha = np.random.normal(loc=1, size=(num_assets, 1))
+    u = np.random.multivariate_normal(np.zeros(num_assets), np.eye(num_assets), timesteps).T
+
+    # Time series in factor space
+    TS_factor = np.random.multivariate_normal(np.zeros(num_factors), sigma_factor**2, timesteps).T
+
+    # Estimate mu from time series in full space
+    mu = np.mean(alpha + B @ TS_factor + u, axis=1)
+
+    # Final covariance data
+    F = B @ sigma_factor
+    risk_specific = np.diag(np.sqrt(np.diag(np.cov(u))))
+
+Note that the matrices ``F`` and ``risk_specific`` are already in the format for the
+optimization model as described in `Using factor models as input`_.  To compute
+the efficient frontier(s), we simple range over a series of values for
+:math:`\gamma`, compute various optimal portfolios with different cardinality
+constraints:
+
+.. code-block:: python
+    :dedent: 0
+
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+    gammas = np.logspace(-1, 1, 256)**2
+    rr_pairs_unc = []
+    rr_pairs_con = {1: [], 2: [], 3: []}
+
+    for g in gammas:
+        mvp = MeanVariancePortfolio(mu, cov_factors=(F, risk_specific))
+
+        # No cardinality constraints
+        x = mvp.efficient_portfolio(g, silent=True)
+        ret = mu @ x
+        risk = ((F.T @ x)**2).sum() + (x**2 * risk_specific**2).sum()
+        rr_pairs_unc.append((ret, risk))
+
+        for max_positions in [1, 2, 3]:
+            # Some cardinality constraints
+            x = mvp.efficient_portfolio(g, max_positions=max_positions, silent=True)
+            ret = mu @ x
+            risk = ((F.T @ x)**2).sum() + (x**2 * risk_specific**2).sum()
+            rr_pairs_con[max_positions].append((ret, risk))
+
+
+All risk/return pairs are now recorded in ``rr_pairs_unc`` (unconstrained
+portfolios) and ``rr_pairs_con`` (constrained portfolios). The corresponding
+efficient frontiers look like this:
+
+.. code-block:: python
+
+    from matplotlib import pyplot as plt
+    fig, ax = plt.subplots()
+
+    ax.scatter(list(t[1] for t in rr_pairs_unc), list(t[0] for t in rr_pairs_unc), label="unconstrained")
+    for k in rr_pairs_con:
+        v = rr_pairs_con[k]
+        ax.scatter(list(t[1] for t in v), list(t[0] for t in v), label=f"{k:d} asset{'' if k==1 else 's':s}")
+        ax.legend(loc='lower right')
+        plt.xlabel("risk")
+        plt.ylabel("return")
+
+    plt.show()
+
+.. figure:: figures/mvp.png
+
+Of course all cardinality constrained portfolios are dominated by the
+unconstrained ones, but already restricting the portfolio to three open
+positions yields points very close to the unconstrained efficient frontier.
+The discontinuity of the constrained frontiers is a consequence of the discrete
+decision of holding a position or not, preventing a smooth progression from one
+efficient portfolio to another for varying values of :math:`\gamma`.
+
+.. code-block:: python
+
+   while 1:
+       while 2:
+           pass
+
+.. footbibliography::
