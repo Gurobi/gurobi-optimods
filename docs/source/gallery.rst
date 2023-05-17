@@ -12,11 +12,6 @@ The Opti Mods Gallery
         :text-align: center
         :img-top: mods/figures/bipartite-matching-example.png
 
-    .. grid-item-card:: Cardinality Constrained Regression
-        :link: mods/card-regression
-        :link-type: doc
-        :text-align: center
-
     .. grid-item-card:: Stigler Diet Problem
         :link: mods/diet
         :link-type: doc
@@ -66,7 +61,6 @@ The Opti Mods Gallery
    :hidden:
 
    mods/bipartite-matching
-   mods/card-regression
    mods/diet
    mods/l1-regression
    mods/min-cost-flow

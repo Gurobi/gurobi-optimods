@@ -20,7 +20,7 @@ API Reference
    :members: solve_qubo
 
 .. automodule:: gurobi_optimods.regression
-   :members: LADRegression, CardinalityConstrainedRegression
+   :members: LADRegression
 
 .. automodule:: gurobi_optimods.shortest_path
    :members: shortest_path
