@@ -45,6 +45,9 @@ The Opti Mods Gallery
         :link: mods/qubo
         :link-type: doc
         :text-align: center
+        :img-top: https://www.researchgate.net/profile/Sascha-Wald-2/publication/321920877/figure/fig2/AS:631634013458435@1527604692145/Schematic-representation-of-a-configuration-of-the-2D-Ising-model-on-a-square-lattice.png
+
+        .. https://www.researchgate.net/figure/Schematic-representation-of-a-configuration-of-the-2D-Ising-model-on-a-square-lattice_fig2_321920877
 
     .. grid-item-card:: Shortest Path
         :link: mods/shortest-path
