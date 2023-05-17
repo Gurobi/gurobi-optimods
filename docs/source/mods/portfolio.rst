@@ -1,8 +1,20 @@
 Mean-Variance Portfolio
 =======================
 
-Portfolio optimization is concerned with the allocation of wealth into assets
-(such as stocks, bonds, commodities, etc.). This mod returns portfolios on the
+Portfolio optimization involves the strategic allocation of wealth across various
+assets, including stocks, bonds, commodities, and other investment instruments.
+The objective of portfolio optimization is to construct portfolios that strike an
+optimal balance between expected returns and risk.
+
+To achieve this, portfolio optimization can take into consideration several factors,
+including historical data, market trends, and the investor's risk tolerance.
+Expected returns and variances play a crucial role in the process. Expected returns
+estimate the potential gains an investor anticipates from holding a particular asset,
+while variances measure the volatility or fluctuation in the asset's returns.
+
+The efficient frontier is a key concept in portfolio optimization. It represents the
+set of portfolios that offer the highest expected returns for a given level of risk.
+This mod returns portfolios on the
 efficient frontier given expected returns and variances.
 
 
@@ -221,7 +233,7 @@ constraints`_ for an example.
 
 Rather than computing the covariance matrix explcitly from the decomposition,
 it is adivised to input the individual factor matrices directly through the
-``cov_factors`` keyward argurment as in the following example:
+``cov_factors`` keyword argurment as in the following example:
 
 .. testcode:: mod
 
@@ -286,10 +298,13 @@ portfolio, such as transaction fees or limiting the number of trades.
 Working with leverage
 ~~~~~~~~~~~~~~~~~~~~~
 
-By default all positions traded will be long positions. You can allow
-allocations in short positions by defining a nonzero limit on the total short
-allocations.  For example, to allow short selling up to 30% of the
-portfolio value, you can do:
+By default, all traded positions will be long positions. You can allow
+allocations in short positions (where assets are borrowed and sold with
+the intention of repurchasing them later at a lower price)
+by defining a nonzero limit on the total short
+allocations via the keyword parameter ``max_total_short``.
+For example, to allow short positions to take up to 30% of the
+portfolio value (130-30 strategy), you can do:
 
 .. testcode:: mod
 
@@ -314,8 +329,8 @@ portfolio value, you can do:
     Presolved: 62 rows, 70 columns, 160 nonzeros
     ...
 
-With leverage allowed we now obtain an optimal portfolio with three short
-positions, totalling to about 14% of the wealth:
+By incorporating leverage, we now obtain an optimal portfolio with three short
+positions, totaling to about 14% of the wealth:
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -341,7 +356,7 @@ One-time transaction fees
 
 In order to take into account fixed costs per transaction suggested by the
 optimal portfolio :math:`x`, you can use the keyword parameters ``fees_buy``
-(for long positions) and ``fees_sell`` (for short positions):
+(for buy trades) and ``fees_sell`` (for sell trades):
 
 .. testcode:: mod
 
@@ -369,9 +384,13 @@ optimal portfolio :math:`x`, you can use the keyword parameters ``fees_buy``
     Presolved: 26 rows, 25 columns, 65 nonzeros
     ...
 
+Transaction fees can be provided either as a constant fee, applying the
+same amount uniformly to all assets, or as numpy array or pandas Series
+to specify distinct fees for individual assets.
+
 Note that these parameters prescribe the transaction fees *relative* to the
-total portfolio value.  In the above example we used the ``fees_buy=0.005``,
-meaning that each transaction for a long position has a fixed-cost of 0.5% of
+total portfolio value.  In the above example we used ``fees_buy=0.005``,
+meaning that each buy transaction has a fixed-cost of 0.5% of
 the total portfolio value.
 
 All transaction fees are assumed to be covered by the portfolio itself,
@@ -393,8 +412,8 @@ Proportional transaction costs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can define transaction costs *proportional to the transaction value* by
-using the ``costs_buy`` (for long positions) and ``costs_sell`` (for short
-positions) keyword parameters as follows:
+using the ``costs_buy`` (for buy trades) and ``costs_sell`` (for sell
+trades) keyword parameters as follows:
 
 .. testcode:: mod
 
@@ -422,9 +441,13 @@ positions) keyword parameters as follows:
     Presolved: 1 rows, 10 columns, 10 nonzeros
     ...
 
+Transaction costs can be provided either as a constant value, applying
+the same cost uniformly to all assets, or as a numpy array or pandas Series,
+allowing for asset-specific costs.
+
 Note that these parameters prescribe the transaction costs relative to the
 trade value.  In the above example we used ``costs_buy=0.0025``, meaning that
-each transaction for a long position incurs transaction costs of 0.25% of
+each buy transaction incurs transaction costs of 0.25% of
 the traded value.
 
 All transaction costs are assumed to be covered by the portfolio itself,
@@ -663,11 +686,13 @@ portfolio itself, reducing the total portfolio value as needed:
 Efficient frontier(s) with cardinality constraints
 --------------------------------------------------
 
-In the classical mean-variance portfolio theory the *efficient frontier*
-consists of all portfolios that optimally balance risk and return for a range
-of values for :math:`\gamma` (see `Problem Specification`_).  When plotted in
-the risk-return plane the result is a smooth curve, see `efficient frontiers`_
-In this example we will explore the effect of restricting the number of open
+In classical mean-variance portfolio theory, the *efficient frontier*
+comprises all portfolios that achieve an optimal balance between risk and
+return for varying values of :math:`\gamma` (see `Problem Specification`_).
+Plotted in the risk-return plane, the result is a smooth curve, depicting
+the trade-off between risk and expected return, see `efficient frontiers`_.
+
+In this example we will explore the impact of restricting the number of open
 positions on the efficient frontier.
 
 Multiple-Factor Data Model
@@ -690,9 +715,9 @@ where
 * :math:`f \in \mathbf{R}^k` are the factor return rates, and
 * :math:`u \in \mathbf{R}^n` are the residual returns of the assets (uncorrelated).
 
-So this excess return of each asset can be attributed to weighted correlation
-with general market movement (:math:`Bf`) such as macroeconomic influence, and
-intrinsic, uncorrelated returns for each asset (:math:`u`).
+So this excess return of each asset can be attributed to two factors: its weighted correlation
+with general market movement (:math:`Bf`), which includes macroeconomic influences, and its
+intrinsic, uncorrelated returns that are independent of market fluctuations (:math:`u`).
 
 These model quantities allow for structured estimates of the first and second
 moments (return and risk); for details of the derivation we refer to
@@ -706,10 +731,10 @@ covariance matrix decomposes algebraically as follows:
       \Sigma = F F^T + \mbox{cov}(u)
     \end{equation*}
 
-That is, :math:`\Sigma` is given by the sum of a low rank term and a diagonal
+That is, :math:`\Sigma` is given by the sum of a low-rank term and a diagonal
 term; we will take advantage of this structure further below.  The following
-code snippet generates some synthetic data according to such a multiple-factor
-model:
+code snippet generates synthetic data based on a multiple-factor model
+incorporating this particular structure:
 
 .. code-block:: Python
 
@@ -743,7 +768,7 @@ Computing frontiers
 ~~~~~~~~~~~~~~~~~~~
 
 To compute the efficient frontier(s), we simple range over a series of values
-for :math:`\gamma`, compute various optimal portfolios with different
+for :math:`\gamma` and compute various optimal portfolios with different
 cardinality constraints::
 
     from gurobi_optimods.portfolio import MeanVariancePortfolio
@@ -795,8 +820,8 @@ efficient frontiers look like this:
    Efficient frontiers for various cardinality constraints
 
 Of course all cardinality constrained portfolios are dominated by the
-unconstrained ones, but already restricting the portfolio to three open
-positions yields points very close to the unconstrained efficient frontier.
+unconstrained ones, but restricting the portfolio to three open
+positions already yields points very close to the unconstrained efficient frontier.
 The discontinuity of the constrained frontiers is a consequence of the discrete
 decision of holding a position or not, preventing a smooth progression from one
 efficient portfolio to another for varying values of :math:`\gamma`.
