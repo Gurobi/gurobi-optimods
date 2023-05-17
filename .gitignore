@@ -98,3 +98,6 @@ cython_debug/
 
 # Local vscode configs
 .vscode/
+
+# vim swap file
+.*.swp
