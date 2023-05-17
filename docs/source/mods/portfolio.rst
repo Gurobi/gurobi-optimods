@@ -752,13 +752,11 @@ cardinality constraints::
 
     for g in gammas:
         mvp = MeanVariancePortfolio(mu, cov_factors=(F, risk_specific))
-
         # No cardinality constraints
         x = mvp.efficient_portfolio(g, silent=True)
         ret = mu @ x
         risk = ((F.T @ x)**2).sum() + (x**2 * risk_specific**2).sum()
         rr_pairs_unc.append((ret, risk))
-
         for max_positions in [1, 2, 3]:
             # Some cardinality constraints
             x = mvp.efficient_portfolio(g, max_positions=max_positions, silent=True)
