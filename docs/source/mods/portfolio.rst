@@ -739,10 +739,7 @@ Note that the matrices ``F`` and ``risk_specific`` are already in the format for
 optimization model as described in `Using factor models as input`_.  To compute
 the efficient frontier(s), we simple range over a series of values for
 :math:`\gamma`, compute various optimal portfolios with different cardinality
-constraints:
-
-.. code-block:: python
-    :dedent: 0
+constraints::
 
     from gurobi_optimods.portfolio import MeanVariancePortfolio
     gammas = np.logspace(-1, 1, 256)**2
@@ -793,11 +790,5 @@ positions yields points very close to the unconstrained efficient frontier.
 The discontinuity of the constrained frontiers is a consequence of the discrete
 decision of holding a position or not, preventing a smooth progression from one
 efficient portfolio to another for varying values of :math:`\gamma`.
-
-.. code-block:: python
-
-   while 1:
-       while 2:
-           pass
 
 .. footbibliography::
