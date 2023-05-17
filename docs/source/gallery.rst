@@ -16,7 +16,6 @@ The Opti Mods Gallery
         :link: mods/card-regression
         :link-type: doc
         :text-align: center
-        :img-top: mods/figures/reg_coeffs.png
 
     .. grid-item-card:: Stigler Diet Problem
         :link: mods/diet
@@ -27,7 +26,7 @@ The Opti Mods Gallery
         :link: mods/l1-regression
         :link-type: doc
         :text-align: center
-        :img-top: mods/figures/reg_coeffs.png
+        :img-top: mods/icons/lad-regression.png
 
     .. grid-item-card:: Minimum-Cost Flow
         :link: mods/min-cost-flow
