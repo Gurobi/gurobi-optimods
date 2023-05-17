@@ -1,12 +1,5 @@
 docutils==0.17.1
-gurobipy==10.0.1
 Jinja2==3.0.3
-matplotlib==3.7.1
-networkx==3.1
-numpy==1.24.2
-pandas==2.0.0
-scikit-learn==1.2.2
-scipy==1.10.1
 sphinx-copybutton==0.5.1
 sphinx-design==0.4.1
 sphinx-rtd-theme==1.1.1

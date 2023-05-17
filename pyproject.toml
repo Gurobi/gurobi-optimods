@@ -32,5 +32,12 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+examples = [
+    "networkx",
+    "matplotlib",
+    "scikit-learn"
+]
+
 [tool.hatch.version]
 path = "src/gurobi_optimods/__init__.py"
