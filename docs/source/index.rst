@@ -38,8 +38,9 @@ information on how to get involved in the project.
    :caption: User Guide
 
    gallery
-   extending
    contributing
+   extending
+   beyond
 
 .. toctree::
    :maxdepth: 1
