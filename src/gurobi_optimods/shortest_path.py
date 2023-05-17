@@ -1,13 +1,9 @@
-import collections
 import logging
 from typing import Optional, overload
 
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-
-import gurobipy as gp
-from gurobipy import GRB
 
 try:
     import networkx as nx

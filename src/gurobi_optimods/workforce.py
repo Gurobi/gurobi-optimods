@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import gurobipy as gp
 import gurobipy_pandas as gppd

@@ -5,9 +5,7 @@ as sklearn.datasets.
 
 import pathlib
 
-import numpy as np
 import pandas as pd
-import scipy.sparse as sp
 
 try:
     import networkx as nx

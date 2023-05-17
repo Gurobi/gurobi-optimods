@@ -1,11 +1,7 @@
-import collections
 import logging
-from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-import gurobipy as gp
-from gurobipy import GRB
 import scipy.sparse as sp
 
 try:
@@ -23,9 +19,7 @@ logger = logging.getLogger(__name__)
 def min_cost_flow(arc_data: pd.DataFrame, demand_data: pd.DataFrame, *, create_env):
     """Solve the minimum cost flow problem for a given graph.
 
-    The inputs adhere to the following structure:
-
-    .. code-block:: python
+    The inputs adhere to the following structure::
 
         arc_data = pd.DataFrame(
             [
@@ -38,13 +32,18 @@ def min_cost_flow(arc_data: pd.DataFrame, demand_data: pd.DataFrame, *, create_e
             [{"node": 0, "demand": -1}, {"node": 2, "demand": 1}]
         ).set_index("node")
 
-    :param arc_data: DataFrame with graph and respective attributes. These must include ``"from"``, ``"to"`` nodes used as index, ``"capacity"``, and ``"cost"``.
+    :param arc_data: DataFrame with graph and respective attributes. These must
+        include ``"from"``, ``"to"`` nodes used as index, ``"capacity"``, and
+        ``"cost"``.
     :type arc_data: :class:`pd.DataFrame`
-    :param demand_data: DataFrame with node demand information. These must include indexed by `"node"`, and include the `"demand"`. This value can be positive (requesting flow) or negative (supplying flow).
+    :param demand_data: DataFrame with node demand information. These must
+        include indexed by `"node"`, and include the `"demand"`. This value can
+        be positive (requesting flow) or negative (supplying flow).
     :type demand_data: :class:`pd.DataFrame`
     :param silent: silent=True suppresses all console output (defaults to False)
     :type silent: bool
-    :param logfile: Write all mod output to the given file path (defaults to None: no log)
+    :param logfile: Write all mod output to the given file path (defaults to
+        None: no log)
     :type logfile: str
     :return: Cost of the minimum cost flow.
     :rtype: :class:`float`
@@ -137,11 +136,13 @@ def min_cost_flow_networkx(G, *, create_env):
 
     Note: We assume the networkx input graph node labels are all integers.
 
-    :param G: Graph with edge attributes ``capacity`` and ``cost``, as well as node attributes ``demand``.
+    :param G: Graph with edge attributes ``capacity`` and ``cost``, as well as
+        node attributes ``demand``.
     :type G: :class:`nx.DiGraph`
     :param silent: silent=True suppresses all console output (defaults to False)
     :type silent: bool
-    :param logfile: Write all mod output to the given file path (defaults to None: no log)
+    :param logfile: Write all mod output to the given file path (defaults to
+        None: no log)
     :type logfile: str
     :return: Cost of the minimum cost flow.
     :rtype: :class:`float`
