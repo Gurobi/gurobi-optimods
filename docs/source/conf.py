@@ -49,6 +49,7 @@ epub_show_urls = "footnote"
 extlinks_detect_hardcoded_links = True
 extlinks = {
     "pypi": ("https://pypi.org/project/%s/", "%s"),
+    "ghsrc": ("https://github.com/Gurobi/gurobi-optimods/tree/main/%s", "%s"),
 }
 
 # -- Bibfiles

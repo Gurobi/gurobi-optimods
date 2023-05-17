@@ -31,7 +31,7 @@ meets minimum requirements specified for each nutrient.
 
     .. tab:: Optimization Model
 
-	The model is defined over foods :math:`i \in F` and nutrients :math:`j \in N`.
+	    The model is defined over foods :math:`i \in F` and nutrients :math:`j \in N`.
         Foods have cost per unit :math:`c_{i}` and nutrients per unit :math:`n_{ij}`.
 
         .. math::
@@ -40,6 +40,10 @@ meets minimum requirements specified for each nutrient.
             \min \quad        & \sum_{i \in F} c_{i} x_{i} \\
             \mbox{s.t.} \quad & l_{j} \le \sum_{i \in F} n_{ij} x_{i} \le u_{j} \,\, & \forall j \in N \\
             \end{alignat}
+
+        Implementing this mathematical model using ``gurobipy-pandas`` is quite
+        straightforward. The source for the mod can be found in the
+        :ghsrc:`Github repository<src/gurobi_optimods/diet.py#L19>`.
 
 The API uses pandas dataframes for each data table. Separate tables are needed
 for foods and nutrients. We also need a linking table which specifies the nutrient
