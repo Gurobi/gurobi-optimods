@@ -1,5 +1,5 @@
-Optimal Mean-Variance Portfolios
-================================
+Mean-Variance Portfolio
+=======================
 
 Portfolio optimization is concerned with the allocation of wealth into assets
 (such as stocks, bonds, commodities, etc.). This mod returns portfolios on the
@@ -38,7 +38,7 @@ Our methods use risk and return estimators.
         * :math:`\gamma\geq0` is the risk aversion coefficient.
 
 
-This description refers only to the simple base model.  Further down in Section
+This description refers only to the simple base model.  Further down in
 `Enforcing more portfolio features`_ we explain how to enforce additional
 features, such as leverage or transaction fees.
 
@@ -204,7 +204,7 @@ Using factor models as input
 ----------------------------
 
 In the preceding discussion we have assumed that we the covariance matrix
-:math:`Sigma` was explicitly given.  In many cases, however, the covariance is
+:math:`\Sigma` was explicitly given.  In many cases, however, the covariance is
 naturally given through a *factor model*.  Mathematically this means that a
 decomposition
 
@@ -263,16 +263,17 @@ it is adivised to input the individual factor matrices directly through the
     Presolved: 2 rows, 4 columns, 6 nonzeros
     ...
 
-The two computed portfolios are the same, up to numerical noise due to
-different formulations:
+The two computed portfolios are the same, up to numerical noise.
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>> np.round(np.hstack((x_matrix[:, None], x_factors[:, None])), decimals=4)
-    array([[0.7793, 0.7793],
-           [0.    , 0.    ],
-           [0.2207, 0.2207]])
+    >>> pd.DataFrame(data={'matrix': x_matrix, 'factors': x_factors})
+                 matrix       factors
+        0  7.792530e-01  7.792530e-01
+        1  1.677210e-09  3.696123e-09
+        2  2.207470e-01  2.207470e-01
+
 
 .. _portfolio features:
 
@@ -614,7 +615,7 @@ using at most two trades:
 
     # A random starting portfolio
     x0 = pd.Series(
-        [0.06, 0.  , 0.  , 0.23, 0.37, 0.18, 0.  , 0.09, 0.07, 0.],
+        [0.06, 0.0, 0.0, 0.23, 0.37, 0.18, 0.0, 0.09, 0.07, 0.0],
         index=mu.index
     )
 
@@ -649,9 +650,9 @@ using at most two trades:
     JJ   0.00    0.000   False
 
 The traded positions are "AA" and "EE", resulting in one-time fees for one
-long, and one short transaction (in total 0.3% of the total investment).  As
-explained in the Section `One-time transaction fees`_, these fees are accounted
-by the portfolio itself, reducing the total portfolio value as needed:
+long, and one short transaction (in sum 0.3% of the total investment).  As
+explained in `One-time transaction fees`_, these fees are accounted by the
+portfolio itself, reducing the total portfolio value as needed:
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE

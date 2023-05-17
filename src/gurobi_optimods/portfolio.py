@@ -167,6 +167,9 @@ class MeanVariancePortfolio:
 
         if status == GRB.OPTIMAL:
             return self._convert_result(xvals)
+        elif status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
+            print("No portfolio satisfies the constraints!")
+            return None
         else:
             return None
 
