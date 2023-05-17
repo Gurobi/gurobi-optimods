@@ -212,7 +212,7 @@ class MeanVariancePortfolio:
         max_total_short,
         initial_holdings,
     ):
-        # max x' * mu + x' * cov_matrix * x
+        # max x' * mu - gamma * x' * cov_matrix * x
         # s.t.
         #      x = x_long - x_short  (x is split in positive/negative parts)
         #
