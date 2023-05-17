@@ -28,7 +28,7 @@ jobs:
       - name: Lint with flake8
         run: |
           # check for Python syntax errors or undefined names
-          python -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          python -m flake8 . --count --select=E9,F63,F7,F82,F811,F401 --show-source --statistics
       - name: Verify pre-commit checks passed
         run: |
           pre-commit run --all-files
