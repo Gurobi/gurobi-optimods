@@ -665,9 +665,9 @@ Efficient frontier(s) with cardinality constraints
 In the classical mean-variance portfolio theory the *efficient frontier*
 consists of all portfolios that optimally balance risk and return for a range
 of values for :math:`\gamma` (see `Problem Specification`_).  When plotted in
-the risk-return plane the result is a smooth curve, see TODObelow.  In this
-example we will explore the effect of restricting the number of open positions
-on the efficient frontier.
+the risk-return plane the result is a smooth curve, see `efficient frontiers`_
+In this example we will explore the effect of restricting the number of open
+positions on the efficient frontier.
 
 Multiple-Factor Data Model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -694,7 +694,7 @@ with general market movement (:math:`Bf`) such as macroeconomic influence, and
 intrinsic, uncorrelated returns for each asset (:math:`u`).
 
 These model quantities allow for structured estimates of the first and second
-moments (return and risk); for The details of the derivation we refer to
+moments (return and risk); for details of the derivation we refer to
 :footcite:t:`cornuéjols_peña_tütüncü_2018`, Sect. 6.6.  The important effect on the input
 data for the mean-variance model we want to point out though is that the
 covariance matrix decomposes algebraically as follows:
@@ -736,10 +736,14 @@ model:
     risk_specific = np.diag(np.sqrt(np.diag(np.cov(u))))
 
 Note that the matrices ``F`` and ``risk_specific`` are already in the format for the
-optimization model as described in `Using factor models as input`_.  To compute
-the efficient frontier(s), we simple range over a series of values for
-:math:`\gamma`, compute various optimal portfolios with different cardinality
-constraints::
+optimization model as described in `Using factor models as input`_.
+
+Computing frontiers
+~~~~~~~~~~~~~~~~~~~
+
+To compute the efficient frontier(s), we simple range over a series of values
+for :math:`\gamma`, compute various optimal portfolios with different
+cardinality constraints::
 
     from gurobi_optimods.portfolio import MeanVariancePortfolio
     gammas = np.logspace(-1, 1, 256)**2
@@ -762,6 +766,8 @@ constraints::
             risk = ((F.T @ x)**2).sum() + (x**2 * risk_specific**2).sum()
             rr_pairs_con[max_positions].append((ret, risk))
 
+Comparison
+~~~~~~~~~~
 
 All risk/return pairs are now recorded in ``rr_pairs_unc`` (unconstrained
 portfolios) and ``rr_pairs_con`` (constrained portfolios). The corresponding
@@ -782,7 +788,12 @@ efficient frontiers look like this:
 
     plt.show()
 
+.. _efficient frontiers:
+
 .. figure:: figures/mvp.png
+   :alt: Efficient frontiers for various cardinality constraints
+
+   Efficient frontiers for various cardinality constraints
 
 Of course all cardinality constrained portfolios are dominated by the
 unconstrained ones, but already restricting the portfolio to three open
