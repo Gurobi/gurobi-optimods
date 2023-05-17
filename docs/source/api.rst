@@ -20,7 +20,7 @@ API Reference
    :members: solve_qubo
 
 .. automodule:: gurobi_optimods.regression
-   :members: LADRegression
+   :members: LADRegression, CardinalityConstrainedRegression
 
 .. automodule:: gurobi_optimods.workforce
    :members: solve_workforce_scheduling
