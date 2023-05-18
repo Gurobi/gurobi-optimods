@@ -36,13 +36,13 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/mwis.png
 
-    .. grid-item-card:: Optimal Mean-Variance Portfolios
+    .. grid-item-card:: Mean-Variance Portfolio
         :link: mods/portfolio
         :link-type: doc
         :text-align: center
         :img-top: mods/figures/mvp.png
 
-    .. grid-item-card:: QUBO: Quadratic Unconstrained Binary Optimization
+    .. grid-item-card:: Quadratic Unconstrained Binary Optimization (QUBO)
         :link: mods/qubo
         :link-type: doc
         :text-align: center
