@@ -72,7 +72,6 @@ class MeanVariancePortfolio:
         min_short=None,
         max_total_short=0.0,
         initial_holdings=None,
-        gurobi_params=None,
         *,
         create_env,
     ):
@@ -113,15 +112,15 @@ class MeanVariancePortfolio:
         :type max_total_short: :class:`float` >= 0
         :param initial_holdings: Initial portfolio holdings (sum needs to be <= 1)
         :type initial_holdings: 1-d :class:`np.ndarray`
-        :param gurobi_params: Gurobi parameters to be passed to the solver
-        :type gurobi_params: class:`dict`
         :param silent: silent=True suppresses all console output (defaults to False)
         :type silent: bool
         :param logfile: Write all mod output to the given file path (defaults to None: no log)
         :type logfile: str
+        :param solver_params: Gurobi parameters to be passed to the solver
+        :type solver_params: class:`dict`
 
-        Refer to the Section :ref:`portfolio features` for a detailed discussion
-        of these parameters.
+        Refer to :ref:`portfolio features` for a detailed discussion of these
+        parameters.
         """
 
         fees_buy = self._homogenize_input(fees_buy)
@@ -136,9 +135,7 @@ class MeanVariancePortfolio:
         else:
             initial_holdings = np.zeros(self.mu.shape)
 
-        with create_env(params=gurobi_params) as env, gp.Model(
-            "efficient_portfolio", env=env
-        ) as m:
+        with create_env() as env, gp.Model("efficient_portfolio", env=env) as m:
             x = self._populate_model(
                 m,
                 gamma,

@@ -62,13 +62,13 @@ class TestMVPBasic(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
         with redirect_stdout(io.StringIO()) as console:
-            x = mvp.efficient_portfolio(0.5, gurobi_params={})
+            x = mvp.efficient_portfolio(0.5, solver_params={})
         consoleContent = console.getvalue()
         self.assertIn("Gurobi Optimizer", consoleContent)
 
-        gurobi_params = {"OutputFlag": 0}
+        solver_params = {"OutputFlag": 0}
         with redirect_stdout(io.StringIO()) as console:
-            x = mvp.efficient_portfolio(0.5, gurobi_params=gurobi_params)
+            x = mvp.efficient_portfolio(0.5, solver_params=solver_params)
         consoleContent = console.getvalue()
         self.assertEqual(consoleContent, "")
 
@@ -80,7 +80,7 @@ class TestMVPBasic(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
         with redirect_stdout(io.StringIO()) as console:
-            x = mvp.efficient_portfolio(0.5, gurobi_params={})
+            x = mvp.efficient_portfolio(0.5, solver_params={})
         consoleContent = console.getvalue()
         self.assertIn("Gurobi Optimizer", consoleContent)
 
@@ -108,9 +108,9 @@ class TestMVPBasic(unittest.TestCase):
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
-        gurobi_params = {"MIPFocus": 1}
+        solver_params = {"MIPFocus": 1}
         with redirect_stdout(io.StringIO()) as console:
-            x = mvp.efficient_portfolio(0.5, gurobi_params=gurobi_params)
+            x = mvp.efficient_portfolio(0.5, solver_params=solver_params)
         consoleContent = console.getvalue()
         self.assertIn("Set parameter MIPFocus to value 1", consoleContent)
 
