@@ -10,7 +10,7 @@ Coding Standards
 
 We use `black <https://github.com/psf/black>`_ to format all source code.
 ``pre-commit`` takes care of this formatting when installed (see
-:ref:`Development Environment`) and runs checks automatically when you commit
+:ref:`contributing:development environment`) and runs checks automatically when you commit
 changes. To run code quality checks manually, run the following and ensure no
 issues are reported::
 

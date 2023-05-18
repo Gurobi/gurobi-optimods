@@ -35,11 +35,12 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "sphinx": ("https://www.sphinx-doc.org/en/master/", None),
 }
-intersphinx_disabled_domains = ["std"]
 
 templates_path = ["_templates"]
 
 html_theme = "sphinx_rtd_theme"
+
+autosectionlabel_prefix_document = True
 
 # -- Include only prompts
 copybutton_prompt_text = ">>> "
