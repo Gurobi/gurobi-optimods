@@ -1,5 +1,5 @@
-QUBO: Quadratic Unconstrained Binary Optimization
-=================================================
+Quadratic Unconstrained Binary Optimization (QUBO)
+==================================================
 
 Many :math:`\mathcal{NP}`-hard discrete optimization problems that naturally
 arise in application fields such as finance, energy, healthcare, and machine learning,
