@@ -1,5 +1,5 @@
-The Opti Mods Gallery
-=====================
+The OptiMods Gallery
+====================
 
 .. _cards-clickable:
 

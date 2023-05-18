@@ -20,6 +20,7 @@ extensions = [
     "sphinx_toolbox.code",
     "sphinx_toolbox.collapse",
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosectionlabel",
     "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
     "sphinx.ext.duration",

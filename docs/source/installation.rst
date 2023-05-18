@@ -5,8 +5,8 @@ Installation
 
     python -m pip install gurobi-optimods
 
-This will also install gurobipy, numpy, scipy, pandas, and gurobipy-pandas as
-dependencies.
+This will also install ``gurobipy``, ``numpy``, ``scipy``, ``pandas``, and
+``gurobipy-pandas`` as dependencies.
 
 Please note that gurobipy is commercial software and requires a license (which
 you can get `for free as an academic

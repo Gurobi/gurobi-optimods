@@ -1,6 +1,9 @@
 Stigler Diet Problem
 ====================
 
+.. warning::
+    This page is under construction
+
 Thanks `Wikipedia <https://en.wikipedia.org/wiki/Stigler_diet>`_:
 
     For a moderately active man weighing 154 pounds, how much of each of 77 foods

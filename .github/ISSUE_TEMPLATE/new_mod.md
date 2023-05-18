@@ -9,30 +9,16 @@ assignees: ''
 
 **Why this Mod?**
 
-Justify why this Mod is a useful addition.
-
-**Design requirements**
-
-Verify the mod will meet the following criteria:
-
-- [ ] Self-contained: the user doesn't need to interact directly with gurobipy
-  objects when using the function or class exposed by the mod.
-- [ ] Stateless: data-in data-out, no follow-up optimization steps, and gurobipy
-  objects are disposed as soon as solutions are retrieved.
-- [ ] Covers a well-known concept from a non-optimization field. In particular,
-  we must be able to explain what the Mod does using domain-specific terminology
-  without reference to the mathematical model.
-- [ ] Clear purpose / single focus. There may be natural parameters to switch on/off
-  various side-constraints, but these should be kept to a minimum.
+Justify why this Mod is a useful addition that meets the goals of the project.
 
 **What will the API be?**
 
 Add a code snippet for the proposed API. Does this link cleanly to:
 
-- [ ] numpy
-- [ ] scipy
-- [ ] pandas
-- [ ] Other (please specify)
+- numpy
+- scipy
+- pandas
+- other (please specify)
 
 to provide input data to the Mod?
 
