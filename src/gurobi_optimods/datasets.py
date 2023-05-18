@@ -99,3 +99,8 @@ def load_diet():
         foods=pd.read_csv(DATA_FILE_DIR / "diet-foods.csv"),
         nutrition_values=pd.read_csv(DATA_FILE_DIR / "diet-values.csv"),
     )
+
+
+def load_portfolio():
+    fn = DATA_FILE_DIR / "portfolio/portfolio.csv"
+    return pd.read_csv(fn, index_col=0)

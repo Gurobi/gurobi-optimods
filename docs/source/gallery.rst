@@ -35,6 +35,12 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/mwis.png
 
+    .. grid-item-card:: Optimal Mean-Variance Portfolios
+        :link: mods/portfolio
+        :link-type: doc
+        :text-align: center
+        :img-top: mods/figures/mvp.png
+
     .. grid-item-card:: QUBO: Quadratic Unconstrained Binary Optimization
         :link: mods/qubo
         :link-type: doc
@@ -65,6 +71,7 @@ The OptiMods Gallery
    mods/l1-regression
    mods/min-cost-flow
    mods/mwis
+   mods/portfolio
    mods/qubo
    mods/shortest-path
    mods/workforce
