@@ -1,9 +1,12 @@
 Contributing to OptiMods
 ========================
 
-We welcome contributions: bug fixes, doc corrections, extensions to existing
-mods, or development of new mods. This page describes general development
-principles to adhere to when contributing.
+We welcome contributions from the commumnity: bug fixes, doc corrections,
+extensions to existing mods, or development of new mods. This page describes
+conventions to follow when contributing, and the development process we follow
+for the project, which is applicable to all contributors. For guidelines on
+proposing and implementing new mods, see :doc:`adding`. For discussion on
+extending existing mods, see :doc:`extending`.
 
 Coding Standards
 ----------------

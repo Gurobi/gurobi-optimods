@@ -1,15 +1,28 @@
 Usage
 =====
 
-.. warning::
-   ⚠ This page is under construction
+The best way to get started with the optimods is to try one out! Check out the
+:doc:`gallery` first to find a mod that suits you. Each mod comes complete with
+a page of explanatory documentation which provides background on the problem it
+is intended to solve. The docs also include runnable example codes and datasets
+to get you started.
 
-Brief discussion of how to use the mods in the package package.
+Note that you may need to install additonal dependencies for some examples. The
+quick way to ensure you have a Python environment which can execute all the
+example snippets in the docs is to run the following::
 
-1. Reading/exploring the documentation
-2. Trying the example codes (note you may need to install extra dependencies for
-   some examples)
-3. Working with a mod (a mod is self-contained, data-in data-out, just plug your
-   data in)
-4. Learning more (check out the mathematical model)
-5. We welcome contributions!
+   python -m pip install gurobi-optimods[examples]
+
+Each mod is designed to be self-contained, with a clean data-in data-out API.
+Munge your data into the appropriate format using Python tools you already know,
+and run the mod as outlined in its documentation page to get back a solution.
+
+If you are interested to learn more about the mathematical model underlying a
+mod, the documentation page explains the model. You can also browse :ghsrc:`the
+mod source<src/gurobi_optimods>` to find out how the model is implemented in
+code.
+
+Finally, we welcome contributions of new mods, bug fixes and new features for
+existing mods, and improvements to the documentation. This is intended to be a
+community project that grows over time to handle a wide range of optimization
+use-cases across a different fields. See :doc:`contributing` for more details.

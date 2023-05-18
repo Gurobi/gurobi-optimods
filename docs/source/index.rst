@@ -7,9 +7,6 @@ Welcome to Gurobi OptiMods's documentation!
 optimization use cases, each with clear, informative, and pretty documentation
 that explains how to use it and the mathematical model behind it.
 
-Getting Started
----------------
-
 The package is a collection of independent 'mods'. Each mod is intended to be
 immediately applicable to real use-cases. However, we expect that for many
 practical applications users will need to understand and extend the
