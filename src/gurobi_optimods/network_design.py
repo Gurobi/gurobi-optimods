@@ -1,25 +1,39 @@
-# Implementation of your new mod. This should be copied to
-# src/gurobi_optimods/<mod-name>.py. You may alternatively want to include
-# your mod in an existing file, if it coexists naturally with other mods.
-#
-# In general the public API should be a single class or function. Go with
-# whatever makes the most sense for this mod.
-
 import gurobipy as gp
 from gurobipy import GRB
 import networkx as nx
 from typing import Dict
+from gurobi_optimods.utils import optimod
+import matplotlib.pyplot as plt
+from gurobi_optimods.datasets import load_network_design
 
 
-def solve_network_design(G: nx.DiGraph, commodities: Dict):
+@optimod()
+def solve_network_design(G: nx.DiGraph, commodities: Dict, *, create_env):
+    """Solve a fixed-cost network design problem on a given graph for a given set of commodities
+
+    :param G: A graph specified as a networkx graph
+    :type G: :class:`nx.DiGraph`
+    :param commodities: A dictionary where the keys correpond to different commodity labels and the values are triples
+        containing the origin node, destination node, and the quantity.
+    :type G: :class:`Dict`
+    :param silent: silent=True suppresses all console output (defaults to False)
+    :type silent: bool
+    :param logfile: Write all mod output to the given file path (defaults to None: no log)
+    :type logfile: str
+    :return: A subgraph of the original graph specifying the maximum matching
+    :rtype: :class:`nx.Graph`
     """
-    A sphinx-compatible docstring
 
-    :param data1: Data structure for first argument
-    :type data1: pd.DataFrame
-    """
-    print(commodities)
-    with gp.Env() as env, gp.Model(env=env) as m:
+    if isinstance(G, nx.Graph):
+        return _network_design_networkx(G, commodities, create_env)
+    else:
+        raise ValueError(f"Unknown graph type: {type(G)}")
+
+
+def _network_design_networkx(G, commodities, create_env):
+
+    _ensure_origins_desinations_are_nodes(G.nodes(), commodities)
+    with create_env() as env, gp.Model(env=env) as m:
 
         x = {
             (i, j, k): m.addVar(vtype=GRB.CONTINUOUS, name=f"flow-{i},{j},{k}")
@@ -42,7 +56,7 @@ def solve_network_design(G: nx.DiGraph, commodities: Dict):
             )
         )
 
-        path_constraints = {
+        m._path_constraints = {
             (i, k): m.addConstr(
                 gp.quicksum([x[i, j, k] for j in G.successors(i)])
                 - gp.quicksum([x[j, i, k] for j in G.predecessors(i)])
@@ -57,7 +71,7 @@ def solve_network_design(G: nx.DiGraph, commodities: Dict):
             for k, commodity in commodities.items()
         }
 
-        capacity_constraints = {
+        m._capacity_constraints = {
             (i, j): m.addConstr(
                 gp.quicksum(
                     commodity["Demand"] * x[i, j, k]
@@ -68,10 +82,12 @@ def solve_network_design(G: nx.DiGraph, commodities: Dict):
             )
             for (i, j, arc) in G.edges(data=True)
         }
+
         m.optimize()
         if m.Status == GRB.INFEASIBLE:
             raise ValueError("Unsatisfiable flows")
 
+        # Create a new graph with selected edges in the match
         G_new = nx.DiGraph()
         for (i, j) in G.edges():
             if y[(i, j)].X > 0.5:
@@ -79,3 +95,22 @@ def solve_network_design(G: nx.DiGraph, commodities: Dict):
                 G_new.add_edge(i, j, flow={k: x[i, j, k].X for k in commodities})
 
         return m.ObjVal, G_new
+
+
+def _ensure_origins_desinations_are_nodes(nodes, commodities):
+
+    for k, commodity in commodities.items():
+        assert (
+            commodity["Origin"] in nodes
+        ), f"Origin {commodity['Origin']} of commodity {k} not a node"
+        assert (
+            commodity["Destination"] in nodes
+        ), f"Destination {commodity['Destination']} of commodity {k} not a node"
+
+
+def _draw_network_design_with_solution(original_graph, solution_graph):
+    print("hi")
+
+    nx.draw(original_graph, with_labels=True)
+    plt.draw()  # pyplot draw()
+    plt.show()
