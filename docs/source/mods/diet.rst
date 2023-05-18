@@ -31,8 +31,9 @@ meets minimum requirements specified for each nutrient.
 
     .. tab:: Optimization Model
 
-	    The model is defined over foods :math:`i \in F` and nutrients :math:`j \in N`.
-        Foods have cost per unit :math:`c_{i}` and nutrients per unit :math:`n_{ij}`.
+	    The model is defined over foods :math:`i \in F` and nutrients :math:`j
+	    \in N`. Foods have cost per unit :math:`c_{i}` and nutrients per
+	    unit :math:`n_{ij}`.
 
         .. math::
 
