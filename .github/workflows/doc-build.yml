@@ -1,7 +1,6 @@
-# Run the doctests against python 3.8 + gurobipy 10.
-# Doctests should pass with the 'examples' extra deps installed.
+# The docs should build without warnings from sphinx
 
-name: Doc tests
+name: Docs build
 
 on:
   workflow_call:
@@ -10,13 +9,12 @@ permissions:
   contents: read
 
 jobs:
-  doc-tests:
+  doc-build:
 
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python: ["3.8"]
-        gurobipy: ["10.0.1"]
 
     steps:
       - uses: actions/checkout@v3
@@ -27,11 +25,11 @@ jobs:
       - name: Install tooling
         run: |
           python -m pip install --upgrade pip
-      - name: Install dependencies
+      - name: Install docs build dependencies
         run: |
           python -m pip install -rdocs/requirements.txt
-          python -m pip install .[examples] gurobipy==${{ matrix.gurobipy }}
+          python -m pip install .
       - name: Run doctests
         run: |
           cd docs
-          make doctest
+          make clean html SPHINXOPTS="-W --keep-going"

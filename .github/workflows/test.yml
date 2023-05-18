@@ -19,3 +19,6 @@ jobs:
   doc-tests:
     uses: ./.github/workflows/doc-tests.yml
     needs: [python-tests]
+  doc-build:
+    uses: ./.github/workflows/doc-build.yml
+    needs: [python-tests]

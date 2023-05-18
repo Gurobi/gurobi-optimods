@@ -20,6 +20,9 @@ jobs:
   doc-tests:
     uses: ./.github/workflows/doc-tests.yml
     needs: [python-tests]
+  doc-build:
+    uses: ./.github/workflows/doc-build.yml
+    needs: [python-tests]
   publish-pypi:
     uses: ./.github/workflows/publish-pypi.yml
     needs: [code-quality,python-tests,wheel-tests,doc-tests]
