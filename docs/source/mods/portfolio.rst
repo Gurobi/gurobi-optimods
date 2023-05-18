@@ -32,7 +32,7 @@ Problem Specification
         :math:`\gamma`.
 
 
-    .. tab:: Mathematical Formulations
+    .. tab:: Mathematical Formulation
 
         .. math::
 
