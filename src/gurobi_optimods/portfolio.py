@@ -1,7 +1,6 @@
 import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
-import scipy.sparse as sp
 import pandas as pd
 
 from gurobi_optimods.utils import optimod
