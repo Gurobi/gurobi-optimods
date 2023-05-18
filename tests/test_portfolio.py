@@ -44,7 +44,7 @@ class TestMVPBasic(unittest.TestCase):
         with self.assertRaises(TypeError):
             mvp = MeanVariancePortfolio(mu, cov_matrix=None, cov_factors=None)
 
-    def test_init_0(self):
+    def test_init_1(self):
         # Specifying both cov_matrix and cov_factors is disallowed
         data = load_portfolio()
         cov_matrix = data.cov()
