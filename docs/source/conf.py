@@ -59,3 +59,8 @@ bibtex_bibfiles = [
     "refs/qubo.bib",
     "refs/regression.bib",
 ]
+
+rst_prolog = """.. warning::
+    This code is in a pre-release state. It may not be fully functional and breaking changes
+    can occur without notice.
+"""
