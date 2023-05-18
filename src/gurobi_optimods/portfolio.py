@@ -124,17 +124,11 @@ class MeanVariancePortfolio:
         of these parameters.
         """
 
-        if isinstance(initial_holdings, pd.Series):
-            initial_holdings = initial_holdings.to_numpy()
-
-        if isinstance(fees_buy, pd.Series):
-            fees_buy = fees_buy.to_numpy()
-        if isinstance(fees_sell, pd.Series):
-            fees_sell = fees_sell.to_numpy()
-        if isinstance(costs_buy, pd.Series):
-            costs_buy = costs_buy.to_numpy()
-        if isinstance(costs_sell, pd.Series):
-            costs_sell = costs_sell.to_numpy()
+        fees_buy = self._homogenize_input(fees_buy)
+        fees_sell = self._homogenize_input(fees_sell)
+        costs_buy = self._homogenize_input(costs_buy)
+        costs_sell = self._homogenize_input(costs_sell)
+        initial_holdings = self._homogenize_input(initial_holdings)
 
         if initial_holdings is not None:
             if initial_holdings.sum() > 1.0:
@@ -357,3 +351,15 @@ class MeanVariancePortfolio:
             return pd.Series(x, index=self.index)
         else:
             assert False
+
+    def _homogenize_input(self, input_data):
+        # Check and unpack if input_data is a Series
+        if isinstance(input_data, pd.Series):
+            if self.index is not None:
+                if any(self.index != input_data.index):
+                    raise ValueError("Misaligned Series indexes: " + input_data.index)
+            else:
+                self.index = input_data.index
+            input_data = input_data.to_numpy()
+
+        return input_data

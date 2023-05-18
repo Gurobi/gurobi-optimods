@@ -776,3 +776,34 @@ class TestMVPFeatures(unittest.TestCase):
         total_fees = df_buy[x > 1e-6].sum() + df_sell[x < -1e-6].sum()
 
         self.assertAlmostEqual(x.sum(), 1 - total_fees, delta=1e-6)
+
+    def test_input_wrong_index(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        gamma = 100.0
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+
+        fees_buy = pd.Series(index=mu.index[::-1], data=np.linspace(0.0, 0.1, mu.size))
+        with self.assertRaises(ValueError):
+            x = mvp.efficient_portfolio(gamma, fees_buy=fees_buy)
+
+        fees_sell = pd.Series(index=mu.index[::-1], data=np.linspace(0.0, 0.1, mu.size))
+        with self.assertRaises(ValueError):
+            x = mvp.efficient_portfolio(gamma, fees_sell=fees_sell)
+
+        costs_buy = pd.Series(index=mu.index[::-1], data=np.linspace(0.0, 0.1, mu.size))
+        with self.assertRaises(ValueError):
+            x = mvp.efficient_portfolio(gamma, costs_buy=costs_buy)
+
+        costs_sell = pd.Series(
+            index=mu.index[::-1], data=np.linspace(0.0, 0.1, mu.size)
+        )
+        with self.assertRaises(ValueError):
+            x = mvp.efficient_portfolio(gamma, costs_sell=costs_sell)
+
+        initial_holdings = pd.Series(
+            index=mu.index[::-1], data=np.linspace(0.0, 0.01, mu.size)
+        )
+        with self.assertRaises(ValueError):
+            x = mvp.efficient_portfolio(gamma, initial_holdings=initial_holdings)
