@@ -21,20 +21,18 @@ efficient frontier given expected returns and variances.
 Problem Specification
 ---------------------
 
-Our methods use risk and return estimators.
-
 .. tabs::
 
-    .. tab:: Domain-Specific Description
+    .. tab:: Description
 
         We consider a single-period portfolio optimization problem where want
         to allocate wealth into :math:`n` risky assets. The returned portfolio
-        :math:`x` is an efficient mean-variance portfolio given returns
+        :math:`x` is an efficient mean-variance portfolio for given returns
         :math:`\mu`, covariance matrix :math:`\Sigma` and risk aversion
         :math:`\gamma`.
 
 
-    .. tab:: Mathematical Description
+    .. tab:: Mathematical Formulations
 
         .. math::
 
