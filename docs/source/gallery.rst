@@ -48,12 +48,6 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/qubo.png
 
-    .. grid-item-card:: Shortest Path
-        :link: mods/shortest-path
-        :link-type: doc
-        :text-align: center
-        :img-top: mods/figures/shortest-path-result.png
-
     .. grid-item-card:: Workforce Scheduling
         :link: mods/workforce
         :link-type: doc
@@ -72,5 +66,4 @@ The OptiMods Gallery
    mods/mwis
    mods/portfolio
    mods/qubo
-   mods/shortest-path
    mods/workforce
