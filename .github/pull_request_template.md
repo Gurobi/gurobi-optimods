@@ -13,9 +13,10 @@ For a new Mod contribution, please include the issue number for the Mod proposal
   - [ ] Tests for the Mod implementation in `tests/`
   - [ ] Docstrings for public API, correctly linked using sphinx-autodoc
 - Documentation page:
-  - [ ] Problem specification with description tab and optimzation model tab
+  - [ ] Background and problem specification
   - [ ] Example of the input data format (use `gurobi_optimods.datasets` for loading data)
   - [ ] Runnable code example
   - [ ] Presentation of solutions
+  - [ ] Included in the mod gallery and toctree
 
 **Have a nice day!**
