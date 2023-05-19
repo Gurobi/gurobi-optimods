@@ -1,9 +1,8 @@
 ### First snippet
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 
-from gurobi_optimods.regression import CardinalityConstrainedRegression, LADRegression
+from gurobi_optimods.regression import CardinalityConstrainedRegression
 
 # Load the diabetes dataset
 diabetes = datasets.load_diabetes()
@@ -37,7 +36,7 @@ fig.tight_layout()
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.linear_model import Lasso, Ridge, LinearRegression
+from sklearn.linear_model import Lasso
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 models = [
