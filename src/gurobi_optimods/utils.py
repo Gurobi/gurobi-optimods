@@ -117,6 +117,7 @@ def optimod(mod_logger=None):
             ) as create_env:
                 return func(*args, create_env=create_env, **kwargs)
 
+        optimod_decorated._decorated_mod = True
         return optimod_decorated
 
     return optimod_decorator
