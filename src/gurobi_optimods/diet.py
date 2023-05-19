@@ -1,5 +1,6 @@
 """
-Diet problem with a pandas interface
+Diet Problem
+------------
 """
 
 from dataclasses import dataclass

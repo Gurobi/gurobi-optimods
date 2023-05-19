@@ -1,3 +1,8 @@
+"""
+Maximum Weighted Independent Set
+--------------------------------
+"""
+
 import numpy as np
 
 import gurobipy as gp

@@ -1,3 +1,8 @@
+"""
+Minimum Cost Flow
+-----------------
+"""
+
 import logging
 
 import gurobipy as gp

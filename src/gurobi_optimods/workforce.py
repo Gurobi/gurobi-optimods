@@ -1,3 +1,8 @@
+"""
+Workforce Scheduling
+--------------------
+"""
+
 import logging
 
 import gurobipy as gp

@@ -1,3 +1,8 @@
+"""
+Quadratic Unconstrained Binary Optimization (QUBO)
+--------------------------------------------------
+"""
+
 import logging
 from dataclasses import dataclass
 

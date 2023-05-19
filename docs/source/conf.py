@@ -129,6 +129,10 @@ def process_docstring(app, what, name, obj, options, lines):
         for line in reversed(boilerplate):
             lines.insert(lineno, line)
 
+    if what == "module":
+        lines.append("")
+        lines.append(f"The following mods can be imported from ``{name}``:")
+
 
 def setup(app):
     app.connect("autodoc-process-signature", process_signature)
