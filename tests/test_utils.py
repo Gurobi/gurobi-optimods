@@ -1,3 +1,8 @@
+"""
+Test of gurobi_optimods.utils, not to be confused with utilities for testing
+found in tests/utils.py
+"""
+
 import io
 import os
 import tempfile
