@@ -2,7 +2,9 @@ Stigler Diet Problem
 ====================
 
 .. warning::
-    This page is under construction
+    This page is under construction. To put it bluntly, the diet mod has made
+    some really poor diet choices and it should be ashamed of itself. But, as
+    we know: garbage data in, garbage results out.
 
 Thanks `Wikipedia <https://en.wikipedia.org/wiki/Stigler_diet>`_:
 
