@@ -21,9 +21,10 @@ class MeanVariancePortfolio:
 
     :param mu: Return vector
     :type mu: 1-d :class:`np.ndarray`
-    :param cov_matrix: Covariance matrix
+    :param cov_matrix: Covariance matrix :math:`\Sigma`
     :type cov_matrix: 2-d :class:`np.ndarray`
-    :param cov_factors: Covariance factors
+    :param cov_factors: Covariance factors that constitute :math:`\Sigma`,
+        see :ref:`factor models`
     :type cov_factors: 2-d :class:`tuple` of :class:`np.ndarray`
 
     """
@@ -84,7 +85,7 @@ class MeanVariancePortfolio:
 
         :param gamma: Risk aversion cofficient for balancing risk and return;
             the resulting objective functions is
-            :math:`\mu^T x - 0.5 \gamma x^T \cov_matrix x`
+            :math:`\mu^T x - 0.5 \gamma x^T \Sigma x`
         :type gamma: :class:`float` >= 0
         :param max_trades: Upper limit on the number of trades
         :type max_trades: :class:`int` >= 0

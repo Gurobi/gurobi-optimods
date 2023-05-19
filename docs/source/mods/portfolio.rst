@@ -209,6 +209,7 @@ here the solution suggests to spread the investments over five positions
     JJ    1.248442e-08
     dtype: float64
 
+.. _factor models:
 
 Using factor models as input
 ----------------------------
