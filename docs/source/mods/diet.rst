@@ -53,7 +53,7 @@ meets minimum requirements specified for each nutrient.
 
 The API uses pandas dataframes for each data table. Separate tables are needed
 for foods and nutrients. We also need a linking table which specifies the nutrient
-content of each food (not yet shown).
+content of each food.
 
 .. testsetup:: diet
 
@@ -65,7 +65,7 @@ content of each food (not yet shown).
 
     .. tab:: ``categories``
 
-        Give interpretation of input data.
+        Data on dietary requirements is included as a dataframe.
 
         .. doctest:: diet
             :options: +NORMALIZE_WHITESPACE
@@ -79,11 +79,15 @@ content of each food (not yet shown).
             2       fat     0     65.0
             3    sodium     0   1779.0
 
-        The min and max columns correspond to :math:`l_j` and :math:`u_j`.
+        The min and max columns correspond to :math:`l_j` and :math:`u_j` in the
+        mathematical model.
 
     .. tab:: ``foods``
 
-        Another bit of input data (perhaps a secondary table)
+        Data on available foods is included as a dataframe.
+
+        ..doctest::diet
+            :options: +NORMALIZE_WHITESPACE
 
             >>> from gurobi_optimods import datasets
             >>> data = datasets.load_diet()
@@ -99,7 +103,30 @@ content of each food (not yet shown).
             7       milk  0.89
             8  ice cream  1.59
 
-	The cost column corresponds to :math:`c_i`.
+	    The cost column corresponds to :math:`c_i` in the mathematical model.
+
+    .. tab:: ``nutation``
+
+        ..doctest::diet
+            :options: +NORMALIZE_WHITESPACE
+
+            >>> data.nutrition_values
+                category       food   value
+            0   calories  hamburger   410.0
+            1   calories    chicken   420.0
+            2   calories    hot dog   560.0
+            3   calories      fries   380.0
+            4   calories   macaroni   320.0
+            ..       ...        ...     ...
+            31    sodium   macaroni   930.0
+            32    sodium      pizza   820.0
+            33    sodium      salad  1230.0
+            34    sodium       milk   125.0
+            35    sodium  ice cream   180.0
+            <BLANKLINE>
+            [36 rows x 3 columns]
+
+        The value column corresponds to :math:`n_{ij}` in the mathematical model.
 
 |
 
@@ -130,9 +157,9 @@ Using the example data above, solve for the optimal diet.
     Optimize a model with 8 rows, 9 columns and 72 nonzeros
     ...
 
-Gurobi solves this now-simple linear programming model with ease and poise. But
-think back to the days of Dantzig where hundreds of engineers performed simplex
-iterations using slide rules and sextants.
+Gurobi solves this now-simple linear programming model with ease. But think back
+to the days of Dantzig where hundreds of engineers performed simplex iterations
+using slide rules and sextants.
 
 .. collapse:: View Gurobi Logs
 
