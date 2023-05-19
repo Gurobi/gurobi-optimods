@@ -5,6 +5,8 @@ from numpy.testing import assert_allclose
 
 from gurobi_optimods.regression import LADRegression, CardinalityConstrainedRegression
 
+from .utils import large_model
+
 
 class TestLADRegression(unittest.TestCase):
     def test_two_points(self):
@@ -50,11 +52,12 @@ class TestCardinalityConstrainedRegression(unittest.TestCase):
         y_pred = reg.predict(np.array([[1.0], [2.0], [3.0]]))
         assert_allclose(y_pred, np.array([2.0, 4.0, 6.0]))
 
+    @large_model
     def test_random_constrained(self):
         # Plug in some random data and check shape consistency.
         # Verify that cardinality constraint is respected
-        X_train = np.random.random((100, 5))
-        y_train = np.random.random((100))
+        X_train = np.random.random((200, 5))
+        y_train = np.random.random((200))
         reg = CardinalityConstrainedRegression(k=2)
         reg.fit(X_train, y_train)
 
