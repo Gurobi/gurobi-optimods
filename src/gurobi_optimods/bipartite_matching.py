@@ -70,10 +70,6 @@ def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
         nodes2 must be a column name. Otherwise, it is a numpy array of nodes in the second
         bipartite set.
     :type nodes2: :class:`np.array|List|str`
-    :param silent: silent=True suppresses all console output (defaults to False)
-    :type silent: bool
-    :param logfile: Write all mod output to the given file path (defaults to None: no log)
-    :type logfile: str
     :return: A subgraph of the original graph specifying the maximum matching
     :rtype: :class:`sp.sparray|nx.Graph|pd.DataFrame`
     """

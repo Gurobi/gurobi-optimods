@@ -9,6 +9,8 @@ from gurobipy import GRB
 import gurobipy_pandas as gppd
 import pandas as pd
 
+from gurobi_optimods.utils import optimod
+
 
 @dataclass
 class DietResult:
@@ -16,7 +18,8 @@ class DietResult:
     total_cost: float
 
 
-def solve_diet_problem(categories, foods, values):
+@optimod()
+def solve_diet_problem(categories, foods, values, *, create_env):
     """
     Choose quantities of foods to eat in order to meet the required
     nutrient amounts in each category, for minimum total cost.
@@ -28,7 +31,7 @@ def solve_diet_problem(categories, foods, values):
     :param values: Dataframe with columns (food, category, value)
     :type values: pd.DataFrame
     """
-    with gp.Env() as env, gp.Model(env=env) as model:
+    with create_env() as env, gp.Model(env=env) as model:
         # Build the model
         quantity = gppd.add_vars(
             model, foods.set_index("food"), obj="cost", name="quantity"

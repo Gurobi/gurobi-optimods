@@ -48,10 +48,6 @@ def solve_qubo(coeff_matrix, time_limit=GRB.INFINITY, *, create_env) -> QuboResu
     :type coeffMatrix: :class:`numpy.ndarray` or :class:`scipy.sparse`
     :param timeLimit: Time limit in seconds
     :type timeLimit: :class:`int`
-    :param output: Enable progress output
-    :type output: :class:`bool`
-    :param logFile: Filename for Gurobi log output
-    :type logFile: :class:`string`
     :return: 0/1 solution array, objective value
     :rtype: :class:`QuboResult`
     """

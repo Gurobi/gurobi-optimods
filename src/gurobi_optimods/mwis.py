@@ -3,8 +3,11 @@ import numpy as np
 import gurobipy as gp
 from gurobipy import GRB
 
+from gurobi_optimods.utils import optimod
 
-def maximum_weighted_independent_set(adjacency_matrix, weights):
+
+@optimod()
+def maximum_weighted_independent_set(adjacency_matrix, weights, *, create_env):
     """Find a set of mutually non-adjacent vertices with maximum weighted sum.
 
     :param adjacency_matrix: The upper triangular adjacency matrix.
@@ -14,7 +17,7 @@ def maximum_weighted_independent_set(adjacency_matrix, weights):
     :return: The maximum weighted independent set array.
     :rtype: :class:`np.array`
     """
-    with gp.Env() as env, gp.Model("mwis", env=env) as model:
+    with create_env() as env, gp.Model("mwis", env=env) as model:
         # x_i: 1 if vertex i is in the independent set and 0 otherwise
         x = model.addMVar(len(weights), vtype=GRB.BINARY, name="x")
         # Maximize the sum of the vertex weights in the independent set
