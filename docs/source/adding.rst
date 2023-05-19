@@ -117,18 +117,6 @@ A reference to your page must also be added to ``docs/source/gallery.rst`` to
 include it in the gallery page and toctree when the documentation is built. You
 should also add an icon to the gallery card for your mod.
 
-We use
-[sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/index.html)
-for referencing. To add references in your mod documentation:
-
-- Add a ``<mod>.bib`` file under ``docs/source/refs``
-- Add your new ``<mod>.bib`` file to the ``bibtex_bibfiles`` list in
-  ``docs/source/conf.py``
-- Use ``:footcite:t:`` or ``:footcite:p:`` as needed to cite references within
-  your documentation
-- Add the ``.. footbibliography::`` directive at the bottom of your
-  documentation page to show references as footnotes
-
 Including datasets
 ------------------
 

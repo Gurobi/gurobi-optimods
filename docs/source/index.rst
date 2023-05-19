@@ -40,5 +40,6 @@ information on how to get involved in the project.
 
    api
    contributing
+   dev-reference
    license
    contact
