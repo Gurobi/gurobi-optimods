@@ -52,14 +52,3 @@ For questions related to using gurobi-optimods please use the [Gurobi Community 
 For reporting bugs, issues and feature requests, specific to `gurobi-optimods`, please [open an issue](https://github.com/Gurobi/gurobi-optimods/issues).
 
 If you encounter issues with Gurobi or `gurobipy` please contact [Gurobi Support](https://support.gurobi.com/hc/en-us).
-
-## Contributors
-
-- Simon Bowly (maintainer)
-- Robert Luce (maintainer)
-- Maliheh Aramon
-- Dan Bienstock
-- Silke Horn
-- Jarek Najman
-- Mario Ruthmair
-- David Torres
