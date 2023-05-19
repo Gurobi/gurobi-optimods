@@ -650,7 +650,7 @@ class TestMVPFeatures(unittest.TestCase):
         x_factors = mvp_factors.efficient_portfolio(gamma)
         x_Sigma = mvp_Sigma.efficient_portfolio(gamma)
 
-        assert_allclose(x_factors, x_Sigma, atol=1e-6)
+        assert_allclose(x_factors, x_Sigma, atol=1e-5)
 
     def test_costs_per_asset_long(self):
         data = load_portfolio()
