@@ -245,7 +245,6 @@ class TestBipartiteMatchingNetworkx(unittest.TestCase):
         self.assertEqual(matching.number_of_nodes(), graph.number_of_nodes())
         self.assert_is_unweighted_matching(matching)
 
-    @unittest.expectedFailure
     def test_random_directed(self):
         # Property test: check that a random graph returns a matching
         graph = nx.bipartite.random_graph(n=5, m=7, p=0.5, seed=293847, directed=True)

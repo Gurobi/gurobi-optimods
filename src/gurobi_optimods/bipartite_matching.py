@@ -151,6 +151,9 @@ def _maximum_bipartite_matching_networkx(graph, nodes1, nodes2, create_env):
     nodes1 = set(nodes1)
     nodes2 = set(nodes2)
 
+    # Treat all matching problems as undirected
+    graph = graph.to_undirected()
+
     with create_env() as env, gp.Model(env=env) as model:
         # Add variables for each layer of edges in the max flow graph
         source_layer = {i: model.addVar(name=f"flow[source,{i}]", ub=1) for i in nodes1}
