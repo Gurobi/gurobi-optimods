@@ -378,7 +378,6 @@ class TestOpfGraphics(unittest.TestCase):
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
 
-        self.plot_graphics = True
         if self.plot_graphics:
             # get path to csv file holding the coordinates for NY
             coordsfile = load_filepath("nybuses.csv")

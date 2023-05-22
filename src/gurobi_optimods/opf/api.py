@@ -144,6 +144,14 @@ def compute_violations_from_given_voltages(case, voltages, polar=False):
     """
     Constructs an OPF model from given case data and computes a solution
     out of given voltage values.
+
+    TODO-Dan Please review description
+
+    If a voltage solution is present, e.g., from an external computation,
+    this function can be used to check whether the given voltage solution is indeed
+    feasible for the AC optimization model. Usually, if the violations are not too
+    big, one can use the voltage solution for further calculations.
+
     Returns a violation dictionary following MATPOWER notation which holds
     all case data and additional violation fields. The additional fields are
 

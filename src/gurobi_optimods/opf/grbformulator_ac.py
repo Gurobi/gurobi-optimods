@@ -1723,7 +1723,6 @@ def lpformulator_checkviol_simple(
     """
     Returns bounds infeasibility if setting grbvariable to some value.
     Inputs maxlbviol, maxubviol, badlb, ubvar are updated if the infeasibility is larger
-    TODO-Dan Wouldn't it be enough to use Gurobi attributes BoundVio?
 
     :param alldata: Main dictionary holding all necessary data
     :type alldata: dict
@@ -1741,9 +1740,9 @@ def lpformulator_checkviol_simple(
     :type badlbvar: :class: `gurobipy.Var`
     :param badubvar: Variable with the biggest upper bound violation
     :type badubvar: :class: `gurobipy.Var`
-    :param max_violation_value: Max overall bound violation # TODO-Dan We can get this via model.BoundVio, see https://www.gurobi.com/documentation/current/refman/attributes.html
+    :param max_violation_value: Max overall bound violation
     :type max_violation_value: float
-    :param max_violation_string: Name of variable with largest overall bound violation # TODO-Dan We can get this via model.BoundVioIndex, see https://www.gurobi.com/documentation/current/refman/attributes.html
+    :param max_violation_string: Name of variable with largest overall bound violation
     :type max_violation_string: str
     """
 

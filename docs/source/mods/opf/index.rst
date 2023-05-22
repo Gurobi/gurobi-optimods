@@ -81,29 +81,30 @@ Basic use examples
 
         Here we show how to read in a 'case' based on the NY State network.
 
-        .. doctest:: mod
+        .. doctest:: opf
             :options: +NORMALIZE_WHITESPACE
 
-	       >>> import gurobipy as gp
-	       >>> from gurobi_optimods.opf import read_case_from_mat_file
-	       # This is a basic module used to read a casefile
-	       >>> casefile = 'caseNY.mat' #make sure you have the right path
-	       >>> case = read_case_from_mat_file(casefile)  #creates main dictionary
+            >>> import gurobipy as gp
+            >>> from gurobi_optimods.opf import read_case_from_mat_file
+            >>> from gurobi_optimods.datasets import load_caseNYopf
+            >>> casefile = load_caseNYopf() # make sure you have the right path
+            >>> case = read_case_from_mat_file(casefile)  # create main dictionary
+            Reading case file ...
+              Slack bus: 3502
+              Bus 11 ID 3502 is the reference bus.
+            Reading and building time: ...
+            <BLANKLINE>
 
-	       #example of a bus:
-	       >>> buses = case['bus']
-	       >>> buses[101]
-	       {'bus_i': 3600, 'type': 2, 'Pd': 2.14, 'Qd': 1.16, 'Gs': 0.0, 'Bs': 0.0, 'area': 24.0, 'Vm': 1.0163928, 'Va': -91.575965, 'baseKV': 138.0, 'zone': 1.0, 'Vmax': 1.1, 'Vmin': 0.9}
+            >>> buses = case['bus']
+            >>> buses[101]
+            {'bus_i': 3600, 'type': 2, 'Pd': 2.14, 'Qd': 1.16, 'Gs': 0.0, 'Bs': 0.0, 'area': 24.0, 'Vm': 1.0163928, 'Va': -91.575965, 'baseKV': 138.0, 'zone': 1.0, 'Vmax': 1.1, 'Vmin': 0.9}
 
+            >>> branches = case['branch']
+            >>> branches[10]
+            {'fbus': 3362.0, 'tbus': 3542.0, 'r': 0.000676, 'x': 0.012043, 'b': 0.12494, 'rateA': 1046.0, 'rateB': 1098.3, 'rateC': 1150.6, 'ratio': 1.0, 'angle': 0.0, 'status': 1.0, 'angmin': 0.0, 'angmax': 0.0}
 
-	       #example of a branch:
-	       >>> branches = case['branch']
-	       >>> branches[10]
-	       {'fbus': 3362.0, 'tbus': 3542.0, 'r': 0.000676, 'x': 0.012043, 'b': 0.12494, 'rateA': 1046.0, 'rateB': 1098.3, 'rateC': 1150.6, 'ratio': 1.0, 'angle': 0.0, 'status': 1.0, 'angmin': 0.0, 'angmax': 0.0}
-
-	       #example of a generator
-	       >>> generators = case['gen']
-	       >>> gens[5]
-	       {'bus': 3505, 'Pg': 487.92, 'Qg': 0.0, 'Qmax': 0.0, 'Qmin': 0.0, 'Vg': 1.02, 'mBase': 100.0, 'status': 1, 'Pmax': 883.0, 'Pmin': 1.0, 'Pc1': 0.0, 'Pc2': 0.0, 'Qc1min': 0.0, 'Qc1max': 0.0, 'Qc2min': 0.0, 'Qc2max': 0.0, 'ramp_agc': 0.0, 'ramp_10': 0.0, 'ramp_30': 0.0, 'ramp_q': 0.0, 'apf': 883.0}
+            >>> generators = case['gen']
+            >>> generators[5]
+            {'bus': 3505, 'Pg': 487.92, 'Qg': 0.0, 'Qmax': 0.0, 'Qmin': 0.0, 'Vg': 1.02, 'mBase': 100.0, 'status': 1, 'Pmax': 883.0, 'Pmin': 1.0, 'Pc1': 0.0, 'Pc2': 0.0, 'Qc1min': 0.0, 'Qc1max': 0.0, 'Qc2min': 0.0, 'Qc2max': 0.0, 'ramp_agc': 0.0, 'ramp_10': 0.0, 'ramp_30': 0.0, 'ramp_q': 0.0, 'apf': 883.0}
 
 .. footbibliography::

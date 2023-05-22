@@ -89,7 +89,7 @@ class Plotlyhandler:
 
     def generate_edge_traces(self):
         """
-        TODO-Dan add description
+        TODO-Dan Please add description
 
         :return: TODO-Dan What does it return?
         :rtype: TODO-Dan What is the return type?
@@ -288,11 +288,6 @@ class Plotlyhandler:
         )
 
         layout_params.update(params)
-
-        if False:  # TODO-Dan Can this be deleted?
-            logger = logging.getLogger("OpfLogger")
-            logger.info([self.vertex_size[v] for v in self.gG.vertices.values()])
-            logger.info([self.vertex_color[v] for v in self.gG.vertices.values()])
 
         # create figure and add traces
         fig = go.Figure(layout=go.Layout(**layout_params))

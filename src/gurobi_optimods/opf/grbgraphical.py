@@ -50,8 +50,11 @@ def generate_solution_figure(alldata, solution):
 
     textlist = []
     textlist.append(f"OBJ: {solution['f']:10.2f}")
-    if "branchswitching_mip" in alldata.keys() and alldata["branchswitching_mip"]:
+    if numzeros > 0:
         textlist.append(f"Lines off: {numzeros}")
+    else:
+        textlist.append(f"No lines turned off")
+
     return grbgraphical(alldata, "branchswitching", textlist)
 
 
@@ -145,7 +148,7 @@ def grbgraphical(alldata, plottype, textlist):
     graph_dict["N"] = numbuses
     graph_dict["M"] = numbranches
     counter = 0
-    for branch in alldata["branches"].values():
+    for branch in branches.values():
         graph_dict[counter] = (branch.count_f, branch.count_t)
         counter += 1
 
@@ -194,7 +197,8 @@ def grbgraphical(alldata, plottype, textlist):
                 mynode_color[j - 1] = "red"
 
         for j in range(1, numbranches + 1):
-            branch = alldata["branches"][j]
+            branch = branches[j]
+            edge_text[j] = ""
             if abs(branchlimitviol[branch]) > 1e-3:
                 myedge_width[j] = 5
                 myedge_color[j] = "red"

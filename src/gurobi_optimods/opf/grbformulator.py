@@ -202,9 +202,6 @@ def lpformulator_optimize(alldata, model, opftype):
         for j in range(1, 1 + numbranches):
             branch = branches[j]
             zvar[branch].Start = 1.0
-            # Jarek, there is some strange behavior here
-            # print(zvar[branch], ' ',zvar[branch].Start)
-            # TODO-Dan What strange behavior?
 
         # writemipstart(alldata) # For debugging
 
