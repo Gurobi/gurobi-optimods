@@ -232,7 +232,8 @@ constraints`_ for an example.
 
 Rather than computing the covariance matrix explcitly from the decomposition,
 it is adivised to input the individual factor matrices directly through the
-``cov_factors`` keyword argurment as in the following example:
+``cov_factors`` keyword argurment as in the following example, which mimicks a
+single-factor model:
 
 .. testcode:: mod
 
