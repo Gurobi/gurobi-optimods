@@ -8,8 +8,9 @@ import logging
 import gurobipy as gp
 import numpy as np
 import pandas as pd
-import scipy.sparse as sp
 from gurobipy import GRB
+import scipy.sparse as sp
+import gurobipy_pandas as gppd  # noqa: F401
 
 try:
     import networkx as nx
@@ -51,33 +52,33 @@ def min_cost_flow(arc_data: pd.DataFrame, demand_data: pd.DataFrame, *, create_e
     :return: DataFrame with the flow for each edge.
     :rtype: :class:`pd.Series`
     """
-    # Perform conversion from pd to ndarray
-    # Arcs and attributes
-    arcs = arc_data.index.to_numpy()
-    from_arc = np.array([a[0] for a in arcs], dtype="object")
-    to_arc = np.array([a[1] for a in arcs], dtype="object")
-    capacity = arc_data["capacity"].to_numpy()
-    cost = arc_data["cost"].to_numpy()
+    with create_env() as env, gp.Model(env=env) as model:
+        model.ModelSense = GRB.MINIMIZE
 
-    # Nodes and attributes
-    rep_nodes = np.concatenate((from_arc, to_arc), dtype="object")
-    # Get unique node labels in the order they appear in rep_nodes
-    _, idx = np.unique(rep_nodes, return_index=True)
-    nodes = rep_nodes[np.sort(idx)]
+        arc_df = arc_data.gppd.add_vars(model, ub="capacity", obj="cost", name="flow")
 
-    demand_nodes = demand_data.index.to_numpy()
-    _demands = demand_data["demand"].to_numpy()
-    demands = np.zeros(nodes.shape, dtype=object)
-    # Assign demand in the same order as the nodes array
-    demand_nodes_indices = np.where(np.isin(nodes, demand_nodes, assume_unique=True))[0]
-    for i, n in enumerate(demand_nodes_indices):
-        demands[n] = _demands[i]
+        source_label, target_label = arc_data.index.names
+        balance_df = (
+            pd.DataFrame(
+                {
+                    "inflow": arc_df["flow"].groupby(target_label).sum(),
+                    "outflow": arc_df["flow"].groupby(source_label).sum(),
+                    "demand": demand_data["demand"],
+                }
+            )
+            .fillna(0)  # zero fill (some nodes have no in, out, or demand)
+            .gppd.add_constrs(model, "inflow - outflow == demand", name="balance")
+        )
+        logger.info(
+            f"Solving min-cost flow with {len(balance_df)} nodes and "
+            f"{len(arc_data)} edges"
+        )
+        model.optimize()
 
-    # Call solve_min_cost_flow using some data
-    with create_env() as env:
-        obj, flows = solve_min_cost_flow(env, from_arc, to_arc, capacity, cost, demands)
+        if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
+            raise ValueError("Unsatisfiable flows")
 
-    return obj, pd.Series(flows, index=arc_data.index)
+        return model.ObjVal, arc_df["flow"].gppd.X
 
 
 @optimod()
@@ -106,8 +107,8 @@ def min_cost_flow_scipy(
     """
     G = G.tocoo()
 
-    from_arc = G.row
-    to_arc = G.col
+    edge_source = G.row
+    edge_target = G.col
 
     capacities = capacities.tocoo()
     capacities = capacities.data
@@ -115,16 +116,30 @@ def min_cost_flow_scipy(
     costs = costs.tocoo()
     costs = costs.data
 
-    with create_env() as env:
-        cost, flows = solve_min_cost_flow(
-            env, from_arc, to_arc, capacities, costs, demands
-        )
-    # Filter + create scipy output matrix
-    select = flows > 0.5
-    from_arc_result = from_arc[select]
-    to_arc_result = to_arc[select]
-    arg = (flows[select], (from_arc_result, to_arc_result))
-    return cost, sp.coo_matrix(arg, dtype=float, shape=G.shape)
+    # Create incidence matrix from edge lists.
+    indices = np.column_stack((edge_source, edge_target)).reshape(-1, order="C")
+    indptr = np.arange(0, 2 * edge_source.shape[0] + 2, 2)
+    ones = np.ones(edge_source.shape)
+    data = np.column_stack((ones * -1.0, ones)).reshape(-1, order="C")
+
+    A = sp.csc_array((data, indices, indptr))
+
+    logger.info("Solving min-cost flow with {0} nodes and {1} edges".format(*A.shape))
+
+    # Solve model with gurobi, return cost and flows
+    with create_env() as env, gp.Model(env=env) as model:
+        x = model.addMVar(A.shape[1], lb=0, obj=costs, name="x")
+        model.addConstr(x <= capacities, name="capacity")
+        model.addMConstr(A, x, GRB.EQUAL, demands, name="flow")
+        model.optimize()
+        if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
+            raise ValueError("Unsatisfiable flows")
+        # Filter + create scipy output matrix
+        select = x.X > 0.5
+        edge_source_result = edge_source[select]
+        edge_target_result = edge_target[select]
+        arg = (x.X[select], (edge_source_result, edge_target_result))
+        return model.ObjVal, sp.coo_matrix(arg, dtype=float, shape=G.shape)
 
 
 @optimod()
@@ -141,84 +156,45 @@ def min_cost_flow_networkx(G, *, create_env):
     :return: Dictionary indexed by edges with non-zero flow in the solution.
     :rtype: :class:`dict`
     """
-    # Perform conversion from nx to ndarray
-    edges = list(G.edges(data=True))  # ensure ordering
+    logger.info(
+        f"Solving min-cost flow with {len(G.nodes)} nodes and {len(G.edges)} edges"
+    )
 
-    from_arc = np.array([e[0] for e in edges])
-    to_arc = np.array([e[1] for e in edges])
-    capacity = np.array([e[2]["capacity"] for e in edges])
-    cost = np.array([e[2]["cost"] for e in edges])
+    with create_env() as env, gp.Model(env=env) as model:
+        edges, capacities, costs = gp.multidict(
+            {(i, j): [d["capacity"], d["cost"]] for i, j, d in G.edges(data=True)}
+        )
+        nodes = list(G.nodes(data=True))
+        x = {
+            (i, j): model.addVar(
+                name=f"flow[{i},{j}]",
+                ub=capacities[i, j],
+                obj=costs[i, j],
+            )
+            for i, j in edges
+        }
 
-    nodes = list(G.nodes(data=True))  # ensure ordering
-    demands = np.zeros(len(nodes))
-    for i, v in enumerate(nodes):
-        n, d = v  # unpack tuple
-        if d:
-            demands[i] = d["demand"]
+        flow_constrs = {}
+        for n, data in nodes:
+            flow_constrs[n] = model.addConstr(
+                (
+                    gp.quicksum(x[j, n] for j in G.predecessors(n))
+                    - gp.quicksum(x[n, j] for j in G.successors(n))
+                    == data["demand"]
+                ),
+                name=f"flow_balance[{n}]",
+            )
 
-    with create_env() as env:
-        obj, flows = solve_min_cost_flow(env, from_arc, to_arc, capacity, cost, demands)
+        model.optimize()
 
-    # Convert numpy sol back to networkx
-    select = flows > 0.5
-    from_arc_result = from_arc[select]
-    to_arc_result = to_arc[select]
-    return obj, {
-        (f, t): v for f, t, v in zip(from_arc_result, to_arc_result, flows[select])
-    }
-
-
-def solve_min_cost_flow(
-    env: gp.Env,
-    edge_source: np.ndarray,
-    edge_target: np.ndarray,
-    capacity: np.ndarray,
-    cost: np.ndarray,
-    demand: np.ndarray,
-):
-    """Solve a min-cost flow model for the given network.
-
-    Formulated as min-cost flow (A, b, c, u) using the matrix-friendly API, where
-    A = incidence matrix, b = demand, c = cost, u = capacity::
-
-        min   c^T x
-        s.t.  A x = b
-              0 <= x <= u
-
-    :param env: Gurobi environment to use for model
-    :type env: :class:`gurobipy.Env`
-    :param edge_source: Index array; ``edge_source[i]`` is the source node
-        :math:`j` of edge :math:`i`
-    :type edge_source: :class:`numpy.ndarray`
-    :param edge_target: Index array; ``edge_target[i]`` is the source node
-        :math:`j` of edge :math:`i`
-    :type edge_target: :class:`numpy.ndarray`
-    :param capacity: Capacity array; ``capacity[i]`` is the capacity of
-        edge :math:`i`
-    :type capacity: :class:`numpy.ndarray`
-    :param cost: Cost array; ``cost[i]`` is the cost of edge :math:`i` (to
-        be minimized)
-    :type cost: :class:`numpy.ndarray`
-    :param demand: Demand array; ``demand[j]`` is the net demand of node
-        :math:`j`
-    :type demand: :class:`numpy.ndarray`
-    """
-
-    # Create incidence matrix from edge lists.
-    indices = np.column_stack((edge_source, edge_target)).reshape(-1, order="C")
-    indptr = np.arange(0, 2 * edge_source.shape[0] + 2, 2)
-    ones = np.ones(edge_source.shape)
-    data = np.column_stack((ones * -1.0, ones)).reshape(-1, order="C")
-    A = sp.csc_array((data, indices, indptr))
-
-    logger.info("Solving min-cost flow with {0} nodes and {1} edges".format(*A.shape))
-
-    # Solve model with gurobi, return cost and flows
-    with gp.Model(env=env) as m:
-        m.ModelSense = GRB.MINIMIZE
-        x = m.addMVar(A.shape[1], lb=0, ub=capacity, obj=cost, name="x")
-        m.addMConstr(A, x, GRB.EQUAL, demand)
-        m.optimize()
-        if m.Status == GRB.INFEASIBLE:
+        if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
-        return m.ObjVal, x.X
+
+        # Create a new Graph with selected edges in the matching
+        resulting_flow = nx.DiGraph()
+        resulting_flow.add_nodes_from(nodes)
+        resulting_flow.add_edges_from(
+            [(edge[0], edge[1], {"flow": v.X}) for edge, v in x.items() if v.X > 0.1]
+        )
+
+        return model.ObjVal, resulting_flow

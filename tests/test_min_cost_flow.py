@@ -1,19 +1,22 @@
 import unittest
 
-import gurobipy as gp
 import numpy as np
-from gurobipy import GRB
+import pandas as pd
+import scipy.sparse as sp
 
 try:
     import networkx as nx
 except ImportError:
     nx = None
 
-from numpy.testing import assert_array_equal, assert_allclose
-
 import gurobi_optimods.datasets as datasets
 import gurobi_optimods.min_cost_flow as mcf
-from gurobi_optimods.min_cost_flow import solve_min_cost_flow
+
+from .test_graph_utils import (
+    check_solution_pandas,
+    check_solution_scipy,
+    check_solution_networkx,
+)
 
 
 class TestMinCostFlow(unittest.TestCase):
@@ -22,8 +25,9 @@ class TestMinCostFlow(unittest.TestCase):
         cost, sol = mcf.min_cost_flow(edge_data, node_data)
         sol = sol[sol > 0]
         self.assertEqual(cost, 31)
-        self.assertEqual(sol.tolist(), [1.0, 1.0, 1.0, 2.0, 2.0])
-        self.assertEqual(sol.index.tolist(), [(0, 1), (0, 2), (1, 3), (2, 4), (4, 5)])
+        candidate = {(0, 1): 1.0, (0, 2): 1.0, (1, 3): 1.0, (2, 4): 2.0, (4, 5): 2.0}
+        self.assertIsInstance(sol, pd.Series)
+        self.assertTrue(check_solution_pandas(sol, [candidate]))
 
     def test_infeasible(self):
         edge_data, node_data = datasets.load_graph()
@@ -36,7 +40,7 @@ class TestMinCostFlow(unittest.TestCase):
         G, cap, cost, demands = datasets.load_graph_scipy()
         cost, sol = mcf.min_cost_flow_scipy(G, cap, cost, demands)
         self.assertEqual(cost, 31)
-        expected = np.array(
+        candidate = np.array(
             [
                 [0.0, 1.0, 1.0, 0.0, 0.0, 0.0],
                 [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
@@ -45,16 +49,39 @@ class TestMinCostFlow(unittest.TestCase):
                 [0.0, 0.0, 0.0, 0.0, 0.0, 2.0],
             ]
         )
-        assert_array_equal(sol.toarray(), expected)
+        self.assertIsInstance(sol, sp.spmatrix)
+        self.assertTrue(check_solution_scipy(sol, [candidate]))
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
         G = datasets.load_graph_networkx()
         cost, sol = mcf.min_cost_flow_networkx(G)
         self.assertEqual(cost, 31)
-        self.assertEqual(
-            sol, {(0, 1): 1.0, (0, 2): 1.0, (1, 3): 1.0, (2, 4): 2.0, (4, 5): 2.0}
-        )
+        expected = {
+            (0, 1): {"flow": 1.0},
+            (0, 2): {"flow": 1.0},
+            (1, 3): {"flow": 1.0},
+            (2, 4): {"flow": 2.0},
+            (4, 5): {"flow": 2.0},
+        }
+        self.assertIsInstance(sol, nx.Graph)
+        self.assertTrue(check_solution_networkx(sol, [expected]))
+
+    @unittest.skipIf(nx is None, "networkx is not installed")
+    def test_networkx_renamed(self):
+        G = datasets.load_graph_networkx()
+        G = nx.relabel_nodes(G, {0: "s", 5: "t"})
+        cost, sol = mcf.min_cost_flow_networkx(G)
+        self.assertEqual(cost, 31)
+        expected = {
+            ("s", 1): {"flow": 1.0},
+            ("s", 2): {"flow": 1.0},
+            (1, 3): {"flow": 1.0},
+            (2, 4): {"flow": 2.0},
+            (4, "t"): {"flow": 2.0},
+        }
+        self.assertIsInstance(sol, nx.Graph)
+        self.assertTrue(check_solution_networkx(sol, [expected]))
 
 
 class TestMinCostFlow2(unittest.TestCase):
@@ -63,11 +90,25 @@ class TestMinCostFlow2(unittest.TestCase):
         cost, sol = mcf.min_cost_flow(edge_data, node_data)
         sol = sol[sol > 0]
         self.assertEqual(cost, 150)
-        self.assertEqual(sol.tolist(), [12.0, 8.0, 4.0, 8.0, 11.0, 5.0, 10.0])
-        self.assertEqual(
-            sol.index.tolist(),
-            [(0, 1), (0, 2), (1, 3), (1, 2), (2, 3), (2, 4), (3, 4)],
-        )
+        candidate = {
+            (0, 1): 12.0,
+            (0, 2): 8.0,
+            (1, 3): 4.0,
+            (1, 2): 8.0,
+            (2, 3): 15.0,
+            (2, 4): 1.0,
+            (3, 4): 14.0,
+        }
+        candidate2 = {
+            (0, 1): 12.0,
+            (0, 2): 8.0,
+            (1, 3): 4.0,
+            (1, 2): 8.0,
+            (2, 3): 11.0,
+            (2, 4): 5.0,
+            (3, 4): 10.0,
+        }
+        self.assertTrue(check_solution_pandas(sol, [candidate, candidate2]))
 
     def test_scipy(self):
         G, cap, cost, demands = datasets.load_graph2_scipy()
@@ -79,77 +120,57 @@ class TestMinCostFlow2(unittest.TestCase):
                 [0.0, 0.0, 8.0, 4.0, 0.0],
                 [0.0, 0.0, 0.0, 11.0, 5.0],
                 [0.0, 0.0, 0.0, 0.0, 10.0],
-                [0.0, 0.0, 0.0, 0.0, 0.0],
             ]
         )
-        assert_array_equal(sol.toarray(), expected)
+        self.assertTrue(check_solution_scipy(sol, [expected]))
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
         G = datasets.load_graph2_networkx()
         cost, sol = mcf.min_cost_flow_networkx(G)
         self.assertEqual(cost, 150)
-        self.assertEqual(
-            sol,
-            {
-                (0, 1): 12.0,
-                (0, 2): 8.0,
-                (1, 3): 4.0,
-                (1, 2): 8.0,
-                (2, 3): 11.0,
-                (2, 4): 5.0,
-                (3, 4): 10.0,
-            },
-        )
+        candidate = {
+            (0, 1): {"flow": 12.0},
+            (0, 2): {"flow": 8.0},
+            (1, 2): {"flow": 8.0},
+            (1, 3): {"flow": 4.0},
+            (2, 3): {"flow": 11.0},
+            (2, 4): {"flow": 5.0},
+            (3, 4): {"flow": 10.0},
+        }
+        candidate2 = {
+            (0, 1): {"flow": 12.0},
+            (0, 2): {"flow": 8.0},
+            (1, 3): {"flow": 4.0},
+            (1, 2): {"flow": 8.0},
+            (2, 3): {"flow": 15.0},
+            (2, 4): {"flow": 1.0},
+            (3, 4): {"flow": 14.0},
+        }
+        self.assertTrue(check_solution_networkx(sol, [candidate, candidate2]))
 
-
-class TestSolveMinCostFlowUtil(unittest.TestCase):
-    # FIXME repurpose these to target the mod
-
-    def setUp(self):
-        self.env = gp.Env()
-
-    def tearDown(self):
-        self.env.close()
-
-    def test_max_flow(self):
-        # Max flow network from a small bipartite matching model, augmented
-        # with a sink->source edge to create a min-cost flow
-        cost, flows = solve_min_cost_flow(
-            env=self.env,
-            edge_source=np.array([5, 5, 0, 1, 1, 2, 3, 4, 6]),
-            edge_target=np.array([0, 1, 4, 2, 4, 6, 6, 6, 5]),
-            capacity=np.array([1.0] * 8 + [GRB.INFINITY]),
-            cost=np.array([0.0] * 8 + [-1.0]),
-            demand=np.zeros(7),
-        )
-        # Max flow is 2. Any optimal solution has 2 units along the sink->source
-        # arc and 2 units in each of the 3 network layers.
-        self.assertEqual(cost, -2.0)
-        self.assertEqual(flows[-1], 2.0)
-        self.assertEqual(flows.sum(), 8.0)
-
-    def test_linear(self):
-        # Silly example to get the demand direction right
-        cost, flows = solve_min_cost_flow(
-            env=self.env,
-            edge_source=np.array([0, 1, 2, 3]),
-            edge_target=np.array([1, 2, 3, 4]),
-            capacity=np.ones(4),
-            cost=np.ones(4),
-            demand=np.array([-1.0, 0.0, 0.0, 0.0, 1.0]),
-        )
-        self.assertEqual(cost, 4.0)
-        assert_allclose(flows, np.ones(4))
-
-    def test_infeasible(self):
-        # A very silly example
-        with self.assertRaisesRegex(ValueError, "Unsatisfiable flows"):
-            solve_min_cost_flow(
-                env=self.env,
-                edge_source=np.array([0]),
-                edge_target=np.array([1]),
-                capacity=np.array([1.0]),
-                cost=np.array([1.0]),
-                demand=np.array([-1.0, 2.0]),
-            )
+    @unittest.skipIf(nx is None, "networkx is not installed")
+    def test_networkx_renamed(self):
+        G = datasets.load_graph2_networkx()
+        G = nx.relabel_nodes(G, {0: "s", 4: "t"})
+        cost, sol = mcf.min_cost_flow_networkx(G)
+        self.assertEqual(cost, 150)
+        candidate = {
+            ("s", 1): {"flow": 12.0},
+            ("s", 2): {"flow": 8.0},
+            (1, 2): {"flow": 8.0},
+            (1, 3): {"flow": 4.0},
+            (2, 3): {"flow": 11.0},
+            (2, "t"): {"flow": 5.0},
+            (3, "t"): {"flow": 10.0},
+        }
+        candidate2 = {
+            ("s", 1): {"flow": 12.0},
+            ("s", 2): {"flow": 8.0},
+            (1, 3): {"flow": 4.0},
+            (1, 2): {"flow": 8.0},
+            (2, 3): {"flow": 15.0},
+            (2, "t"): {"flow": 1.0},
+            (3, "t"): {"flow": 14.0},
+        }
+        self.assertTrue(check_solution_networkx(sol, [candidate, candidate2]))

@@ -153,12 +153,6 @@ An example of these inputs with their respective requirements is shown below.
       Edges have attributes ``capacity`` and ``cost`` and nodes have
       attributes ``demand``.
 
-      We assume that nodes labels are integers from :math:`0,\dots,|V|-1`.
-      NetworkX has a handy function for this
-      `nx.convert_node_labels_to_integers`_.
-
-      .. _nx.convert_node_labels_to_integers: https://networkx.org/documentation/stable/reference/generated/networkx.relabel.convert_node_labels_to_integers.html
-
   .. group-tab:: scipy.sparse
 
       .. doctest:: load_graph_scipy
@@ -229,7 +223,7 @@ formats.
                   4         2.0
           3       5         0.0
           4       5         2.0
-          dtype: float64
+          Name: flow, dtype: float64
 
       The ``min_cost_flow`` function returns the cost of the solution as well
       as ``pd.Series`` with the flow per edge. Similarly as the input
@@ -247,8 +241,8 @@ formats.
           >>> obj, sol = min_cost_flow_networkx(G, silent=True)
           >>> obj
           31.0
-          >>> sol
-          {(0, 1): 1.0, (0, 2): 1.0, (1, 3): 1.0, (2, 4): 2.0, (4, 5): 2.0}
+          >>> list(sol.edges(data=True))
+          [(0, 1, {'flow': 1.0}), (0, 2, {'flow': 1.0}), (1, 3, {'flow': 1.0}), (2, 4, {'flow': 2.0}), (4, 5, {'flow': 2.0})]
 
       The ``min_cost_flow_networkx`` function returns the cost of the solution
       as well as a dictionary indexed by edge with the non-zero flow.
