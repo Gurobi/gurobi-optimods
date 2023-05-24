@@ -8,7 +8,7 @@ from gurobi_optimods.utils import optimod
 
 
 @optimod()
-def max_sharpe_ratio(Q, mu, rf_rate, *, create_env):
+def max_sharpe_ratio(Q, mu, rf_rate=0, *, create_env):
     """
     Solve the problem of finding a portfolio that maximizes the
     Sharpe ratio.
@@ -17,7 +17,7 @@ def max_sharpe_ratio(Q, mu, rf_rate, *, create_env):
     :type Q: :class:`np.ndarray|pd.DataFrame`
     :param mu: Return rates.
     :type mu: :class:`np.ndarray|pd.Series`
-    :param rf_rate: Risk-free rate of return.
+    :param rf_rate: Risk-free rate of return (optional, defaults to ``0``).
     :type rf_rate: float
     :return: Portfolio that maximizes the Sharpe ratio.
     :rtype: :class:`np.ndarray|pd.Series`
@@ -46,6 +46,13 @@ def max_sharpe_ratio(Q, mu, rf_rate, *, create_env):
         mu = mu.to_numpy()
     elif not isinstance(mu, np.ndarray):
         raise ValueError(f"Unknown return rates type: {type(mu)}")
+
+    if not isinstance(rf_rate, float) and not isinstance(rf_rate, int):
+        raise ValueError(f"Unknown risk-free return rate type: {type(rf_rate)}")
+    elif (mu < rf_rate).all():
+        raise ValueError(
+            f"No expected returns are greater than risk-free return rate of {rf_rate}"
+        )
 
     portfolio, ratio = _max_sharpe_ratio_numpy(Q, mu, rf_rate, create_env)
 
