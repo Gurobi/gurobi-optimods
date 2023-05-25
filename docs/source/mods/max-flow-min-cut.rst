@@ -9,10 +9,15 @@ minimises the total capacity of the edges which if removed would disconnect the
 source from the sink.
 
 The first algorithm to solve this problem was proposed
-:footcite:t:`ford1956maximal`, called the Ford-Fulkerson algorithm.  Later on
+:footcite:t:`ford1956maximal`, called the Ford-Fulkerson algorithm.
+Additionally, they also showed the relationship between these problems, that the
+maximum flow value is equal to the capacity of the minimum cut. Later on,
 :footcite:t:`goldberg1988new` proposed the famous push-relabel algorithm, and
 more recently :footcite:t:`orlin2013max` and other authors have proposed
-polynomial-time algorithms for this problem.
+polynomial-time algorithms.
+
+From the mathematical properties of these problems
+:footcite:p:`ford1956maximal`.
 
 Problem Specification
 ---------------------
@@ -28,9 +33,12 @@ We provide the graph theory and mathematical definition of this problem.
         :math:`B_{ij}\in\mathbb{R}`.
 
         Given a source and sink vertices :math:`s\in V` and :math:`t\in V`,
-        respectively, the problem can be stated as finding the flow with maximum
-        value from :math:`s` to :math:`t` such that the flow is capacity
-        feasible.
+        respectively, the problems can be stated as finding:
+
+        - the flow with maximum value from source to sink such that the flow is
+          capacity feasible.
+        - the set of edges which disconnects the source and sink such that the
+          total capacity is minimised.
 
     .. tab:: Optimization Model
 
@@ -39,7 +47,8 @@ We provide the graph theory and mathematical definition of this problem.
         :math:`(i,j)\in E`.
 
 
-        The mathematical formulation can be stated as follows:
+        The mathematical formulation for the maximum flow can be stated as
+        follows:
 
         .. math::
 
@@ -60,10 +69,6 @@ We provide the graph theory and mathematical definition of this problem.
 
         The last constraints ensure non-negativity of the variables and that the
         capacity per edge is not exceeded.
-
-        The mathematical relationship between the maximum-flow and the
-        minimum-cut is as follows: the minimum-cut formulation is the dual of
-        the maximum flow formulation.
 
 |
 
@@ -143,13 +148,13 @@ An example of these inputs with their respective requirements is shown below.
             (3, 5)        1
             (4, 5)        1
           >>> print(capacities)
-            (0, 1)        2
-            (0, 2)        2
-            (1, 3)        1
-            (2, 3)        1
-            (2, 4)        2
-            (3, 5)        2
-            (4, 5)        2
+            (0, 1)    2
+            (0, 2)    2
+            (1, 3)    1
+            (2, 3)    1
+            (2, 4)    2
+            (3, 5)    2
+            (4, 5)    2
 
       Three separate sparse matrices including the adjacency matrix, edge
       capacity and cost, and a single array with the demands per node.
@@ -184,7 +189,7 @@ formats.
                   4         1.0
           3       5         2.0
           4       5         1.0
-          dtype: float64
+          Name: flow, dtype: float64
           >>> from gurobi_optimods.min_cut import min_cut
           >>> obj, partition, cutset = min_cut(edge_data, 0, 5, silent=True)
           >>> obj
@@ -214,8 +219,10 @@ formats.
           >>> obj, sol = max_flow(G, 0, 5, silent=True)
           >>> obj
           3.0
-          >>> sol
-          {(0, 1): 1.0, (0, 2): 2.0, (1, 3): 1.0, (2, 3): 1.0, (2, 4): 1.0, (3, 5): 2.0, (4, 5): 1.0}
+          >>> type(sol)
+          <class 'networkx.classes.digraph.DiGraph'>
+          >>> list(sol.edges(data=True))
+          [(0, 1, {'flow': 1.0}), (0, 2, {'flow': 2.0}), (1, 3, {'flow': 1.0}), (2, 3, {'flow': 1.0}), (2, 4, {'flow': 1.0}), (3, 5, {'flow': 2.0}), (4, 5, {'flow': 1.0})]
           >>> from gurobi_optimods.min_cut import min_cut
           >>> obj, part, cut = min_cut(G, 0, 5, silent=True)
           >>> obj
@@ -245,15 +252,14 @@ formats.
           3.0
           >>> sol
           <5x6 sparse matrix of type '<class 'numpy.float64'>'
-                  with 7 stored elements in COOrdinate format>
+              with 6 stored elements in COOrdinate format>
           >>> print(sol)
-            (0, 1)        1.0
-            (0, 2)        2.0
-            (1, 3)        1.0
-            (2, 3)        1.0
-            (2, 4)        1.0
-            (3, 5)        2.0
-            (4, 5)        1.0
+            (0, 1)    1.0
+            (0, 2)    2.0
+            (1, 3)    1.0
+            (2, 4)    2.0
+            (3, 5)    1.0
+            (4, 5)    2.0
           >>> from gurobi_optimods.min_cut import min_cut
           >>> obj, part, cutset = min_cut(G, 0, 5, silent=True)
           >>> obj
@@ -272,9 +278,9 @@ formats.
 
 The solution for this example is shown in the figure below. The edge labels
 denote the edge capacity and resulting flow: :math:`(B_{ij}, x^*_{ij})`. All
-edges in the maximum flow solution carry some flow. The cutset from the minimum
-solution is shown with the edges in blue, and the nodes in the partitions are
-shown in blue and in green.
+edges in the maximum flow solution carry some flow, totalling at 3.0 at the
+sink. The cutset from the minimum solution is shown with the edges in blue, and
+the nodes in the partitions are shown in blue and in green.
 
 .. image:: figures/max-flow-min-cut.png
   :width: 600
@@ -286,29 +292,27 @@ In all these cases, the model is solved as an LP by Gurobi.
 
     .. code-block:: text
 
-        Solving min-cost flow with 6 nodes and 7 edges
+        Solving min-cut problem with 6 nodes and 7 edges
         Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[arm])
 
         CPU model: Apple M1
         Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
 
-        Optimize a model with 6 rows, 7 columns and 14 nonzeros
-        Model fingerprint: 0xc6fc382e
+        Optimize a model with 14 rows, 8 columns and 24 nonzeros
+        Model fingerprint: 0x5414d3c4
         Coefficient statistics:
           Matrix range     [1e+00, 1e+00]
-          Objective range  [1e+00, 1e+01]
-          Bounds range     [1e+00, 2e+00]
-          RHS range        [1e+00, 2e+00]
-        Presolve removed 4 rows and 4 columns
+          Objective range  [1e+00, 1e+00]
+          Bounds range     [0e+00, 0e+00]
+          RHS range        [1e+00, 4e+00]
+        Presolve removed 14 rows and 8 columns
         Presolve time: 0.00s
-        Presolved: 2 rows, 3 columns, 6 nonzeros
-
+        Presolve: All rows and columns removed
         Iteration    Objective       Primal Inf.    Dual Inf.      Time
-               0    2.7994000e+01   1.002000e+00   0.000000e+00      0s
-               1    3.1000000e+01   0.000000e+00   0.000000e+00      0s
+               0    3.0000000e+00   0.000000e+00   0.000000e+00      0s
 
-        Solved in 1 iterations and 0.00 seconds (0.00 work units)
-        Optimal objective  3.100000000e+01
+        Solved in 0 iterations and 0.00 seconds (0.00 work units)
+        Optimal objective  3.000000000e+00
 
 ----
 
