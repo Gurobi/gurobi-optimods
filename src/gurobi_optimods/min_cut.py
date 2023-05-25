@@ -124,8 +124,8 @@ def _min_cut_pandas(arc_data, source, sink, create_env):
             name="capacity",
         )
         logger.info(
-            f"Solving min-cost flow with {len(balance_df)} nodes and "
-            f"{len(arc_data)} edges"
+            f"Solving min-cut problem with {len(balance_df)} nodes and "
+            f"{len(arc_data)-1} edges"
         )
         model.optimize()
 
@@ -134,27 +134,26 @@ def _min_cut_pandas(arc_data, source, sink, create_env):
 
         # Construct partition and cutset
 
-        flow_pi = balance_df["balance"].gppd.Pi
         cap_pi = capacity_constrs.gppd.Pi
 
-        p1 = set([source])
-        p2 = set([sink])
-        cutset = set()
-        for a in arc_data.index:
-            i, j = a
-            if cap_pi[a] > 1e-3:
-                p1.add(i)
-                p2.add(j)
-                cutset.add((i, j))
+        cutset = set([a for a in arc_data.index if cap_pi[a] > 1e-3])
 
-        for i in balance_df.index:
-            if i in [source, sink]:
-                continue
-            if flow_pi[i] > 1e-3:
-                p1.add(i)
-            elif i not in p1:
-                p2.add(i)
-        # Return cut value, partition, and cutset
+        p1 = set()
+        queue = [source]
+        while len(queue) > 0:
+            node = queue.pop()
+            p1.add(node)
+            # Add successors of `node` that are not in the cutset
+            queue.extend(
+                [
+                    a[1]
+                    for a in arc_data.loc[
+                        ([node], slice(None)),
+                    ].index
+                    if a not in cutset and a[1] not in p1 and a[1] not in queue
+                ]
+            )
+        p2 = set([n for n in balance_df.index if n not in p1])
         return model.ObjVal, (p1, p2), cutset
 
 
@@ -184,7 +183,9 @@ def _min_cut_scipy(G, source, sink, create_env):
 
     A = sp.csc_array((data, indices, indptr))
 
-    logger.info("Solving min-cut problem with {0} nodes and {1} edges".format(*A.shape))
+    logger.info(
+        f"Solving min-cut problem with {A.shape[0]} nodes and " f"{A.shape[1]-1} edges"
+    )
 
     with create_env() as env, gp.Model(env=env) as model:
         # Solve max-flow problem
@@ -200,26 +201,25 @@ def _min_cut_scipy(G, source, sink, create_env):
 
         # Construct partition and cutset
         cap_pi = cap.Pi
-        flow_pi = flow.Pi
 
-        p1 = set([source])
-        p2 = set([sink])
-        cutset = set()
-
-        for n, (i, j) in enumerate(zip(G.row, G.col)):
-            if cap_pi[n] > 1e-3:
-                p1.add(i)
-                p2.add(j)
-                cutset.add((i, j))
-
-        for i in range(G.shape[1]):
-            if i in [source, sink]:
-                continue
-            if flow_pi[i] > 1e-3:
-                p1.add(i)
-            elif i not in p1:
-                p2.add(i)
-        # Return cut value, partition, and cutset
+        p1 = set()
+        cutset = set(
+            [(i, j) for n, (i, j) in enumerate(zip(G.row, G.col)) if cap_pi[n] > 1e-3]
+        )
+        queue = [source]
+        while len(queue) > 0:
+            node = queue.pop()
+            p1.add(node)
+            row = G.getrow(node)
+            # Add successors of `node` that are not in the cutset
+            queue.extend(
+                [
+                    j
+                    for j in row.tocoo().col
+                    if (node, j) not in cutset and j not in p1 and j not in queue
+                ]
+            )
+        p2 = set([n for n in range(G.shape[1]) if n not in p1])
         return model.ObjVal, (p1, p2), cutset
 
 
@@ -269,22 +269,20 @@ def _min_cut_networkx(G, source, sink, create_env):
             raise ValueError("Unsatisfiable flows")
 
         # Construct partition and cutset
-        p1 = set([source])
-        p2 = set([sink])
-        cutset = set()
+        cutset = set([(i, j) for (i, j) in edges if capacity_constrs[i, j].Pi > 1e-3])
 
-        for i, j in edges:
-            if capacity_constrs[i, j].Pi > 1e-3:
-                p1.add(i)
-                p2.add(j)
-                cutset.add((i, j))
-
-        for i, d in nodes:
-            if i in [source, sink]:
-                continue
-            if flow_constrs[i].Pi > 1e-3:
-                p1.add(i)
-            elif i not in p1:
-                p2.add(i)
-        # Return cut value, partition, and cutset
+        p1 = set()
+        queue = [source]
+        while len(queue) > 0:
+            node = queue.pop()
+            p1.add(node)
+            # Add successors of `node` that are not in the cutset
+            queue.extend(
+                [
+                    j
+                    for j in G.successors(node)
+                    if (node, j) not in cutset and j not in p1 and j not in queue
+                ]
+            )
+        p2 = set([n for n in G.nodes if n not in p1])
         return model.ObjVal, (p1, p2), cutset

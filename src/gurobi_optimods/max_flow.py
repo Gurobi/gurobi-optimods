@@ -10,7 +10,6 @@ try:
 except ImportError:
     nx = None
 
-from gurobi_optimods.utils import optimod
 from gurobi_optimods.min_cost_flow import (
     min_cost_flow,
     min_cost_flow_scipy,
