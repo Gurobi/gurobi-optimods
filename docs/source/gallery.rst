@@ -56,6 +56,7 @@ The OptiMods Gallery
    mods/bipartite-matching
    mods/lad-regression
    mods/min-cost-flow
+   mods/max-flow-min-cut
    mods/mwis
    mods/portfolio
    mods/qubo
