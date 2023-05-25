@@ -4,8 +4,14 @@ API Reference
 .. automodule:: gurobi_optimods.bipartite_matching
    :members: maximum_bipartite_matching
 
+.. automodule:: gurobi_optimods.max_flow
+   :members: max_flow
+
 .. automodule:: gurobi_optimods.min_cost_flow
    :members: min_cost_flow_pandas, min_cost_flow_networkx, min_cost_flow_scipy
+
+.. automodule:: gurobi_optimods.min_cut
+   :members: min_cut
 
 .. automodule:: gurobi_optimods.mwis
    :members: maximum_weighted_independent_set
