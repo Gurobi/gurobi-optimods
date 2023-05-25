@@ -1,3 +1,8 @@
+"""
+Minimum Cut
+-----------
+"""
+
 import logging
 from typing import Optional, overload
 
@@ -55,7 +60,7 @@ if nx is not None:
 
 @optimod()
 def min_cut(graph, source: int, sink: int, *, create_env):
-    """Solve the maximum flow problem for a given graph.
+    """Solve the minimum cut problem for a given graph.
 
     :param graph: A graph, specified either as a scipy.sparse adjacency matrix, networkx
         graph, or pandas dataframe
@@ -70,9 +75,9 @@ def min_cut(graph, source: int, sink: int, *, create_env):
     :return: Cut value of the minimum cut.
     :rtype: :class:`float`
     :return: Partition of size 2 with cut sets.
-    :rtype: :class:`tuple(set[int], set[int])`
+    :rtype: :class:`tuple(set(), set())`
     :return: Cutset with edges.
-    :rtype: :class:`set[tuple]`
+    :rtype: :class:`set(tuple(.,.))`
     """
     if isinstance(graph, sp.spmatrix):
         return _min_cut_scipy(graph, source, sink, create_env)
