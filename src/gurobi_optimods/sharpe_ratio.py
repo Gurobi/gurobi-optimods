@@ -8,14 +8,14 @@ from gurobi_optimods.utils import optimod
 
 
 @optimod()
-def max_sharpe_ratio(Q, mu, rf_rate=0, *, create_env):
+def max_sharpe_ratio(cov_matrix, mu, rf_rate=0, *, create_env):
     """
     Solve the problem of finding a portfolio that maximizes the
     Sharpe ratio.
 
-    :param Q: 2D positive-semidefinite variance-covariance matrix.
-    :type Q: :class:`np.ndarray|pd.DataFrame`
-    :param mu: Return rates.
+    :param cov_matrix: 2D positive-semidefinite variance-covariance matrix :math:`\Sigma`.
+    :type cov_matrix: :class:`np.ndarray|pd.DataFrame`
+    :param mu: Expected return rates :math:`\mu`.
     :type mu: :class:`np.ndarray|pd.Series`
     :param rf_rate: Risk-free rate of return (optional, defaults to ``0``).
     :type rf_rate: float
@@ -32,20 +32,22 @@ def max_sharpe_ratio(Q, mu, rf_rate=0, *, create_env):
     """
     indices = None
 
-    if isinstance(Q, pd.DataFrame):
-        indices = Q.index
-        Q = Q.to_numpy()
-    elif not isinstance(Q, np.ndarray):
-        raise TypeError(f"Unknown covariance matrix type: {type(Q)}")
+    if isinstance(cov_matrix, pd.DataFrame):
+        indices = cov_matrix.index
+        cov_matrix = cov_matrix.to_numpy()
+    elif not isinstance(cov_matrix, np.ndarray):
+        raise TypeError(f"Unknown covariance matrix type: {type(cov_matrix)}")
 
-    if Q.ndim != 2:
-        raise ValueError(f"Covariance matrix should be in 2 dimensions, not {Q.ndim}")
+    if cov_matrix.ndim != 2:
+        raise ValueError(
+            f"Covariance matrix should be in 2 dimensions, not {cov_matrix.ndim}"
+        )
 
     if isinstance(mu, pd.Series):
         if indices is None:
             indices = mu.index
         elif not mu.index.equals(indices):
-            raise ValueError("Indices of Q and mu are misaligned")
+            raise ValueError("Indices of cov_matrix and mu are misaligned")
         mu = mu.to_numpy()
     elif not isinstance(mu, np.ndarray):
         raise TypeError(f"Unknown return rates type: {type(mu)}")
@@ -60,7 +62,7 @@ def max_sharpe_ratio(Q, mu, rf_rate=0, *, create_env):
             f"No expected returns are greater than risk-free return rate of {rf_rate}"
         )
 
-    portfolio, ratio = _max_sharpe_ratio_numpy(Q, mu, rf_rate, create_env)
+    portfolio, ratio = _max_sharpe_ratio_numpy(cov_matrix, mu, rf_rate, create_env)
 
     if indices is not None:
         portfolio = pd.Series(data=portfolio, index=indices)
@@ -68,11 +70,11 @@ def max_sharpe_ratio(Q, mu, rf_rate=0, *, create_env):
     return portfolio, ratio
 
 
-def _max_sharpe_ratio_numpy(Q, mu, rf_rate, create_env):
+def _max_sharpe_ratio_numpy(cov_matrix, mu, rf_rate, create_env):
     with create_env() as env, gp.Model("sharpe_ratio", env=env) as model:
         y = model.addMVar(mu.size, name="y")
         model.addConstr((mu - rf_rate) @ y == 1)
-        model.setObjective(y @ Q @ y, sense=GRB.MINIMIZE)
+        model.setObjective(y @ cov_matrix @ y, sense=GRB.MINIMIZE)
 
         model.optimize()
 
