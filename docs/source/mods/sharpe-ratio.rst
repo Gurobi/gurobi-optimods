@@ -3,7 +3,7 @@ Maximum Sharpe Ratio
 
 The Sharpe ratio, named after Nobel laureate William F. Sharpe, measures the risk-adjusted performance of a portfolio. It is calculated by subtracting the risk-free rate of return from a portfolio's expected return and dividing the result by the portfolio's standard deviation. Thus, a higher Sharpe ratio corresponds to more attractive risk-adjusted performance, as the portfolio's returns are higher relative to the portfolio's risk.
 
-This mod computes the portfolio that maximizes the Sharpe ratio for the given expected returns and variances.
+This OptiMod computes the portfolio that maximizes the Sharpe ratio for the given expected returns and variances.
 
 
 Problem Specification
@@ -23,9 +23,9 @@ Problem Specification
 
     .. tab:: Mathematical Formulation
 
-        Consider `n` assets. Let :math:`r_f \geq 0` be the risk-free rate. Let :math:`\mu \in \mathbb{R}^n` be the vector of expected returns and let :math:`\Sigma \in \mathbb{R}^{n \times n}` be the positive semidefinite covariance matrix. We there exists :math:`i \in \{1, \ldots, n\}` such that :math:`\mu_i > r_f`. If not, the portfolio that maximizes the Sharpe ratio is the one consisting entirely of the risk-free asset.
+        Consider :math:`n` assets. Let :math:`r_f \geq 0` be the risk-free rate. Let :math:`\mu \in \mathbb{R}^n` be the vector of expected returns and let :math:`\Sigma \in \mathbb{R}^{n \times n}` be the positive semidefinite covariance matrix. We assume there exists :math:`i \in \{1, \ldots, n\}` such that :math:`\mu_i > r_f`. If not, the portfolio that maximizes the Sharpe ratio is the one consisting entirely of the risk-free asset.
 
-        We seek a portfolio of weights :math:`x` that maximizes
+        We seek a portfolio of weights :math:`x` that maximizes the Sharpe ratio :math:`(\mu^\top x - r_f) / \sqrt{x^\top \Sigma x}`:
 
         .. math::
             \begin{alignat*}{2}
@@ -34,7 +34,7 @@ Problem Specification
                 && x \geq {} &0.
             \end{alignat*}
 
-        Model \textbf{(1)} can be reformulated as follows:
+        Model :math:`\textbf{(1)}` can be reformulated as follows:
 
         .. math::
             \begin{alignat*}{2}
@@ -43,7 +43,7 @@ Problem Specification
                 && y \geq {} &0.
             \end{alignat*}
 
-        :math:`\textbf{(1)}` and :math:`\textbf{(2)}` are equivalent in the sense that given a solution to either problem, we can construct a solution to the other of equal or better objective value. In particular, any solution :math:`\bar{y}` of :math:`\textbf{(2)}` can be mapped to a solution :math:`\bar{x}` of :math:`\textbf{(1)}` using the transformation :math:`\bar{x}_i := \bar{y}_i / \sum_{j = 1}^n \bar{y}_j` for `j = 1, \ldots, n`. Conversely, any solution :math:`\bar{x}` of :math:`\textbf{(1)}` can be mapped to a solution :math:`\bar{y}` of :math:`\textbf{(2)}` using the transformation :math:`\bar{y}_ := \bar{x}_i / \mu^\top \bar{x}`.
+        Models :math:`\textbf{(1)}` and :math:`\textbf{(2)}` are equivalent in the sense that given a solution to either problem, we can construct a solution to the other of equal or better objective value. In particular, any solution :math:`\bar{x}` of :math:`\textbf{(1)}` can be mapped to a solution :math:`\bar{y}` of :math:`\textbf{(2)}` of equivalent objective value using the transformation :math:`\bar{y}_i := \bar{x}_i / \mu^\top \bar{x}` for :math:`i = 1, \ldots, n`. Conversely, any solution :math:`\bar{y}` of :math:`\textbf{(2)}` can be mapped to a solution :math:`\bar{x}` of :math:`\textbf{(1)}` of equivalent objective value using the transformation :math:`\bar{x}_i := \bar{y}_i / \sum_{j = 1}^n \bar{y}_j` for :math:`i = 1, \ldots, n`.
 
         Like :math:`\textbf{(1)}`, model :math:`\textbf{(2)}` is non-convex. However, because :math:`\Sigma` is positive semidefinite, the optimal solution of :math:`\textbf{(2)}` is equivalent to the optimal solution of the following model:
 
@@ -54,7 +54,7 @@ Problem Specification
                 && y \geq {} &0.
             \end{alignat*}
 
-        In this mod, we solve the convex quadratic program :math:`\textbf{(3)}`, then map the optimal solution :math:`y^*` back to the original problem :math:`\textbf{(3)}` via the transformation :math:`x^*_i := y^*_i / \sum_{j=1}^n y^*_j`.
+        In this OptiMod, we solve the convex quadratic program :math:`\textbf{(3)}`, then map the optimal solution :math:`y^*` back to the original problem :math:`\textbf{(3)}` via the transformation :math:`x^*_i := y^*_i / \sum_{j=1}^n y^*_j` for :math:`i = 1, \ldots, n`.
 
 Interface
 ---------
@@ -86,9 +86,9 @@ One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :
             E  0.028701  0.018816  0.027282  0.044323  0.114622  0.025116
             F  0.030124  0.020539  0.026499  0.032523  0.025116  0.048444
 
-        If the ``cov_matrix`` and ``mu`` passed to the ``max_sharpe_ratio`` function are both pandas objects, their indices should be identical.
+        If the ``cov_matrix`` and ``mu`` arguments passed to the ``max_sharpe_ratio`` function are both pandas objects, their indices should be identical.
 
-        The ``max_sharpe_ratio`` function also accepts ``cov_matrix`` in the form of a numpy ndarray.
+        The ``max_sharpe_ratio`` function also accepts the ``cov_matrix`` argument in the form of a numpy ndarray:
 
         .. doctest:: sharpe-ratio-sigma
             :options: +NORMALIZE_WHITESPACE
@@ -124,9 +124,9 @@ One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :
             F    0.174672
             dtype: float64
 
-        If the ``cov_matrix`` and ``mu`` passed to the ``max_sharpe_ratio`` function are both pandas objects, their indices should be identical.
+        If the ``cov_matrix`` and ``mu`` arguments passed to the ``max_sharpe_ratio`` function are both pandas objects, their indices should be identical.
 
-        The ``max_sharpe_ratio`` function also accepts ``mu`` in the form a numpy ndarray.
+        The ``max_sharpe_ratio`` function also accepts the ``mu`` argument in the form a numpy ndarray:
 
         .. doctest:: sharpe-ratio-mu
             :options: +NORMALIZE_WHITESPACE
@@ -137,13 +137,13 @@ One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :
 
 The ``max_sharpe_ratio`` function returns two objects:
 
-1. The portfolio that maximizes the Sharpe ratio. If either the covariance matrix or expected returns were given as pandas object, the portfolio is a pandas Series. Otherwise, the portfolio is a numpy ndarray.
+1. The portfolio that maximizes the Sharpe ratio. The values in the portfolio represent the relative weights that should be allocated to each asset. The weights sum to 1. If ``cov_matrix`` and/or ``mu`` were given as a pandas object, the portfolio is a pandas Series. Otherwise, the portfolio is a numpy ndarray.
 2. The Sharpe ratio of the optimal portfolio.
 
 Example code
 ------------
 
-The example code below solves the Sharpe ratio problem for the simple example dataset comprised of six assets.
+The example code below solves the problem of maximizing the Sharpe ratio for the simple example dataset comprised of six assets.
 
 .. testcode:: sharpe-ratio
 
@@ -215,7 +215,7 @@ The example code below solves the Sharpe ratio problem for the simple example da
         Barrier solved model in 12 iterations and 0.08 seconds (0.00 work units)
         Optimal objective 3.06155542e-01
 
-    Note that the optimal objective reported in the log is the Sharpe ratio raised to the :math:`-\frac{1}{2}` power. In this example, the optimal Sharpe ratio is :math:`1.80729454311`. See the mathematical formulation provided in the `Problem Specification`_ section for additional details.
+    Note that the optimal objective reported in the log output is the Sharpe ratio raised to the :math:`-\frac{1}{2}` power. In this example, the optimal Sharpe ratio is :math:`1.80729454311`. See the mathematical formulation provided in the `Problem Specification`_ section for additional details.
 
 |
 
@@ -224,7 +224,7 @@ The model is solved as a QP by Gurobi.
 Solution
 --------
 
-For the example data, the optimal portfolio is to invest in three assets (A, C, and E). The solution suggests allocating an extremely small proportion (1e-6) of the total investment budget to the other three assets; these investment amounts are negligible and can be ignored. The Sharpe ratio of the optimal portfolio is 1.8109:
+For the example data, the portfolio that maximizes the Sharpe ratio is obtained by investing in three assets (A, C, and E). The optimal solution suggests allocating an extremely small proportion (<1e-6) of the total investment budget to the other three assets; these investment amounts are negligible and can be ignored. The Sharpe ratio of the optimal portfolio is approximately 1.810906:
 
 .. doctest:: sharpe-ratio
     :options: +NORMALIZE_WHITESPACE
@@ -238,14 +238,14 @@ For the example data, the optimal portfolio is to invest in three assets (A, C, 
     F    2.824517e-08
     dtype: float64
     >>> ratio
-    1.8109060196861502
+    1.810906...
 
 Comparison to Monte Carlo simulation
 ------------------------------------
 
-We can compare this optimal portfolio compares to portfolios acquired via Monte Carlo simulation. In Monte Carlo simluation, a large number of random portfolios are generated. Then, the expected return and standard deviation of the return is calculated for each portfolio using the covariance matrix :math:`\Sigma` and vector of expected returns :math:`\mu`. The portfolio with the highest Sharpe ratio (expected return divided by standard deviation of return) is used to guide investment decisions. The hope is that with enough randomly generated portfolios, at least one of them will have a Sharpe ratio close to optimal.
+We can compare this optimal portfolio to portfolios acquired via Monte Carlo simulation. In Monte Carlo simluation, a large number of random portfolios are generated. Then, the expected return and standard deviation of the return is calculated for each portfolio using the covariance matrix :math:`\Sigma` and vector of expected returns :math:`\mu`. The portfolio with the highest Sharpe ratio (expected return divided by standard deviation of return) is chosen. The hope is that with enough randomly generated portfolios, at least one of them will have a Sharpe ratio close to optimal.
 
-In the code below, we randomly generate 10000 portfolios (non-negative vectors of length six whose elements sum to 1). We plot each portfolio to visualize the tradeoff between portfolio risk and return. We plot the portfolio returned by the ``max_sharpe_ratio`` function as well using a red star.
+In the code below, we randomly generate 10000 portfolios for the example of six assets. Each portfolio is a non-negative vector of length six whose elements sum to 1. We plot each portfolio to visualize the tradeoff between risk and return. To compare these randomly generated portfolios with the one obtained by this OptiMod, we plot the portfolio returned by the ``max_sharpe_ratio`` function as well using a red star.
 
 .. testcode:: sharpe-ratio
 
@@ -280,4 +280,4 @@ In the code below, we randomly generate 10000 portfolios (non-negative vectors o
 
 .. figure:: figures/sharpe-ratio.png
 
-As the number of investible assets increases, the likelihood of the Monte Carlo simulation method finding a portfolio with a Sharpe ratio close to optimal decreases. More scalable and precise approaches like the one implemented in the ``max_sharpe_ratio`` function become more desirable.
+A small number of the randomly generated portfolios have Sharpe ratios close to the maximal Sharpe ratio returned by the ``max_sharpe_ratio`` function.
