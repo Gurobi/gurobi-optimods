@@ -36,7 +36,10 @@ def max_sharpe_ratio(Q, mu, rf_rate=0, *, create_env):
         indices = Q.index
         Q = Q.to_numpy()
     elif not isinstance(Q, np.ndarray):
-        raise ValueError(f"Unknown covariance matrix type: {type(Q)}")
+        raise TypeError(f"Unknown covariance matrix type: {type(Q)}")
+
+    if Q.ndim != 2:
+        raise ValueError(f"Covariance matrix should be in 2 dimensions, not {Q.ndim}")
 
     if isinstance(mu, pd.Series):
         if indices is None:
@@ -45,10 +48,13 @@ def max_sharpe_ratio(Q, mu, rf_rate=0, *, create_env):
             raise ValueError("Indices of Q and mu are misaligned")
         mu = mu.to_numpy()
     elif not isinstance(mu, np.ndarray):
-        raise ValueError(f"Unknown return rates type: {type(mu)}")
+        raise TypeError(f"Unknown return rates type: {type(mu)}")
+
+    if mu.ndim != 1:
+        raise ValueError(f"Return rates should be in 1 dimension, not {mu.ndim}")
 
     if not isinstance(rf_rate, float) and not isinstance(rf_rate, int):
-        raise ValueError(f"Unknown risk-free return rate type: {type(rf_rate)}")
+        raise TypeError(f"Unknown risk-free return rate type: {type(rf_rate)}")
     elif (mu < rf_rate).all():
         raise ValueError(
             f"No expected returns are greater than risk-free return rate of {rf_rate}"

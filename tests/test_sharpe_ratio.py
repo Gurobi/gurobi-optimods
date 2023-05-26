@@ -40,26 +40,36 @@ class TestSharpeRatio(unittest.TestCase):
         self.assertEqual(set(data.Q.keys()), assets)
         self.assertEqual(set(data.mu.keys()), assets)
 
-    def test_invalid_args(self):
+    def test_invalid_arg_types(self):
         data = load_sharpe_ratio()
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             max_sharpe_ratio(None, None, None)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             max_sharpe_ratio(1, data.mu)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             max_sharpe_ratio(data.mu, data.mu)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             max_sharpe_ratio(data.Q, data.Q)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             max_sharpe_ratio(data.Q, 1)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             max_sharpe_ratio(data.Q, data.mu, "0")
+
+    def test_incorrect_numpy_dimensions(self):
+        with self.assertRaises(ValueError):
+            max_sharpe_ratio(np.ones((1, 1, 1)), np.ones(1))
+
+        with self.assertRaises(ValueError):
+            max_sharpe_ratio(np.ones(1), np.ones(1))
+
+        with self.assertRaises(ValueError):
+            max_sharpe_ratio(np.ones((1, 1)), np.ones((1, 1)))
 
     def test_numpy_inputs(self):
         data = load_sharpe_ratio()
