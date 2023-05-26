@@ -155,4 +155,4 @@ def _convert_pandas_to_scipy(
 def load_sharpe_ratio():
     data = pd.read_csv(DATA_FILE_DIR / "sharpe-ratio/log-returns.csv", index_col=0)
     # Annualize covariance-variance matrix and expected returns
-    return AttrDict(Q=data.cov() * len(data.index), mu=data.sum())
+    return AttrDict(cov_matrix=data.cov() * len(data.index), mu=data.sum())
