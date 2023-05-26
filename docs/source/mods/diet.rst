@@ -86,7 +86,7 @@ content of each food.
 
         Data on available foods is included as a dataframe.
 
-        ..doctest::diet
+        .. doctest:: diet
             :options: +NORMALIZE_WHITESPACE
 
             >>> from gurobi_optimods import datasets
@@ -107,7 +107,7 @@ content of each food.
 
     .. tab:: ``nutation``
 
-        ..doctest::diet
+        .. doctest:: diet
             :options: +NORMALIZE_WHITESPACE
 
             >>> data.nutrition_values
