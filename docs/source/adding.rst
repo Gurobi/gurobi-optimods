@@ -1,4 +1,4 @@
-Adding a New Mod
+Adding a new Mod
 ================
 
 The goal of the OptiMods is to create and maintain an open-source Python
@@ -17,7 +17,7 @@ To propose a new mod, create an issue in our repository using the 'New Mod
 Proposal' template to gather the required details. One of the maintainers will
 reach out to you on the issue to discuss the proposed topic and design.
 
-A good mod:
+A good Mod:
 
 - solves well-known, well-defined problem from a non-optimization field;
 - has a simple interface which shields the user from interacting with gurobipy
