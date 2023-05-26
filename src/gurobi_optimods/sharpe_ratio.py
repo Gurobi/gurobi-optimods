@@ -57,6 +57,8 @@ def max_sharpe_ratio(cov_matrix, mu, rf_rate=0, *, create_env):
 
     if not isinstance(rf_rate, float) and not isinstance(rf_rate, int):
         raise TypeError(f"Unknown risk-free return rate type: {type(rf_rate)}")
+    elif rf_rate < 0:
+        raise ValueError("Risk-free return rate should be non-negative")
     elif (mu < rf_rate).all():
         raise ValueError(
             f"No expected returns are greater than risk-free return rate of {rf_rate}"

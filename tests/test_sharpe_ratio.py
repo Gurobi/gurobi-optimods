@@ -34,6 +34,12 @@ class TestSharpeRatio(unittest.TestCase):
         with self.assertRaises(TypeError):
             max_sharpe_ratio(data.cov_matrix, data.mu, "0")
 
+    def test_negative_rf_rate(self):
+        data = load_sharpe_ratio()
+
+        with self.assertRaises(ValueError):
+            max_sharpe_ratio(data.cov_matrix, data.mu, -0.01)
+
     def test_incorrect_numpy_dimensions(self):
         with self.assertRaises(ValueError):
             max_sharpe_ratio(np.ones((1, 1, 1)), np.ones(1))

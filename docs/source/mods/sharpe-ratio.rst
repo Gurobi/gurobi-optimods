@@ -23,7 +23,7 @@ Problem Specification
 
     .. tab:: Mathematical Formulation
 
-        Consider `n` assets. Let :math:`r_f` be the risk-free rate. Let :math:`\mu \in \mathbb{R}^n` be the vector of expected returns and let :math:`\Sigma \in \mathbb{R}^{n \times n}` be the positive semidefinite covariance matrix. We there exists :math:`i \in \{1, \ldots, n\}` such that :math:`\mu_i > r_f`. If not, the portfolio that maximizes the Sharpe ratio is the one consisting entirely of the risk-free asset.
+        Consider `n` assets. Let :math:`r_f \geq 0` be the risk-free rate. Let :math:`\mu \in \mathbb{R}^n` be the vector of expected returns and let :math:`\Sigma \in \mathbb{R}^{n \times n}` be the positive semidefinite covariance matrix. We there exists :math:`i \in \{1, \ldots, n\}` such that :math:`\mu_i > r_f`. If not, the portfolio that maximizes the Sharpe ratio is the one consisting entirely of the risk-free asset.
 
         We seek a portfolio of weights :math:`x` that maximizes
 
@@ -64,7 +64,7 @@ The ``max_sharpe_ratio`` function requires the following arguments:
 * ``cov_matrix``: The covariance matrix :math:`\Sigma`, given as a numpy ndarray or pandas DataFrame (e.g., returned by the `pandas.DataFrame.cov <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.cov.html>`_ method).
 * ``mu``: The vector of expected returns :math:`\mu`, given as a numpy ndarray or pandas Series.
 
-One can optionally pass in ``rf_rate``, the risk-free return rate :math:`r_f`. By default, the risk-free rate is 0.
+One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :math:`r_f`. By default, the risk-free rate is 0.
 
 .. tabs::
 
