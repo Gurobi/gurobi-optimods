@@ -2,11 +2,11 @@ Contributing to OptiMods
 ========================
 
 We welcome contributions from the commumnity: bug fixes, doc corrections,
-extensions to existing mods, or development of new mods. This page describes
+extensions to existing Mods, or development of new Mods. This page describes
 conventions to follow when contributing, and the development process we follow
 for the project, which is applicable to all contributors. For guidelines on
-proposing and implementing new mods, see :doc:`adding`. For discussion on
-extending existing mods, see :doc:`extending`.
+proposing and implementing new Mods, see :doc:`adding`. For discussion on
+extending existing Mods, see :doc:`extending`.
 
 Coding Standards
 ----------------
@@ -23,16 +23,16 @@ issues are reported::
 Testing
 -------
 
-All new additions, including bug fixes, mod extensions, or brand new mods `must`
+All new additions, including bug fixes, Mod extensions, or brand new Mods `must`
 include unit tests to verify their functionality. We use
-:external+python:std:doc:`unittest <library/unittest>` to test mod functionality
+:external+python:std:doc:`unittest <library/unittest>` to test Mod functionality
 and :doc:`sphinx doctest <sphinx:usage/extensions/doctest>` to ensure code
 snippets provided in the documentation work as expected.
 
 Documentation
 -------------
 
-Documentation is a core part of the OptiMods project. All mods must be
+Documentation is a core part of the OptiMods project. All Mods must be
 accompanied by a documentation page explaining their use and providing
 appropriate background information.
 
@@ -72,5 +72,5 @@ We use issues and pull requests to manage and review contributions.
 - Minor doc fixes can be submitted directly as pull requests.
 - Bugs should first be reported as issues before submitting a pull request to
   fix them. Use the 'Bug report' issue template.
-- New mod proposals should first be submitted as issues for discussion, see
+- New Mod proposals should first be submitted as issues for discussion, see
   :doc:`adding` for further details.
