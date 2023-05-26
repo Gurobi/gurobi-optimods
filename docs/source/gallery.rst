@@ -42,6 +42,12 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/qubo.png
 
+    .. grid-item-card:: Maximum Sharpe Ratio
+        :link: mods/sharpe-ratio
+        :link-type: doc
+        :text-align: center
+        :img-top: mods/figures/sharpe-ratio.png
+
     .. grid-item-card:: Workforce Scheduling
         :link: mods/workforce
         :link-type: doc
@@ -59,4 +65,5 @@ The OptiMods Gallery
    mods/mwis
    mods/portfolio
    mods/qubo
+   mods/sharpe-ratio
    mods/workforce
