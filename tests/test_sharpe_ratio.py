@@ -9,34 +9,7 @@ from gurobi_optimods.sharpe_ratio import max_sharpe_ratio
 class TestSharpeRatio(unittest.TestCase):
     def test_dataset_keys(self):
         data = load_sharpe_ratio()
-        assets = {
-            "A",
-            "B",
-            "C",
-            "D",
-            "E",
-            "F",
-            "G",
-            "H",
-            "I",
-            "J",
-            "K",
-            "L",
-            "M",
-            "N",
-            "O",
-            "P",
-            "Q",
-            "R",
-            "S",
-            "T",
-            "U",
-            "V",
-            "W",
-            "X",
-            "Y",
-            "Z",
-        }
+        assets = {"A", "B", "C", "D", "E", "F"}
         self.assertEqual(set(data.cov_matrix.keys()), assets)
         self.assertEqual(set(data.mu.keys()), assets)
 
@@ -167,4 +140,4 @@ class TestSharpeRatio(unittest.TestCase):
         self.assertTrue(data.cov_matrix.index.identical(portfolio.index))
         self.assertAlmostEqual(portfolio.sum(), 1, delta=1e-6)
         self.assertIsInstance(ratio, float)
-        self.assertAlmostEqual(ratio, 2.417932187428722, delta=1e-6)
+        self.assertAlmostEqual(ratio, 1.8109060196861502, delta=1e-6)
