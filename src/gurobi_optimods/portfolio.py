@@ -104,11 +104,11 @@ class MeanVariancePortfolio:
         :param fees_sell: Fixed-charge fee for each sell transaction, relative
             to total portfolio value
         :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param costs_buy: Variable transaction costs for each buy transaction, relative
-            to trade value
+        :param costs_buy: Variable transaction costs for each buy transaction,
+            relative to trade value
         :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param costs_sell: Variable transaction costs for each sell transaction, relative
-            to trade value
+        :param costs_sell: Variable transaction costs for each sell transaction,
+            relative to trade value
         :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
         :param min_long: Lower bound on the volume on a traded long position,
             relative to total portfolio value
