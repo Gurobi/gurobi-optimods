@@ -97,31 +97,31 @@ class MeanVariancePortfolio:
             Risk aversion cofficient for balancing risk and return; the
             resulting objective functions is
             :math:`\mu^T x - 0.5 \gamma x^T \Sigma x`
-        max_trades : :class:`int` >= 0
+        max_trades : :class:`int` >= 0, optional
             Upper limit on the number of trades
-        max_positions : :class:`int` >= 0
+        max_positions : :class:`int` >= 0, optional
             Upper limit on the number of open positions
-        fees_buy : :class:`float` or :class:`np.ndarray` >= 0
+        fees_buy : :class:`float` or :class:`np.ndarray` >= 0, optional
             Fixed-charge fee for each buy transaction, relative to total
             portfolio value
-        fees_sell : :class:`float` or :class:`np.ndarray` >= 0
+        fees_sell : :class:`float` or :class:`np.ndarray` >= 0, optional
             Fixed-charge fee for each sell transaction, relative to total
             portfolio value
-        costs_buy : :class:`float` or :class:`np.ndarray` >= 0
+        costs_buy : :class:`float` or :class:`np.ndarray` >= 0, optional
             Variable transaction costs for each buy transaction, relative to
             trade value
-        costs_sell : :class:`float` or :class:`np.ndarray` >= 0
+        costs_sell : :class:`float` or :class:`np.ndarray` >= 0, optional
             Variable transaction costs for each sell transaction, relative to
             trade value
-        min_long : :class:`float` >= 0
+        min_long : :class:`float` >= 0, optional
             Lower bound on the volume on a traded long position, relative to
             total portfolio value
-        min_short : :class:`float` >= 0
+        min_short : :class:`float` >= 0, optional
             Lower bound on the volume on a traded short position, relative to
             total portfolio value
-        max_total_short : :class:`float` >= 0
+        max_total_short : :class:`float` >= 0, optional
             Maximum total short positions, relative to total investment.
-        initial_holdings : 1-d :class:`np.ndarray`
+        initial_holdings : 1-d :class:`np.ndarray`, optional
             Initial portfolio holdings (sum needs to be <= 1)
 
         Notes
