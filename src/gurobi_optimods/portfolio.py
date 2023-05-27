@@ -19,13 +19,21 @@ class MeanVariancePortfolio:
     :meth:`MeanVariancePortfolio.efficient_portfolio` to solve for efficient
     portfolios with given parameters.
 
-    :param mu: Return vector
-    :type mu: 1-d :class:`np.ndarray`
-    :param cov_matrix: Covariance matrix :math:`\Sigma`
-    :type cov_matrix: 2-d :class:`np.ndarray`
-    :param cov_factors: Covariance factors that constitute :math:`\Sigma`,
-        see :ref:`factor models`
-    :type cov_factors: 2-d :class:`tuple` of :class:`np.ndarray`
+    Parameters
+    ----------
+    mu : 1-d :class:`np.ndarray`
+        Vector of expected returns for each asset
+    cov_matrix : 2-d :class:`np.ndarray`
+        Covariance matrix :math:`\Sigma`
+    cov_factors : tuple of :class:`np.ndarray`
+        Covariance factors that constitute :math:`\Sigma`. Typically each
+        element ``F`` of ``cov_matrix`` will either be a
+
+            * n-by-k dense matrix, or a
+            * n-by-n diagonal matrix.
+
+        Each element ``F`` of ``cov_factors`` contributes the term ``F @ F.T``
+        to :math:`\Sigma`; see also :ref:`factor models`
 
     """
 
@@ -80,8 +88,7 @@ class MeanVariancePortfolio:
         *,
         create_env,
     ):
-        """
-        Compute efficient portfolio for given paramters
+        """Compute efficient portfolio for given paramters
 
         :param gamma: Risk aversion cofficient for balancing risk and return;
             the resulting objective functions is
