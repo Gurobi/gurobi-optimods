@@ -88,45 +88,48 @@ class MeanVariancePortfolio:
         *,
         create_env,
     ):
-        """Compute efficient portfolio for given paramters
+        """Compute efficient portfolio for given parameters
 
-        :param gamma: Risk aversion cofficient for balancing risk and return;
-            the resulting objective functions is
+        Parameters
+        ----------
+
+        gamma : :class:`float` >= 0
+            Risk aversion cofficient for balancing risk and return; the
+            resulting objective functions is
             :math:`\mu^T x - 0.5 \gamma x^T \Sigma x`
-        :type gamma: :class:`float` >= 0
-        :param max_trades: Upper limit on the number of trades
-        :type max_trades: :class:`int` >= 0
-        :param max_positions: Upper limit on the number of open positions
-        :type max_positions: :class:`int` >= 0
-        :param fees_buy: Fixed-charge fee for each buy transaction, relative
-            to total portfolio value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param fees_sell: Fixed-charge fee for each sell transaction, relative
-            to total portfolio value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param costs_buy: Variable transaction costs for each buy transaction,
-            relative to trade value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param costs_sell: Variable transaction costs for each sell transaction,
-            relative to trade value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param min_long: Lower bound on the volume on a traded long position,
-            relative to total portfolio value
-        :type min_long: :class:`float` >= 0
-        :param min_short: Lower bound on the volume on a traded short position,
-            relative to total portfolio value
-        :type min_long: :class:`float` >= 0
-        :param max_total_short: Maximum total short positions, relative to
-            total investment.
-        :type max_total_short: :class:`float` >= 0
-        :param max_total_short: Maximum total short positions, relative to
-            total investment.
-        :type max_total_short: :class:`float` >= 0
-        :param initial_holdings: Initial portfolio holdings (sum needs to be <= 1)
-        :type initial_holdings: 1-d :class:`np.ndarray`
+        max_trades : :class:`int` >= 0
+            Upper limit on the number of trades
+        max_positions : :class:`int` >= 0
+            Upper limit on the number of open positions
+        fees_buy : :class:`float` or :class:`np.ndarray` >= 0
+            Fixed-charge fee for each buy transaction, relative to total
+            portfolio value
+        fees_sell : :class:`float` or :class:`np.ndarray` >= 0
+            Fixed-charge fee for each sell transaction, relative to total
+            portfolio value
+        costs_buy : :class:`float` or :class:`np.ndarray` >= 0
+            Variable transaction costs for each buy transaction, relative to
+            trade value
+        costs_sell : :class:`float` or :class:`np.ndarray` >= 0
+            Variable transaction costs for each sell transaction, relative to
+            trade value
+        min_long : :class:`float` >= 0
+            Lower bound on the volume on a traded long position, relative to
+            total portfolio value
+        min_short : :class:`float` >= 0
+            Lower bound on the volume on a traded short position, relative to
+            total portfolio value
+        max_total_short : :class:`float` >= 0
+            Maximum total short positions, relative to total investment.
+        initial_holdings : 1-d :class:`np.ndarray`
+            Initial portfolio holdings (sum needs to be <= 1)
 
-        Refer to :ref:`portfolio features` for a detailed discussion of these
+        Notes
+        -----
+
+        Refer to :ref:`portfolio features` for a detailed discussion of all
         parameters.
+
         """
 
         fees_buy = self._homogenize_input(fees_buy)
