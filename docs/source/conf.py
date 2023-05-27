@@ -26,6 +26,7 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.napoleon",
     "sphinxcontrib.bibtex",
 ]
 
