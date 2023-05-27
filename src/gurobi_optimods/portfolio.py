@@ -124,9 +124,25 @@ class MeanVariancePortfolio:
         initial_holdings : 1-d :class:`np.ndarray`, optional
             Initial portfolio holdings (sum needs to be <= 1)
 
+        Returns
+        -------
+        mvp_result : dict
+            A dict containing the efficient portfolio, along with auxiliary
+            information:
+
+            * ``mvp_result["x"]``: The portfolio vector :math:`x`
+            * ``mvp_result["risk"]``: The estimated risk :math:`x^T \Sigma x`
+              of the portfolio
+            * ``mvp_result["return"]``: The estimated return :math:`\mu^T x` of
+              the portfolio
+
+            Some combinations of requested portfolio features may rule out
+            **all** possible portfolios.  In this corner case the value
+            ``None`` is returned.
+
+
         Notes
         -----
-
         Refer to :ref:`portfolio features` for a detailed discussion of all
         parameters.
 
