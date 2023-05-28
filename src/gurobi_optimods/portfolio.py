@@ -182,7 +182,7 @@ class MeanVariancePortfolio:
                 xvals = x.X
 
         if status == GRB.OPTIMAL:
-            return self._convert_result(xvals)
+            return self._construct_result(xvals)
         elif status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             print("No portfolio satisfies the constraints!")
             return None
@@ -201,7 +201,7 @@ class MeanVariancePortfolio:
             m.optimize()
 
             if m.Status == GRB.OPTIMAL:
-                return self._convert_result(x.X)
+                return self._construct_result(x.X)
 
     # Just boilerplate, waiting to be filled with life
     def _maximize_return(self, max_risk):
@@ -214,7 +214,7 @@ class MeanVariancePortfolio:
             m.optimize()
 
             if m.Status == GRB.OPTIMAL:
-                return self._convert_result(x.X)
+                return self._construct_result(x.X)
 
     def _populate_model(
         self,
@@ -366,13 +366,26 @@ class MeanVariancePortfolio:
 
         return x
 
-    def _convert_result(self, x):
+    def _construct_result(self, x):
+        pf = dict()
         if self.resultType == "numpy":
-            return x
+            pf["x"] = x
         elif self.resultType == "pandas":
-            return pd.Series(x, index=self.index)
+            pf["x"] = pd.Series(x, index=self.index)
         else:
             assert False
+
+        pf["return"] = self.mu @ x
+
+        if not isinstance(self.covariance, tuple):
+            pf["risk"] = x @ self.covariance @ x
+        else:
+            pf["risk"] = 0.0
+            for F in self.covariance:
+                y = x @ F
+                pf["risk"] += y @ y
+
+        return pf
 
     def _homogenize_input(self, input_data):
         # Check and unpack if input_data is a Series
