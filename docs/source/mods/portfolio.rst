@@ -128,7 +128,7 @@ from this DataFrame:
     :hide:
 
     ...
-    Optimize a model with 82 rows, 90 columns and 190 nonzeros
+    Optimize a model with 82 rows, 91 columns and 190 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -287,13 +287,13 @@ single-factor model:
     :hide:
 
     ...
-    Optimize a model with 26 rows, 27 columns and 57 nonzeros
+    Optimize a model with 26 rows, 28 columns and 57 nonzeros
     ...
     Model has 6 quadratic objective terms
     ...
     Presolved: 1 rows, 3 columns, 3 nonzeros
     ...
-    Optimize a model with 30 rows, 31 columns and 67 nonzeros
+    Optimize a model with 30 rows, 32 columns and 67 nonzeros
     ...
     Model has 4 quadratic objective terms
     ...
@@ -347,7 +347,7 @@ portfolio value (130-30 strategy), you can do:
     :hide:
 
     ...
-    Optimize a model with 82 rows, 90 columns and 200 nonzeros
+    Optimize a model with 82 rows, 91 columns and 200 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -402,7 +402,7 @@ optimal portfolio :math:`x`, you can use the keyword parameters ``fees_buy``
     :hide:
 
     ...
-    Optimize a model with 82 rows, 90 columns and 200 nonzeros
+    Optimize a model with 82 rows, 91 columns and 200 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -459,7 +459,7 @@ trades) keyword parameters as follows:
     :hide:
 
     ...
-    Optimize a model with 82 rows, 90 columns and 200 nonzeros
+    Optimize a model with 82 rows, 91 columns and 200 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -516,13 +516,13 @@ allocated to each trade:
     :hide:
 
     ...
-    Optimize a model with 82 rows, 90 columns and 200 nonzeros
+    Optimize a model with 82 rows, 91 columns and 200 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
     Presolved: 62 rows, 70 columns, 160 nonzeros
     ...
-    Optimize a model with 102 rows, 90 columns and 240 nonzeros
+    Optimize a model with 102 rows, 91 columns and 240 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -577,7 +577,7 @@ total number of open positions to three can be achieved as follows:
     :hide:
 
     ...
-    Optimize a model with 83 rows, 90 columns and 210 nonzeros
+    Optimize a model with 83 rows, 91 columns and 210 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -613,6 +613,59 @@ the ``max_trades`` keyword parameter.  Without a starting portfolio (see
 of positions (via ``max_positions``).  But with a starting portfolio defined,
 this parameter will limit the number of trades changing it.
 
+
+Including a risk-free asset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A risk-free asset can be included in the optimal choice of portfolio through
+the ``rf_return`` parameter.  Its value specifies the risk-free return rate.
+For example, here we compute an efficient portfolio under the assumption that
+the risk-free return rate is 0.25%:
+
+.. testcode:: mod
+
+    import pandas as pd
+
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+
+    data = load_portfolio()
+    cov_matrix = data.cov()
+    mu = data.mean()
+    gamma = 12.5
+
+    mvp = MeanVariancePortfolio(mu, cov_matrix)
+    pf = mvp.efficient_portfolio(gamma, rf_return=0.0025)
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 82 rows, 91 columns and 191 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+    Presolved: 1 rows, 11 columns, 11 nonzeros
+    ...
+
+If a risk-free return rate has been specified, the returned portfolio
+information has an additional key ``x_rf`` that tells the proportion of
+investment into the risk-free asset.  In this example the optimal portfolio
+allocates about 17% into the risk-free asset:
+
+.. testcode:: mod
+
+   print(f"risky     investment: {pf['x'].sum():.2f}%")
+   print(f"risk-less investment: {pf['x_rf']:.2f}%")
+
+.. testoutput:: mod
+
+   risky     investment: 0.83%
+   risk-less investment: 0.17%
+
+
+Note that the contribution of ``rf_return * x_rf`` to the portfolio's expected
+value is already included in ``pf["return"]``.
 
 Starting portfolio & rebalancing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -674,7 +727,7 @@ using at most two trades:
     :hide:
 
     ...
-    Optimize a model with 83 rows, 90 columns and 230 nonzeros
+    Optimize a model with 83 rows, 91 columns and 230 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
