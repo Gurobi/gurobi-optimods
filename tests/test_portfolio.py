@@ -871,3 +871,17 @@ class TestMVPFeatures(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             _ = mvp.efficient_portfolio(gamma, initial_holdings=initial_holdings)
+
+    def test_risk_free_asset(self):
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        gamma = 12.5
+
+        # Parameters chosen such that some fraction is invested in cash
+        mvp = MeanVariancePortfolio(mu, cov_matrix)
+        pf = mvp.efficient_portfolio(gamma, rf_return=0.0025)
+
+        self.assertIn("x_rf", pf)
+        self.assertGreater(pf["x_rf"], 0.1)
+        self.assertAlmostEqual(pf["return"], mu @ pf["x"] + 0.0025 * pf["x_rf"])
