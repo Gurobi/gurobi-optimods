@@ -803,17 +803,13 @@ cardinality constraints::
 
     for g in gammas:
         mvp = MeanVariancePortfolio(mu, cov_factors=(F, risk_specific))
-        # No cardinality constraints
-        x = mvp.efficient_portfolio(g, silent=True)["x"]
-        ret = mu @ x
-        risk = ((F.T @ x)**2).sum() + (x**2 * risk_specific**2).sum()
-        rr_pairs_unc.append((ret, risk))
+        # Optimal portfolio w/o cardinality constraints
+        pf = mvp.efficient_portfolio(g, silent=True)
+        rr_pairs_unc.append((pf["risk"], pf["return"]))
         for max_positions in [1, 2, 3]:
-            # Some cardinality constraints
-            x = mvp.efficient_portfolio(g, max_positions=max_positions, silent=True)["x"]
-            ret = mu @ x
-            risk = ((F.T @ x)**2).sum() + (x**2 * risk_specific**2).sum()
-            rr_pairs_con[max_positions].append((ret, risk))
+            # Optimal portfolio with cardinality constraints
+            pf = mvp.efficient_portfolio(g, max_positions=max_positions, silent=True)
+            rr_pairs_con[max_positions].append((pf["risk"], pf["return"]))
 
 Comparison
 ~~~~~~~~~~
@@ -827,10 +823,11 @@ efficient frontiers look like this:
     from matplotlib import pyplot as plt
     fig, ax = plt.subplots()
 
-    ax.scatter(list(t[1] for t in rr_pairs_unc), list(t[0] for t in rr_pairs_unc), label="unconstrained")
+    risk, ret = zip(*rr_pairs_unc)
+    ax.scatter(risk, ret, label="unconstrained")
     for k in rr_pairs_con:
-        v = rr_pairs_con[k]
-        ax.scatter(list(t[1] for t in v), list(t[0] for t in v), label=f"{k:d} asset{'' if k==1 else 's':s}")
+        risk, ret = zip(*rr_pairs_con[k])
+        ax.scatter(risk, ret, label=f"{k:d} asset{'' if k==1 else 's':s}")
         ax.legend(loc='lower right')
         plt.xlabel("risk")
         plt.ylabel("return")
