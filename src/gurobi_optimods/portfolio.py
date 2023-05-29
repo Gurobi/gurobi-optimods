@@ -189,33 +189,6 @@ class MeanVariancePortfolio:
         else:
             return None
 
-    # Just boilerplate, waiting to be filled with life
-    def _minimize_risk(self, expected_return):
-        with gp.Env() as env, gp.Model("min_risk", env=env) as m:
-            x = m.addMVar(shape=self.mu.shape, name="x")
-
-            m.addConstr(x.sum() == 1, name="fully_invested")
-            m.addConstr(self.mu @ x >= expected_return, name="expected_return")
-            m.setObjective(x @ self.covariance @ x)
-
-            m.optimize()
-
-            if m.Status == GRB.OPTIMAL:
-                return self._construct_result(x.X)
-
-    # Just boilerplate, waiting to be filled with life
-    def _maximize_return(self, max_risk):
-        with gp.Env() as env, gp.Model("max_return", env=env) as m:
-            x = m.addMVar(shape=self.mu.shape, name="x")
-            m.addConstr(x.sum() == 1, name="fully_invested")
-            m.addConstr(x @ self.covariance @ x <= max_risk, name="max_risk")
-            m.setObjective(self.mu @ x, GRB.MAXIMIZE)
-
-            m.optimize()
-
-            if m.Status == GRB.OPTIMAL:
-                return self._construct_result(x.X)
-
     def _populate_model(
         self,
         m,
