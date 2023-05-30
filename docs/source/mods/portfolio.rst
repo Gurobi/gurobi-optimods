@@ -655,13 +655,13 @@ allocates about 17% into the risk-free asset:
 
 .. testcode:: mod
 
-   print(f"risky     investment: {pf['x'].sum():.2f}%")
-   print(f"risk-less investment: {pf['x_rf']:.2f}%")
+   print(f"risky     investment: {100*pf['x'].sum():.2f}%")
+   print(f"risk-less investment: {100*pf['x_rf']:.2f}%")
 
 .. testoutput:: mod
 
-   risky     investment: 0.83%
-   risk-less investment: 0.17%
+   risky     investment: 83.18%
+   risk-less investment: 16.82%
 
 
 Note that the contribution of ``rf_return * x_rf`` to the portfolio's expected
