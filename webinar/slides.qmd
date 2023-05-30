@@ -1,0 +1,125 @@
+---
+title: "Gurobi OptiMods"
+subtitle: "Simple APIs for Common Optimization Tasks"
+title-slide-attributes:
+  data-background-image: images/titlebg.svg
+format:
+  revealjs:
+    logo: images/gurobi-light.svg
+    css: static/style.css
+    theme: default
+    footer: © 2023 Gurobi Optimization, LLC. All Rights Reserved
+    include-after-body: static/clean-title-page.html
+    revealjs-plugins:
+      - fullscreen
+controls: true
+controls-layout: edges
+---
+
+## Project Goals
+<!-- Section for Robert: introduction, docs overview, portfolio Mod walkthrough -->
+
+<!-- Regular slide: just notes -->
+- Open source
+- Hosted on github
+- Provides simple high-level APIs
+
+## Documentation
+<!-- Regular slide: docs embedded as a small window -->
+
+:::: {.columns}
+
+::: {.column width=50%}
+- Hosted on readthedocs
+:::
+
+::: {.column width=50%}
+
+<div style="height: 600px;">
+<iframe style="width: 100%; height: 100%;" src="https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/latest"></iframe>
+</div>
+
+:::
+
+::::
+
+## Gallery
+<!-- Regular slide: docs embedded as a small window -->
+
+:::: {.columns}
+
+::: {.column width=40%}
+- 7 Mods complete
+:::
+
+::: {.column width=60%}
+
+<div style="height: 600px;">
+<iframe style="width: 100%; height: 100%;" src="https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/latest/gallery.html"></iframe>
+</div>
+
+:::
+
+::::
+
+## {fullscreen=true}
+<!-- Full screen slide: notebook side-by-side with the docs -->
+
+<div class="fullpage">
+<div class="sidebyside">
+<embed class="notebookwindow" type="text/html" src="http://localhost:8888/notebooks/notebooks/portfolio.ipynb"/>
+<embed class="docswindow" type="text/html" src="https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/latest/mods/portfolio.html"/>
+</div>
+</div>
+
+
+## {fullscreen=true}
+<!-- Section for Simon: workforce Mod walkthrough, contributing guide, summing up -->
+
+<!-- Full screen slide: notebook side-by-side with the docs -->
+<div class="fullpage">
+<div class="sidebyside">
+<embed class="notebookwindow" type="text/html" src="http://localhost:8888/notebooks/notebooks/workforce.ipynb"/>
+<embed class="docswindow" type="text/html" src="https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/latest/mods/workforce.html"/>
+</div>
+</div>
+
+## Contributing: Propose Mods
+<!-- Regular slide: docs embedded as a small window -->
+
+:::: {.columns}
+
+::: {.column width=50%}
+- Got an idea? Post it as an issue!
+:::
+
+::: {.column width=50%}
+
+<div style="height: 600px;">
+<iframe style="width: 100%; height: 100%;" src="https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/latest/contributing.html"></iframe>
+</div>
+
+:::
+
+::::
+
+## Contributing: Build a Mod
+<!-- Regular slide: docs embedded as a small window -->
+
+:::: {.columns}
+
+::: {.column width=50%}
+- Welcome new additions
+- Detailed contributing guide (how to structure a Mod)
+- Submit a PR
+:::
+
+::: {.column width=50%}
+
+<div style="height: 600px;">
+<embed style="width: 100%; height: 100%;" type="text/html" src="https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/latest/adding.html"/>
+</div>
+
+:::
+
+::::

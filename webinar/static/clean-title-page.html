@@ -1,0 +1,39 @@
+<!-- https://stackoverflow.com/questions/75351401/remove-slide-number-and-footer-on-quarto-title-slide -->
+<!-- This could go in the plugin? -->
+
+<style>
+    .hide {
+        display: none !important;
+    }
+</style>
+
+
+<script>
+    function remove() {
+        let footer = document.querySelector('div.footer');
+        let slideNo = document.querySelector('div.slide-number');
+        let logo = document.querySelector('img.slide-logo');
+        slideNo.classList.add('hide');
+        footer.classList.add('hide');
+        logo.classList.add('hide');
+
+        Reveal.on('slidechanged', event => {
+            if (Reveal.isFirstSlide()) {
+                slideNo.classList.add('hide');
+                footer.classList.add('hide');
+                logo.classList.add('hide');
+            }
+            else if (Reveal.getCurrentSlide().hasAttribute("data-fullscreen")) {
+                slideNo.classList.add('hide');
+                footer.classList.add('hide');
+                logo.classList.remove('hide');
+            } else {
+                slideNo.classList.remove('hide');
+                footer.classList.remove('hide');
+                logo.classList.remove('hide');
+            }
+        });
+    }
+
+    window.onload = remove();
+</script>

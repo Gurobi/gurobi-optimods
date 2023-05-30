@@ -1,0 +1,64 @@
+/* ==== Configuration for fullscreen side-by-side notebook and docs ==== */
+
+/* Base container for centered alignment */
+.fullpage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+}
+
+/* Adds a small width margin so that the slide controls don't overlap content */
+.sidebyside {
+  width: calc(100% - 1.8em);
+  height: calc(100% - 0.5em);
+  display: flex;
+  flex-direction: row;
+}
+
+/* Choose a fixed width here which causes the RTD sidebar to be hidden by default */
+.docswindow {
+  width: 600px;
+  height: 100%;
+}
+
+/* Notebook uses all the remaining horizontal space */
+.notebookwindow {
+  flex: 1;
+  height: 100%;
+}
+
+/* ==== Theming for regular revealjs slides ==== */
+
+/* White text and sidebar on title slide */
+
+.quarto-title-block h1 {
+  border-left: 5px solid #dd1e12;
+  padding-left: 20px;
+  color: white;
+  text-align: left;
+}
+
+.quarto-title-block p {
+  padding-left: 30px;
+  color: white;
+  text-align: left;
+}
+
+/* Gurobitope on the title slide */
+.quarto-title-block h1::after {
+  content: url(../images/gurobi-cube.svg);
+  width: 140px;
+  float: right;
+  padding-right: 60px;
+  padding-top: 40px;
+}
+
+/* Red sidebar for all headings */
+/* Note: don't be tempted to set a min-height ... there is an empty h2 on fullscreen pages */
+.reveal h2 {
+  border-left: 5px solid #dd1e12;
+  padding-left: 20px;
+}
