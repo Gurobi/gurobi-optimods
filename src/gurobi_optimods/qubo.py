@@ -49,10 +49,10 @@ def solve_qubo(coeff_matrix, time_limit=GRB.INFINITY, *, create_env) -> QuboResu
     i.e., minimize quadratic function :math:`x'Qx` defined by coefficient matrix :math:`Q`
     over a binary decision variable vector :math:`x`
 
-    :param coeffMatrix: Quadratic coefficient matrix
-    :type coeffMatrix: :class:`numpy.ndarray` or :class:`scipy.sparse`
-    :param timeLimit: Time limit in seconds
-    :type timeLimit: :class:`int`
+    :param coeff_matrix: Quadratic coefficient matrix
+    :type coeff_matrix: :class:`numpy.ndarray` or :class:`scipy.sparse`
+    :param time_limit: Time limit in seconds
+    :type time_limit: :class:`int`
     :return: 0/1 solution array, objective value
     :rtype: :class:`QuboResult`
     """
