@@ -122,13 +122,13 @@ from this DataFrame:
     gamma = 100.0
 
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma)
+    pf = mvp.efficient_portfolio(gamma)
 
 .. testoutput:: mod
     :hide:
 
     ...
-    Optimize a model with 82 rows, 90 columns and 190 nonzeros
+    Optimize a model with 82 rows, 91 columns and 190 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -189,14 +189,28 @@ from this DataFrame:
 Solution
 --------
 
-The returned Series contains the relative investment for each asset;
-here the solution suggests to spread the investments over five positions
-(AA, DD, GG, HH, II).  The other allocations are negligible.
+The return value of the ``efficient_portfolio`` method is a dict containing
+information on the computed portfolio.
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>> x
+    >>> pf.keys()
+    dict_keys(['x', 'return', 'risk'])
+
+The data returned is as follows:
+
+* ``x`` : The relative investments :math:`x` for each asset
+* ``return`` : The estimated return :math:`\mu^T x`
+* ``risk`` : The estimated risk :math:`x^T \Sigma x`
+
+In this example the solution suggests to spread the investments over five
+positions (AA, DD, GG, HH, II).  The other allocations are negligible.
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> pf["x"]
     AA    4.236507e-01
     BB    1.743570e-07
     CC    7.573610e-10
@@ -208,6 +222,17 @@ here the solution suggests to spread the investments over five positions
     II    6.888222e-02
     JJ    1.248442e-08
     dtype: float64
+
+The estimated risk and return are:
+positions (AA, DD, GG, HH, II).  The other allocations are negligible.
+
+.. doctest:: mod
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> round(pf["risk"], ndigits=8)
+    0.00017552
+    >>> round(pf["return"], ndigits=8)
+    0.00365177
 
 .. _factor models:
 
@@ -250,25 +275,25 @@ single-factor model:
     # Full covariance matrix according to single factor model
     Sigma = beta @ beta.T * market_variance**2 + np.diag(asset_risk**2)
     mvp_matrix = MeanVariancePortfolio(mu, cov_matrix=Sigma)
-    x_matrix = mvp_matrix.efficient_portfolio(20)
+    x_matrix = mvp_matrix.efficient_portfolio(20)["x"]
 
     # Better use known factorization
     F1 = beta * market_variance
     F2 = np.diag(asset_risk)
     mvp_factors = MeanVariancePortfolio(mu, cov_factors=(F1, F2))
-    x_factors = mvp_factors.efficient_portfolio(20)
+    x_factors = mvp_factors.efficient_portfolio(20)["x"]
 
 .. testoutput:: mod
     :hide:
 
     ...
-    Optimize a model with 26 rows, 27 columns and 57 nonzeros
+    Optimize a model with 26 rows, 28 columns and 57 nonzeros
     ...
     Model has 6 quadratic objective terms
     ...
     Presolved: 1 rows, 3 columns, 3 nonzeros
     ...
-    Optimize a model with 30 rows, 31 columns and 67 nonzeros
+    Optimize a model with 30 rows, 32 columns and 67 nonzeros
     ...
     Model has 4 quadratic objective terms
     ...
@@ -316,13 +341,13 @@ portfolio value (130-30 strategy), you can do:
     mu = data.mean()
     gamma = 100.0
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, max_total_short=0.3)
+    x = mvp.efficient_portfolio(gamma, max_total_short=0.3)["x"]
 
 .. testoutput:: mod
     :hide:
 
     ...
-    Optimize a model with 82 rows, 90 columns and 200 nonzeros
+    Optimize a model with 82 rows, 91 columns and 200 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -371,13 +396,13 @@ optimal portfolio :math:`x`, you can use the keyword parameters ``fees_buy``
     gamma = 100.0
 
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, fees_buy=0.005)
+    x = mvp.efficient_portfolio(gamma, fees_buy=0.005)["x"]
 
 .. testoutput:: mod
     :hide:
 
     ...
-    Optimize a model with 82 rows, 90 columns and 200 nonzeros
+    Optimize a model with 82 rows, 91 columns and 200 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -428,13 +453,13 @@ trades) keyword parameters as follows:
     gamma = 100.0
 
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, costs_buy=0.0025)
+    x = mvp.efficient_portfolio(gamma, costs_buy=0.0025)["x"]
 
 .. testoutput:: mod
     :hide:
 
     ...
-    Optimize a model with 82 rows, 90 columns and 200 nonzeros
+    Optimize a model with 82 rows, 91 columns and 200 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -484,20 +509,20 @@ allocated to each trade:
     mu = data.mean()
     gamma = 100.0
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x_plain = mvp.efficient_portfolio(gamma, max_total_short=0.3)
-    x_minpos = mvp.efficient_portfolio(gamma, max_total_short=0.3, min_long=0.05, min_short=0.05)
+    x_plain = mvp.efficient_portfolio(gamma, max_total_short=0.3)["x"]
+    x_minpos = mvp.efficient_portfolio(gamma, max_total_short=0.3, min_long=0.05, min_short=0.05)["x"]
 
 .. testoutput:: mod
     :hide:
 
     ...
-    Optimize a model with 82 rows, 90 columns and 200 nonzeros
+    Optimize a model with 82 rows, 91 columns and 200 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
     Presolved: 62 rows, 70 columns, 160 nonzeros
     ...
-    Optimize a model with 102 rows, 90 columns and 240 nonzeros
+    Optimize a model with 102 rows, 91 columns and 240 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -546,13 +571,13 @@ total number of open positions to three can be achieved as follows:
     gamma = 100.0
 
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, max_positions=3)
+    x = mvp.efficient_portfolio(gamma, max_positions=3)["x"]
 
 .. testoutput:: mod
     :hide:
 
     ...
-    Optimize a model with 83 rows, 90 columns and 210 nonzeros
+    Optimize a model with 83 rows, 91 columns and 210 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -588,6 +613,59 @@ the ``max_trades`` keyword parameter.  Without a starting portfolio (see
 of positions (via ``max_positions``).  But with a starting portfolio defined,
 this parameter will limit the number of trades changing it.
 
+
+Including a risk-free asset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A risk-free asset can be included in the optimal choice of portfolio through
+the ``rf_return`` parameter.  Its value specifies the risk-free return rate.
+For example, here we compute an efficient portfolio under the assumption that
+the risk-free return rate is 0.25%:
+
+.. testcode:: mod
+
+    import pandas as pd
+
+    from gurobi_optimods.datasets import load_portfolio
+    from gurobi_optimods.portfolio import MeanVariancePortfolio
+
+    data = load_portfolio()
+    cov_matrix = data.cov()
+    mu = data.mean()
+    gamma = 12.5
+
+    mvp = MeanVariancePortfolio(mu, cov_matrix)
+    pf = mvp.efficient_portfolio(gamma, rf_return=0.0025)
+
+.. testoutput:: mod
+    :hide:
+
+    ...
+    Optimize a model with 82 rows, 91 columns and 191 nonzeros
+    ...
+    Model has 55 quadratic objective terms
+    ...
+    Presolved: 1 rows, 11 columns, 11 nonzeros
+    ...
+
+If a risk-free return rate has been specified, the returned portfolio
+information has an additional key ``x_rf`` that tells the proportion of
+investment into the risk-free asset.  In this example the optimal portfolio
+allocates about 17% into the risk-free asset:
+
+.. testcode:: mod
+
+   print(f"risky     investment: {100*pf['x'].sum():.2f}%")
+   print(f"risk-less investment: {100*pf['x_rf']:.2f}%")
+
+.. testoutput:: mod
+
+   risky     investment: 83.18%
+   risk-less investment: 16.82%
+
+
+Note that the contribution of ``rf_return * x_rf`` to the portfolio's expected
+value is already included in ``pf["return"]``.
 
 Starting portfolio & rebalancing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -643,13 +721,13 @@ using at most two trades:
     )
 
     x = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=2,
-        fees_buy=0.001, fees_sell=0.002)
+        fees_buy=0.001, fees_sell=0.002)["x"]
 
 .. testoutput:: mod
     :hide:
 
     ...
-    Optimize a model with 83 rows, 90 columns and 230 nonzeros
+    Optimize a model with 83 rows, 91 columns and 230 nonzeros
     ...
     Model has 55 quadratic objective terms
     ...
@@ -778,17 +856,13 @@ cardinality constraints::
 
     for g in gammas:
         mvp = MeanVariancePortfolio(mu, cov_factors=(F, risk_specific))
-        # No cardinality constraints
-        x = mvp.efficient_portfolio(g, silent=True)
-        ret = mu @ x
-        risk = ((F.T @ x)**2).sum() + (x**2 * risk_specific**2).sum()
-        rr_pairs_unc.append((ret, risk))
+        # Optimal portfolio w/o cardinality constraints
+        pf = mvp.efficient_portfolio(g, silent=True)
+        rr_pairs_unc.append((pf["risk"], pf["return"]))
         for max_positions in [1, 2, 3]:
-            # Some cardinality constraints
-            x = mvp.efficient_portfolio(g, max_positions=max_positions, silent=True)
-            ret = mu @ x
-            risk = ((F.T @ x)**2).sum() + (x**2 * risk_specific**2).sum()
-            rr_pairs_con[max_positions].append((ret, risk))
+            # Optimal portfolio with cardinality constraints
+            pf = mvp.efficient_portfolio(g, max_positions=max_positions, silent=True)
+            rr_pairs_con[max_positions].append((pf["risk"], pf["return"]))
 
 Comparison
 ~~~~~~~~~~
@@ -802,10 +876,11 @@ efficient frontiers look like this:
     from matplotlib import pyplot as plt
     fig, ax = plt.subplots()
 
-    ax.scatter(list(t[1] for t in rr_pairs_unc), list(t[0] for t in rr_pairs_unc), label="unconstrained")
+    risk, ret = zip(*rr_pairs_unc)
+    ax.scatter(risk, ret, label="unconstrained")
     for k in rr_pairs_con:
-        v = rr_pairs_con[k]
-        ax.scatter(list(t[1] for t in v), list(t[0] for t in v), label=f"{k:d} asset{'' if k==1 else 's':s}")
+        risk, ret = zip(*rr_pairs_con[k])
+        ax.scatter(risk, ret, label=f"{k:d} asset{'' if k==1 else 's':s}")
         ax.legend(loc='lower right')
         plt.xlabel("risk")
         plt.ylabel("return")

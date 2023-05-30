@@ -85,48 +85,72 @@ class MeanVariancePortfolio:
         min_short=None,
         max_total_short=0.0,
         initial_holdings=None,
+        rf_return=None,
         *,
         create_env,
     ):
-        """Compute efficient portfolio for given paramters
+        """Compute efficient portfolio for given parameters
 
-        :param gamma: Risk aversion cofficient for balancing risk and return;
-            the resulting objective functions is
+        Parameters
+        ----------
+
+        gamma : :class:`float` >= 0
+            Risk aversion cofficient for balancing risk and return; the
+            resulting objective functions is
             :math:`\mu^T x - 0.5 \gamma x^T \Sigma x`
-        :type gamma: :class:`float` >= 0
-        :param max_trades: Upper limit on the number of trades
-        :type max_trades: :class:`int` >= 0
-        :param max_positions: Upper limit on the number of open positions
-        :type max_positions: :class:`int` >= 0
-        :param fees_buy: Fixed-charge fee for each buy transaction, relative
-            to total portfolio value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param fees_sell: Fixed-charge fee for each sell transaction, relative
-            to total portfolio value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param costs_buy: Variable transaction costs for each buy transaction, relative
-            to trade value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param costs_sell: Variable transaction costs for each sell transaction, relative
-            to trade value
-        :type fees_buy: :class:`float` or :class:`np.ndarray` >= 0
-        :param min_long: Lower bound on the volume on a traded long position,
-            relative to total portfolio value
-        :type min_long: :class:`float` >= 0
-        :param min_short: Lower bound on the volume on a traded short position,
-            relative to total portfolio value
-        :type min_long: :class:`float` >= 0
-        :param max_total_short: Maximum total short positions, relative to
-            total investment.
-        :type max_total_short: :class:`float` >= 0
-        :param max_total_short: Maximum total short positions, relative to
-            total investment.
-        :type max_total_short: :class:`float` >= 0
-        :param initial_holdings: Initial portfolio holdings (sum needs to be <= 1)
-        :type initial_holdings: 1-d :class:`np.ndarray`
+        max_trades : :class:`int` >= 0, optional
+            Upper limit on the number of trades
+        max_positions : :class:`int` >= 0, optional
+            Upper limit on the number of open positions
+        fees_buy : :class:`float` or :class:`np.ndarray` >= 0, optional
+            Fixed-charge fee for each buy transaction, relative to total
+            portfolio value
+        fees_sell : :class:`float` or :class:`np.ndarray` >= 0, optional
+            Fixed-charge fee for each sell transaction, relative to total
+            portfolio value
+        costs_buy : :class:`float` or :class:`np.ndarray` >= 0, optional
+            Variable transaction costs for each buy transaction, relative to
+            trade value
+        costs_sell : :class:`float` or :class:`np.ndarray` >= 0, optional
+            Variable transaction costs for each sell transaction, relative to
+            trade value
+        min_long : :class:`float` >= 0, optional
+            Lower bound on the volume on a traded long position, relative to
+            total portfolio value
+        min_short : :class:`float` >= 0, optional
+            Lower bound on the volume on a traded short position, relative to
+            total portfolio value
+        max_total_short : :class:`float` >= 0, optional
+            Maximum total short positions, relative to total investment.
+        initial_holdings : 1-d :class:`np.ndarray`, optional
+            Initial portfolio holdings (sum needs to be <= 1)
+        rf_return : :class:`float`, optional, default None
+            Include a risk-free asset having return rate ``rf_return``.
 
-        Refer to :ref:`portfolio features` for a detailed discussion of these
+        Returns
+        -------
+        mvp_result : dict
+            A dict containing the efficient portfolio, along with auxiliary
+            information:
+
+            * ``mvp_result["x"]``: The portfolio vector :math:`x`
+            * ``mvp_result["risk"]``: The estimated risk :math:`x^T \Sigma x`
+              of the portfolio
+            * ``mvp_result["return"]``: The estimated return :math:`\mu^T x` of
+              the portfolio
+            * ``mvp["x_rf"]`` relative investment in the risk-free asset.
+              Present only if ``rf_return`` was non-None on input
+
+            Some combinations of requested portfolio features may rule out
+            **all** possible portfolios.  In this corner case the value
+            ``None`` is returned.
+
+
+        Notes
+        -----
+        Refer to :ref:`portfolio features` for a detailed discussion of all
         parameters.
+
         """
 
         fees_buy = self._homogenize_input(fees_buy)
@@ -142,7 +166,7 @@ class MeanVariancePortfolio:
             initial_holdings = np.zeros(self.mu.shape)
 
         with create_env() as env, gp.Model("efficient_portfolio", env=env) as m:
-            x = self._populate_model(
+            x, x_rf = self._populate_model(
                 m,
                 gamma,
                 max_trades,
@@ -155,47 +179,22 @@ class MeanVariancePortfolio:
                 min_short,
                 max_total_short,
                 initial_holdings,
+                rf_return,
             )
 
             m.optimize()
             status = m.Status
             if status == GRB.OPTIMAL:
-                xvals = x.X
+                x_vals = x.X
+                x_rf_val = x_rf.X
 
         if status == GRB.OPTIMAL:
-            return self._convert_result(xvals)
+            return self._construct_result(x_vals, x_rf_val, rf_return)
         elif status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             print("No portfolio satisfies the constraints!")
             return None
         else:
             return None
-
-    # Just boilerplate, waiting to be filled with life
-    def _minimize_risk(self, expected_return):
-        with gp.Env() as env, gp.Model("min_risk", env=env) as m:
-            x = m.addMVar(shape=self.mu.shape, name="x")
-
-            m.addConstr(x.sum() == 1, name="fully_invested")
-            m.addConstr(self.mu @ x >= expected_return, name="expected_return")
-            m.setObjective(x @ self.covariance @ x)
-
-            m.optimize()
-
-            if m.Status == GRB.OPTIMAL:
-                return self._convert_result(x.X)
-
-    # Just boilerplate, waiting to be filled with life
-    def _maximize_return(self, max_risk):
-        with gp.Env() as env, gp.Model("max_return", env=env) as m:
-            x = m.addMVar(shape=self.mu.shape, name="x")
-            m.addConstr(x.sum() == 1, name="fully_invested")
-            m.addConstr(x @ self.covariance @ x <= max_risk, name="max_risk")
-            m.setObjective(self.mu @ x, GRB.MAXIMIZE)
-
-            m.optimize()
-
-            if m.Status == GRB.OPTIMAL:
-                return self._convert_result(x.X)
 
     def _populate_model(
         self,
@@ -211,8 +210,9 @@ class MeanVariancePortfolio:
         min_short,
         max_total_short,
         initial_holdings,
+        rf_return,
     ):
-        # max x' * mu - gamma * x' * cov_matrix * x
+        # max rf_return * x_rf + x' * mu - gamma * x' * cov_matrix * x
         # s.t.
         #      x = x_long - x_short  (x is split in positive/negative parts)
         #
@@ -224,6 +224,7 @@ class MeanVariancePortfolio:
         #               + sum(b_sell) * fees_sell
         #               + sum(x_buy) * costs_buy
         #               + sum(x_sell) * costs_sell
+        #               + x_rf
         #      = 1
         #                             (fully invested, minus transaction costs and fees)
         #
@@ -258,6 +259,9 @@ class MeanVariancePortfolio:
         x_short = m.addMVar(shape=self.mu.shape, name="x_short")
         m.addConstr(x == x_long - x_short)
 
+        # Dummy variable for investment in risk-free asset,
+        x_rf = m.addVar(lb=0.0, ub=0.0, name="x_rf")
+
         x_buy = m.addMVar(shape=self.mu.shape, name="x_buy")
         x_sell = m.addMVar(shape=self.mu.shape, name="x_sell")
         m.addConstr(x - initial_holdings == x_buy - x_sell)
@@ -268,6 +272,8 @@ class MeanVariancePortfolio:
 
         b_buy = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_buy")
         b_sell = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_sell")
+
+        m.update()
 
         # Define VUB constraints for x_long and x_short.
         #
@@ -307,6 +313,10 @@ class MeanVariancePortfolio:
         if costs_sell is not None:
             investment += (x_sell * costs_sell).sum()
 
+        if rf_return is not None:
+            x_rf.ub = 1.0
+            investment += x_rf
+
         if min_long is not None:
             m.addConstr(x_buy >= min_long * b_buy, name="min_buy")
 
@@ -317,10 +327,7 @@ class MeanVariancePortfolio:
 
         if not isinstance(self.covariance, tuple):
             # Basic mean-variance weighted objective
-            m.setObjective(
-                self.mu @ x - 0.5 * gamma * x @ self.covariance @ x,
-                GRB.MAXIMIZE,
-            )
+            objexpr = self.mu @ x - 0.5 * gamma * x @ self.covariance @ x
         else:
             # Idea:   We have given  Sigma =
             #
@@ -343,17 +350,36 @@ class MeanVariancePortfolio:
                 m.addConstr(F.T @ x == y, name=f"link_factor{idx:d}_x")
                 objexpr -= 0.5 * gamma * y @ y
 
-            m.setObjective(objexpr, GRB.MAXIMIZE)
+        if rf_return is not None:
+            objexpr += rf_return * x_rf
 
-        return x
+        m.setObjective(objexpr, GRB.MAXIMIZE)
+        return (x, x_rf)
 
-    def _convert_result(self, x):
+    def _construct_result(self, x, x_rf, rf_return):
+        pf = dict()
         if self.resultType == "numpy":
-            return x
+            pf["x"] = x
         elif self.resultType == "pandas":
-            return pd.Series(x, index=self.index)
+            pf["x"] = pd.Series(x, index=self.index)
         else:
             assert False
+
+        pf["return"] = self.mu @ x
+
+        if not isinstance(self.covariance, tuple):
+            pf["risk"] = x @ self.covariance @ x
+        else:
+            pf["risk"] = 0.0
+            for F in self.covariance:
+                y = x @ F
+                pf["risk"] += y @ y
+
+        if rf_return is not None:
+            pf["x_rf"] = x_rf
+            pf["return"] += rf_return * x_rf
+
+        return pf
 
     def _homogenize_input(self, input_data):
         # Check and unpack if input_data is a Series
