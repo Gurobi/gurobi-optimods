@@ -85,7 +85,7 @@ class TestMVPBasic(unittest.TestCase):
         self.assertIn("Gurobi Optimizer", consoleContent)
 
         with redirect_stdout(io.StringIO()) as console:
-            pf = mvp.efficient_portfolio(0.5, silent=True)
+            pf = mvp.efficient_portfolio(0.5, verbose=False)
         consoleContent = console.getvalue()
         self.assertEqual(consoleContent, "")
 

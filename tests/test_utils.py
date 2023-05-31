@@ -37,13 +37,13 @@ class TestOptimodDecorator(unittest.TestCase):
         self.assertIn("Gurobi Optimizer", buffer_stdout.getvalue())
         self.assertEqual(buffer_stderr.getvalue(), "")
 
-    def test_silent(self):
-        # silent=True disables all output
+    def test_not_verbose(self):
+        # verbose=False disables all output
 
         with redirect_stdout(io.StringIO()) as buffer_stdout, redirect_stderr(
             io.StringIO()
         ) as buffer_stderr:
-            self.mod(silent=True)
+            self.mod(verbose=False)
 
         self.assertEqual(buffer_stdout.getvalue(), "")
         self.assertEqual(buffer_stderr.getvalue(), "")
@@ -76,7 +76,7 @@ class TestOptimodDecorator(unittest.TestCase):
 class TestOverrideParams(unittest.TestCase):
     def test_mod_override_outputflag(self):
         # The mod can pass custom parameters which override those created
-        # by silent/logfile
+        # by verbose/logfile
 
         @optimod()
         def mod(*, create_env):
@@ -89,7 +89,7 @@ class TestOverrideParams(unittest.TestCase):
         ) as buffer_stderr:
             # Normally, output would be produced, but the mod sets
             # outputflag=0, disabling all gurobi logging
-            mod(silent=False)
+            mod(verbose=True)
 
         self.assertEqual(buffer_stdout.getvalue(), "")
         self.assertEqual(buffer_stderr.getvalue(), "")

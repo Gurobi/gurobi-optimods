@@ -7,11 +7,11 @@
 #       with create_env() as env, gp.Model(env=env) as model:
 #           # do stuff with model
 #
-# The mod then gets two arguments for free: `silent`, where `silent=True`
-# suppresses all output, and logfile=<file-path> creates a log file including
-# logger output from the mod and gurobi output.
+# The mod then gets two arguments for free: `verbose`, where `verbose=False`
+# suppresses all output, and logfile=<file-path>, which creates a log file
+# including logger output from the mod and gurobi output.
 #
-# FIXME this won't handle multi-threaded stuff well (context manipulates
+# Note that this won't handle multi-threaded stuff well (context manipulates
 # global logger handlers). But it's simpler to implement in the mods than
 # passing some funky log collecting object around.
 
@@ -107,11 +107,11 @@ def optimod(mod_logger=None):
     def optimod_decorator(func):
         @functools.wraps(func)
         def optimod_decorated(
-            *args, silent=False, logfile=None, solver_params=None, **kwargs
+            *args, verbose=True, logfile=None, solver_params=None, **kwargs
         ):
             with _mod_context(
                 mod_logger=mod_logger,
-                log_to_console=not silent,
+                log_to_console=verbose,
                 log_to_file=logfile,
                 user_params=solver_params,
             ) as create_env:
