@@ -82,7 +82,7 @@ class TestOptimodDecorator(unittest.TestCase):
             try:
                 model.optimize()
             except gp.GurobiError as ge:
-                if "Model too large for size-limited license" in ge.message:
+                if ge.errno == gp.GRB.ERROR_SIZE_LIMIT_EXCEEDED:
                     is_limited = True
 
         if not is_limited:
@@ -101,7 +101,7 @@ class TestOptimodDecorator(unittest.TestCase):
             try:
                 too_large_mod()
             except gp.GurobiError as ge:
-                self.assertNotIn("Model too large for size-limited license", ge.message)
+                self.assertNotEqual(ge.errno, gp.GRB.ERROR_SIZE_LIMIT_EXCEEDED)
                 raise
 
         self.assertIn(
