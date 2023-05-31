@@ -72,6 +72,42 @@ class TestOptimodDecorator(unittest.TestCase):
             self.mod(logfile=logfile)
             assert not w
 
+    def test_license_limit(self):
+        # Ensure that we point to an appropriate license limit KB
+
+        # Step 1: Are we using the pip license at all?
+        is_limited = False
+        with gp.Env() as env, gp.Model(env=env) as model:
+            model.addVars(2001)
+            try:
+                model.optimize()
+            except gp.GurobiError as ge:
+                if "Model too large for size-limited license" in ge.message:
+                    is_limited = True
+
+        if not is_limited:
+            self.skipTest("No pip license in use")
+
+        # Step 2: Trigger a license limit error through env creation wrapper
+        @optimod()
+        def too_large_mod(*, create_env):
+            with create_env() as env, gp.Model(env=env) as model:
+                model.addVars(2001)
+                model.optimize()
+
+        # We expect a ValueError; getting the standard license limit  error is a
+        # fail, everything else an error
+        with self.assertRaises(ValueError) as cm:
+            try:
+                too_large_mod()
+            except gp.GurobiError as ge:
+                self.assertNotIn("Model too large for size-limited license", ge.message)
+                raise
+
+        self.assertIn(
+            "Given data exceeds Gurobi's license limits; see https:/XXX for resolution"
+        )
+
 
 class TestOverrideParams(unittest.TestCase):
     def test_mod_override_outputflag(self):
