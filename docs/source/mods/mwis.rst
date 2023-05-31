@@ -33,7 +33,7 @@ vertex weight is maximum.
 
 .. tabs::
 
-    .. tab:: Domain-Specific Description
+    .. tab:: Description
 
         Let :math:`G = (V, E, w)` be an undirected graph where each vertex
         :math:`i \in V` has a positive weight :math:`w_i`. Find a

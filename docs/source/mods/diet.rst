@@ -23,7 +23,7 @@ meets minimum requirements specified for each nutrient.
 
 .. tabs::
 
-    .. tab:: Domain-Specific Description
+    .. tab:: Description
 
         We have some data on various food items: their cost per unit,
         and amount per unit of various nutrients. We are also given

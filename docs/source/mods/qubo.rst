@@ -29,7 +29,7 @@ Problem Specification
 
 .. tabs::
 
-    .. tab:: Domain-Specific Description
+    .. tab:: Description
 
         We are given a set :math:`I` of :math:`n` items,
         weights :math:`q_i \in \mathbb{R}`
@@ -75,7 +75,7 @@ Problem Specification
         for binary variables.
 
 The input data consisting of the item (pair) weights is defined as a matrix (see the
-domain-specific description), either as a NumPy array :class:`numpy.ndarray`
+description), either as a NumPy array :class:`numpy.ndarray`
 or as a SciPy sparse matrix :class:`scipy.sparse`.
 
 Code
