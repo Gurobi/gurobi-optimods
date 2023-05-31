@@ -5,7 +5,7 @@ Bipartite Matching
 
 
 import logging
-from typing import List, Optional, overload
+from typing import List, overload
 
 import numpy as np
 import pandas as pd
