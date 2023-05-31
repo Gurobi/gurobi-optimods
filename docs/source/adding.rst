@@ -68,12 +68,6 @@ of a mod takes this form::
 
         ... describe additional arguments ...
 
-        :param silent: ``silent=True`` suppresses all console output. Defaults
-            to ``False``.
-        :type silent: bool
-        :param logfile: Write all mod output to the given file path. Defaults
-            to ``None`` (no log file produced)
-        :type logfile: str
         :return: Description of returned result
         :rtype: Type of returned result
         """
@@ -96,8 +90,8 @@ function returns using context managers. Gurobi environments should be created
 by calling ``create_env``. This function is provided to your mod by the
 ``@optimod()`` decorator and supplies some necessary parameters to Gurobi to
 handle console output and log files consistently across mods. The standard
-parameters ``silent`` and ``logfile`` are also handled by the decorator, but you
-should include them in the docstring as above.
+parameters ``verbose`` and ``logfile`` are also handled by the decorator and will
+be included automatically in the API documentation.
 
 If your mod needs to produce any output, use the in-built python logging call
 ``logger.info``.

@@ -211,7 +211,7 @@ formats.
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.min_cost_flow import min_cost_flow
           >>> edge_data, node_data = datasets.load_graph()
-          >>> obj, sol = min_cost_flow(edge_data, node_data, silent=True)
+          >>> obj, sol = min_cost_flow(edge_data, node_data, verbose=False)
           >>> obj
           31.0
           >>> sol
@@ -238,7 +238,7 @@ formats.
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.min_cost_flow import min_cost_flow_networkx
           >>> G = datasets.load_graph_networkx()
-          >>> obj, sol = min_cost_flow_networkx(G, silent=True)
+          >>> obj, sol = min_cost_flow_networkx(G, verbose=False)
           >>> obj
           31.0
           >>> list(sol.edges(data=True))
@@ -255,7 +255,7 @@ formats.
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.min_cost_flow import min_cost_flow_scipy
           >>> G, capacities, cost, demands = datasets.load_graph_scipy()
-          >>> obj, sol = min_cost_flow_scipy(G, capacities, cost, demands, silent=True)
+          >>> obj, sol = min_cost_flow_scipy(G, capacities, cost, demands, verbose=False)
           >>> obj
           31.0
           >>> sol

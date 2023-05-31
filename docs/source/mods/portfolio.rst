@@ -806,11 +806,11 @@ cardinality constraints::
     for g in gammas:
         mvp = MeanVariancePortfolio(mu, cov_factors=(F, risk_specific))
         # Optimal portfolio w/o cardinality constraints
-        pf = mvp.efficient_portfolio(g, silent=True)
+        pf = mvp.efficient_portfolio(g, verbose=False)
         rr_pairs_unc.append((pf["risk"], pf["return"]))
         for max_positions in [1, 2, 3]:
             # Optimal portfolio with cardinality constraints
-            pf = mvp.efficient_portfolio(g, max_positions=max_positions, silent=True)
+            pf = mvp.efficient_portfolio(g, max_positions=max_positions, verbose=False)
             rr_pairs_con[max_positions].append((pf["risk"], pf["return"]))
 
 Comparison

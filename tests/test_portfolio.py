@@ -72,7 +72,7 @@ class TestMVPBasic(unittest.TestCase):
         consoleContent = console.getvalue()
         self.assertEqual(consoleContent, "")
 
-    def test_silent(self):
+    def test_non_verbose(self):
         data = load_portfolio()
         cov_matrix = data.cov()
         mu = data.mean()

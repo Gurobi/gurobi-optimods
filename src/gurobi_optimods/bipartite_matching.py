@@ -30,8 +30,6 @@ def maximum_bipartite_matching(
     graph: sp.spmatrix,
     nodes1: np.ndarray,
     nodes2: np.ndarray,
-    silent: bool = False,
-    logfile: Optional[str] = None,
 ) -> sp.spmatrix:
     ...
 
@@ -41,8 +39,6 @@ def maximum_bipartite_matching(
     graph: pd.DataFrame,
     nodes1: str,
     nodes2: str,
-    silent: bool = False,
-    logfile: Optional[str] = None,
 ) -> pd.DataFrame:
     ...
 
@@ -54,8 +50,6 @@ if nx is not None:
         graph: nx.Graph,
         nodes1: List,
         nodes2: List,
-        silent: bool = False,
-        logfile: Optional[str] = None,
     ) -> nx.Graph:
         ...
 

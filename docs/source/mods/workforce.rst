@@ -318,7 +318,7 @@ set to ``True`` to enforce the new requirement.
     ...     shift_requirements=data.shift_requirements,
     ...     worker_limits=worker_limits,
     ...     rolling_limits=True,
-    ...     silent=True,
+    ...     verbose=False,
     ... )
     >>> shifts_table = pd.pivot_table(
     ...     assigned_shifts.assign(value=1),
