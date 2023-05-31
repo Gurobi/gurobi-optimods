@@ -5,8 +5,7 @@ We welcome contributions from the commumnity: bug fixes, doc corrections,
 extensions to existing Mods, or development of new Mods. This page describes
 conventions to follow when contributing, and the development process we follow
 for the project, which is applicable to all contributors. For guidelines on
-proposing and implementing new Mods, see :doc:`adding`. For discussion on
-extending existing Mods, see :doc:`extending`.
+proposing and implementing new Mods, see :doc:`adding`.
 
 Coding Standards
 ----------------

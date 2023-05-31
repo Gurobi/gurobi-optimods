@@ -14,13 +14,14 @@ implementation of a Mod to tailor it to their use-case. Read the :doc:`usage`
 section first for an overview of the design and use-case for the OptiMods.
 
 Check out :doc:`gallery` for a quick overview of the current set of implemented
-Mods. We welcome contributions of use-cases you are interested in, or extensions
-to existing Mods. See :doc:`contributing` and :doc:`extending` for more
-information on how to get involved in the project.
+Mods. We welcome contributions of new Mods based on use-cases you are interested
+in, as well as fixes and improvements to existing Mods. See :doc:`contributing`
+and :doc:`adding` for more information on how to get involved in the project.
 
 .. toctree::
    :maxdepth: 1
    :caption: Start
+   :hidden:
 
    installation
    usage
@@ -28,18 +29,18 @@ information on how to get involved in the project.
 .. toctree::
    :maxdepth: 1
    :caption: User Guide
+   :hidden:
 
    gallery
-   extending
+   contributing
    adding
-   beyond
 
 .. toctree::
    :maxdepth: 1
    :caption: Reference
+   :hidden:
 
    api
-   contributing
    dev-reference
    license
    contact
