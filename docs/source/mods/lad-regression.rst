@@ -114,11 +114,11 @@ and ``X_test`` have shape ``(n, m)``, while response variable datasets
     >>> y_test.shape
     (111,)
 
-Comparison with OLS
--------------------
+Comparison with Ordinary Least Squares
+--------------------------------------
 
 Here we extract the coefficients of the fitted model and compare them with the
-coefficients found using OLS.
+coefficients found using Ordinary Least Squares (OLS).
 
 .. testcode:: lad_regression
 

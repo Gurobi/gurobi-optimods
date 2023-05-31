@@ -19,7 +19,7 @@ The OptiMods Gallery
         :img-top: mods/figures/pie.png
 
     .. grid-item-card:: Least Absolute Deviation Regression
-        :link: mods/l1-regression
+        :link: mods/lad-regression
         :link-type: doc
         :text-align: center
         :img-top: mods/icons/lad-regression.png
@@ -61,7 +61,7 @@ The OptiMods Gallery
 
    mods/bipartite-matching
    mods/diet
-   mods/l1-regression
+   mods/lad-regression
    mods/min-cost-flow
    mods/mwis
    mods/portfolio
