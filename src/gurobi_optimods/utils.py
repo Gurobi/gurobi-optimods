@@ -90,6 +90,14 @@ def _mod_context(
     try:
         yield create_env
 
+    except gp.GurobiError as ge:
+        if "Model too large for size-limited license" in ge.message:
+            raise ValueError(
+                "Given data exceeds Gurobi's license limits; see https:/XXX for resolution"
+            )
+        else:
+            raise
+
     finally:
         if log_to_console:
             mod_logger.removeHandler(ch)
