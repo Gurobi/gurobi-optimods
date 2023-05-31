@@ -29,53 +29,37 @@ class TestOptimodDecorator(unittest.TestCase):
     def test_basic(self):
         # By default, logs are written to standard output
 
-        buffer_stdout = io.StringIO()
-        buffer_stderr = io.StringIO()
-
-        with redirect_stdout(buffer_stdout), redirect_stderr(buffer_stderr):
+        with redirect_stdout(io.StringIO()) as buffer_stdout, redirect_stderr(
+            io.StringIO()
+        ) as buffer_stderr:
             self.mod()
 
-        buffer_stdout.seek(0)
-        buffer_stderr.seek(0)
-
-        self.assertIn("Gurobi Optimizer", buffer_stdout.read())
-        self.assertEqual(buffer_stderr.read(), "")
+        self.assertIn("Gurobi Optimizer", buffer_stdout.getvalue())
+        self.assertEqual(buffer_stderr.getvalue(), "")
 
     def test_silent(self):
         # silent=True disables all output
 
-        buffer_stdout = io.StringIO()
-        buffer_stderr = io.StringIO()
-
-        with redirect_stdout(buffer_stdout), redirect_stderr(buffer_stderr):
+        with redirect_stdout(io.StringIO()) as buffer_stdout, redirect_stderr(
+            io.StringIO()
+        ) as buffer_stderr:
             self.mod(silent=True)
 
-        buffer_stdout.seek(0)
-        buffer_stderr.seek(0)
-
-        self.assertEqual(buffer_stdout.read(), "")
-        self.assertEqual(buffer_stderr.read(), "")
+        self.assertEqual(buffer_stdout.getvalue(), "")
+        self.assertEqual(buffer_stderr.getvalue(), "")
 
     def test_logfile(self):
         # Write to a target log file
 
-        buffer_stdout = io.StringIO()
-        buffer_stderr = io.StringIO()
-
         with tempfile.TemporaryDirectory() as tempdir, redirect_stdout(
-            buffer_stdout
-        ), redirect_stderr(buffer_stderr):
-
+            io.StringIO()
+        ) as buffer_stdout, redirect_stderr(io.StringIO()) as buffer_stderr:
             logfile = os.path.join(tempdir, "tmp.log")
             self.mod(logfile=logfile)
-
             logfile_text = Path(logfile).read_text()
 
-        buffer_stdout.seek(0)
-        buffer_stderr.seek(0)
-
-        self.assertIn("Gurobi Optimizer", buffer_stdout.read())
-        self.assertEqual(buffer_stderr.read(), "")
+        self.assertIn("Gurobi Optimizer", buffer_stdout.getvalue())
+        self.assertEqual(buffer_stderr.getvalue(), "")
         self.assertIn("Gurobi Optimizer", logfile_text)
 
     def test_logfile_closed(self):
@@ -84,7 +68,6 @@ class TestOptimodDecorator(unittest.TestCase):
         with warnings.catch_warnings(
             record=True
         ) as w, tempfile.TemporaryDirectory() as tempdir:
-
             logfile = os.path.join(tempdir, "tmp.log")
             self.mod(logfile=logfile)
             assert not w
@@ -101,19 +84,15 @@ class TestOverrideParams(unittest.TestCase):
             with create_env(params=p) as env, gp.Model(env=env) as model:
                 model.optimize()
 
-        buffer_stdout = io.StringIO()
-        buffer_stderr = io.StringIO()
-
-        with redirect_stdout(buffer_stdout), redirect_stderr(buffer_stderr):
+        with redirect_stdout(io.StringIO()) as buffer_stdout, redirect_stderr(
+            io.StringIO()
+        ) as buffer_stderr:
             # Normally, output would be produced, but the mod sets
             # outputflag=0, disabling all gurobi logging
             mod(silent=False)
 
-        buffer_stdout.seek(0)
-        buffer_stderr.seek(0)
-
-        self.assertEqual(buffer_stdout.read(), "")
-        self.assertEqual(buffer_stderr.read(), "")
+        self.assertEqual(buffer_stdout.getvalue(), "")
+        self.assertEqual(buffer_stderr.getvalue(), "")
 
     def test_user_override_worklimit(self):
         # The user can pass through parameters which take precedence
