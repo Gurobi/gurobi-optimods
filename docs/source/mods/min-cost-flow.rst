@@ -284,34 +284,4 @@ each vertex is shown on top of the vertex in red.
 In all these cases, the model is solved as an LP by Gurobi (typically using the
 NS algorithm).
 
-.. collapse:: View Gurobi Logs
-
-    .. code-block:: text
-
-        Solving min-cost flow with 6 nodes and 7 edges
-        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[arm])
-
-        CPU model: Apple M1
-        Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
-
-        Optimize a model with 6 rows, 7 columns and 14 nonzeros
-        Model fingerprint: 0xc6fc382e
-        Coefficient statistics:
-          Matrix range     [1e+00, 1e+00]
-          Objective range  [1e+00, 1e+01]
-          Bounds range     [1e+00, 2e+00]
-          RHS range        [1e+00, 2e+00]
-        Presolve removed 4 rows and 4 columns
-        Presolve time: 0.00s
-        Presolved: 2 rows, 3 columns, 6 nonzeros
-
-        Iteration    Objective       Primal Inf.    Dual Inf.      Time
-               0    2.7994000e+01   1.002000e+00   0.000000e+00      0s
-               1    3.1000000e+01   0.000000e+00   0.000000e+00      0s
-
-        Solved in 1 iterations and 0.00 seconds (0.00 work units)
-        Optimal objective  3.100000000e+01
-
-----
-
 .. footbibliography::

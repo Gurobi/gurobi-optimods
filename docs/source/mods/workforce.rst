@@ -211,47 +211,6 @@ period.
     ...
     Best objective 1.850000000000e+02, best bound 1.850000000000e+02, gap 0.0000%
 
-.. collapse:: View Gurobi logs for solving this example
-
-    .. code-block:: text
-
-        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
-
-        CPU model: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
-        Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
-
-        Optimize a model with 28 rows, 72 columns and 216 nonzeros
-        Model fingerprint: 0x595b329f
-        Variable types: 0 continuous, 72 integer (72 binary)
-        Coefficient statistics:
-          Matrix range     [1e+00, 1e+00]
-          Objective range  [1e+00, 5e+00]
-          Bounds range     [1e+00, 1e+00]
-          RHS range        [2e+00, 8e+00]
-        Found heuristic solution: objective 170.0000000
-        Presolve removed 6 rows and 22 columns
-        Presolve time: 0.00s
-        Presolved: 22 rows, 50 columns, 145 nonzeros
-        Variable types: 0 continuous, 50 integer (50 binary)
-        Found heuristic solution: objective 177.0000000
-
-        Root relaxation: objective 1.850000e+02, 24 iterations, 0.00 seconds (0.00 work units)
-
-            Nodes    |    Current Node    |     Objective Bounds      |     Work
-         Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
-
-        *    0     0               0     185.0000000  185.00000  0.00%     -    0s
-
-        Explored 1 nodes (24 simplex iterations) in 0.00 seconds (0.00 work units)
-        Thread count was 8 (of 8 available processors)
-
-        Solution count 3: 185 177 170
-
-        Optimal solution found (tolerance 1.00e-04)
-        Best objective 1.850000000000e+02, best bound 1.850000000000e+02, gap 0.0000%
-
-|
-
 Inspecting the Solution
 -----------------------
 

@@ -163,37 +163,6 @@ the network flow model corresponding to the given bipartite graph. Since the
 model is formulated as a network flow, Gurobi will in most cases solve the model
 using a network primal simplex algorithm.
 
-.. collapse:: View Gurobi logs
-
-    .. code-block:: text
-
-        Solving maximum matching n1=5 n2=4 |E|=11
-        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
-
-        CPU model: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
-        Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
-
-        Optimize a model with 11 rows, 21 columns and 42 nonzeros
-        Model fingerprint: 0x6966afa3
-        Coefficient statistics:
-          Matrix range     [1e+00, 1e+00]
-          Objective range  [1e+00, 1e+00]
-          Bounds range     [1e+00, 1e+00]
-          RHS range        [0e+00, 0e+00]
-        Presolve removed 2 rows and 3 columns
-        Presolve time: 0.00s
-        Presolved: 9 rows, 18 columns, 36 nonzeros
-
-        Iteration    Objective       Primal Inf.    Dual Inf.      Time
-               0    4.0000000e+00   8.000000e+00   0.000000e+00      0s
-               6    4.0000000e+00   0.000000e+00   0.000000e+00      0s
-
-        Solved in 6 iterations and 0.00 seconds (0.00 work units)
-        Optimal objective  4.000000000e+00
-        Max bipartite matching |E|=4
-
-|
-
 Solution
 --------
 

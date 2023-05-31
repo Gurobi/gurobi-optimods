@@ -117,49 +117,6 @@ definition as a SciPy sparse matrix in a comment).
     ...
     New QUBO solution found with objective -4.0
 
-The model is solved as an MIQP by Gurobi.
-
-.. collapse:: View Gurobi Logs
-
-    .. code-block:: text
-
-        Gurobi 10.0.1 (linux64) logging started Fri Apr 28 17:24:54 2023
-
-        Set parameter LogFile to value "gurobi.log"
-        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (linux64)
-
-        CPU model: Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz, instruction set [SSE2|AVX|AVX2]
-        Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
-
-        Optimize a model with 0 rows, 3 columns and 0 nonzeros
-        Model fingerprint: 0x0d77f9fa
-        Model has 5 quadratic objective terms
-        Variable types: 0 continuous, 3 integer (3 binary)
-        Coefficient statistics:
-        Matrix range     [0e+00, 0e+00]
-        Objective range  [0e+00, 0e+00]
-        QObjective range [2e+00, 6e+00]
-        Bounds range     [1e+00, 1e+00]
-        RHS range        [0e+00, 0e+00]
-        Found heuristic solution: objective 0.0000000
-        Found heuristic solution: objective -1.0000000
-        Found heuristic solution: objective -4.0000000
-        Presolve removed 0 rows and 3 columns
-        Presolve time: 0.00s
-        Presolve: All rows and columns removed
-
-        Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
-        Thread count was 1 (of 8 available processors)
-
-        Solution count 3: -4 -1 0
-        No other solutions better than -4
-
-        Optimal solution found (tolerance 1.00e-04)
-        Best objective -4.000000000000e+00, best bound -4.000000000000e+00, gap 0.0000%
-
-        User-callback calls 84, time in user-callback 0.00 sec
-
-
 Solution
 --------
 

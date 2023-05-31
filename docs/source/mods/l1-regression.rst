@@ -114,37 +114,6 @@ and ``X_test`` have shape ``(n, m)``, while response variable datasets
     >>> y_test.shape
     (111,)
 
-The formulated model is solved as a linear program by Gurobi. Logs provided for
-interested parties:
-
-.. collapse:: View Gurobi logs
-
-    .. code-block:: text
-
-        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[x86])
-
-        CPU model: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
-        Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
-
-        Optimize a model with 331 rows, 673 columns and 4303 nonzeros
-        Model fingerprint: 0xb54fc171
-        Coefficient statistics:
-          Matrix range     [6e-05, 1e+00]
-          Objective range  [1e+00, 1e+00]
-          Bounds range     [0e+00, 0e+00]
-          RHS range        [2e+01, 3e+02]
-        Presolve time: 0.00s
-        Presolved: 331 rows, 673 columns, 4303 nonzeros
-
-        Iteration    Objective       Primal Inf.    Dual Inf.      Time
-               0      handle free variables                          0s
-             354    1.4473274e+04   0.000000e+00   0.000000e+00      0s
-
-        Solved in 354 iterations and 0.01 seconds (0.01 work units)
-        Optimal objective  1.447327363e+04
-
-|
-
 Comparison with OLS
 -------------------
 
