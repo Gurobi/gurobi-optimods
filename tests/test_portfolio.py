@@ -123,7 +123,6 @@ class TestMVPFeatures(unittest.TestCase):
         mu = np.array([1, -0.1])
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         pf = mvp.efficient_portfolio(0.5)
-        self.assertTrue(hasattr(pf, "x"))
         assert_allclose(pf.x, [0.925, 0.075], atol=1e-6)
 
     def test_two_assets_return(self):
@@ -131,7 +130,6 @@ class TestMVPFeatures(unittest.TestCase):
         mu = np.array([1, -0.1])
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         pf = mvp.efficient_portfolio(0.5)
-        self.assertTrue(hasattr(pf, "ret"))
         self.assertAlmostEqual(pf.ret, pf.x @ mu)
 
     def test_two_assets_risk(self):
@@ -139,7 +137,6 @@ class TestMVPFeatures(unittest.TestCase):
         mu = np.array([1, -0.1])
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         pf = mvp.efficient_portfolio(0.5)
-        self.assertTrue(hasattr(pf, "risk"))
         self.assertAlmostEqual(pf.risk, pf.x @ cov_matrix @ pf.x)
 
     def test_example_data_result(self):
@@ -151,10 +148,6 @@ class TestMVPFeatures(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         pf = mvp.efficient_portfolio(gamma)
         self.assertIsInstance(pf, PortfolioResult)
-        self.assertTrue(hasattr(pf, "x"))
-        self.assertTrue(hasattr(pf, "ret"))
-        self.assertTrue(hasattr(pf, "risk"))
-        self.assertTrue(hasattr(pf, "x_rf"))
 
         self.assertAlmostEqual(pf.ret, pf.x @ mu)
         self.assertAlmostEqual(pf.risk, pf.x @ cov_matrix @ pf.x)
@@ -883,6 +876,5 @@ class TestMVPFeatures(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         pf = mvp.efficient_portfolio(gamma, rf_return=0.0025)
 
-        self.assertTrue(hasattr(pf, "x_rf"))
         self.assertGreater(pf.x_rf, 0.1)
         self.assertAlmostEqual(pf.ret, mu @ pf.x + 0.0025 * pf.x_rf)
