@@ -537,7 +537,7 @@ def fill_result_fields(alldata, model, opftype, result):
         # Bus solution data only available if we have rectangular formulation or polar
         if (
             alldata["use_ef"] and not alldata["doiv"]
-        ):  # TODO-Dan how to compute voltage magnitude and angle values for IV?
+        ):  # Voltage mag and angle are variables for IV
             for busindex in result["bus"]:
                 resbus = result["bus"][busindex]
                 databus = alldata["buses"][busindex]

@@ -1,3 +1,5 @@
+# Please refer to plotly documentation and the networkx documentation for basic exmaples of plotly use, and of network data structures
+
 import logging
 from collections import defaultdict
 from typing import Union
@@ -33,7 +35,7 @@ class Plotlyhandler:
     :param vertex_text_position: Position of text shown for each vertex, defaults to None
     :type vertex_text_position: str, optional
     :param vertex_text_font_color: Color of vertex text
-    :type vertex_text_font_color: #TODO-Dan what is the type here? A tuple?
+    :type vertex_text_font_color: str
     :param vertex_text_font_family: Font name of vertext text, defaults to None
     :type vertex_text_font_family: str, optional
     :param vertex_text_font_size: Font size of vertex text, defaults to None
@@ -41,7 +43,7 @@ class Plotlyhandler:
     :param vertex_border_width: Width of vertex border, defaults to None
     :type vertex_border_width: float, optional
     :param vertex_border_color: Color of vertex border, defaults to None
-    :type vertex_border_color: #TODO-Dan what is the type here? A tuple?
+    :type vertex_border_color: str
     """
 
     def __init__(
@@ -89,10 +91,10 @@ class Plotlyhandler:
 
     def generate_edge_traces(self):
         """
-        TODO-Dan Please add description
+        generates plotly trace for edges of the graph,
+        i.e., position, width and color
 
-        :return: TODO-Dan What does it return?
-        :rtype: TODO-Dan What is the return type?
+        returns trace
         """
         # group all edges by (color, width)
         groups = defaultdict(list)
@@ -147,22 +149,11 @@ class Plotlyhandler:
         self, showlabel, colorscale, showscale, colorbar_title, reversescale
     ) -> Union[go.Scatter, go.Scatter3d]:
         """
-        TODO-Dan add description
+        creates plotly vertex trace
 
-        :param showlabel: TODO-Dan what is it?
-        :type showlabel: TODO-Dan what is the type?
-        :param colorscale: TODO-Dan what is it?
-        :type colorscale: TODO-Dan what is the type?
-        :param showscale: TODO-Dan what is it?
-        :type showscale: TODO-Dan what is the type?
-        :param colorbar_title: TODO-Dan what is it?
-        :type colorbar_title: TODO-Dan what is the type?
-        :param reversescale: TODO-Dan what is it?
-        :type reversescale: TODO-Dan what is the type?
-
-        :return: TODO-Dan What does it return?
-        :rtype: TODO-Dan What is the return type?
+        See create_figure for explanation for the different attributes.
         """
+
         x, y, z = [], [], []
         for v in self.gG.vertices.values():
             x += [self.pos[v][0]]
@@ -241,16 +232,16 @@ class Plotlyhandler:
         """
         Creates a :class: `plotly.graph_objects.Figure` object
 
-        :param showlabel: TODO-Dan what is it?
-        :type showlabel: TODO-Dan what is the type?
-        :param colorscale: TODO-Dan what is it?
-        :type colorscale: TODO-Dan what is the type?
-        :param showscale: TODO-Dan what is it?
-        :type showscale: TODO-Dan what is the type?
-        :param colorbar_title: TODO-Dan what is it?
-        :type colorbar_title: TODO-Dan what is the type?
-        :param reversescale: TODO-Dan what is it?
-        :type reversescale: TODO-Dan what is the type?
+        :param showlabel: True or Faalse as to whether node labels to be shown
+        :type showlabel: Boolean
+        :param colorscale: Plotly color scale attribute,
+        :type colorscale: String
+        :param showscale: Plotly showscale attribute!
+        :type showscale: Boolean
+        :param colorbar_title: Plotly attribute (default is Fale)
+        :type colorbar_title: String
+        :param reversescale: Default value is False (Plotly attribute)
+        :type reversescale: Boolean
 
         :return: Returns a :class: `plotly.graph_objects.Figure` object
         :rtype: :class: `plotly.graph_objects.Figure`

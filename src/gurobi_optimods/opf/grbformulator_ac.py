@@ -1292,9 +1292,7 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
             bus = buses[j]
             xbuffer[cvar[bus]] = bus.inputV * bus.inputV
             xbuffer[vvar[bus]] = bus.inputV
-            xbuffer[
-                thetavar[bus]  # TODO-Dan Which bug?
-            ] = bus.inputA_rad  # here is the bug; the first 'bus.' should not be there
+            xbuffer[thetavar[bus]] = bus.inputA_rad
 
         for j in range(1, 1 + numbranches):
             branch = branches[j]
@@ -1584,7 +1582,6 @@ def lpformulator_ac_strictchecker(alldata, model):
     for j in range(1, 1 + numbuses):
         bus = buses[j]
         varinj = Pinjvar[bus]
-        varf = Pvar_f[branch]
         (
             maxlbviol,
             maxubviol,
@@ -1611,11 +1608,15 @@ def lpformulator_ac_strictchecker(alldata, model):
         injectionP = 0
         for branchid in bus.frombranchids.values():
             branch = branches[branchid]
+            varf = PIvar_f[branch]
             injectionP += xbuffer[varf]
 
         for branchid in bus.tobranchids.values():
             branch = branches[branchid]
+            varf = PIvar_f[branch]
             injectionP += xbuffer[varf]
+
+        # at this point, injectionP is the sum of P flows out of the bus
 
         # Construct min/max injection at the bus by looking at available generators and load
         myPubound = myPlbound = 0
@@ -1626,12 +1627,9 @@ def lpformulator_ac_strictchecker(alldata, model):
 
         minnetgen = myPlbound - bus.Pd
         maxnetgen = myPubound - bus.Pd
+        # minnetgen, maxnetgen are (resp.) min and max net generation at the given bus.
 
-        # TODO-Dan I don't understand how a user can make anything of this output. Could you explain? Or maybe improve the output?
-        # logger.info(
-        #     f"Bus ID {bus.nodeID} #{j} injection {injectionP} mingen {myPlbound} maxgen {myPubound} load {bus.Pd}."
-        # )
-        # logger.info(f"   min net generation {minnetgen} max {maxnetgen}.")
+        # compute candidate
 
         candmaxviol = alldata["violation"][bus]["Pinjmax"]
         if candmaxviol < alldata["violation"][bus]["Pinjmin"]:
@@ -1686,19 +1684,11 @@ def lpformulator_ac_strictchecker(alldata, model):
         minnetgen = myQlbound - bus.Qd
         maxnetgen = myQubound - bus.Qd
 
-        # TODO-Dan I don't understand how a user can make anything of this output. Could you explain? Or maybe improve the output?
-        # logger.info(
-        #     f"Bus ID {bus.nodeID} #{j} injection {injectionQ} mingen {myQlbound} maxgen {myQubound} load {bus.Qd}."
-        # )
-        # logger.info(f"   min net generation {minnetgen} max {maxnetgen}.")
-
         candmaxviol = alldata["violation"][bus]["Qinjmax"]
         if candmaxviol < alldata["violation"][bus]["Qinjmin"]:
             candmaxviol = -alldata["violation"][bus]["Qinjmin"]
         IQviol[bus] = candmaxviol
 
-    # TODO-Dan I don't understand how a user can make anything of this output. We provide some internal variable names and I don't think
-    #          that users can make anything out of it (maybe the experts). Could you explain? Or maybe improve the output?
     worstboundviol_report(badlbvar, maxlbviol, "LB")
     worstboundviol_report(badubvar, maxubviol, "UB")
 
@@ -1740,9 +1730,9 @@ def lpformulator_checkviol_simple(
     :type badlbvar: :class: `gurobipy.Var`
     :param badubvar: Variable with the biggest upper bound violation
     :type badubvar: :class: `gurobipy.Var`
-    :param max_violation_value: Max overall bound violation
+    :param max_violation_value: Max overall bound violation # TODO-Dan We can get this via model.BoundVio, see https://www.gurobi.com/documentation/current/refman/attributes.html
     :type max_violation_value: float
-    :param max_violation_string: Name of variable with largest overall bound violation
+    :param max_violation_string: Name of variable with largest overall bound violation # TODO-Dan We can get this via model.BoundVioIndex, see https://www.gurobi.com/documentation/current/refman/attributes.html
     :type max_violation_string: str
     """
 
@@ -1756,8 +1746,8 @@ def lpformulator_checkviol_simple(
     lbviol = lb - value
     ubviol = value - ub
 
-    # TODO-Dan I don't understand how a user can make anything of this output. We print an internal variable name.
-    #          I don't see how a user can get anything out of it. Could you explain? Or maybe improve the output?
+    # lbviol, ubviol: violation of lower and upper bound for given variable
+
     if lbviol > 0:
         logger.info(
             f"Lower bound violation for variable {grbvariable.varname}  LB {lb:<14.4e}  x {value:<14.4e}  UB {ub:<14.4e}"
@@ -1769,6 +1759,7 @@ def lpformulator_checkviol_simple(
 
     # TODO-Dan I don't understand how a user can make anything of this output. We print an internal variable name.
     #          I don't see how a user can get anything out of it. Could you explain? Or maybe improve the output?
+    # correct, this is just for an expert
     if ubviol > 0:
         logger.info(
             f"Upper bound violation for variable {grbvariable.varname}  LB {lb:<14.4e}  x {value:<14.4e}  UB {ub:<14.4e}"

@@ -65,7 +65,7 @@ class Bus:
         self.genidsbycount = []  # array of generator IDs at this bus
         self.frombranchids = {}  # branches where this bus is the 'from' bus
         self.tobranchids = {}  # branches where this bus is the 'to' bus
-        self.count = count  # bus count, we need the count, because depending on the industry application some data is stored via nodeID and some via the number of buses starting with 1
+        self.count = count  # bus count, needed to identify bus without ID
         self.nodeID = nodeID  # ID of bus
         self.nodetype = nodetype
         self.Pd = Pd  # active load
@@ -194,7 +194,7 @@ class Branch:
         self.r = r  # resistance
         self.x = x  # reactance
         self.bc = bc  # branch charging admittance
-        self.count = count
+        self.count = count  # needed to identify branch
         self.rateAmva = rateAmva  # the following three parameters
         self.rateBmva = rateBmva  # describe branch limits
         self.rateCmva = rateCmva
@@ -348,7 +348,7 @@ class Gen:
         apf,
     ):
         """Constructor method"""
-        self.count = count
+        self.count = count  # needed to identify gen
         self.nodeID = nodeID  # ID of bus holding gen
         self.Pg = Pg  # active power generation in existing solution
         self.Qg = Qg  # reactive power generation in existing solution

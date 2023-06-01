@@ -50,11 +50,8 @@ def generate_solution_figure(alldata, solution):
 
     textlist = []
     textlist.append(f"OBJ: {solution['f']:10.2f}")
-    if numzeros > 0:
+    if "branchswitching_mip" in alldata.keys() and alldata["branchswitching_mip"]:
         textlist.append(f"Lines off: {numzeros}")
-    else:
-        textlist.append(f"No lines turned off")
-
     return grbgraphical(alldata, "branchswitching", textlist)
 
 
@@ -148,7 +145,7 @@ def grbgraphical(alldata, plottype, textlist):
     graph_dict["N"] = numbuses
     graph_dict["M"] = numbranches
     counter = 0
-    for branch in branches.values():
+    for branch in alldata["branches"].values():
         graph_dict[counter] = (branch.count_f, branch.count_t)
         counter += 1
 
@@ -197,8 +194,7 @@ def grbgraphical(alldata, plottype, textlist):
                 mynode_color[j - 1] = "red"
 
         for j in range(1, numbranches + 1):
-            branch = branches[j]
-            edge_text[j] = ""
+            branch = alldata["branches"][j]
             if abs(branchlimitviol[branch]) > 1e-3:
                 myedge_width[j] = 5
                 myedge_color[j] = "red"
@@ -332,9 +328,9 @@ def graphplot(
     :type myedge_width: dict
     :param myedge_color: Dictionary holding the color of each network edge. The color depends on violation and whether the edge is turned on/off
     :type myedge_color: dict
-    :param myedge_ends: Dictionary holding each edge in both directions, e.g., (1,2) and (2,1)# TODO-Dan do we need it?
+    :param myedge_ends: Dictionary holding each edge in both directions, e.g., (1,2) and (2,1)# TODO-Dan do we need it? Yes because e.g. flows could be different
     :type myedge_ends: dict
-    :param myedge_list_consolidated: Dictionary holding possible multi-edges# TODO-Dan What exactly is this?
+    :param myedge_list_consolidated: Dictionary holding possible multi-edges# There could be parallel edges and we want to render all of them
     :type myedge_list_consolidated: dict
     :param myedge_degrees_consolidated: Dictionary holding the degree of each edge
     :type myedge_degrees_consolidated : dict
