@@ -14,7 +14,7 @@ API Reference
    :members: maximum_weighted_independent_set
 
 .. automodule:: gurobi_optimods.portfolio
-   :members: MeanVariancePortfolio
+   :members: MeanVariancePortfolio, PortfolioResult
 
 .. automodule:: gurobi_optimods.qubo
    :members: solve_qubo
