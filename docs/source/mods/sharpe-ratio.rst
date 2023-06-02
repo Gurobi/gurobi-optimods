@@ -191,7 +191,7 @@ We can compare this optimal portfolio to portfolios acquired via Monte Carlo sim
 
 In the code below, we randomly generate 10000 portfolios for the six assets from the example. Each portfolio is a non-negative vector of length six whose elements sum to 1. We plot each portfolio to visualize the tradeoff between risk and return. To compare these randomly generated portfolios with the one obtained by this OptiMod, we additionally plot the portfolio returned by the ``max_sharpe_ratio`` function using a red star.
 
-.. testcode:: sharpe-ratio
+.. code-block:: Python
 
     import numpy as np
     import matplotlib.pyplot as plt
