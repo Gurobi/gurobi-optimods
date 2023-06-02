@@ -45,16 +45,21 @@ def callback(model, where):
 @optimod()
 def solve_qubo(coeff_matrix, time_limit=GRB.INFINITY, *, create_env) -> QuboResult:
     """
-    Solve a quadratic unconstrained binary optimization (QUBO) problem,
-    i.e., minimize quadratic function :math:`x'Qx` defined by coefficient matrix :math:`Q`
-    over a binary decision variable vector :math:`x`
+    Solve a quadratic unconstrained binary optimization (QUBO) problem, i.e.,
+    minimize quadratic function :math:`x'Qx` defined by coefficient matrix
+    :math:`Q` over a binary decision variable vector :math:`x`
 
-    :param coeff_matrix: Quadratic coefficient matrix
-    :type coeff_matrix: :class:`numpy.ndarray` or :class:`scipy.sparse`
-    :param time_limit: Time limit in seconds
-    :type time_limit: :class:`int`
-    :return: 0/1 solution array, objective value
-    :rtype: :class:`QuboResult`
+    Parameters
+    ----------
+    coeff_matrix : spmatrix
+        Quadratic coefficient matrix
+    time_limit : float
+        Time limit in seconds (optional, default no limit)
+
+    Returns
+    -------
+    QuboResult
+        A dataclass containing a 0/1 solution array and its objective value
     """
 
     if coeff_matrix.ndim != 2:

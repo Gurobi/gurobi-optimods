@@ -25,12 +25,25 @@ def solve_diet_problem(categories, foods, values, *, create_env):
     Choose quantities of foods to eat in order to meet the required
     nutrient amounts in each category, for minimum total cost.
 
-    :param categories: Dataframe with columns (category, min, max)
-    :type categories: pd.DataFrame
-    :param foods: Dataframe with columns (food, cost)
-    :type foods: pd.DataFrame
-    :param values: Dataframe with columns (food, category, value)
-    :type values: pd.DataFrame
+    Parameters
+    ----------
+    categories : DataFrame
+        Dataframe with columns (category, min, max)
+    foods : DataFrame
+        Dataframe with columns (food, cost)
+    values : DataFrame
+        Dataframe with columns (food, category, value)
+
+    Returns
+    -------
+    DataFrame
+        A menu!
+
+    Raises
+    ------
+    ValueError
+        If a feasible diet isn't possible
+
     """
     with create_env() as env, gp.Model(env=env) as model:
         # Build the model

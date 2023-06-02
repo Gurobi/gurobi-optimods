@@ -17,7 +17,7 @@ API Reference
    :members: MeanVariancePortfolio, PortfolioResult
 
 .. automodule:: gurobi_optimods.qubo
-   :members: solve_qubo
+   :members: solve_qubo, QuboResult
 
 .. automodule:: gurobi_optimods.regression
    :members: LADRegression

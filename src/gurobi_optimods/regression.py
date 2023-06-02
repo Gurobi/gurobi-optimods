@@ -35,10 +35,13 @@ class LADRegression(RegressionBase):
     def fit(self, X_train, y_train, *, create_env):
         """Fit the model to training data.
 
-        :param X_train: Training set feature values
-        :type X_train: :class:`np.array`
-        :param y_train: Training set output values
-        :type y_train: :class:`np.array`
+        Parameters
+        ----------
+
+        X_train : ndarray
+            Training set feature values
+        y_train : ndarray
+            Training set output values
         """
 
         # Metadata about the input data
