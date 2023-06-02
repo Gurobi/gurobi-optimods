@@ -54,6 +54,12 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/bipartite-matching-flow.png
 
+    .. grid-item-card:: Optimal Power Flow
+        :link: mods/opf/opf
+        :link-type: doc
+        :text-align: center
+        :img-top: mods/figures/opf.png
+
 
 .. toctree::
    :maxdepth: 1
@@ -67,3 +73,4 @@ The OptiMods Gallery
    mods/portfolio
    mods/qubo
    mods/workforce
+   mods/opf/opf

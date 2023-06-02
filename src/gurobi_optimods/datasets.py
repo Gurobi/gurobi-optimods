@@ -152,7 +152,7 @@ def _convert_pandas_to_scipy(
     return G, cap, costs, dem
 
 
-def load_opfilepath(filename):
+def load_filepath(filename):
     file = str(DATA_FILE_DIR) + "/opf/" + filename
     return file
 

@@ -61,6 +61,7 @@ bibtex_bibfiles = [
     "refs/portfolio.bib",
     "refs/qubo.bib",
     "refs/regression.bib",
+    "refs/opf.bib",
 ]
 
 rst_prolog = """.. warning::
