@@ -49,9 +49,17 @@ def generate_solution_figure(alldata, solution):
         gholder[j - 1] = gen["Pg"]
 
     textlist = []
-    textlist.append(f"OBJ: {solution['f']:10.2f}")
-    if "branchswitching_mip" in alldata.keys() and alldata["branchswitching_mip"]:
-        textlist.append(f"Lines off: {numzeros}")
+    textlist.append([f"OBJ: {solution['f']:10.2f}", "black"])
+    if numzeros > 0:
+        textlist.append([f"Lines off: {numzeros}", "black"])
+    else:
+        textlist.append(["No lines turned off", "black"])
+    textlist.append(["Black bus: generation <= 75 and load < 50", "black"])
+    textlist.append(["Blue bus: generation <= 75 and load > 50", "blue"])
+    textlist.append(["Purple bus: generation >  75", "purple"])
+    textlist.append(["Orange bus: generation >  150", "orange"])
+    textlist.append(["Red bus: generation >  500", "red"])
+
     return grbgraphical(alldata, "branchswitching", textlist)
 
 
@@ -107,10 +115,16 @@ def generate_violations_figure(alldata, violations):
         maxlimiviol = max(branchlimitviol, maxlimiviol)
 
     textlist = []
-    textlist.append(f"max voltage magnitude violation: {maxvmviol:10.2f}")
-    textlist.append(f"max real power injection violation: {maxPviol:10.2f}")
-    textlist.append(f"max reactive power injection violation: {maxQviol:10.2f}")
-    textlist.append(f"max branch limit violation: {maxlimiviol:10.2f}")
+    textlist.append([f"max voltage magnitude violation: {maxvmviol:10.2f}", "black"])
+    textlist.append([f"max real power injection violation: {maxPviol:10.2f}", "black"])
+    textlist.append(
+        [f"max reactive power injection violation: {maxQviol:10.2f}", "black"]
+    )
+    textlist.append([f"max branch limit violation: {maxlimiviol:10.2f}", "black"])
+    textlist.append(
+        ["Red bus: Vm violation > 1e-3 or (re)active power violation > 1e-2", "red"]
+    )
+    textlist.append(["Red branch: limit violation > 1e-3", "red"])
     return grbgraphical(alldata, "violation", textlist)
 
 
@@ -145,7 +159,7 @@ def grbgraphical(alldata, plottype, textlist):
     graph_dict["N"] = numbuses
     graph_dict["M"] = numbranches
     counter = 0
-    for branch in alldata["branches"].values():
+    for branch in branches.values():
         graph_dict[counter] = (branch.count_f, branch.count_t)
         counter += 1
 
@@ -194,7 +208,8 @@ def grbgraphical(alldata, plottype, textlist):
                 mynode_color[j - 1] = "red"
 
         for j in range(1, numbranches + 1):
-            branch = alldata["branches"][j]
+            branch = branches[j]
+            edge_text[j] = ""
             if abs(branchlimitviol[branch]) > 1e-3:
                 myedge_width[j] = 5
                 myedge_color[j] = "red"
@@ -328,9 +343,9 @@ def graphplot(
     :type myedge_width: dict
     :param myedge_color: Dictionary holding the color of each network edge. The color depends on violation and whether the edge is turned on/off
     :type myedge_color: dict
-    :param myedge_ends: Dictionary holding each edge in both directions, e.g., (1,2) and (2,1)# TODO-Dan do we need it? Yes because e.g. flows could be different
+    :param myedge_ends: Dictionary holding each edge in both directions, e.g., (1,2) and (2,1). We need it, because, e.g., flows could be different
     :type myedge_ends: dict
-    :param myedge_list_consolidated: Dictionary holding possible multi-edges# There could be parallel edges and we want to render all of them
+    :param myedge_list_consolidated: Dictionary holding possible multi-edges. There could be parallel edges and we want to render all of them
     :type myedge_list_consolidated: dict
     :param myedge_degrees_consolidated: Dictionary holding the degree of each edge
     :type myedge_degrees_consolidated : dict
@@ -584,7 +599,7 @@ def grbgetgraphattr(alldata, value):
     """
 
     color = "Black"
-    size = 4
+    size = 2
     valuesset = False
     numfeatures = 0  # alldata['graphical']['numfeatures']
 

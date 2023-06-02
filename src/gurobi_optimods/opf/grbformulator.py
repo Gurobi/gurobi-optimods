@@ -169,6 +169,9 @@ def lpformulator_optimize(alldata, model, opftype):
     # Disable logging handler to get Gurobi output
     logging.disable(logging.INFO)
     model.params.LogFile = alldata["logfile"]
+    # Nonlinear functions are only supported starting with version 11
+    if GRB.VERSION_MAJOR >= 11:
+        model.setParam("FuncNonlinear", 1)
     # Specific settings for better convergence
     if opftype != OpfType.DC:
         if alldata["use_ef"] or alldata["dopolar"]:

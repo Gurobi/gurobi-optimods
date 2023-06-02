@@ -142,8 +142,10 @@ def read_optimization_settings(alldata, settings):
     logger = logging.getLogger("OpfLogger")
     logger.info("All settings:")
     for s in defaults.keys():
+        if s == "skipjabr":
+            logger.info(f"  usejabr {not alldata[s]}")
         # Don't print hidden settings
-        if s not in [
+        elif s not in [
             "fixcs",
             "fixtolerance",
             "usemaxdispersion",

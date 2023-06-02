@@ -84,7 +84,7 @@ class TestOpf(unittest.TestCase):
         case = read_case_from_mat_file(casefile)
         # solve opf model and return a solution
         solution = solve_opf_model(
-            case, logfile="", opftype="AC", useef=True, usejabr=True, branchswitching=1
+            case, logfile="", opftype="AC", useef=True, usejabr=True
         )
         # check whether the solution points looks correct
         self.assertTrue(solution is not None)
@@ -333,7 +333,7 @@ class TestOpfGraphics(unittest.TestCase):
 
     # test plotting a solution from pre-loaded data
     def test_graphics_volts(self):
-        # get path to csv file holding the coordinates for case 9
+        # get path to csv file holding the voltage information for case 9
         voltsfile = load_filepath("case9volts.csv")
         volts_dict = read_voltages_from_csv_file(voltsfile)
         # load case dictionary

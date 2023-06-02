@@ -1608,12 +1608,12 @@ def lpformulator_ac_strictchecker(alldata, model):
         injectionP = 0
         for branchid in bus.frombranchids.values():
             branch = branches[branchid]
-            varf = PIvar_f[branch]
+            varf = Pvar_f[branch]
             injectionP += xbuffer[varf]
 
         for branchid in bus.tobranchids.values():
             branch = branches[branchid]
-            varf = PIvar_f[branch]
+            varf = Pvar_f[branch]
             injectionP += xbuffer[varf]
 
         # at this point, injectionP is the sum of P flows out of the bus
@@ -1730,9 +1730,9 @@ def lpformulator_checkviol_simple(
     :type badlbvar: :class: `gurobipy.Var`
     :param badubvar: Variable with the biggest upper bound violation
     :type badubvar: :class: `gurobipy.Var`
-    :param max_violation_value: Max overall bound violation # TODO-Dan We can get this via model.BoundVio, see https://www.gurobi.com/documentation/current/refman/attributes.html
+    :param max_violation_value: Max overall bound violation
     :type max_violation_value: float
-    :param max_violation_string: Name of variable with largest overall bound violation # TODO-Dan We can get this via model.BoundVioIndex, see https://www.gurobi.com/documentation/current/refman/attributes.html
+    :param max_violation_string: Name of variable with largest overall bound violation
     :type max_violation_string: str
     """
 

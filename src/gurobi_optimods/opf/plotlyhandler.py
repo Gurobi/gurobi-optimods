@@ -91,10 +91,11 @@ class Plotlyhandler:
 
     def generate_edge_traces(self):
         """
-        generates plotly trace for edges of the graph,
+        Generates plotly traces for edges of the graph,
         i.e., position, width and color
 
-        returns trace
+        :return: List of traces
+        :rtype: list
         """
         # group all edges by (color, width)
         groups = defaultdict(list)
@@ -141,7 +142,6 @@ class Plotlyhandler:
             )
 
             traces += [go.Scatter(**params)]
-        # print('>>>>','pos',self.pos)
 
         return traces
 
@@ -149,9 +149,21 @@ class Plotlyhandler:
         self, showlabel, colorscale, showscale, colorbar_title, reversescale
     ) -> Union[go.Scatter, go.Scatter3d]:
         """
-        creates plotly vertex trace
+        Creates plotly vertex trace
 
-        See create_figure for explanation for the different attributes.
+        :param showlabel: True or False as to whether node labels to be shown
+        :type showlabel: Boolean
+        :param colorscale: Plotly color scale attribute
+        :type colorscale: String
+        :param showscale: Plotly showscale attribute
+        :type showscale: Boolean
+        :param colorbar_title: Plotly attribute (default is False)
+        :type colorbar_title: String
+        :param reversescale: Default value is False (Plotly attribute)
+        :type reversescale: Boolean
+
+        :return: A vertex trace
+        :rtype: :class: `plotly.graph_objects.Scatter`
         """
 
         x, y, z = [], [], []
@@ -232,13 +244,13 @@ class Plotlyhandler:
         """
         Creates a :class: `plotly.graph_objects.Figure` object
 
-        :param showlabel: True or Faalse as to whether node labels to be shown
+        :param showlabel: True or False as to whether node labels to be shown
         :type showlabel: Boolean
-        :param colorscale: Plotly color scale attribute,
+        :param colorscale: Plotly color scale attribute
         :type colorscale: String
-        :param showscale: Plotly showscale attribute!
+        :param showscale: Plotly showscale attribute
         :type showscale: Boolean
-        :param colorbar_title: Plotly attribute (default is Fale)
+        :param colorbar_title: Plotly attribute (default is False)
         :type colorbar_title: String
         :param reversescale: Default value is False (Plotly attribute)
         :type reversescale: Boolean
@@ -293,9 +305,10 @@ class Plotlyhandler:
                 fig.add_annotation(
                     x=200,
                     y=2000 - 70 * k,
-                    text=self.annotation_list[k],  # "BALONEY",
+                    xanchor="left",
+                    text=self.annotation_list[k][0],  # "BALONEY",
                     showarrow=False,
-                    font=dict(size=20, color="red"),
+                    font=dict(size=20, color=self.annotation_list[k][1]),
                     yshift=10,
                 )
 
