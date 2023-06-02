@@ -163,63 +163,7 @@ The example code below solves the problem of maximizing the Sharpe ratio for the
     ...
     Optimize a model with 1 rows, 6 columns and 6 nonzeros
     ...
-    Optimal objective ...
-
-
-.. collapse:: View Gurobi log for solving this example
-
-    .. code-block:: text
-
-        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[arm])
-
-        CPU model: Apple M1 Pro
-        Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
-
-        Optimize a model with 1 rows, 6 columns and 6 nonzeros
-        Model fingerprint: 0x8a64724c
-        Model has 21 quadratic objective terms
-        Coefficient statistics:
-          Matrix range     [2e-02, 5e-01]
-          Objective range  [0e+00, 0e+00]
-          QObjective range [5e-02, 2e-01]
-          Bounds range     [0e+00, 0e+00]
-          RHS range        [1e+00, 1e+00]
-        Presolve time: 0.04s
-        Presolved: 1 rows, 6 columns, 6 nonzeros
-        Presolved model has 21 quadratic objective terms
-        Ordering time: 0.00s
-
-        Barrier statistics:
-         Free vars  : 5
-         AA' NZ     : 1.500e+01
-         Factor NZ  : 2.100e+01
-         Factor Ops : 9.100e+01 (less than 1 second per iteration)
-         Threads    : 1
-
-                          Objective                Residual
-        Iter       Primal          Dual         Primal    Dual     Compl     Time
-           0   2.36907424e+05 -2.36907424e+05  2.89e+03 4.81e-06  9.99e+05     0s
-           1   5.46637227e+04 -5.63293162e+04  1.97e+02 3.28e-07  8.14e+04     0s
-           2   2.41513966e+03 -4.80064244e+03  7.50e+00 1.25e-08  3.99e+03     0s
-           3   4.26418722e+01 -2.29684466e+03  7.50e-06 1.27e-14  3.90e+02     0s
-           4   4.15350414e+01 -5.23960479e+01  2.68e-07 4.44e-16  1.57e+01     0s
-           5   3.02551672e+00 -5.57323733e+01  2.70e-13 2.22e-16  9.79e+00     0s
-           6   1.68620039e+00 -8.66364122e-01  2.89e-15 6.22e-15  4.25e-01     0s
-           7   5.59068804e-01 -1.76548882e-01  4.44e-16 1.11e-16  1.23e-01     0s
-           8   3.38521711e-01  2.85826427e-01  2.78e-16 2.12e-16  8.78e-03     0s
-           9   3.08810219e-01  3.05102830e-01  3.44e-15 5.55e-17  6.18e-04     0s
-          10   3.06219030e-01  3.06149821e-01  2.22e-15 4.86e-17  1.15e-05     0s
-          11   3.06155606e-01  3.06155537e-01  2.64e-14 5.55e-17  1.15e-08     0s
-          12   3.06155542e-01  3.06155542e-01  3.06e-14 5.55e-17  1.15e-11     0s
-
-        Barrier solved model in 12 iterations and 0.08 seconds (0.00 work units)
-        Optimal objective 3.06155542e-01
-
-    Note that the optimal objective reported in the log output is the Sharpe ratio raised to the :math:`-\frac{1}{2}` power. In this example, the optimal Sharpe ratio is approximately 1.810906. See the mathematical formulation provided in the `Problem Specification`_ section for additional details.
-
-|
-
-The model is solved as a QP by Gurobi.
+    Optimal objective 3...
 
 Solution
 --------
