@@ -3,6 +3,8 @@ Mean-Variance Portfolio
 -----------------------
 """
 
+from dataclasses import dataclass
+from typing import Optional
 import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
@@ -357,29 +359,30 @@ class MeanVariancePortfolio:
         return (x, x_rf)
 
     def _construct_result(self, x, x_rf, rf_return):
-        pf = dict()
         if self.resultType == "numpy":
-            pf["x"] = x
+            pass
         elif self.resultType == "pandas":
-            pf["x"] = pd.Series(x, index=self.index)
+            x = pd.Series(x, index=self.index)
         else:
             assert False
 
-        pf["return"] = self.mu @ x
+        ret = self.mu @ x
 
         if not isinstance(self.covariance, tuple):
-            pf["risk"] = x @ self.covariance @ x
+            risk = x @ self.covariance @ x
         else:
-            pf["risk"] = 0.0
+            risk = 0.0
             for F in self.covariance:
                 y = x @ F
-                pf["risk"] += y @ y
+                risk += y @ y
 
         if rf_return is not None:
-            pf["x_rf"] = x_rf
-            pf["return"] += rf_return * x_rf
+            x_rf = x_rf
+            ret += rf_return * x_rf
+        else:
+            x_rf = None
 
-        return pf
+        return PortfolioResult(x, ret, risk, x_rf)
 
     def _homogenize_input(self, input_data):
         # Check and unpack if input_data is a Series
@@ -392,3 +395,29 @@ class MeanVariancePortfolio:
             input_data = input_data.to_numpy()
 
         return input_data
+
+
+@dataclass
+class PortfolioResult:
+    """
+    Data class representing computed portfolios.
+
+
+    Attributes
+    ----------
+    x : 1-d :class:`np.ndarray`
+        The vector of relative investments into each asset
+    ret : :class:`float`
+        The (estimated) return of the portfolio
+    risk : :class:`float`
+        The (estimated) risk of the portfolio
+    x_rf : :class:`float`
+        The relative investment into the risk-free asset.  Equals to None if no
+        risk-free return rate was specified upon input
+
+    """
+
+    x: np.ndarray
+    ret: float
+    risk: float
+    x_rf: Optional[float] = None

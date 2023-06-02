@@ -138,19 +138,12 @@ from this DataFrame:
 Solution
 --------
 
-The return value of the ``efficient_portfolio`` method is a dict containing
-information on the computed portfolio.
-
-.. doctest:: mod
-    :options: +NORMALIZE_WHITESPACE
-
-    >>> pf.keys()
-    dict_keys(['x', 'return', 'risk'])
-
-The data returned is as follows:
+The return value of the ``efficient_portfolio`` method is a data class instance
+containing information on the computed portfolio.  It has the following
+attributes:
 
 * ``x`` : The relative investments :math:`x` for each asset
-* ``return`` : The estimated return :math:`\mu^T x`
+* ``ret`` : The estimated return :math:`\mu^T x`
 * ``risk`` : The estimated risk :math:`x^T \Sigma x`
 
 In this example the solution suggests to spread the investments over five
@@ -159,7 +152,7 @@ positions (AA, DD, GG, HH, II).  The other allocations are negligible.
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>> pf["x"]
+    >>> pf.x
     AA    4.236507e-01
     BB    1.743570e-07
     CC    7.573610e-10
@@ -173,14 +166,13 @@ positions (AA, DD, GG, HH, II).  The other allocations are negligible.
     dtype: float64
 
 The estimated risk and return are:
-positions (AA, DD, GG, HH, II).  The other allocations are negligible.
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>> round(pf["risk"], ndigits=8)
+    >>> round(pf.risk, ndigits=8)
     0.00017552
-    >>> round(pf["return"], ndigits=8)
+    >>> round(pf.ret, ndigits=8)
     0.00365177
 
 .. _factor models:
@@ -224,13 +216,13 @@ single-factor model:
     # Full covariance matrix according to single factor model
     Sigma = beta @ beta.T * market_variance**2 + np.diag(asset_risk**2)
     mvp_matrix = MeanVariancePortfolio(mu, cov_matrix=Sigma)
-    x_matrix = mvp_matrix.efficient_portfolio(20)["x"]
+    x_matrix = mvp_matrix.efficient_portfolio(20).x
 
     # Better use known factorization
     F1 = beta * market_variance
     F2 = np.diag(asset_risk)
     mvp_factors = MeanVariancePortfolio(mu, cov_factors=(F1, F2))
-    x_factors = mvp_factors.efficient_portfolio(20)["x"]
+    x_factors = mvp_factors.efficient_portfolio(20).x
 
 .. testoutput:: mod
     :hide:
@@ -290,7 +282,7 @@ portfolio value (130-30 strategy), you can do:
     mu = data.mean()
     gamma = 100.0
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, max_total_short=0.3)["x"]
+    x = mvp.efficient_portfolio(gamma, max_total_short=0.3).x
 
 .. testoutput:: mod
     :hide:
@@ -345,7 +337,7 @@ optimal portfolio :math:`x`, you can use the keyword parameters ``fees_buy``
     gamma = 100.0
 
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, fees_buy=0.005)["x"]
+    x = mvp.efficient_portfolio(gamma, fees_buy=0.005).x
 
 .. testoutput:: mod
     :hide:
@@ -402,7 +394,7 @@ trades) keyword parameters as follows:
     gamma = 100.0
 
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, costs_buy=0.0025)["x"]
+    x = mvp.efficient_portfolio(gamma, costs_buy=0.0025).x
 
 .. testoutput:: mod
     :hide:
@@ -458,8 +450,8 @@ allocated to each trade:
     mu = data.mean()
     gamma = 100.0
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x_plain = mvp.efficient_portfolio(gamma, max_total_short=0.3)["x"]
-    x_minpos = mvp.efficient_portfolio(gamma, max_total_short=0.3, min_long=0.05, min_short=0.05)["x"]
+    x_plain = mvp.efficient_portfolio(gamma, max_total_short=0.3).x
+    x_minpos = mvp.efficient_portfolio(gamma, max_total_short=0.3, min_long=0.05, min_short=0.05).x
 
 .. testoutput:: mod
     :hide:
@@ -520,7 +512,7 @@ total number of open positions to three can be achieved as follows:
     gamma = 100.0
 
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, max_positions=3)["x"]
+    x = mvp.efficient_portfolio(gamma, max_positions=3).x
 
 .. testoutput:: mod
     :hide:
@@ -597,15 +589,15 @@ the risk-free return rate is 0.25%:
     Presolved: 1 rows, 11 columns, 11 nonzeros
     ...
 
-If a risk-free return rate has been specified, the returned portfolio
-information has an additional key ``x_rf`` that tells the proportion of
+If a risk-free return rate has been specified, the returned
+:class:`PortfolioResult` instance's ``x_rf`` attribute tells the proportion of
 investment into the risk-free asset.  In this example the optimal portfolio
 allocates about 17% into the risk-free asset:
 
 .. testcode:: mod
 
-   print(f"risky     investment: {100*pf['x'].sum():.2f}%")
-   print(f"risk-less investment: {100*pf['x_rf']:.2f}%")
+   print(f"risky     investment: {100*pf.x.sum():.2f}%")
+   print(f"risk-less investment: {100*pf.x_rf:.2f}%")
 
 .. testoutput:: mod
 
@@ -613,8 +605,8 @@ allocates about 17% into the risk-free asset:
    risk-less investment: 16.82%
 
 
-Note that the contribution of ``rf_return * x_rf`` to the portfolio's expected
-value is already included in ``pf["return"]``.
+Note that the contribution of ``rf_return * pf.x_rf`` to the portfolio's expected
+value is already included in ``pf.ret``.
 
 Starting portfolio & rebalancing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -670,7 +662,7 @@ using at most two trades:
     )
 
     x = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=2,
-        fees_buy=0.001, fees_sell=0.002)["x"]
+        fees_buy=0.001, fees_sell=0.002).x
 
 .. testoutput:: mod
     :hide:
@@ -807,11 +799,11 @@ cardinality constraints::
         mvp = MeanVariancePortfolio(mu, cov_factors=(F, risk_specific))
         # Optimal portfolio w/o cardinality constraints
         pf = mvp.efficient_portfolio(g, verbose=False)
-        rr_pairs_unc.append((pf["risk"], pf["return"]))
+        rr_pairs_unc.append((pf.risk, pf.ret))
         for max_positions in [1, 2, 3]:
             # Optimal portfolio with cardinality constraints
             pf = mvp.efficient_portfolio(g, max_positions=max_positions, verbose=False)
-            rr_pairs_con[max_positions].append((pf["risk"], pf["return"]))
+            rr_pairs_con[max_positions].append((pf.risk, pf.ret))
 
 Comparison
 ~~~~~~~~~~
