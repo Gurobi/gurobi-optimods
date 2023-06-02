@@ -22,5 +22,8 @@ API Reference
 .. automodule:: gurobi_optimods.regression
    :members: LADRegression
 
+.. automodule:: gurobi_optimods.sharpe_ratio
+   :members: max_sharpe_ratio
+
 .. automodule:: gurobi_optimods.workforce
    :members: solve_workforce_scheduling
