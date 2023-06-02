@@ -6,6 +6,7 @@ found in tests/utils.py
 import io
 import os
 import tempfile
+import traceback
 import unittest
 import warnings
 from contextlib import redirect_stderr, redirect_stdout
@@ -106,6 +107,14 @@ class TestOptimodDecorator(unittest.TestCase):
                 too_large_mod()
             except gp.GurobiError as ge:
                 self.assertNotEqual(ge.errno, gp.GRB.ERROR_SIZE_LIMIT_EXCEEDED)
+            except ValueError:
+                # Avoid any trace of the gurobipy-specific error in the traceback
+                self.assertNotIn(
+                    "Model too large for size-limited license", traceback.format_exc()
+                )
+                self.assertNotIn(
+                    "https://www.gurobi.com/free-trial", traceback.format_exc()
+                )
                 raise
 
 

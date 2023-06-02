@@ -90,16 +90,6 @@ def _mod_context(
     try:
         yield create_env
 
-    except gp.GurobiError as ge:
-        if ge.errno == gp.GRB.ERROR_SIZE_LIMIT_EXCEEDED:
-            raise ValueError(
-                "Given data exceeds Gurobi's license limits; please see "
-                "https://support.gurobi.com/hc/en-us/articles/15801588452241 "
-                "to resolve this issue"
-            )
-        else:
-            raise
-
     finally:
         if log_to_console:
             mod_logger.removeHandler(ch)
@@ -125,7 +115,24 @@ def optimod(mod_logger=None):
                 log_to_file=logfile,
                 user_params=solver_params,
             ) as create_env:
-                return func(*args, create_env=create_env, **kwargs)
+                try:
+                    return func(*args, create_env=create_env, **kwargs)
+
+                except gp.GurobiError as ge:
+                    if ge.errno == gp.GRB.ERROR_SIZE_LIMIT_EXCEEDED:
+                        pass  # fall through
+                    else:
+                        raise
+
+                # We can only fall through to here due to SIZE_LIMIT_EXCEEDED,
+                # so raise a more optimods-appropriate error. Raise here
+                # (instead of directly in the except block above) to avoid a
+                # confusing double stack trace.
+                raise ValueError(
+                    "Given data exceeds Gurobi's license limits; please see "
+                    "https://support.gurobi.com/hc/en-us/articles/15801588452241 "
+                    "to resolve this issue"
+                )
 
         optimod_decorated._decorated_mod = True
         return optimod_decorated
