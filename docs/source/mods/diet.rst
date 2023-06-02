@@ -1,6 +1,11 @@
 Stigler Diet Problem
 ====================
 
+.. warning::
+    This page is under construction. To put it bluntly, the diet mod has made
+    some really poor diet choices and it should be ashamed of itself. But, as
+    we know: garbage data in, garbage results out.
+
 Thanks `Wikipedia <https://en.wikipedia.org/wiki/Stigler_diet>`_:
 
     For a moderately active man weighing 154 pounds, how much of each of 77 foods
@@ -18,7 +23,7 @@ meets minimum requirements specified for each nutrient.
 
 .. tabs::
 
-    .. tab:: Domain-Specific Description
+    .. tab:: Description
 
         We have some data on various food items: their cost per unit,
         and amount per unit of various nutrients. We are also given
@@ -31,8 +36,9 @@ meets minimum requirements specified for each nutrient.
 
     .. tab:: Optimization Model
 
-	The model is defined over foods :math:`i \in F` and nutrients :math:`j \in N`.
-        Foods have cost per unit :math:`c_{i}` and nutrients per unit :math:`n_{ij}`.
+	    The model is defined over foods :math:`i \in F` and nutrients :math:`j
+	    \in N`. Foods have cost per unit :math:`c_{i}` and nutrients per
+	    unit :math:`n_{ij}`.
 
         .. math::
 
@@ -41,9 +47,13 @@ meets minimum requirements specified for each nutrient.
             \mbox{s.t.} \quad & l_{j} \le \sum_{i \in F} n_{ij} x_{i} \le u_{j} \,\, & \forall j \in N \\
             \end{alignat}
 
+        Implementing this mathematical model using ``gurobipy-pandas`` is quite
+        straightforward. The source for the mod can be found in the
+        :ghsrc:`Github repository<src/gurobi_optimods/diet.py#L19>`.
+
 The API uses pandas dataframes for each data table. Separate tables are needed
 for foods and nutrients. We also need a linking table which specifies the nutrient
-content of each food (not yet shown).
+content of each food.
 
 .. testsetup:: diet
 
@@ -55,7 +65,7 @@ content of each food (not yet shown).
 
     .. tab:: ``categories``
 
-        Give interpretation of input data.
+        Data on dietary requirements is included as a dataframe.
 
         .. doctest:: diet
             :options: +NORMALIZE_WHITESPACE
@@ -69,11 +79,15 @@ content of each food (not yet shown).
             2       fat     0     65.0
             3    sodium     0   1779.0
 
-        The min and max columns correspond to :math:`l_j` and :math:`u_j`.
+        The min and max columns correspond to :math:`l_j` and :math:`u_j` in the
+        mathematical model.
 
     .. tab:: ``foods``
 
-        Another bit of input data (perhaps a secondary table)
+        Data on available foods is included as a dataframe.
+
+        .. doctest:: diet
+            :options: +NORMALIZE_WHITESPACE
 
             >>> from gurobi_optimods import datasets
             >>> data = datasets.load_diet()
@@ -89,7 +103,30 @@ content of each food (not yet shown).
             7       milk  0.89
             8  ice cream  1.59
 
-	The cost column corresponds to :math:`c_i`.
+	    The cost column corresponds to :math:`c_i` in the mathematical model.
+
+    .. tab:: ``nutation``
+
+        .. doctest:: diet
+            :options: +NORMALIZE_WHITESPACE
+
+            >>> data.nutrition_values
+                category       food   value
+            0   calories  hamburger   410.0
+            1   calories    chicken   420.0
+            2   calories    hot dog   560.0
+            3   calories      fries   380.0
+            4   calories   macaroni   320.0
+            ..       ...        ...     ...
+            31    sodium   macaroni   930.0
+            32    sodium      pizza   820.0
+            33    sodium      salad  1230.0
+            34    sodium       milk   125.0
+            35    sodium  ice cream   180.0
+            <BLANKLINE>
+            [36 rows x 3 columns]
+
+        The value column corresponds to :math:`n_{ij}` in the mathematical model.
 
 |
 
@@ -120,38 +157,9 @@ Using the example data above, solve for the optimal diet.
     Optimize a model with 8 rows, 9 columns and 72 nonzeros
     ...
 
-Gurobi solves this now-simple linear programming model with ease and poise. But
-think back to the days of Dantzig where hundreds of engineers performed simplex
-iterations using slide rules and sextants.
-
-.. collapse:: View Gurobi Logs
-
-    .. code-block:: text
-
-        Gurobi Optimizer version 10.0.0 build v10.0.0rc2 (mac64[x86])
-
-        CPU model: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
-        Thread count: 4 physical cores, 8 logical processors, using up to 8 threads
-
-        Optimize a model with 8 rows, 9 columns and 72 nonzeros
-        Model fingerprint: 0x4ec4fbc2
-        Coefficient statistics:
-        Matrix range     [2e+00, 2e+03]
-        Objective range  [9e-01, 3e+00]
-        Bounds range     [0e+00, 0e+00]
-        RHS range        [6e+01, 1e+04]
-        Presolve removed 4 rows and 0 columns
-        Presolve time: 0.00s
-        Presolved: 4 rows, 10 columns, 37 nonzeros
-
-        Iteration    Objective       Primal Inf.    Dual Inf.      Time
-            0    0.0000000e+00   1.472500e+02   0.000000e+00      0s
-            4    1.1828861e+01   0.000000e+00   0.000000e+00      0s
-
-        Solved in 4 iterations and 0.00 seconds (0.00 work units)
-        Optimal objective  1.182886111e+01
-
-|
+Gurobi solves this now-simple linear programming model with ease. But think back
+to the days of Dantzig where hundreds of engineers performed simplex iterations
+using slide rules and sextants.
 
 Solution
 --------

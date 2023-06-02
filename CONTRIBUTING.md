@@ -1,57 +1,41 @@
 # Contributing Guide
 
-## Bug fixes
+We value your experience in using gurobi-optimods and would like to encourage
+you to contribute directly to the project.
 
-Create an issue first using the 'Bug Report' template.
+## How to report bugs or submit feature requests
 
-## Propose a new Mod
+If you encounter a bug, or you have a proposal for a new mod or additional
+features for an existing mod, please first add the bug report or mod proposal to
+the gurobi-optimod
+[issue tracker](https://github.com/Gurobi/gurobi-optimods/issues).
 
-Create an issue, and use the 'New Mod Proposal' template to gather the required details.
+When reporting a bug, please include a minimal reproducible example, including
+the installed version of the package and its dependencies.
 
-## Implementing a new mod
+## Submitting changes
 
-1. Assign yourself to an open mod issue
-2. Fork Gurobi/gurobi-optimods to your own github account
-3. Set up your development environment (see below) and ensure that you can run the tests and build the docs
-4. Copy the template files (replacing `<mod>` with your mod name):
-```
-cp _templates/mod.py src/gurobi_optimods/<mod>.py
-cp _templates/test_mod.py tests/test_<mod>.py
-cp _templates/mod.rst docs/source/mods/<mod>.rst
-```
-5. Include your mod in the toctree at `docs/source/mods/index.rst` (maintain lexicographic order)
-6. Create a new branch, commit the scaffolding files
-7. Push the branch to your fork
-8. Create a *draft* PR for your branch into gurobi-optimods/main
-9. Follow the checklist in the PR
-10. When complete, take the PR out of draft and assign a reviewer
+We welcome your contribution in directly tackling some of the issues.
 
-## Implementation notes
+We use the GitHub pull request workflow. Once your pull request is ready for review, one
+of the core maintainers of gurobi-optimods will review your pull request.
 
-- Data files should live under `src/gurobi_optimods/data/<mod-name>` to reduce clutter
-- Mods should be stateless (see the template example). This means gurobipy environments and models are created within a mod function, and closed before the function returns.
-- We use `sphinxcontrib-bibtex` for citations/referencing. To add references for a mod:
-  - Add a new `.bib` file under `docs/source/refs`
-  - Add your new `.bib` file to the `bibtex_bibfiles` list in `docs/source/conf.py`
-  - Use `:footcite:t:` or `:footcite:p:` to cite references within your documentation
-  - Add the `.. footbibliography::` directive at the bottom of your documentation page to show references as footnotes (example in the L1 regression mod)
-  - For more info, see [the docs](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/index.html) for `sphinxcontrib-bibtex`
+A pull request should contain tests for the changes made to the code behavior, should
+include a clear message outlining the changes done, and should be linked to an existing
+issue.
 
-### Development environment
+Full details regarding coding standards, setting up a development environment,
+and continuous integration testing can be found in our
+[online documentation](https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/latest/contributing.html).
 
-To set up your development environment:
+After a pull request is submitted, the tests will be run automatically, and the
+status will appear on the pull request page. If the tests failed, there is a
+link which can be used to debug the failed tests.
 
-1. Create and activate a python >=3.8 virtual environment
-2. Run `make develop` from the top directory of this repository
+## Code reviews
 
-To run the tests
-
-1. Activate your virtual environment
-2. Run `make test`. This will run the unit tests of the mod implementations and doctests examples from the docs
-
-To build and view the docs:
-
-1. Activate your virtual environment
-2. Change to `docs` directory
-3. Run `make livehtml`. This will build the docs and (after a little while) open up a browser window at the index page
-4. Any change to the documentation source files will automatically rebuild the docs and trigger an update in your browser
+The pull request author should respond to all comments received. If the comment
+has been accepted and appropriate changes applied, the author should respond by
+a short message such as "Done" and then resolve the comment. If more discussion
+is needed on a comment, it should remain open until a solution can be figured
+out.

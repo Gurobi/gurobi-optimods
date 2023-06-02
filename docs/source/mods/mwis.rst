@@ -33,7 +33,7 @@ vertex weight is maximum.
 
 .. tabs::
 
-    .. tab:: Domain-Specific Description
+    .. tab:: Description
 
         Let :math:`G = (V, E, w)` be an undirected graph where each vertex
         :math:`i \in V` has a positive weight :math:`w_i`. Find a
@@ -94,38 +94,6 @@ a graph with 8 vertices and 12 edges known as the cube graph.
 
     ...
     Best objective 1.650000000000e+02, best bound 1.650000000000e+02, gap 0.0000%
-
-
-The model is solved as a MIP by Gurobi.
-
-.. collapse:: View Gurobi Logs
-
-    .. code-block:: text
-
-        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[arm])
-        Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
-        Optimize a model with 12 rows, 8 columns and 24 nonzeros
-        Model fingerprint: 0x31a65d0e
-        Variable types: 0 continuous, 8 integer (8 binary)
-        Coefficient statistics:
-        Matrix range     [1e+00, 1e+00]
-        Objective range  [1e+00, 1e+02]
-        Bounds range     [1e+00, 1e+00]
-        RHS range        [1e+00, 1e+00]
-        Found heuristic solution: objective 165.0000000
-        Presolve removed 12 rows and 8 columns
-        Presolve time: 0.00s
-        Presolve: All rows and columns removed
-
-        Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
-        Thread count was 1 (of 8 available processors)
-
-        Solution count 1: 165
-
-        Optimal solution found (tolerance 1.00e-04)
-        Best objective 1.650000000000e+02, best bound 1.650000000000e+02, gap 0.0000%
-
-|
 
 Solution
 --------

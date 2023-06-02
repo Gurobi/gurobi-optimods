@@ -1,0 +1,27 @@
+# Build and upload a wheel. No tests run, this should be
+# handled via a larger workflow.
+
+name: Upload wheel to PyPI
+
+on:
+  workflow_call:
+
+jobs:
+  publish-pypi:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.8"
+    - name: Install build tools
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install build twine
+    - name: Build package
+      run: python -m build
+    - name: Publish with twine
+      env:
+        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      run: twine upload -u __token__ -p $PYPI_TOKEN dist/*

@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gurobi-optimods"
-description = "Gurobi OptiMods -- optimization easy to use"
-readme = "README.rst"
+description = "Nice APIs for common optimization tasks"
+readme = "README.md"
 requires-python = ">=3.8"
 license = "Apache-2.0"
 keywords = ["optimization", "gurobipy", "pandas"]
@@ -14,18 +14,17 @@ authors = [
     { name = "Robert Luce", email = "luce@gurobi.com" },
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-    "gurobipy",
-    "gurobipy-pandas",
+    "gurobipy>=10.0.0",
+    "gurobipy-pandas>=1.0.0",
     "numpy",
     "pandas",
     "scipy",
@@ -33,7 +32,11 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-networkx = ["networkx"]
+examples = [
+    "networkx",
+    "matplotlib",
+    "scikit-learn"
+]
 
 [tool.hatch.version]
 path = "src/gurobi_optimods/__init__.py"

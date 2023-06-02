@@ -1,0 +1,29 @@
+# Release workflow. Run basic QA, build and test the universal wheel
+# on many platforms, then publish to pypi
+
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  code-quality:
+    uses: ./.github/workflows/code-quality.yml
+  python-tests:
+    uses: ./.github/workflows/python-tests.yml
+    needs: [code-quality]
+  wheel-tests:
+    uses: ./.github/workflows/wheel-tests.yml
+    needs: [python-tests]
+  doc-tests:
+    uses: ./.github/workflows/doc-tests.yml
+    needs: [python-tests]
+  doc-build:
+    uses: ./.github/workflows/doc-build.yml
+    needs: [python-tests]
+  publish-pypi:
+    uses: ./.github/workflows/publish-pypi.yml
+    needs: [code-quality,python-tests,wheel-tests,doc-tests]
+    secrets: inherit

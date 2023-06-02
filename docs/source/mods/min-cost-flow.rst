@@ -6,8 +6,18 @@ a certain amount of flow in the cheapest way. It is a fundamental flow problem
 as many other graph problems can be modelled using this framework, for example,
 the shortest-path, maximum flow, or matching problems.
 
+The first algorithm to solve this problem was proposed by Dantzig
+:footcite:p:`dantzig1951application`, :footcite:p:`dantzig1963linear`, called
+the `network simplex` (NS) algorithm. Other methods have been proposed since
+then but NS remains one the most efficient approaches. Competitive methods on
+larger networks include cost-scaling methods (e.g. variants of the push-relabel
+algorithm by :footcite:t:`goldberg1990finding`). For a more detailed comparison
+see, for example, :footcite:t:`kovacs2015minimum`.
+
 Problem Specification
 ---------------------
+
+We provide the graph theory and mathematical definition of this problem.
 
 .. tabs::
 
@@ -23,7 +33,7 @@ Problem Specification
         This value can be positive (requesting flow), negative (supplying
         flow), or 0.
 
-        The problem can be stated as finding a the flow with minimal total cost
+        The problem can be stated as finding the flow with minimal total cost
         such that:
 
         - the demand at each vertex is met;
@@ -47,7 +57,7 @@ Problem Specification
             \end{alignat}
 
         Where :math:`\delta^+(\cdot)` (:math:`\delta^-(\cdot)`) denotes the
-        outgoing (incoming) neighours.
+        outgoing (incoming) neighbours.
 
         The objective minimises the total cost over all edges.
 
@@ -71,7 +81,7 @@ Code and Inputs
 For this mod, one can use input graphs of different types:
 
 * pandas: using a ``pd.DataFrame``;
-* Networkx: using a ``nx.DiGraph`` or ``nx.Graph``;
+* NetworkX: using a ``nx.DiGraph`` or ``nx.Graph``;
 * SciPy.sparse: using some ``sp.sparray`` matrices and NumPy's ``np.ndarray``.
 
 An example of these inputs with their respective requirements is shown below.
@@ -80,11 +90,11 @@ An example of these inputs with their respective requirements is shown below.
 
   .. group-tab:: pandas
 
-      .. doctest:: load_min_cost_flow
+      .. doctest:: load_graph
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
-          >>> edge_data, node_data = datasets.load_min_cost_flow()
+          >>> edge_data, node_data = datasets.load_graph()
           >>> edge_data
                          capacity  cost
           source target
@@ -113,13 +123,13 @@ An example of these inputs with their respective requirements is shown below.
 
       We assume that nodes labels are integers from :math:`0,\dots,|V|-1`.
 
-  .. group-tab:: Networkx
+  .. group-tab:: NetworkX
 
-      .. doctest:: load_min_cost_flow_networkx
+      .. doctest:: load_graph_networkx
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
-          >>> G = datasets.load_min_cost_flow_networkx()
+          >>> G = datasets.load_graph_networkx()
           >>> for e in G.edges(data=True):
           ...     print(e)
           ...
@@ -143,15 +153,13 @@ An example of these inputs with their respective requirements is shown below.
       Edges have attributes ``capacity`` and ``cost`` and nodes have
       attributes ``demand``.
 
-      We assume that nodes labels are integers from :math:`0,\dots,|V|-1`.
-
   .. group-tab:: scipy.sparse
 
-      .. doctest:: load_min_cost_flow_scipy
+      .. doctest:: load_graph_scipy
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
-          >>> G, capacities, cost, demands = datasets.load_min_cost_flow_scipy()
+          >>> G, capacities, cost, demands = datasets.load_graph_scipy()
           >>> G
           <5x6 sparse matrix of type '<class 'numpy.int64'>'
                   with 7 stored elements in COOrdinate format>
@@ -202,8 +210,8 @@ formats.
 
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.min_cost_flow import min_cost_flow
-          >>> edge_data, node_data = datasets.load_min_cost_flow()
-          >>> obj, sol = min_cost_flow(edge_data, node_data, silent=True)
+          >>> edge_data, node_data = datasets.load_graph()
+          >>> obj, sol = min_cost_flow(edge_data, node_data, verbose=False)
           >>> obj
           31.0
           >>> sol
@@ -215,26 +223,26 @@ formats.
                   4         2.0
           3       5         0.0
           4       5         2.0
-          dtype: float64
+          Name: flow, dtype: float64
 
       The ``min_cost_flow`` function returns the cost of the solution as well
       as ``pd.Series`` with the flow per edge. Similarly as the input
       DataFrame the resulting series is indexed by ``source`` and ``target``.
 
 
-  .. group-tab:: Networkx
+  .. group-tab:: NetworkX
 
       .. doctest:: min_cost_flow_networkx
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.min_cost_flow import min_cost_flow_networkx
-          >>> G = datasets.load_min_cost_flow_networkx()
-          >>> obj, sol = min_cost_flow_networkx(G, silent=True)
+          >>> G = datasets.load_graph_networkx()
+          >>> obj, sol = min_cost_flow_networkx(G, verbose=False)
           >>> obj
           31.0
-          >>> sol
-          {(0, 1): 1.0, (0, 2): 1.0, (1, 3): 1.0, (2, 4): 2.0, (4, 5): 2.0}
+          >>> list(sol.edges(data=True))
+          [(0, 1, {'flow': 1.0}), (0, 2, {'flow': 1.0}), (1, 3, {'flow': 1.0}), (2, 4, {'flow': 2.0}), (4, 5, {'flow': 2.0})]
 
       The ``min_cost_flow_networkx`` function returns the cost of the solution
       as well as a dictionary indexed by edge with the non-zero flow.
@@ -246,8 +254,8 @@ formats.
 
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.min_cost_flow import min_cost_flow_scipy
-          >>> G, capacities, cost, demands = datasets.load_min_cost_flow_scipy()
-          >>> obj, sol = min_cost_flow_scipy(G, capacities, cost, demands, silent=True)
+          >>> G, capacities, cost, demands = datasets.load_graph_scipy()
+          >>> obj, sol = min_cost_flow_scipy(G, capacities, cost, demands, verbose=False)
           >>> obj
           31.0
           >>> sol
@@ -273,32 +281,7 @@ each vertex is shown on top of the vertex in red.
   :width: 600
   :alt: Sample network.
 
-In all these cases, the model is solved as an LP by Gurobi.
+In all these cases, the model is solved as an LP by Gurobi (typically using the
+NS algorithm).
 
-.. collapse:: View Gurobi Logs
-
-    .. code-block:: text
-
-        Solving min-cost flow with 6 nodes and 7 edges
-        Gurobi Optimizer version 10.0.1 build v10.0.1rc0 (mac64[arm])
-
-        CPU model: Apple M1
-        Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
-
-        Optimize a model with 6 rows, 7 columns and 14 nonzeros
-        Model fingerprint: 0xc6fc382e
-        Coefficient statistics:
-          Matrix range     [1e+00, 1e+00]
-          Objective range  [1e+00, 1e+01]
-          Bounds range     [1e+00, 2e+00]
-          RHS range        [1e+00, 2e+00]
-        Presolve removed 4 rows and 4 columns
-        Presolve time: 0.00s
-        Presolved: 2 rows, 3 columns, 6 nonzeros
-
-        Iteration    Objective       Primal Inf.    Dual Inf.      Time
-               0    2.7994000e+01   1.002000e+00   0.000000e+00      0s
-               1    3.1000000e+01   0.000000e+00   0.000000e+00      0s
-
-        Solved in 1 iterations and 0.00 seconds (0.00 work units)
-        Optimal objective  3.100000000e+01
+.. footbibliography::
