@@ -111,6 +111,16 @@ A reference to your page must also be added to ``docs/source/gallery.rst`` to
 include it in the gallery page and toctree when the documentation is built. You
 should also add an icon to the gallery card for your mod.
 
+Your documentation page must contain example codes that new users can
+immediately used, with presentation of the results included in the documentation
+page.
+
+The implementation of the Mod (description of the mathematical model or
+algorithms used) should be hidden from the user at first glance. We use tabs to
+do this. Any mathematical and algorithmic details should be placed in a tab and
+clearly indicate that this is advanced detail the user does not need to fully
+understand in order to use the Mod.
+
 Including datasets
 ------------------
 

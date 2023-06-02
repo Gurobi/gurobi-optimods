@@ -12,9 +12,9 @@ Coding Standards
 
 We use `black <https://github.com/psf/black>`_ to format all source code.
 ``pre-commit`` takes care of this formatting when installed (see
-:ref:`contributing:development environment`) and runs checks automatically when you commit
-changes. To run code quality checks manually, run the following and ensure no
-issues are reported::
+:ref:`contributing:development environment`) and runs checks automatically when
+you commit changes. To run code quality checks manually, run the following and
+ensure no issues are reported::
 
     pre-commit run --all-files
     python -m flake8 . --select=E9,F63,F7,F82,F811,F401 --show-source
@@ -33,7 +33,8 @@ Documentation
 
 Documentation is a core part of the OptiMods project. All Mods must be
 accompanied by a documentation page explaining their use and providing
-appropriate background information.
+appropriate background information. If new mod features are added, the
+documentation must reflect the changes.
 
 Development Environment
 -----------------------
