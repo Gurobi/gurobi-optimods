@@ -17,6 +17,17 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class QuboResult:
+    """
+    Solution to a QUBO problem.
+
+    Attributes
+    ----------
+    solution : ndarray
+        0/1 array of variable values in the solution
+    objective_value : float
+        The objective function value for this solution
+    """
+
     solution: np.ndarray
     objective_value: float
 
