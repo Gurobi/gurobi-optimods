@@ -95,19 +95,18 @@ class TestOptimodDecorator(unittest.TestCase):
                 model.addVars(2001)
                 model.optimize()
 
-        # We expect a ValueError; getting the standard license limit  error is a
+        # We expect a ValueError; getting the standard license limit error is a
         # fail, everything else an error
-        with self.assertRaises(ValueError) as cm:
+        re_expect_message = (
+            "Given data exceeds Gurobi's license limits; please see "
+            "https://support.gurobi.com.*to resolve this issue"
+        )
+        with self.assertRaisesRegex(ValueError, re_expect_message):
             try:
                 too_large_mod()
             except gp.GurobiError as ge:
                 self.assertNotEqual(ge.errno, gp.GRB.ERROR_SIZE_LIMIT_EXCEEDED)
                 raise
-
-        self.assertIn(
-            "Given data exceeds Gurobi's license limits; see https:/XXX for resolution",
-            str(cm.exception),
-        )
 
 
 class TestOverrideParams(unittest.TestCase):

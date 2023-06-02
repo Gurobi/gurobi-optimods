@@ -93,7 +93,9 @@ def _mod_context(
     except gp.GurobiError as ge:
         if ge.errno == gp.GRB.ERROR_SIZE_LIMIT_EXCEEDED:
             raise ValueError(
-                "Given data exceeds Gurobi's license limits; see https:/XXX for resolution"
+                "Given data exceeds Gurobi's license limits; please see "
+                "https://support.gurobi.com/hc/en-us/articles/15801588452241 "
+                "to resolve this issue"
             )
         else:
             raise
