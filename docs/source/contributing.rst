@@ -19,6 +19,9 @@ ensure no issues are reported::
     pre-commit run --all-files
     python -m flake8 . --select=E9,F63,F7,F82,F811,F401 --show-source
 
+We follow the `numpydoc <https://numpydoc.readthedocs.io/en/latest/format.html>`
+style guide for docstrings of all public API functions.
+
 Testing
 -------
 

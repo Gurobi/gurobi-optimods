@@ -590,7 +590,8 @@ the risk-free return rate is 0.25%:
     ...
 
 If a risk-free return rate has been specified, the returned
-:class:`PortfolioResult` instance's ``x_rf`` attribute tells the proportion of
+:class:`~gurobi_optimods.portfolio.PortfolioResult` instance's ``x_rf``
+attribute tells the proportion of
 investment into the risk-free asset.  In this example the optimal portfolio
 allocates about 17% into the risk-free asset:
 

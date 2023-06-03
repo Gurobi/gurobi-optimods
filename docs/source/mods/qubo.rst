@@ -75,8 +75,8 @@ Problem Specification
         for binary variables.
 
 The input data consisting of the item (pair) weights is defined as a matrix (see the
-description), either as a NumPy array :class:`numpy.ndarray`
-or as a SciPy sparse matrix :class:`scipy.sparse`.
+description), either as a NumPy array :class:`~numpy.ndarray`
+or as a SciPy sparse matrix :class:`~scipy.sparse.spmatrix`.
 
 Code
 ----

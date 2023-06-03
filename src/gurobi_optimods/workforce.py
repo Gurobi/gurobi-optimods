@@ -26,22 +26,34 @@ def solve_workforce_scheduling(
 ) -> pd.DataFrame:
     """Solve a workforce scheduling model.
 
-    :param preferences: Dataframe with columns 'Worker' and 'Shift' defining
-        all allowable worker-shift combinations
-    :type preferences: :class:`pd.DataFrame`
-    :param shift_requirements: Dataframe with columns 'Shift' and 'Required'
-        specifying the number of staff required for every shift
-    :type shift_requirements: :class:`pd.DataFrame`
-    :param worker_limits: Dataframe with columns 'Worker', 'MinShifts', and
-        'MaxShifts' specifying the maximum and minimum number of shifts each
-        worker may be assigned
-    :type worker_limits: :class:`pd.DataFrame`
-    :param rolling_limits: Whether to enforce worker shift limits on a rolling
-        window basis. If True, worker_limits must contain an additional 'Window'
-        column specifying the rolling window for each worker
-    :type rolling_limits: :class:`bool`
-    :return: Assigned shifts as a subset of the preferences dataframe
-    :rtype: :class:`pd.DataFrame`
+    Parameters
+    ----------
+    preferences : DataFrame
+        Dataframe with columns 'Worker' and 'Shift' defining all allowable
+        worker-shift combinations. The 'Preference' column optionally assigns a
+        preference value to the given combination.
+    shift_requirements : DataFrame
+        Dataframe with columns 'Shift' and 'Required' specifying the number of
+        staff required for every shift.
+    worker_limits : DataFrame
+        Dataframe with columns 'Worker', 'MinShifts', and 'MaxShifts' specifying
+        the maximum and minimum number of shifts each worker may be assigned in
+        the schedule.
+    rolling_limits : bool
+        Whether to enforce worker shift limits on a rolling window basis. If
+        True, worker_limits must contain an additional 'Window' column
+        specifying the rolling window for each worker.
+
+    Returns
+    -------
+    DataFrame
+        Shift assignments as a subset of the preferences dataframe
+
+    Raises
+    ------
+    ValueError
+        If a feasible set of shift assignments cannot be constructed from the
+        input data
     """
     with create_env() as env, gp.Model(env=env) as m:
 

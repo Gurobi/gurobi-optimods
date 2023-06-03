@@ -32,4 +32,4 @@ jobs:
       - name: Build docs (fail on warnings)
         run: |
           cd docs
-          make clean html SPHINXOPTS="-W --keep-going"
+          make clean html SPHINXOPTS="-W --keep-going -n"

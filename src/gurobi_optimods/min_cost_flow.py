@@ -30,8 +30,8 @@ def min_cost_flow(arc_data: pd.DataFrame, demand_data: pd.DataFrame, *, create_e
 
         arc_data = pd.DataFrame(
             [
-                {"from": 0, "to": 1, "capacity": 16, "cost": 0},
-                {"from": 1, "to": 2, "capacity": 10, "cost": 0},
+                {"from": 0, "to": 1, "capacity": 16, "cost": 0}, {"from": 1,
+                "to": 2, "capacity": 10, "cost": 0},
             ]
         ).set_index(["from", "to"])
 
@@ -39,18 +39,22 @@ def min_cost_flow(arc_data: pd.DataFrame, demand_data: pd.DataFrame, *, create_e
             [{"node": 0, "demand": -1}, {"node": 2, "demand": 1}]
         ).set_index("node")
 
-    :param arc_data: DataFrame with graph and respective attributes. These must
-        include ``"from"``, ``"to"`` nodes used as index, ``"capacity"``, and
+    Parameters
+    ----------
+    arc_data : DataFrame
+        DataFrame with graph and respective attributes. These must include
+        ``"from"``, ``"to"`` nodes used as index, ``"capacity"``, and
         ``"cost"``.
-    :type arc_data: :class:`pd.DataFrame`
-    :param demand_data: DataFrame with node demand information. These must
+    demand_data : DataFrame
+        DataFrame with node demand information. These must
         include indexed by `"node"`, and include the `"demand"`. This value can
         be positive (requesting flow) or negative (supplying flow).
-    :type demand_data: :class:`pd.DataFrame`
-    :return: Cost of the minimum cost flow.
-    :rtype: :class:`float`
-    :return: DataFrame with the flow for each edge.
-    :rtype: :class:`pd.Series`
+
+    Returns
+    -------
+    tuple
+        Cost of the minimum cost flow (float), dictionary indexed by edges with
+        non-zero flow in the solution (Series)
     """
     with create_env() as env, gp.Model(env=env) as model:
         model.ModelSense = GRB.MINIMIZE
@@ -92,18 +96,22 @@ def min_cost_flow_scipy(
 ):
     """Solve the minimum cost flow problem for a given graph.
 
-    :param G: Adjacency matrix of the graph.
-    :type G: :class:`sp.sparray`
-    :param capacities: Matrix containing capacities for each edge.
-    :type capacities: :class:`sp.sparray`
-    :param costs: Matrix containing costs for each edge.
-    :type costs: :class:`sp.sparray`
-    :param demands: Array containing the demand for each node.
-    :type demands: :class:`np.ndarray`
-    :return: Cost of the minimum cost flow.
-    :rtype: :class:`float`
-    :return: Adjacency matrix with flow in the solution
-    :rtype: :class:`sp.sparray`
+    Parameters
+    ----------
+    G : spmatrix
+        Adjacency matrix of the graph.
+    capacities : spmatrix
+        Matrix containing capacities for each edge.
+    costs : spmatrix
+        Matrix containing costs for each edge.
+    demands : ndarray
+        Array containing the demand for each node.
+
+    Returns
+    -------
+    tuple
+        Cost of the minimum cost flow (float), dictionary indexed by edges with
+        non-zero flow in the solution (spmatrix)
     """
     G = G.tocoo()
 
@@ -146,15 +154,17 @@ def min_cost_flow_scipy(
 def min_cost_flow_networkx(G, *, create_env):
     """Solve the minimum cost flow problem for a given graph.
 
-    Note: We assume the networkx input graph node labels are all integers.
+    Parameters
+    ----------
+    G : DiGraph
+        Graph with edge attributes ``capacity`` and ``cost``, as well as node
+        attributes ``demand``.
 
-    :param G: Graph with edge attributes ``capacity`` and ``cost``, as well as
-        node attributes ``demand``.
-    :type G: :class:`nx.DiGraph`
-    :return: Cost of the minimum cost flow.
-    :rtype: :class:`float`
-    :return: Dictionary indexed by edges with non-zero flow in the solution.
-    :rtype: :class:`dict`
+    Returns
+    -------
+    tuple
+        Cost of the minimum cost flow (float), dictionary indexed by edges with
+        non-zero flow in the solution (dict)
     """
     logger.info(
         f"Solving min-cost flow with {len(G.nodes)} nodes and {len(G.edges)} edges"

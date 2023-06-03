@@ -59,19 +59,25 @@ def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
     """Solve a maximum cardinality bipartite matching problem on the
     given graph.
 
-    :param graph: A graph, specified either as a scipy.sparse adjacency matrix, networkx
-        graph, or pandas dataframe
-    :type graph: :class:`sp.sparray|nx.Graph|pd.DataFrame`
-    :param nodes1: Nodes in the first bipartite set. If ``graph`` is a pandas dataframe,
-        nodes1 must be a column name. Otherwise, it is a numpy array of nodes in the first
-        bipartite set.
-    :type nodes1: :class:`np.array|List|str`
-    :param nodes2: Nodes in the second bipartite set. If ``graph`` is a pandas dataframe,
-        nodes2 must be a column name. Otherwise, it is a numpy array of nodes in the second
-        bipartite set.
-    :type nodes2: :class:`np.array|List|str`
-    :return: A subgraph of the original graph specifying the maximum matching
-    :rtype: :class:`sp.sparray|nx.Graph|pd.DataFrame`
+    Parameters
+    ----------
+    graph : spmatrix or Graph or DataFrame
+        A graph, specified either as a scipy.sparse adjacency matrix, networkx
+        graph, or pandas dataframe.
+    nodes1 : ndarray or str
+        Nodes in the first bipartite set. If ``graph`` is a pandas dataframe,
+        nodes1 must be a column name. Otherwise, it is a numpy array of nodes in
+        the first bipartite set.
+    nodes2 : ndarray or str
+        Nodes in the second bipartite set. If ``graph`` is a pandas dataframe,
+        nodes2 must be a column name. Otherwise, it is a numpy array of nodes in
+        the second bipartite set.
+
+    Returns
+    -------
+    DataFrame or Graph
+        A subgraph of the original ``graph`` (with the same data type) specifying
+        the maximum matching
     """
     if isinstance(graph, sp.spmatrix):
         return _maximum_bipartite_matching_scipy(graph, nodes1, nodes2, create_env)

@@ -14,6 +14,7 @@ release = version
 # -- General configuration
 
 extensions = [
+    "numpydoc",
     "sphinx_copybutton",
     "sphinx_design",
     "sphinx_tabs.tabs",
@@ -26,7 +27,6 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.napoleon",
     "sphinxcontrib.bibtex",
 ]
 
@@ -35,6 +35,10 @@ pygments_style = "vs"
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "sphinx": ("https://www.sphinx-doc.org/en/master/", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "networkx": ("https://networkx.org/documentation/stable", None),
 }
 
 templates_path = ["_templates"]
@@ -68,6 +72,19 @@ rst_prolog = """.. warning::
     This code is in a pre-release state. It may not be fully functional and breaking changes
     can occur without notice.
 """
+
+# -- numpydoc magic linking
+
+numpydoc_xref_param_type = True
+numpydoc_xref_aliases = {
+    "DataFrame": "pandas.DataFrame",
+    "spmatrix": "scipy.sparse.spmatrix",
+    "QuboResult": "gurobi_optimods.qubo.QuboResult",
+    "Graph": "networkx.Graph",
+    "DiGraph": "networkx.DiGraph",
+}
+numpydoc_xref_ignore = {"optional", "or", "of"}
+
 
 # -- Docstring preprocessing for autodoc
 
@@ -135,6 +152,6 @@ def process_docstring(app, what, name, obj, options, lines):
         lines.append(f"The following mods can be imported from ``{name}``:")
 
 
-def setup(app):
-    app.connect("autodoc-process-signature", process_signature)
-    app.connect("autodoc-process-docstring", process_docstring)
+# def setup(app):
+#     app.connect("autodoc-process-signature", process_signature)
+#     app.connect("autodoc-process-docstring", process_docstring)
