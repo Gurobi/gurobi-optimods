@@ -83,6 +83,7 @@ numpydoc_xref_aliases = {
     "Graph": "networkx.Graph",
     "DiGraph": "networkx.DiGraph",
 }
+numpydoc_xref_ignore = {"optional", "or", "of"}
 
 
 # -- Docstring preprocessing for autodoc

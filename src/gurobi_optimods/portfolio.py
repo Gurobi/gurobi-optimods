@@ -23,11 +23,11 @@ class MeanVariancePortfolio:
 
     Parameters
     ----------
-    mu : 1-d :class:`np.ndarray`
+    mu : 1-d ndarray
         Vector of expected returns for each asset
-    cov_matrix : 2-d :class:`np.ndarray`
+    cov_matrix : 2-d ndarray
         Covariance matrix :math:`\Sigma`
-    cov_factors : tuple of :class:`np.ndarray`
+    cov_factors : tuple of ndarray
         Covariance factors that constitute :math:`\Sigma`. Typically each
         element ``F`` of ``cov_matrix`` will either be a
 
@@ -96,57 +96,56 @@ class MeanVariancePortfolio:
         Parameters
         ----------
 
-        gamma : :class:`float` >= 0
+        gamma : float >= 0
             Risk aversion cofficient for balancing risk and return; the
             resulting objective functions is
             :math:`\mu^T x - 0.5 \gamma x^T \Sigma x`
-        max_trades : :class:`int` >= 0, optional
+        max_trades : int >= 0, optional
             Upper limit on the number of trades
-        max_positions : :class:`int` >= 0, optional
+        max_positions : int >= 0, optional
             Upper limit on the number of open positions
-        fees_buy : :class:`float` or :class:`np.ndarray` >= 0, optional
+        fees_buy : float or ndarray >= 0, optional
             Fixed-charge fee for each buy transaction, relative to total
             portfolio value
-        fees_sell : :class:`float` or :class:`np.ndarray` >= 0, optional
+        fees_sell : float or ndarray >= 0, optional
             Fixed-charge fee for each sell transaction, relative to total
             portfolio value
-        costs_buy : :class:`float` or :class:`np.ndarray` >= 0, optional
+        costs_buy : float or ndarray >= 0, optional
             Variable transaction costs for each buy transaction, relative to
             trade value
-        costs_sell : :class:`float` or :class:`np.ndarray` >= 0, optional
+        costs_sell : float or ndarray >= 0, optional
             Variable transaction costs for each sell transaction, relative to
             trade value
-        min_long : :class:`float` >= 0, optional
+        min_long : float >= 0, optional
             Lower bound on the volume on a traded long position, relative to
             total portfolio value
-        min_short : :class:`float` >= 0, optional
+        min_short : float >= 0, optional
             Lower bound on the volume on a traded short position, relative to
             total portfolio value
-        max_total_short : :class:`float` >= 0, optional
+        max_total_short : float >= 0, optional
             Maximum total short positions, relative to total investment.
-        initial_holdings : 1-d :class:`np.ndarray`, optional
+        initial_holdings : 1-d ndarray, optional
             Initial portfolio holdings (sum needs to be <= 1)
-        rf_return : :class:`float`, optional, default None
+        rf_return : float, optional
             Include a risk-free asset having return rate ``rf_return``.
 
         Returns
         -------
-        mvp_result : dict
-            A dict containing the efficient portfolio, along with auxiliary
+        mvp_result : PortfolioResult
+            A dataclass containing the efficient portfolio, along with auxiliary
             information:
 
-            * ``mvp_result["x"]``: The portfolio vector :math:`x`
-            * ``mvp_result["risk"]``: The estimated risk :math:`x^T \Sigma x`
+            * ``mvp_result.x``: The portfolio vector :math:`x`
+            * ``mvp_result.risk``: The estimated risk :math:`x^T \Sigma x`
               of the portfolio
-            * ``mvp_result["return"]``: The estimated return :math:`\mu^T x` of
+            * ``mvp_result.return``: The estimated return :math:`\mu^T x` of
               the portfolio
-            * ``mvp["x_rf"]`` relative investment in the risk-free asset.
+            * ``mvp.x_rf`` relative investment in the risk-free asset.
               Present only if ``rf_return`` was non-None on input
 
             Some combinations of requested portfolio features may rule out
             **all** possible portfolios.  In this corner case the value
             ``None`` is returned.
-
 
         Notes
         -----
@@ -405,13 +404,13 @@ class PortfolioResult:
 
     Attributes
     ----------
-    x : 1-d :class:`np.ndarray`
+    x : 1-d ndarray
         The vector of relative investments into each asset
-    ret : :class:`float`
+    ret : float
         The (estimated) return of the portfolio
-    risk : :class:`float`
+    risk : float
         The (estimated) risk of the portfolio
-    x_rf : :class:`float`
+    x_rf : float, optional
         The relative investment into the risk-free asset.  Equals to None if no
         risk-free return rate was specified upon input
 
