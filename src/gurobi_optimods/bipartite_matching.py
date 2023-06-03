@@ -61,22 +61,23 @@ def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
 
     Parameters
     ----------
-    graph : spmatrix | Graph | DataFrame
+    graph : spmatrix or Graph or DataFrame
         A graph, specified either as a scipy.sparse adjacency matrix, networkx
         graph, or pandas dataframe.
-    nodes1 : ndarray | str
+    nodes1 : ndarray or str
         Nodes in the first bipartite set. If ``graph`` is a pandas dataframe,
         nodes1 must be a column name. Otherwise, it is a numpy array of nodes in
         the first bipartite set.
-    nodes2 : ndarray | str
+    nodes2 : ndarray or str
         Nodes in the second bipartite set. If ``graph`` is a pandas dataframe,
         nodes2 must be a column name. Otherwise, it is a numpy array of nodes in
         the second bipartite set.
 
     Returns
     -------
-    DataFrame
-        A subgraph of the original graph specifying the maximum matching
+    DataFrame or Graph
+        A subgraph of the original ``graph`` (with the same data type) specifying
+        the maximum matching
     """
     if isinstance(graph, sp.spmatrix):
         return _maximum_bipartite_matching_scipy(graph, nodes1, nodes2, create_env)
