@@ -197,6 +197,35 @@ class TestBipartiteMatchingPandas(unittest.TestCase):
         self.assert_is_unweighted_matching(matching, columns=["n1", "n2"])
         assert_frame_equal(matching, expected_result)
 
+    @unittest.expectedFailure
+    def test_integer_types(self):
+        frame = pd.DataFrame(
+            {
+                "a": list(range(100)),
+                "b": list(range(100, 200)),
+            }
+        )
+
+        matching = maximum_bipartite_matching(frame, "a", "b")
+        self.assertIsInstance(matching, pd.DataFrame)
+        self.assertIsNot(matching, frame)
+        assert_frame_equal(matching, frame)
+
+    @unittest.expectedFailure
+    def test_datetime_types(self):
+        start = pd.Timestamp("2022-01-01")
+        frame = pd.DataFrame(
+            {
+                "date": pd.date_range(start, freq="D", periods=10),
+                "activity": [f"a{i}" for i in range(10)],
+            }
+        )
+
+        matching = maximum_bipartite_matching(frame, "date", "activity")
+        self.assertIsInstance(matching, pd.DataFrame)
+        self.assertIsNot(matching, frame)
+        assert_frame_equal(matching, frame)
+
 
 @unittest.skipIf(nx is None, "networkx is not installed")
 class TestBipartiteMatchingNetworkx(unittest.TestCase):
