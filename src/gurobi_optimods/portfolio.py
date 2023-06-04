@@ -28,14 +28,16 @@ class MeanVariancePortfolio:
     cov_matrix : 2-d ndarray
         Covariance matrix :math:`\Sigma`
     cov_factors : tuple of ndarray
-        Covariance factors that constitute :math:`\Sigma`. Typically each
-        element ``F`` of ``cov_matrix`` will either be a
+        Covariance factors that constitute :math:`\Sigma = B K B^T + diag(d)`.
 
-            * n-by-k dense matrix, or a
-            * n-by-n diagonal matrix.
+            * ``cov_factors[0]``: (n, k) dense matrix :math:`B`
+            * ``cov_factors[1]``: (k, k) dense matrix :math:`K`, SPD
+            * ``cov_factors[2]``: (n,) vector :math:`d`, nonnegative
 
-        Each element ``F`` of ``cov_factors`` contributes the term ``F @ F.T``
-        to :math:`\Sigma`; see also :ref:`factor models`
+    Raises
+    ------
+    LinAlgError
+        If the matrix K is not positive definite
 
     """
 
