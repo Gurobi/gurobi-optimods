@@ -99,7 +99,7 @@ class TestOptimodDecorator(unittest.TestCase):
         # We expect a ValueError; getting the standard license limit error is a
         # fail, everything else an error
         re_expect_message = (
-            "Given data exceeds Gurobi's license limits; please see "
+            "Given data exceeds Gurobi trial license limits; please see "
             "https://support.gurobi.com.*to resolve this issue"
         )
         with self.assertRaisesRegex(ValueError, re_expect_message):

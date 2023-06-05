@@ -129,7 +129,7 @@ def optimod(mod_logger=None):
                 # (instead of directly in the except block above) to avoid a
                 # confusing double stack trace.
                 raise ValueError(
-                    "Given data exceeds Gurobi's license limits; please see "
+                    "Given data exceeds Gurobi trial license limits; please see "
                     "https://support.gurobi.com/hc/en-us/articles/15801588452241 "
                     "to resolve this issue"
                 )
