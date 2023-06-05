@@ -33,7 +33,6 @@ class QuboResult:
 
 
 def callback(model, where):
-
     if where == GRB.Callback.MIP:
         runtime = model.cbGet(GRB.Callback.RUNTIME)
         if runtime >= model._next_output_time:
@@ -85,7 +84,6 @@ def solve_qubo(coeff_matrix, time_limit=GRB.INFINITY, *, create_env) -> QuboResu
     params = {"TimeLimit": time_limit, "LogToConsole": 0}
 
     with create_env(params=params) as env, gp.Model(env=env) as model:
-
         x = model.addMVar(n, vtype=GRB.BINARY)
         model.setObjective(x @ coeff_matrix @ x, GRB.MINIMIZE)
 

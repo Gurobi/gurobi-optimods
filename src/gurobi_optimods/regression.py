@@ -49,7 +49,6 @@ class LADRegression(RegressionBase):
 
         # Create model
         with create_env() as env, gp.Model(env=env) as model:
-
             # Create unbounded variables for each column coefficient, and bound
             # magnitudes using additional variables. Keep intercept separate.
             intercept = model.addVar(lb=-GRB.INFINITY, name="intercept")

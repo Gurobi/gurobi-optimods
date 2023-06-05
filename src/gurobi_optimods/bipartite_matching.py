@@ -93,7 +93,6 @@ def _maximum_bipartite_matching_pandas(frame, n1_column, n2_column, create_env):
     already in a pandas dataframe."""
 
     with create_env() as env, gp.Model(env=env) as model:
-
         # Directed flow variables between bipartite sets
         df = frame.set_index([n1_column, n2_column]).gppd.add_vars(
             model, ub=1, name="flow"

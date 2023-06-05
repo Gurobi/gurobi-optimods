@@ -125,7 +125,6 @@ def process_docstring(app, what, name, obj, options, lines):
     """Add parameter entries for decorated mods"""
 
     if what in ["function", "method"] and hasattr(obj, "_decorated_mod"):
-
         # Find where the last input parameter is listed
         in_paramlist = False
         lineno = None

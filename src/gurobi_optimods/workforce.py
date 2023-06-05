@@ -62,7 +62,6 @@ def solve_workforce_scheduling(
         input data
     """
     with create_env() as env, gp.Model(env=env) as m:
-
         # Create binary variables for all valid shift assignments and
         # create preference maximization objective
         m.ModelSense = GRB.MAXIMIZE

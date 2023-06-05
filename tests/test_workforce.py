@@ -196,7 +196,6 @@ class TestWorkforceScheduling(unittest.TestCase):
         )
 
         with self.subTest("upperlimits"):
-
             worker_limits = read_csv(
                 """
                 Worker,MinShifts,MaxShifts
@@ -228,7 +227,6 @@ class TestWorkforceScheduling(unittest.TestCase):
             )
 
         with self.subTest("lowerlimits"):
-
             worker_limits = read_csv(
                 """
                 Worker,MinShifts,MaxShifts
