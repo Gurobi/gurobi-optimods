@@ -17,63 +17,56 @@ see, for example, :footcite:t:`kovacs2015minimum`.
 Problem Specification
 ---------------------
 
-We provide the graph theory and mathematical definition of this problem.
+For a given graph :math:`G` with set of vertices :math:`V` and edges
+:math:`E`. Each edge :math:`(i,j)\in E` has the following attributes:
 
-.. tabs::
+- cost: :math:`c_{ij}\in \mathbb{R}`;
+- and capacity: :math:`B_{ij}\in\mathbb{R}`.
 
-    .. tab:: Graph Theory
+Each vertex :math:`i\in V` has a demand :math:`d_i\in\mathbb{R}` which can be
+positive (requesting flow), negative (supplying flow), or zero (a transshipment
+node).
 
-        For a given graph :math:`G` with set of vertices :math:`V` and edges
-        :math:`E`. Each edge :math:`(i,j)\in E` has the following attributes:
+The problem can be stated as finding the flow with minimal total cost
+such that:
 
-        - cost: :math:`c_{ij}\in \mathbb{R}`;
-        - and capacity: :math:`B_{ij}\in\mathbb{R}`.
+- the demand at each vertex is met exactly; and
+- the flow is capacity feasible.
 
-        Also, each vertex :math:`i\in V` has a demand :math:`d_i\in\mathbb{R}`.
-        This value can be positive (requesting flow), negative (supplying
-        flow), or 0.
+.. dropdown:: Background: Optimization Model
 
-        The problem can be stated as finding the flow with minimal total cost
-        such that:
+    This Mod is implemented by formulating a Linear Program (LP) and solving it
+    using Gurobi. Let us define a set of continuous variables :math:`x_{ij}` to
+    represent the amount of non-negative (:math:`\geq 0`) flow going through an
+    edge :math:`(i,j)\in E`.
 
-        - the demand at each vertex is met;
-        - and, the flow is capacity feasible.
+    The formulation can be stated as follows:
 
-    .. tab:: Optimization Model
+    .. math::
 
-        Let us define a set of continuous variables :math:`x_{ij}` to represent
-        the amount of non-negative (:math:`\geq 0`) flow going through an edge
-        :math:`(i,j)\in E`.
+        \begin{alignat}{2}
+            \min \quad        & \sum_{(i, j) \in E} c_{ij} x_{ij} \\
+            \mbox{s.t.} \quad & \sum_{j \in \delta^+(i)} x_{ij} - \sum_{j \in \delta^-(i)} x_{ji} = d_i & \forall i \in V \\
+                            & 0 \leq x_{ij} \le B_{ij} & \forall (i, j) \in E \\
+        \end{alignat}
 
+    Where :math:`\delta^+(\cdot)` (:math:`\delta^-(\cdot)`) denotes the
+    outgoing (incoming) neighbours.
 
-        The mathematical formulation can be stated as follows:
+    The objective minimises the total cost over all edges.
 
-        .. math::
+    The first constraints ensure flow balance for all vertices. That is, for
+    a given node, the incoming flow (sum over all incoming edges to this
+    node) minus the outgoing flow (sum over all outgoing edges from this
+    node) is equal to the demand. Clearly, in the case when the demand is 0,
+    the outgoing flow must be equal to the incoming flow. When the demand is
+    negative, this node can supply flow to the network (outgoing term is
+    larger), and conversely when the demand is negative, this node can
+    request flow from the network (incoming term is larger).
 
-            \begin{alignat}{2}
-              \min \quad        & \sum_{(i, j) \in E} c_{ij} x_{ij} \\
-              \mbox{s.t.} \quad & \sum_{j \in \delta^+(i)} x_{ij} - \sum_{j \in \delta^-(i)} x_{ji} = d_i & \forall i \in V \\
-                                & 0 \leq x_{ij} \le B_{ij} & \forall (i, j) \in E \\
-            \end{alignat}
+    The last constraints ensure non-negativity of the variables and that the
+    capacity per edge is not exceeded.
 
-        Where :math:`\delta^+(\cdot)` (:math:`\delta^-(\cdot)`) denotes the
-        outgoing (incoming) neighbours.
-
-        The objective minimises the total cost over all edges.
-
-        The first constraints ensure flow balance for all vertices. That is, for
-        a given node, the incoming flow (sum over all incoming edges to this
-        node) minus the outgoing flow (sum over all outgoing edges from this
-        node) is equal to the demand. Clearly, in the case when the demand is 0,
-        the outgoing flow must be equal to the incoming flow. When the demand is
-        negative, this node can supply flow to the network (outgoing term is
-        larger), and conversely when the demand is negative, this node can
-        request flow from the network (incoming term is larger).
-
-        The last constraints ensure non-negativity of the variables and that the
-        capacity per edge is not exceeded.
-
-|
 
 Code and Inputs
 ---------------

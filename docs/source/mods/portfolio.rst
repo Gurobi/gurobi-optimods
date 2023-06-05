@@ -21,31 +21,30 @@ efficient frontier given expected returns and variances.
 Problem Specification
 ---------------------
 
-.. tabs::
-
-    .. tab:: Description
-
-        We consider a single-period portfolio optimization problem where want
-        to allocate wealth into :math:`n` risky assets. The returned portfolio
-        :math:`x` is an efficient mean-variance portfolio for given returns
-        :math:`\mu`, covariance matrix :math:`\Sigma` and risk aversion
-        :math:`\gamma`.
+We consider a single-period portfolio optimization problem where want
+to allocate wealth into :math:`n` risky assets. The returned portfolio
+:math:`x` is an efficient mean-variance portfolio for given returns
+:math:`\mu`, covariance matrix :math:`\Sigma` and risk aversion
+:math:`\gamma`.
 
 
-    .. tab:: Mathematical Formulation
+.. dropdown:: Background: Mathematical Formulation
 
-        .. math::
+    The most basic version of this Mod is implemented by formulating a Quadratic
+    Program (QP) and solving it using Gurobi. The formulation is as follows:
 
-            \begin{alignat}{2}
-            \max \quad        & \mu^\top x - \tfrac12 \gamma\ x^\top\Sigma x \\
-            \mbox{s.t.} \quad & 1^\top x = 1 \\
-            \end{alignat}
+    .. math::
 
-        * :math:`\mu` is the vector of expected returns.
-        * :math:`\Sigma` is the return covariance matrix.
-        * :math:`x` is the portfolio where :math:`x_i` denotes the fraction of
-          wealth invested in the risky asset :math:`i`.
-        * :math:`\gamma\geq0` is the risk aversion coefficient.
+        \begin{alignat}{2}
+        \max \quad        & \mu^\top x - \tfrac12 \gamma\ x^\top\Sigma x \\
+        \mbox{s.t.} \quad & 1^\top x = 1 \\
+        \end{alignat}
+
+    * :math:`\mu` is the vector of expected returns.
+    * :math:`\Sigma` is the return covariance matrix.
+    * :math:`x` is the portfolio where :math:`x_i` denotes the fraction of
+        wealth invested in the risky asset :math:`i`.
+    * :math:`\gamma\geq0` is the risk aversion coefficient.
 
 
 This description refers only to the simple base model.  Further down in

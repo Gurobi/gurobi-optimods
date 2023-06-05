@@ -25,74 +25,74 @@ in the schedule. Optionally, preferences can be provided, in which case the
 scheduler aims to maximize satisfaction by finding a feasible roster which
 maximizes the sum of preference scores of the assigned shifts.
 
-.. tabs::
+The workforce scheduling Mod takes the following three dataframes as input:
 
-    .. tab:: Data Specification
+* The ``availability`` dataframe has two columns: ``Worker`` and
+  ``Shift``. Each row in dataframe specifies that the given worker is
+  available to work the given shift. If the optional ``preferences`` argument
+  is provided, it must refer to an additional column in the ``availability``
+  dataframe containing preferences.
+* The ``shift_requirements`` dataframe has two columns: ``Shift`` and
+  ``Required``. Each row specifies the number of workers required for a given
+  shift. There must be one row for every unique shift in
+  ``availability["Shift"]``.
+* The ``worker_limits`` dataframe has three columns: ``Worker``,
+  ``MinShifts``, and ``MaxShifts``. Each row specifies the minimum and maximum
+  number of shifts the given worker may be assigned in the schedule. There
+  must be one row for every unique worker in ``availability["Worker"]``.
 
-        The workforce scheduling model takes the following three dataframes as
-        input:
+When ``solve_workforce_scheduling`` is called, a model is formulated and solved
+immediately using Gurobi. Workers will be assigned only to shifts they are
+available for, in such a way that all requirements are covered, minimum and
+maximum shift numbers are respected, and the total sum of worker preference
+scores is maximised. If ``preferences=None``, preferences are omitted and any
+feasible schedule will be returned.
 
-        * The ``availability`` dataframe has two columns: ``Worker`` and
-          ``Shift``. Each row in dataframe specifies that the given worker is
-          available to work the given shift. If the optional ``preferences``
-          argument is provided, it must refer to an additional column in the
-          ``availability`` dataframe containing preferences.
-        * The ``shift_requirements`` dataframe has two columns: ``Shift`` and
-          ``Required``. Each row specifies the number of workers required for a
-          given shift. There must be one row for every unique shift in
-          ``availability["Shift"]``.
-        * The ``worker_limits`` dataframe has three columns: ``Worker``,
-          ``MinShifts``, and ``MaxShifts``. Each row specifies the minimum and
-          maximum number of shifts the given worker may be assigned in the
-          schedule. There must be one row for every unique worker in
-          ``availability["Worker"]``.
+The returned assignment dataframe is a subset of the availability dataframe,
+with the same columns. A row in the returned dataframe specifies that the given
+worker has been assigned to the given shift.
 
-        When ``solve_workforce_scheduling`` is called, a model is formulated and
-        solved immediately using Gurobi. Workers will be assigned only to shifts
-        they are available for, in such a way that all requirements are covered,
-        minimum and maximum shift numbers are respected, and the total sum of
-        worker preference scores is maximised. If ``preferences=None``,
-        preferences are omitted and any feasible schedule will be returned.
+.. dropdown:: Background: Mathematical Model
 
-        The returned assignment dataframe is a subset of the availability
-        dataframe, with the same columns. A row in the returned dataframe
-        specifies that the given worker has been assigned to the given shift.
+    The set of shifts :math:`S` is to be covered using the set of workers
+    :math:`W`. Workers :math:`w \in W_{s} \subseteq W` are available to work
+    a given shift `s`, and have a preference :math:`p_{ws}` for each
+    assigned shift. Shift :math:`s` requires :math:`r_{s}` workers assigned.
+    Each worker must be assigned between :math:`l_{w}` and :math:`u_{w}`
+    shifts in total. The model is defined on binary variables :math:`x_{ws}`
+    which satisfy the condition
 
-    .. tab:: Optimization Model
+    .. math::
 
-        The set of shifts :math:`S` is to be covered using the set of workers
-        :math:`W`. Workers :math:`w \in W_{s} \subseteq W` are available to work
-        a given shift `s`, and have a preference :math:`p_{ws}` for each
-        assigned shift. Shift :math:`s` requires :math:`r_{s}` workers assigned.
-        Each worker must be assigned between :math:`l_{w}` and :math:`u_{w}`
-        shifts in total. The model is defined on binary variables :math:`x_{ws}`
-        which satisfy the condition
+        x_{ws} = \begin{cases}
+            1 & \text{if worker w is given shift s} \\
+            0 & \text{otherwise.} \\
+        \end{cases}
 
-        .. math::
+    The mathematical model is then expressed as:
 
-            x_{ws} = \begin{cases}
-                1 & \text{if worker w is given shift s} \\
-                0 & \text{otherwise.} \\
-            \end{cases}
+    .. math::
 
-        The mathematical model is then expressed as:
+        \begin{alignat}{2}
+        \max \quad        & \sum_{s \in S} \sum_{w \in W_{s}} p_{ws} x_{ws} \\
+        \mbox{s.t.} \quad & \sum_{w \in W_{s}} x_{ws} = r_{s} & \forall s \in S \\
+                            & l_{w} \le \sum_{s \in S} x_{ws} \le u_{w} & \forall w \in W \\
+                            & x_{ws} \in \lbrace 0, 1 \rbrace & \forall s \in S, w \in W_{s} \\
+        \end{alignat}
 
-        .. math::
+    The objective computes the total cost of all shift assignments based on
+    worker pay rates. The first constraint ensures that all shifts are
+    assigned the required number of workers, while the second constraint
+    ensures workers are assigned to an acceptable number of shifts.
 
-            \begin{alignat}{2}
-            \max \quad        & \sum_{s \in S} \sum_{w \in W_{s}} p_{ws} x_{ws} \\
-            \mbox{s.t.} \quad & \sum_{w \in W_{s}} x_{ws} = r_{s} & \forall s \in S \\
-                              & l_{w} \le \sum_{s \in S} x_{ws} \le u_{w} & \forall w \in W \\
-                              & x_{ws} \in \lbrace 0, 1 \rbrace & \forall s \in S, w \in W_{s} \\
-            \end{alignat}
+A Simple Example
+----------------
 
-        The objective computes the total cost of all shift assignments based on
-        worker pay rates. The first constraint ensures that all shifts are
-        assigned the required number of workers, while the second constraint
-        ensures workers are assigned to an acceptable number of shifts.
-
-All input data is given as pandas dataframes, following the layout described in
-the Data Specification above. The tabs below show example data for each frame.
+This section shows the simplest possible input dataset for the Mod, comprising
+seven workers covering daily shifts over a two week period, each with defined
+availability. All input data is given as pandas dataframes, following the layout
+described in the :ref:`mods/workforce:problem specification` above. The tabs
+below show example data for each frame.
 
 .. testsetup:: workforce
 
@@ -186,12 +186,9 @@ the Data Specification above. The tabs below show example data for each frame.
         In the mathematical model, this table provides the values :math:`l_w`
         and :math:`u_w`.
 
-Solving a Model
----------------
-
-The example code below solves the workforce scheduling problem for a simple
-example dataset comprising seven workers covering daily shifts over a two week
-period.
+The example code below solves the workforce scheduling problem for the above
+dataset. The dataset can be imported directly in the environment where
+``gurobi-optimods`` is installed.
 
 .. testcode:: workforce
 

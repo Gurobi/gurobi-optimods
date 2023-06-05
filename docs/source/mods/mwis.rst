@@ -31,36 +31,34 @@ maximum weighted independent set, i.e., select a set of vertices in graph
 :math:`G` where there is no edge between any pair of vertices and the sum of the
 vertex weight is maximum.
 
-.. tabs::
+Formally stated, let :math:`G = (V, E, w)` be an undirected graph where each
+vertex :math:`i \in V` has a positive weight :math:`w_i`. Find a subset :math:`S
+\subseteq V` such that:
 
-    .. tab:: Description
+* no two vertices in :math:`S` are connected by an edge; and
+* among all such independent sets, the set :math:`S` has the maximum total
+  vertex weight.
 
-        Let :math:`G = (V, E, w)` be an undirected graph where each vertex
-        :math:`i \in V` has a positive weight :math:`w_i`. Find a
-        subset :math:`S \subseteq V` such that:
+.. dropdown:: Background: Optimization Model
 
-        * no two vertices in :math:`S` are connected by an edge, and
-        * among all such independent sets, the set :math:`S` has the maximum total vertex weight.
+    This mod is implemented by formulating a Binary Integer Programming (BIP)
+    model and solving it using Gurobi. For each vertex :math:`i \in V`, define a
+    binary decision variable :math:`x_i` as below:
 
-    .. tab:: Optimization Model
+    .. math::
+        x_i = \begin{cases}
+            1 & \text{if vertex}\,i\,\text{belongs to set}\,S\,\\
+            0 & \text{otherwise.} \\
+        \end{cases}
 
-        For each vertex :math:`i \in V`, define a binary decision variable
-        :math:`x_i` as below:
+    The formulation of the MWIS is then given below:
 
-        .. math::
-            x_i = \begin{cases}
-                1 & \text{if vertex}\,i\,\text{belongs to set}\,S\,\\
-                0 & \text{otherwise.} \\
-            \end{cases}
-
-        The binary integer programming model of the MWIS is then given below:
-
-        .. math::
-            \begin{align}
-            \max \quad        & \sum_{i \in V} w_i x_i \\
-            \mbox{s.t.} \quad & x_i + x_j \leq 1 & \forall (i, j) \in E \\
-                              & x_i \in \{0, 1\} & \forall i \in V
-            \end{align}
+    .. math::
+        \begin{align}
+        \max \quad        & \sum_{i \in V} w_i x_i \\
+        \mbox{s.t.} \quad & x_i + x_j \leq 1 & \forall (i, j) \in E \\
+                            & x_i \in \{0, 1\} & \forall i \in V
+        \end{align}
 
 The input data for this mod includes a scipy sparse matrix in CSR format
 representing the graph :math:`G` adjacency matrix (upper triangular) and a
