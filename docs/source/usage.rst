@@ -7,7 +7,7 @@ a page of explanatory documentation which provides background on the problem it
 is intended to solve. The docs also include runnable example codes and datasets
 to get you started.
 
-Note that you may need to install additonal dependencies for some examples. The
+Note that you may need to install additional dependencies for some examples. The
 quick way to ensure you have a Python environment which can execute all the
 example snippets in the docs is to run the following::
 
