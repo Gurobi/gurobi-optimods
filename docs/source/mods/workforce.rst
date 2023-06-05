@@ -2,28 +2,28 @@ Workforce Scheduling
 ====================
 
 Workforce scheduling is an extremely widely-used application of optimization in
-practice. It involves balancing many competing concerns, including worker
-availability and preferences, shift coverage requirements, conditions on
-consecutive shifts or rest breaks, and so on. Implementation can become quite
+practice. It involves balancing many competing concerns such as worker
+availability, cost, and preferences; shift coverage requirements; conditions on
+consecutive shifts or rest breaks; and so on. Implementation can become quite
 involved as worker requirements and entitlements become more complex.
 
-This mod implements a relatively simple case. Workers provide their availability
-and preferences, while rest requirements and work entitlements are handled
-through lower and upper limits on the number of shifts a worker is rostered on
-for in a given period. The scheduler aims to maximize satisfaction by finding a
-feasible roster which maximizes the sum of preference scores.
+This Mod implements several basic variants of workforce scheduling. The initial
+example is deliberately simple, while later sections progressively add more
+complexity and enforce additional requirements on the generated schedule. If the
+initial example appears too simple for your use-case, please, read on!
 
 Problem Specification
 ---------------------
 
-Consider a service business, such as a restaurant, that develops its roster for
-a two week period. The service requires only one set of skills. There are a
-number of employed workers with the same set of skills and with identical
-productivity that are available to work on some of the days during the two-week
-planning horizon. There is only one shift per workday, however each shift may
-require a different number of workers. The business requests preferences from
-all workers for shifts they are available for, and aims to maximize the sum of
-preference scores of assigned shifts as a proxy for worker happiness.
+This first example covers a simple case for a business developing a two-week
+roster. Each shift requires a given number of workers who have identical skills
+and productivity. In other words, any work can cover any shift, and all workers
+are considered equivalent. Workers provide their availability for shifts, and
+rest requirements and minimum work entitlements are handled through upper and
+lower limits, respectively, on the number of shifts a worker is rostered on for
+in the schedule. Optionally, preferences can be provided, in which case the
+scheduler aims to maximize satisfaction by finding a feasible roster which
+maximizes the sum of preference scores of the assigned shifts.
 
 .. tabs::
 
@@ -32,26 +32,29 @@ preference scores of assigned shifts as a proxy for worker happiness.
         The workforce scheduling model takes the following three dataframes as
         input:
 
-        * The ``preferences`` dataframe has three columns: ``Worker``, ``Shift``,
-          and ``Preference``. Each row in dataframe specifies that the given worker
-          is available to work the given shift.
+        * The ``availability`` dataframe has two columns: ``Worker`` and
+          ``Shift``. Each row in dataframe specifies that the given worker is
+          available to work the given shift. If the optional ``preferences``
+          argument is provided, it must refer to an additional column in the
+          ``availability`` dataframe containing preferences.
         * The ``shift_requirements`` dataframe has two columns: ``Shift`` and
           ``Required``. Each row specifies the number of workers required for a
           given shift. There must be one row for every unique shift in
-          ``preferences["Shift"]``.
+          ``availability["Shift"]``.
         * The ``worker_limits`` dataframe has three columns: ``Worker``,
           ``MinShifts``, and ``MaxShifts``. Each row specifies the minimum and
           maximum number of shifts the given worker may be assigned in the
           schedule. There must be one row for every unique worker in
-          ``preferences["Worker"]``.
+          ``availability["Worker"]``.
 
         When ``solve_workforce_scheduling`` is called, a model is formulated and
         solved immediately using Gurobi. Workers will be assigned only to shifts
         they are available for, in such a way that all requirements are covered,
         minimum and maximum shift numbers are respected, and the total sum of
-        worker preference scores is maximised.
+        worker preference scores is maximised. If ``preferences=None``,
+        preferences are omitted and any feasible schedule will be returned.
 
-        The returned assignment dataframe is a subset of the preferences
+        The returned assignment dataframe is a subset of the availability
         dataframe, with the same columns. A row in the returned dataframe
         specifies that the given worker has been assigned to the given shift.
 
@@ -99,18 +102,20 @@ the Data Specification above. The tabs below show example data for each frame.
 
 .. tabs::
 
-    .. tab:: ``preferences``
+    .. tab:: ``availability``
 
         The following example table lists worker availability and preferences.
         For example, Siva is available on July 2nd, 3rd, 5th, and so on, with a
-        stronger preference to be assigned the shift on the 5th.
+        stronger preference to be assigned the shift on the 5th. To use the
+        preference data, the optional argument ``preferences="Preference"`` must
+        be supplied.
 
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE
 
             >>> from gurobi_optimods import datasets
             >>> data = datasets.load_workforce()
-            >>> data.preferences
+            >>> data.availability
                  Worker      Shift  Preference
             0      Siva 2023-05-02         2.0
             1      Siva 2023-05-03         2.0
@@ -198,9 +203,10 @@ period.
 
     # Solve the mod, get back a schedule
     assigned_shifts = solve_workforce_scheduling(
-        preferences=data.preferences,
+        availability=data.availability,
         shift_requirements=data.shift_requirements,
         worker_limits=data.worker_limits,
+        preferences="Preference",
     )
 
 .. testoutput:: workforce
@@ -215,7 +221,7 @@ Inspecting the Solution
 -----------------------
 
 The solution to this workforce scheduling problem is a selection of shift
-assignments. The returned dataframe is a subset of the original preferences
+assignments. The returned dataframe is a subset of the original availability
 dataframe.
 
 .. doctest:: workforce
@@ -314,9 +320,10 @@ set to ``True`` to enforce the new requirement.
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
 
     >>> assigned_shifts = solve_workforce_scheduling(
-    ...     preferences=data.preferences,
+    ...     availability=data.availability,
     ...     shift_requirements=data.shift_requirements,
     ...     worker_limits=worker_limits,
+    ...     preferences="Preference",
     ...     rolling_limits=True,
     ...     verbose=False,
     ... )
@@ -348,3 +355,14 @@ set to ``True`` to enforce the new requirement.
 
 Notice that Siva's shifts have been adjusted so as to avoid any worker working
 more than 5 consecutive days.
+
+Further Requirements
+--------------------
+
+As mentioned in the introduction, this Mod implements some basic cases of
+workforce scheduling, and is limited in scope. However, similar modelling
+approaches to those described here can be applied to handle more complex
+requirements. For further information, see :footcite:t:`ERNST20043` (among many,
+many other references on the topic).
+
+.. footbibliography::

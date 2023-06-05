@@ -29,7 +29,7 @@ class AttrDict(dict):
 
 def load_workforce():
     return AttrDict(
-        preferences=pd.read_csv(
+        availability=pd.read_csv(
             DATA_FILE_DIR / "workforce/preferences.csv", parse_dates=["Shift"]
         ),
         shift_requirements=pd.read_csv(
