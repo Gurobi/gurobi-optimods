@@ -197,7 +197,6 @@ class TestBipartiteMatchingPandas(unittest.TestCase):
         self.assert_is_unweighted_matching(matching, columns=["n1", "n2"])
         assert_frame_equal(matching, expected_result)
 
-    @unittest.expectedFailure
     def test_integer_types(self):
         frame = pd.DataFrame(
             {
@@ -211,7 +210,6 @@ class TestBipartiteMatchingPandas(unittest.TestCase):
         self.assertIsNot(matching, frame)
         assert_frame_equal(matching, frame)
 
-    @unittest.expectedFailure
     def test_datetime_types(self):
         start = pd.Timestamp("2022-01-01")
         frame = pd.DataFrame(

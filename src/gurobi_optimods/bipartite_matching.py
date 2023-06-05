@@ -94,49 +94,33 @@ def _maximum_bipartite_matching_pandas(frame, n1_column, n2_column, create_env):
     already in a pandas dataframe."""
 
     with create_env() as env, gp.Model(env=env) as model:
-        df = (
-            pd.concat(
-                [
-                    frame.assign(_original_edge=True),
-                    pd.DataFrame(
-                        {
-                            n1_column: "source",
-                            n2_column: frame[n1_column].unique(),
-                            "_original_edge": False,
-                        }
-                    ),
-                    pd.DataFrame(
-                        {
-                            n1_column: frame[n2_column].unique(),
-                            n2_column: "sink",
-                            "_original_edge": False,
-                        }
-                    ),
-                ]
-            )
-            .set_index([n1_column, n2_column])
-            .gppd.add_vars(model, ub=1, name="flow")
-        )
-        df.loc[("sink", "source"), "flow"] = model.addVar(
-            obj=1, name="flow[sink,source]"
-        )
-        df.loc[("sink", "source"), "_original_edge"] = False
-        model.ModelSense = GRB.MAXIMIZE
 
-        gppd.add_constrs(
-            model,
-            df["flow"].groupby(n1_column).sum(),
-            GRB.EQUAL,
-            df["flow"].groupby(n2_column).sum(),
-            name="balance",
+        # Directed flow variables between bipartite sets
+        df = frame.set_index([n1_column, n2_column]).gppd.add_vars(
+            model, ub=1, name="flow"
         )
+
+        # Inflow variables and flow balance on n1
+        n1_outflows = df["flow"].groupby(n1_column).sum()
+        n1_inflows = gppd.add_vars(model, n1_outflows.index, ub=1, name="src_flow")
+        gppd.add_constrs(model, n1_inflows, GRB.EQUAL, n1_outflows, name="n1_balance")
+
+        # Outflow variables and flow balance on n2
+        n2_inflows = df["flow"].groupby(n2_column).sum()
+        n2_outflows = gppd.add_vars(model, n2_inflows.index, ub=1, name="sink_flow")
+        gppd.add_constrs(model, n2_inflows, GRB.EQUAL, n2_outflows, name="n2_balance")
+
+        # sink-source flow variable and flow balances
+        sink_source_flow = model.addVar(name="sink_source_flow")
+        model.addConstr(sink_source_flow == n1_inflows.sum(), name="src_balance")
+        model.addConstr(n2_outflows.sum() == sink_source_flow, name="sink_balance")
+
+        # max flow
+        model.setObjective(sink_source_flow, sense=GRB.MAXIMIZE)
+
+        # solve and extract solution
         model.optimize()
-
-        return (
-            df[df["flow"].gppd.X.gt(0.1) & df._original_edge]
-            .drop(columns=["flow", "_original_edge"])
-            .reset_index()
-        )
+        return df.loc[df["flow"].gppd.X.gt(0.1)].reset_index().drop(columns=["flow"])
 
 
 def _maximum_bipartite_matching_networkx(graph, nodes1, nodes2, create_env):
