@@ -1493,6 +1493,7 @@ def lpformulator_ac_strictchecker(alldata, model):
         for j in range(1, numbuses + 1):
             bus = buses[j]
             for var in [(evar[bus], bus.inpute), (fvar[bus], bus.inputf)]:
+                output_string = f"auxiliary variable {var[0].VarName} used for rectangular formulation defined for bus ID {bus.nodeID}"
                 (
                     maxlbviol,
                     maxubviol,
@@ -1511,6 +1512,7 @@ def lpformulator_ac_strictchecker(alldata, model):
                     badubvar,
                     max_violation_value,
                     max_violation_string,
+                    output_string,
                 )
 
             alldata["LP"]["xbuffer"][evar[bus]] = bus.inpute
@@ -1525,6 +1527,7 @@ def lpformulator_ac_strictchecker(alldata, model):
         vvar = alldata["LP"]["vvar"]
         for j in range(1, numbuses + 1):
             bus = buses[j]
+            output_string = f"variable {vvar[bus].VarName} defining voltage magnitude of bus ID {bus.nodeID}"
             (
                 maxlbviol,
                 maxubviol,
@@ -1543,6 +1546,7 @@ def lpformulator_ac_strictchecker(alldata, model):
                 badubvar,
                 max_violation_value,
                 max_violation_string,
+                output_string,
             )
 
         logger.info("Polar quantities checked.")
@@ -1552,6 +1556,13 @@ def lpformulator_ac_strictchecker(alldata, model):
     for j in range(1, 1 + numbranches):
         branch = branches[j]
         for var in [Pvar_f[branch], Pvar_t[branch], Qvar_f[branch], Qvar_t[branch]]:
+            power = (
+                "real power injected"
+                if "P" in var.VarName
+                else "reactive power injected"
+            )
+            direction = "from" if "_f" in var.VarName else "to"
+            output_string = f"variable {var.VarName} defining {power} into '{direction}' end of branch ({branch.f},{branch.t})"
             (
                 maxlbviol,
                 maxubviol,
@@ -1570,6 +1581,7 @@ def lpformulator_ac_strictchecker(alldata, model):
                 badubvar,
                 max_violation_value,
                 max_violation_string,
+                output_string,
             )
 
     logger.info("Power flow values checked.")
@@ -1582,6 +1594,7 @@ def lpformulator_ac_strictchecker(alldata, model):
     for j in range(1, 1 + numbuses):
         bus = buses[j]
         varinj = Pinjvar[bus]
+        output_string = f"variable {varinj.VarName} defining total real power injected by bus ID {bus.nodeID} into incident branches"
         (
             maxlbviol,
             maxubviol,
@@ -1600,6 +1613,7 @@ def lpformulator_ac_strictchecker(alldata, model):
             badubvar,
             max_violation_value,
             max_violation_string,
+            output_string,
         )
 
         alldata["violation"][bus]["Pinjmax"] = max(xbuffer[varinj] - varinj.ub, 0)
@@ -1641,7 +1655,7 @@ def lpformulator_ac_strictchecker(alldata, model):
         bus = buses[j]
         varinj = Qinjvar[bus]
         varf = Qvar_f[branch]
-
+        output_string = f"variable {varinj.VarName} defining total reactive power injected by bus ID {bus.nodeID} into incident branches"
         (
             maxlbviol,
             maxubviol,
@@ -1660,6 +1674,7 @@ def lpformulator_ac_strictchecker(alldata, model):
             badubvar,
             max_violation_value,
             max_violation_string,
+            output_string,
         )
 
         alldata["violation"][bus]["Qinjmax"] = max(xbuffer[varinj] - varinj.ub, 0)
@@ -1689,6 +1704,8 @@ def lpformulator_ac_strictchecker(alldata, model):
             candmaxviol = -alldata["violation"][bus]["Qinjmin"]
         IQviol[bus] = candmaxviol
 
+    logger.info("Flow balance constraints checked.")
+
     worstboundviol_report(badlbvar, maxlbviol, "LB")
     worstboundviol_report(badubvar, maxubviol, "UB")
 
@@ -1709,6 +1726,7 @@ def lpformulator_checkviol_simple(
     badubvar,
     max_violation_value,
     max_violation_string,
+    output_string="",
 ):
     """
     Returns bounds infeasibility if setting grbvariable to some value.
@@ -1750,7 +1768,7 @@ def lpformulator_checkviol_simple(
 
     if lbviol > 0:
         logger.info(
-            f"Lower bound violation for variable {grbvariable.varname}  LB {lb:<14.4e}  x {value:<14.4e}  UB {ub:<14.4e}"
+            f"LB violation for {output_string} LB {lb:<14.4e}  x {value:<14.4e}  UB {ub:<14.4e}"
         )
 
     if lbviol > maxlbviol:
@@ -1762,7 +1780,7 @@ def lpformulator_checkviol_simple(
     # correct, this is just for an expert
     if ubviol > 0:
         logger.info(
-            f"Upper bound violation for variable {grbvariable.varname}  LB {lb:<14.4e}  x {value:<14.4e}  UB {ub:<14.4e}"
+            f"UB violation for {output_string} LB {lb:<14.4e}  x {value:<14.4e}  UB {ub:<14.4e}"
         )
 
     if ubviol > maxubviol:
