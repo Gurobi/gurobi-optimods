@@ -1775,9 +1775,6 @@ def lpformulator_checkviol_simple(
         maxlbviol = lb - value
         badlbvar = grbvariable
 
-    # TODO-Dan I don't understand how a user can make anything of this output. We print an internal variable name.
-    #          I don't see how a user can get anything out of it. Could you explain? Or maybe improve the output?
-    # correct, this is just for an expert
     if ubviol > 0:
         logger.info(
             f"UB violation for {output_string} LB {lb:<14.4e}  x {value:<14.4e}  UB {ub:<14.4e}"
