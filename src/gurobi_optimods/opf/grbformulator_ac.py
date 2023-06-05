@@ -1516,7 +1516,7 @@ def lpformulator_ac_strictchecker(alldata, model):
             alldata["LP"]["xbuffer"][evar[bus]] = bus.inpute
             alldata["LP"]["xbuffer"][fvar[bus]] = bus.inputf
 
-        logger.info("Checked e, f values.")
+        logger.info("e, f values checked.")
 
     if alldata["dopolar"]:
         logger.info(

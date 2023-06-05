@@ -173,7 +173,7 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
-        # differences can be quite big because we solve only to 1% optimality
+        # differences can be quite big because we solve only to 0.1% optimality
         self.assertLess(abs(solution["f"] - 681590.8014), 1e2)
         for i in range(0, 10):
             self.assertLess(abs(solution["bus"][i + 1]["Va"] - self.Va_NY[i]), 1e1)
@@ -187,7 +187,7 @@ class TestOpf(unittest.TestCase):
             case, opftype="AC", branchswitching=1, usemipstart=False
         )
         # check whether the solution point looks correct
-        # differences can be quite big because we solve only to 1% optimality
+        # differences can be quite big because we solve only to 0.1% optimality
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
@@ -211,7 +211,7 @@ class TestOpf(unittest.TestCase):
             self.assertTrue(solution is not None)
             self.assertTrue(solution["success"] == 1)
             self.assertTrue(solution["f"] is not None)
-            # differences can be quite big because we solve only to 1% optimality
+            # differences can be quite big because we solve only to 0.1% optimality
             self.assertLess(abs(solution["f"] - self.objvals_dc[i]), 1e1)
             self.assertLess(abs(solution["bus"][1]["Va"] - self.Va_dc[i]), 1e1)
             self.assertLess(abs(solution["gen"][2]["Pg"] - self.Pg_dc[i]), 1e1)
@@ -232,7 +232,7 @@ class TestOpf(unittest.TestCase):
             self.assertTrue(solution is not None)
             self.assertTrue(solution["success"] == 1)
             self.assertTrue(solution["f"] is not None)
-            # differences can be quite big because we solve only to 1% optimality
+            # differences can be quite big because we solve only to 0.1% optimality
             self.assertLess(abs(solution["f"] - self.objvals_ac[i]), 1e1)
             self.assertLess(abs(solution["bus"][3]["Vm"] - self.Vm_ac[i]), 1e1)
             self.assertLess(abs(solution["gen"][2]["Qg"] - self.Qg_ac[i]), 1e1)
@@ -270,8 +270,9 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
-        # differences can be quite big because we solve only to 1% optimality
+        # differences can be quite big because we solve only to 0.1% optimality
         self.assertLess(abs(solution["f"] - 5297.0142014), 1e1)
+        self.assertLess(abs(solution["bus"][1]["Vm"] - 1.20712362), 1e-1)
         self.assertLess(abs(solution["gen"][2]["Pg"] - 132.87813), 1e1)
         self.assertLess(abs(solution["gen"][3]["Qg"] + 22.802347), 1e1)
         self.assertLess(abs(solution["branch"][4]["Pf"] - 95.113306), 1e1)

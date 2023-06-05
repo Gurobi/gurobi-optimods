@@ -3,18 +3,6 @@ import sys
 from enum import Enum
 
 
-def break_exit(foo):
-    """
-    For Dan only
-    Will be definitely removed in the final version
-    # TODO remove it
-    """
-
-    stuff = input("(" + foo + ") break> ")
-    if stuff == "x" or stuff == "q":
-        sys.exit("bye")
-
-
 def initialize_logger(loggername, logfile="", usefilehandler=False):
     """
     Initializes a logger object from the logging package

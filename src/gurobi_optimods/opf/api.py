@@ -142,10 +142,8 @@ def solve_opf_model(
 
 def compute_violations_from_given_voltages(case, voltages, polar=False):
     """
-    Constructs an OPF model from given case data and computes a solution
+    Constructs an OPF model from given case data and computes a violation dictionary
     out of given voltage values.
-
-    TODO-Dan Please review description
 
     If a voltage solution is present, e.g., from an external computation,
     this function can be used to check whether the given voltage solution is indeed

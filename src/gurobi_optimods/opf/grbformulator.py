@@ -538,15 +538,37 @@ def fill_result_fields(alldata, model, opftype, result):
     # Set AC solution data
     if opftype in [OpfType.AC, OpfType.IV]:
         # Bus solution data only available if we have rectangular formulation or polar
-        if (
-            alldata["use_ef"] and not alldata["doiv"]
-        ):  # Voltage mag and angle are variables for IV
+        if alldata["use_ef"]:
             for busindex in result["bus"]:
                 resbus = result["bus"][busindex]
                 databus = alldata["buses"][busindex]
                 # Override old values
                 # Voltage magnitude is root of cvar because cvar = square of voltage magnitude given as e^2 + f^2
-                resbus["Vm"] = math.sqrt(alldata["LP"]["cvar"][databus].X)
+                if alldata["doiv"]:  # doiv makes sure that e, f variables are present
+                    resbus["Vm"] = (
+                        alldata["LP"]["evar"][databus].X ** 2
+                        + alldata["LP"]["fvar"][databus].X ** 2
+                    )
+                else:
+                    resbus["Vm"] = math.sqrt(alldata["LP"]["cvar"][databus].X)
+
+            if alldata["doiv"]:
+                # Need to fill cvar[branch] dictionary to compute angles for IV
+                # Note that there is no cvar dictionary for IV!!!
+                cvar = {}
+                Pvar_f = alldata["LP"]["Pvar_f"]
+                Qvar_f = alldata["LP"]["Qvar_f"]
+                Pvar_t = alldata["LP"]["Pvar_t"]
+                Qvar_t = alldata["LP"]["Qvar_t"]
+                for branch in alldata["branches"].values():
+                    cvar[branch] = (
+                        Pvar_f[branch].X
+                        + Qvar_f[branch].X
+                        + Pvar_t[branch].X
+                        + Qvar_t[branch].X
+                    )
+
+                alldata["LP"]["cvar"] = cvar
 
             compute_voltage_angles(alldata, result)
 
@@ -643,7 +665,11 @@ def compute_voltage_angles(alldata, result):
         nextbus = buses[nextbusindex]
         knownbusindex = nextb[0]
         knownbus = buses[knownbusindex]
-        cvarval = cvar[branches[nextb[2]]].X
+        if alldata["doiv"]:
+            # For IV, we filled the values manually so they are not Gurobi variables
+            cvarval = cvar[branches[nextb[2]]]
+        else:
+            cvarval = cvar[branches[nextb[2]]].X
         res = math.acos(
             cvarval
             / (result["bus"][nextbusindex]["Vm"] * result["bus"][knownbusindex]["Vm"])
