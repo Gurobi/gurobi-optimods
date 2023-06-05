@@ -27,39 +27,33 @@ Problem Specification
 Scikit-learn's documentation gives a general explanation of `Linear Models
 <https://scikit-learn.org/stable/modules/linear_model.html>`_. The distinction
 between this mod and the Ordinary Least Squares regression from scikit-learn is the
-loss function.
+loss function. ``LADRegression`` chooses coefficients :math:`w` of a linear model
+:math:`y = Xw` to minimize the sum of absolute errors on a training
+dataset :math:`(X, y)`. In other words, it aims to minimize the
+following loss function:
 
-.. tabs::
+.. math::
 
-    .. tab:: Loss Function
+    \min_w \lvert Xw - y \rvert
 
-        :code:`LADRegression` chooses coefficients :math:`w` of a linear model
-        :math:`y = Xw` to minimize the sum of absolute errors on a training
-        dataset :math:`(X, y)`. In other words, it aims to minimize the
-        following loss function:
+.. dropdown:: Background: Mathematical Model
 
-        .. math::
+    The fitting algorithm of the LAD regression Mod is implemented by
+    formulating the loss function as a Linear Program (LP), which is then solved
+    using Gurobi. Here :math:`I` is the set of observations and :math:`J` the
+    set of fields. Response values :math:`y_i` are predicted from predictor
+    values :math:`x_{ij}` by fitting coefficients :math:`w_j`. To handle the
+    absolute value in the loss function, auxiliary non-negative variables
+    :math:`u_i` and :math:`v_i` are introduced.
 
-            \min_w \lvert Xw - y \rvert
+    .. math::
 
-    .. tab:: Optimization Model
-
-        To model the L1 regression loss function using linear programming, a a
-        number of auxiliary variables are introduced. Here :math:`I` is the set
-        of observations and :math:`J` the set of fields. Response values
-        :math:`y_i` are predicted from predictor values :math:`x_{ij}` by
-        fitting coefficients :math:`w_j`. To handle the absolute value in the
-        loss function, non-negative variables :math:`u_i` and :math:`v_i` are
-        introduced.
-
-        .. math::
-
-            \begin{alignat}{2}
-            \min \quad        & \sum_i u_i + v_i \\
-            \mbox{s.t.} \quad & \sum_j w_j x_{ij} + u_i - v_i = y_i \quad & \forall i \in I \\
-                              & u_i, v_i \ge 0                      \quad & \forall i \in I \\
-                              & w_j \,\, \text{free}                \quad & \forall j \in J \\
-            \end{alignat}
+        \begin{alignat}{2}
+        \min \quad        & \sum_i u_i + v_i \\
+        \mbox{s.t.} \quad & \sum_j w_j x_{ij} + u_i - v_i = y_i \quad & \forall i \in I \\
+                          & u_i, v_i \ge 0                      \quad & \forall i \in I \\
+                          & w_j \,\, \text{free}                \quad & \forall j \in J \\
+        \end{alignat}
 
 Example Code
 ------------

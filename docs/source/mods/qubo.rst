@@ -27,52 +27,50 @@ solve the problem as a MIP where the constraints are directly represented.
 Problem Specification
 ---------------------
 
-.. tabs::
+We are given a set :math:`I` of :math:`n` items, weights :math:`q_i \in
+\mathbb{R}` for each single item :math:`i \in I`, and weights :math:`q_{ij} \in
+\mathbb{R}` for each pair of distinct items :math:`i,j \in I,~ i \neq j`.
 
-    .. tab:: Description
+The objective is to find a subset :math:`S^* \subseteq I` of items such that the
+sum of weights of all single items in :math:`S^*` and all pairs of distinct
+items in :math:`S^*` is minimal, i.e.,
 
-        We are given a set :math:`I` of :math:`n` items,
-        weights :math:`q_i \in \mathbb{R}`
-        for each single item :math:`i \in I`,
-        and weights :math:`q_{ij} \in \mathbb{R}` for each pair of distinct items
-        :math:`i,j \in I,~ i \neq j`.
+.. math::
+    S^* = \arg \min_{S \subseteq I} \sum_{i \in S} q_i + \sum_{i,j \in S,~ i \neq j} q_{ij}
 
-        The objective is to find a subset :math:`S^* \subseteq I` of items such that the sum of weights
-        of all single items in :math:`S^*` and all pairs of distinct items in :math:`S^*` is
-        minimal, i.e.,
+We arrange the weights in an upper triangular matrix :math:`Q \in \mathbb{R}^{n
+\times n}` where entry :math:`q_{ij}` with :math:`i < j` is the weight for item
+pair :math:`i,j`, and entry :math:`q_{ii} = q_i` is the weight for single item
+:math:`i`.
 
-        .. math::
-            S^* = \arg \min_{S \subseteq I} \sum_{i \in S} q_i + \sum_{i,j \in S,~ i \neq j} q_{ij}
+Note that the input matrix does not necessarily need to be in upper triangular
+format. We accept matrices :math:`Q'` that are populated in an arbitrary way and
+accumulate symmetric entries, i.e., :math:`q_{ij} = q'_{ij} + q'_{ji}` for all
+item pairs :math:`i,j` with :math:`i < j`.
 
-        We arrange the weights in an upper triangular matrix :math:`Q \in \mathbb{R}^{n \times n}`
-        where entry :math:`q_{ij}` with :math:`i < j` is the weight for item pair :math:`i,j`, and
-        entry :math:`q_{ii} = q_i` is the weight for single item :math:`i`.
+.. dropdown:: Background: Optimization Model
 
-        Note that the input matrix does not necessarily need to be in upper triangular format.
-        We accept matrices :math:`Q'` that are populated in an arbitrary way and accumulate symmetric entries,
-        i.e., :math:`q_{ij} = q'_{ij} + q'_{ji}` for all item pairs :math:`i,j` with :math:`i < j`.
+    This Mod is implemented by formulating the QUBO problem as a Binary
+    Quadratic Program (BQP). To do so, we define a binary decision vector
+    :math:`x \in \{0,1\}^n` with variables
 
-    .. tab:: Optimization Model
+    .. math::
+        x_i = \begin{cases}
+            1 & \text{if item}\,i \in S^*\\
+            0 & \text{otherwise.} \\
+        \end{cases}
 
-        We define a binary decision vector :math:`x \in \{0,1\}^n` with variables
+    The BQP is then formulated as:
 
-        .. math::
-            x_i = \begin{cases}
-                1 & \text{if item}\,i \in S^*\\
-                0 & \text{otherwise.} \\
-            \end{cases}
+    .. math::
+        \begin{align}
+        \max \quad        & x' Q x = \sum_{i \in I} \sum_{j \in I} q_{ij} x_i x_j & \\
+        \mbox{s.t.} \quad & x \in \{0, 1\}^n &
+        \end{align}
 
-        The QUBO model is then given as:
-
-        .. math::
-            \begin{align}
-            \max \quad        & x' Q x = \sum_{i \in I} \sum_{j \in I} q_{ij} x_i x_j & \\
-            \mbox{s.t.} \quad & x \in \{0, 1\}^n &
-            \end{align}
-
-        Note that weights :math:`q_i = q_{ii}` for single items :math:`i \in I` are
-        correctly considered in the objective function since :math:`x_i x_i = x_i` holds
-        for binary variables.
+    Note that weights :math:`q_i = q_{ii}` for single items :math:`i \in I` are
+    correctly considered in the objective function since :math:`x_i x_i = x_i` holds
+    for binary variables.
 
 The input data consisting of the item (pair) weights is defined as a matrix (see the
 description), either as a NumPy array :class:`~numpy.ndarray`

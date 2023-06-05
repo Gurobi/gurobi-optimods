@@ -35,28 +35,29 @@ Equivalently, the matching is a subgraph of :math:`G` where all vertices
 have degree at most one. A maximum matching is the largest possible matching
 on :math:`G`.
 
-Algorithm
----------
+.. dropdown:: Background: Mathematical Model
 
-The bipartite matching problem can be reduced to a maximum flow problem by
-introducing a source vertex as a predecessor to all vertices in :math:`U`,
-and a sink vertex as a successor to all vertices in :math:`V`. Giving every
-edge unit capacity, a maximum matching is found by maximizing flow from the
-source to the sink. All edges with non-zero flow in the max flow solution
-are part of the matching.
+    The bipartite matching Mod is implemented by reducing the basic version of
+    the problem to a minimum-cost flow problem. To do so, we introduce a source
+    vertex as a predecessor to all vertices in :math:`U`, and a sink vertex as a
+    successor to all vertices in :math:`V`. Giving every edge unit capacity, a
+    maximum matching is found by maximizing flow from the source to the sink. As
+    a min-cost flow, this is equivalent to adding an edge with a negative cost
+    from the sink to the source and assigning zero cost to all other edges. All
+    edges with non-zero flow in the min-cost flow solution are part of the
+    matching.
 
-.. Figure generated using networkx, see bipartite-matching-figs.py
-.. figure:: figures/bipartite-matching-flow.png
-    :width: 400
-    :alt: Bipartite matching flow network
+    .. Figure generated using networkx, see bipartite-matching-figs.py
+    .. figure:: figures/bipartite-matching-flow.png
+        :width: 400
+        :alt: Bipartite matching flow network
 
-    A maximum flow network for the bipartite matching problem
+        A maximum flow network for the bipartite matching problem
 
-
-We do not describe the mathematical formulation here, see the max flow mod (ref)
-for details. The important point to note is that when this continuous model is
-solved using the simplex algorithm, we are guaranteed to get an integral solution
-and thus the solution can be used to select a set of edges for the matching.
+    We do not describe the mathematical formulation here, see :doc:`/mods/min-cost-flow`
+    for details. The important point to note is that when this continuous model is
+    solved using the simplex algorithm, we are guaranteed to get an integral solution
+    and thus the solution can be used to select a set of edges for the matching.
 
 Interface
 ---------

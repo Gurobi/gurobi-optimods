@@ -17,10 +17,12 @@ Each mod is designed to be self-contained, with a clean data-in data-out API.
 Munge your data into the appropriate format using Python tools you already know,
 and run the mod as outlined in its documentation page to get back a solution.
 
-If you are interested to learn more about the mathematical model underlying a
-mod, the documentation page explains the model. You can also browse :ghsrc:`the
-mod source<src/gurobi_optimods>` to find out how the model is implemented in
-code.
+The documentation pages also included details of the mathematical model
+underlying the mod, should you be interested to learn more about the
+implementation. These details are explained in sections marked "Background". It
+is not necessary to read and understand these sections in order to use the mod
+effectively. You can also browse :ghsrc:`the mod source <src/gurobi_optimods>`
+to find out how the model is implemented in code.
 
 Finally, we welcome contributions of new mods, bug fixes and new features for
 existing mods, and improvements to the documentation. This is intended to be a
