@@ -1,5 +1,7 @@
 from contextlib import redirect_stdout
 import io
+import os
+import tempfile
 import unittest
 import numpy as np
 import pandas as pd
@@ -96,9 +98,11 @@ class TestMVPBasic(unittest.TestCase):
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
-        pf = mvp.efficient_portfolio(0.5, logfile="more_bananas.log")
-        with open("more_bananas.log", "rt") as fh:
-            content = fh.read()
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            logfile = os.path.join(tmpdirname, "more_bananas.log")
+            pf = mvp.efficient_portfolio(0.5, logfile=logfile)
+            with open(logfile, "rt") as fh:
+                content = fh.read()
         self.assertIn("Gurobi Optimizer", content)
 
     def test_params(self):
