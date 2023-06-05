@@ -4,6 +4,7 @@ Workforce Scheduling
 """
 
 import logging
+from typing import Optional
 
 import gurobipy as gp
 import gurobipy_pandas as gppd
@@ -17,9 +18,10 @@ logger = logging.getLogger(__name__)
 
 @optimod()
 def solve_workforce_scheduling(
-    preferences: pd.DataFrame,
+    availability: pd.DataFrame,
     shift_requirements: pd.DataFrame,
     worker_limits: pd.DataFrame,
+    preferences: Optional[str] = None,
     rolling_limits: bool = False,
     *,
     create_env,
@@ -28,7 +30,7 @@ def solve_workforce_scheduling(
 
     Parameters
     ----------
-    preferences : DataFrame
+    availability : DataFrame
         Dataframe with columns 'Worker' and 'Shift' defining all allowable
         worker-shift combinations. The 'Preference' column optionally assigns a
         preference value to the given combination.
@@ -39,6 +41,10 @@ def solve_workforce_scheduling(
         Dataframe with columns 'Worker', 'MinShifts', and 'MaxShifts' specifying
         the maximum and minimum number of shifts each worker may be assigned in
         the schedule.
+    preferences : str, optional
+        The name of a column in the availability dataframe containing preference
+        values. If provided, the mod returns a schedule which maximises the sum
+        of preference values of assigned shifts.
     rolling_limits : bool
         Whether to enforce worker shift limits on a rolling window basis. If
         True, worker_limits must contain an additional 'Window' column
@@ -47,7 +53,7 @@ def solve_workforce_scheduling(
     Returns
     -------
     DataFrame
-        Shift assignments as a subset of the preferences dataframe
+        Shift assignments as a subset of the availability dataframe
 
     Raises
     ------
@@ -60,8 +66,9 @@ def solve_workforce_scheduling(
         # Create binary variables for all valid shift assignments and
         # create preference maximization objective
         m.ModelSense = GRB.MAXIMIZE
-        assignments = preferences.set_index(["Worker", "Shift"]).gppd.add_vars(
-            m, obj="Preference", vtype=GRB.BINARY, name="assign"
+        preference_value = 0.0 if preferences is None else preferences
+        assignments = availability.set_index(["Worker", "Shift"]).gppd.add_vars(
+            m, obj=preference_value, vtype=GRB.BINARY, name="assign"
         )
 
         # Enforce shift coverage requirements
@@ -112,7 +119,7 @@ def solve_workforce_scheduling(
             )
 
         # Solve the model and return the shift assignments as a subset of the
-        # input preferences dataframe. Raise an exception if a feasible schedule
+        # input availability dataframe. Raise an exception if a feasible schedule
         # does not exist.
 
         m.optimize()
