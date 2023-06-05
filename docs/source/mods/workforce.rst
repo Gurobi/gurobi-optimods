@@ -32,26 +32,29 @@ preference scores of assigned shifts as a proxy for worker happiness.
         The workforce scheduling model takes the following three dataframes as
         input:
 
-        * The ``preferences`` dataframe has three columns: ``Worker``, ``Shift``,
-          and ``Preference``. Each row in dataframe specifies that the given worker
-          is available to work the given shift.
+        * The ``availability`` dataframe has two columns: ``Worker`` and
+          ``Shift``. Each row in dataframe specifies that the given worker is
+          available to work the given shift. If the optional ``preferences``
+          argument is provided, it must refer to an additional column in the
+          ``availability`` dataframe containing preferences.
         * The ``shift_requirements`` dataframe has two columns: ``Shift`` and
           ``Required``. Each row specifies the number of workers required for a
           given shift. There must be one row for every unique shift in
-          ``preferences["Shift"]``.
+          ``availability["Shift"]``.
         * The ``worker_limits`` dataframe has three columns: ``Worker``,
           ``MinShifts``, and ``MaxShifts``. Each row specifies the minimum and
           maximum number of shifts the given worker may be assigned in the
           schedule. There must be one row for every unique worker in
-          ``preferences["Worker"]``.
+          ``availability["Worker"]``.
 
         When ``solve_workforce_scheduling`` is called, a model is formulated and
         solved immediately using Gurobi. Workers will be assigned only to shifts
         they are available for, in such a way that all requirements are covered,
         minimum and maximum shift numbers are respected, and the total sum of
-        worker preference scores is maximised.
+        worker preference scores is maximised. If ``preferences=None``,
+        preferences are omitted and any feasible schedule will be returned.
 
-        The returned assignment dataframe is a subset of the preferences
+        The returned assignment dataframe is a subset of the availability
         dataframe, with the same columns. A row in the returned dataframe
         specifies that the given worker has been assigned to the given shift.
 
@@ -99,18 +102,20 @@ the Data Specification above. The tabs below show example data for each frame.
 
 .. tabs::
 
-    .. tab:: ``preferences``
+    .. tab:: ``availability``
 
         The following example table lists worker availability and preferences.
         For example, Siva is available on July 2nd, 3rd, 5th, and so on, with a
-        stronger preference to be assigned the shift on the 5th.
+        stronger preference to be assigned the shift on the 5th. To use the
+        preference data, the optional argument ``preferences="Preference"`` must
+        be supplied.
 
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE
 
             >>> from gurobi_optimods import datasets
             >>> data = datasets.load_workforce()
-            >>> data.preferences
+            >>> data.availability
                  Worker      Shift  Preference
             0      Siva 2023-05-02         2.0
             1      Siva 2023-05-03         2.0
@@ -198,9 +203,10 @@ period.
 
     # Solve the mod, get back a schedule
     assigned_shifts = solve_workforce_scheduling(
-        preferences=data.preferences,
+        availability=data.availability,
         shift_requirements=data.shift_requirements,
         worker_limits=data.worker_limits,
+        preferences="Preference",
     )
 
 .. testoutput:: workforce
@@ -215,7 +221,7 @@ Inspecting the Solution
 -----------------------
 
 The solution to this workforce scheduling problem is a selection of shift
-assignments. The returned dataframe is a subset of the original preferences
+assignments. The returned dataframe is a subset of the original availability
 dataframe.
 
 .. doctest:: workforce
@@ -314,9 +320,10 @@ set to ``True`` to enforce the new requirement.
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
 
     >>> assigned_shifts = solve_workforce_scheduling(
-    ...     preferences=data.preferences,
+    ...     availability=data.availability,
     ...     shift_requirements=data.shift_requirements,
     ...     worker_limits=worker_limits,
+    ...     preferences="Preference",
     ...     rolling_limits=True,
     ...     verbose=False,
     ... )
