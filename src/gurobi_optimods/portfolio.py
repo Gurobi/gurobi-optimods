@@ -5,10 +5,11 @@ Mean-Variance Portfolio
 
 from dataclasses import dataclass
 from typing import Optional
+
 import gurobipy as gp
-from gurobipy import GRB
 import numpy as np
 import pandas as pd
+from gurobipy import GRB
 
 from gurobi_optimods.utils import optimod
 

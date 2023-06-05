@@ -7,13 +7,12 @@ Bipartite Matching
 import logging
 from typing import List, overload
 
+import gurobipy as gp
+import gurobipy_pandas as gppd
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-
-import gurobipy as gp
 from gurobipy import GRB
-import gurobipy_pandas as gppd
 
 try:
     import networkx as nx

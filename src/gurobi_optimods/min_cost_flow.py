@@ -6,11 +6,11 @@ Minimum Cost Flow
 import logging
 
 import gurobipy as gp
+import gurobipy_pandas as gppd  # noqa: F401
 import numpy as np
 import pandas as pd
-from gurobipy import GRB
 import scipy.sparse as sp
-import gurobipy_pandas as gppd  # noqa: F401
+from gurobipy import GRB
 
 try:
     import networkx as nx

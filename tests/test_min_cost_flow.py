@@ -13,9 +13,9 @@ import gurobi_optimods.datasets as datasets
 import gurobi_optimods.min_cost_flow as mcf
 
 from .test_graph_utils import (
+    check_solution_networkx,
     check_solution_pandas,
     check_solution_scipy,
-    check_solution_networkx,
 )
 
 

@@ -1,8 +1,9 @@
-from contextlib import redirect_stdout
 import io
 import os
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_allclose, assert_array_equal

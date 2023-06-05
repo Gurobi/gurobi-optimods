@@ -40,3 +40,6 @@ examples = [
 
 [tool.hatch.version]
 path = "src/gurobi_optimods/__init__.py"
+
+[tool.isort]
+profile = "black"

@@ -3,11 +3,11 @@ from io import StringIO
 from textwrap import dedent
 
 import pandas as pd
-from pandas.api.types import is_object_dtype, is_datetime64_any_dtype, is_numeric_dtype
+from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype, is_object_dtype
 from pandas.testing import assert_frame_equal
 
-from gurobi_optimods.workforce import solve_workforce_scheduling
 from gurobi_optimods.datasets import load_workforce
+from gurobi_optimods.workforce import solve_workforce_scheduling
 
 
 def read_csv(text):

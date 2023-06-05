@@ -1,7 +1,8 @@
 import unittest
+
 import numpy as np
-from numpy.testing import assert_array_equal
 import scipy.sparse as sp
+from numpy.testing import assert_array_equal
 
 from gurobi_optimods.qubo import solve_qubo
 

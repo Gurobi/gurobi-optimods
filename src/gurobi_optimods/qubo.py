@@ -7,8 +7,8 @@ import logging
 from dataclasses import dataclass
 
 import gurobipy as gp
-from gurobipy import GRB
 import numpy as np
+from gurobipy import GRB
 
 from gurobi_optimods.utils import optimod
 
