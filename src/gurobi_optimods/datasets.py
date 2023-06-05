@@ -90,14 +90,6 @@ def load_graph2_scipy():
     return _convert_pandas_to_scipy(edge_data, node_data)
 
 
-def load_diet():
-    return AttrDict(
-        categories=pd.read_csv(DATA_FILE_DIR / "diet/diet-categories.csv"),
-        foods=pd.read_csv(DATA_FILE_DIR / "diet/diet-foods.csv"),
-        nutrition_values=pd.read_csv(DATA_FILE_DIR / "diet/diet-values.csv"),
-    )
-
-
 def load_portfolio():
     fn = DATA_FILE_DIR / "portfolio/portfolio.csv"
     return pd.read_csv(fn, index_col=0)
