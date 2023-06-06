@@ -52,12 +52,12 @@ class MeanVariancePortfolio:
 
         if cov_matrix is not None:
             if isinstance(cov_matrix, pd.DataFrame):
-                self.resultType = "pandas"
-                self.index = cov_matrix.index
-                self.covariance = cov_matrix.to_numpy()
+                self.result_type = "pandas"
+                self._index = cov_matrix.index
+                self._covariance = cov_matrix.to_numpy()
             elif isinstance(cov_matrix, np.ndarray):
-                self.covariance = cov_matrix
-                self.resultType = "numpy"
+                self._covariance = cov_matrix
+                self.result_type = "numpy"
             else:
                 raise TypeError("Incompatible type of cov_matrix")
         elif cov_factors is not None:
@@ -69,17 +69,17 @@ class MeanVariancePortfolio:
             # and we let a possible error from chol propagate.
             B, K, d = cov_factors
             F = B @ np.linalg.cholesky(K)
-            self.covariance = (F, np.sqrt(d))
-            self.index = None
+            self._covariance = (F, np.sqrt(d))
+            self._index = None
         else:
             raise TypeError("No covariace data given")
 
         if isinstance(mu, pd.Series):
-            self.resultType = "pandas"
-            self.mu = mu.to_numpy()
+            self.result_type = "pandas"
+            self._mu = mu.to_numpy()
         elif isinstance(mu, np.ndarray):
-            self.mu = mu
-            self.resultType = "numpy"
+            self._mu = mu
+            self.result_type = "numpy"
         else:
             raise TypeError("Incompatible type of mu")
 
@@ -174,7 +174,7 @@ class MeanVariancePortfolio:
             if initial_holdings.sum() > 1.0:
                 raise ValueError("Initial holding's sum must not exceed 1.0")
         else:
-            initial_holdings = np.zeros(self.mu.shape)
+            initial_holdings = np.zeros(self._mu.shape)
 
         with create_env() as env, gp.Model("efficient_portfolio", env=env) as m:
             x, x_rf = self._populate_model(
@@ -265,24 +265,24 @@ class MeanVariancePortfolio:
         #    b_sell \in {0,1} (indicator variable for x_sell)
 
         # Portfolio vector x is split into long and short positions
-        x = m.addMVar(shape=self.mu.shape, lb=-float("inf"), name="x")
-        x_long = m.addMVar(shape=self.mu.shape, name="x_long")
-        x_short = m.addMVar(shape=self.mu.shape, name="x_short")
+        x = m.addMVar(shape=self._mu.shape, lb=-float("inf"), name="x")
+        x_long = m.addMVar(shape=self._mu.shape, name="x_long")
+        x_short = m.addMVar(shape=self._mu.shape, name="x_short")
         m.addConstr(x == x_long - x_short)
 
         # Dummy variable for investment in risk-free asset,
         x_rf = m.addVar(lb=0.0, ub=0.0, name="x_rf")
 
-        x_buy = m.addMVar(shape=self.mu.shape, name="x_buy")
-        x_sell = m.addMVar(shape=self.mu.shape, name="x_sell")
+        x_buy = m.addMVar(shape=self._mu.shape, name="x_buy")
+        x_sell = m.addMVar(shape=self._mu.shape, name="x_sell")
         m.addConstr(x - initial_holdings == x_buy - x_sell)
 
         # Binaries used to enforce VUB and minimum position/trade size
-        b_long = m.addMVar(shape=self.mu.shape, vtype="B", name="position_long")
-        b_short = m.addMVar(shape=self.mu.shape, vtype="B", name="position_short")
+        b_long = m.addMVar(shape=self._mu.shape, vtype="B", name="position_long")
+        b_short = m.addMVar(shape=self._mu.shape, vtype="B", name="position_short")
 
-        b_buy = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_buy")
-        b_sell = m.addMVar(shape=self.mu.shape, vtype="B", name="trade_sell")
+        b_buy = m.addMVar(shape=self._mu.shape, vtype="B", name="trade_buy")
+        b_sell = m.addMVar(shape=self._mu.shape, vtype="B", name="trade_sell")
 
         m.update()
 
@@ -336,22 +336,22 @@ class MeanVariancePortfolio:
 
         m.addConstr(investment == 1, name="fully_invested")
 
-        if not isinstance(self.covariance, tuple):
+        if not isinstance(self._covariance, tuple):
             # Basic mean-variance weighted objective
-            objexpr = self.mu @ x - 0.5 * gamma * x @ self.covariance @ x
+            objexpr = self._mu @ x - 0.5 * gamma * x @ self._covariance @ x
         else:
-            F, sqrt_d = self.covariance
+            F, sqrt_d = self._covariance
             # We have given Sigma = F @ F.T + diag(sqrt_d) @ diag(sqrt_d)
             # Auxiliary variables y_F, y_d:
             #   F.T @ x = y_F
             #   sqrt_d * x = y_d
 
-            objexpr = self.mu @ x
+            objexpr = self._mu @ x
 
             y_F = m.addMVar(F.shape[1], lb=-float("inf"), name=f"yF")
             m.addConstr(F.T @ x == y_F, name=f"link_yF_x")
 
-            y_d = m.addMVar(self.mu.size, lb=-float("inf"), name=f"yd")
+            y_d = m.addMVar(self._mu.size, lb=-float("inf"), name=f"yd")
             m.addConstr(sqrt_d * x == y_d, name=f"link_yd_x")
 
             objexpr -= 0.5 * gamma * (y_F @ y_F + y_d @ y_d)
@@ -363,19 +363,19 @@ class MeanVariancePortfolio:
         return (x, x_rf)
 
     def _construct_result(self, x, x_rf, rf_return):
-        if self.resultType == "numpy":
+        if self.result_type == "numpy":
             pass
-        elif self.resultType == "pandas":
-            x = pd.Series(x, index=self.index)
+        elif self.result_type == "pandas":
+            x = pd.Series(x, index=self._index)
         else:
             assert False
 
-        ret = self.mu @ x
+        ret = self._mu @ x
 
-        if not isinstance(self.covariance, tuple):
-            risk = x @ self.covariance @ x
+        if not isinstance(self._covariance, tuple):
+            risk = x @ self._covariance @ x
         else:
-            F, sqrt_d = self.covariance
+            F, sqrt_d = self._covariance
             risk = 0.0
 
             y = x @ F
@@ -395,11 +395,11 @@ class MeanVariancePortfolio:
     def _homogenize_input(self, input_data):
         # Check and unpack if input_data is a Series
         if isinstance(input_data, pd.Series):
-            if self.index is not None:
-                if any(self.index != input_data.index):
+            if self._index is not None:
+                if any(self._index != input_data.index):
                     raise ValueError("Misaligned Series indexes: " + input_data.index)
             else:
-                self.index = input_data.index
+                self._index = input_data.index
             input_data = input_data.to_numpy()
 
         return input_data
