@@ -30,9 +30,9 @@ class MeanVariancePortfolio:
     cov_factors : tuple of ndarray
         Covariance factors that constitute :math:`\Sigma = B K B^T + diag(d)`.
 
-            * ``cov_factors[0]``: (n, k) dense matrix :math:`B`
-            * ``cov_factors[1]``: (k, k) dense matrix :math:`K`, SPD
-            * ``cov_factors[2]``: (n,) vector :math:`d`, nonnegative
+            * ``cov_factors[0]``: (n, k) ndarray :math:`B`
+            * ``cov_factors[1]``: (k, k) ndarray :math:`K`, SPD
+            * ``cov_factors[2]``: (n,) ndarray :math:`d`, nonnegative
 
     Raises
     ------
