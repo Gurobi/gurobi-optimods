@@ -183,23 +183,36 @@ Using factor models as input
 In the preceding discussion we have assumed that we the covariance matrix
 :math:`\Sigma` was explicitly given.  In many cases, however, the covariance is
 naturally given through a *factor model*.  Mathematically this means that a
-decomposition
+decompopsition
+
+at hand such that the covariance matrix decomposes as
 
 .. math::
 
     \begin{align*}
-    \Sigma = F_1 F_1^T + F_2 F_2^T + \cdots + F_l F_l^T
+    \Sigma = B K B^T + \mbox{diag}(d)
     \end{align*}
 
-is known.  Examples for this are single- or multi-factor models that divide the
-individual covariances into a general market movement, and an idiosyncratic
-risk component for each asset.  See `Efficient frontier(s) with cardinality
-constraints`_ for an example.
+where
+
+* :math:`B` is a n-by-k matrix of factor exposures (or "betas", or "factor
+  loadings"),
+* :math:`K` is the k-by-k covariance matrix of the factor return rates,
+* :math:`d` is the vector of idiosyncratic risk for each asset,
+
+and :math:`\mbox{diag}(d)` denotes the n-by-n diagonal matrix having diagonal values
+:math:`d`.
+
+Examples for this are single- or multi-factor models that divide the individual
+covariances into a general market movement, and an idiosyncratic risk component
+for each asset.  Also CAPM priors and risk factors obtained from principal
+component analysis can be phrased in this form. See `Efficient frontier(s) with
+cardinality constraints`_ for an example for a synthetic multi-factor model..
 
 Rather than computing the covariance matrix explcitly from the decomposition,
-it is adivised to input the individual factor matrices directly through the
-``cov_factors`` keyword argurment as in the following example, which mimicks a
-single-factor model:
+it is adivised for performance and accuracy reasons to input the individual
+factor matrices directly through the ``cov_factors`` keyword argurment as in
+the following example, which mimicks a single-factor model:
 
 .. testcode:: mod
 
@@ -211,17 +224,16 @@ single-factor model:
     # Factors relating market variance to assets
     beta = np.array([[0.93797928], [1.71942161], [1.15652896]])
     # Idiosyncratic risk
-    asset_risk = np.array([0.23745675, 0.19140259, 0.34325066])
+    asset_risk = np.array([0.23745675, 0.19140259, 0.34325066])**2
 
     # Full covariance matrix according to single factor model
-    Sigma = beta @ beta.T * market_variance**2 + np.diag(asset_risk**2)
+    Sigma = beta @ beta.T * market_variance**2 + np.diag(asset_risk)
     mvp_matrix = MeanVariancePortfolio(mu, cov_matrix=Sigma)
     x_matrix = mvp_matrix.efficient_portfolio(20).x
 
-    # Better use known factorization
-    F1 = beta * market_variance
-    F2 = np.diag(asset_risk)
-    mvp_factors = MeanVariancePortfolio(mu, cov_factors=(F1, F2))
+    # Same model, but taking advantage of the factor structure
+    mvp_factors = MeanVariancePortfolio(mu, cov_factors=(
+        beta, market_variance**2 * np.eye(1), asset_risk))
     x_factors = mvp_factors.efficient_portfolio(20).x
 
 .. testoutput:: mod
@@ -748,7 +760,7 @@ covariance matrix decomposes algebraically as follows:
 .. math::
 
     \begin{equation*}
-      \Sigma = F F^T + \mbox{cov}(u)
+      \Sigma = B K B^T + \mbox{cov}(u)
     \end{equation*}
 
 That is, :math:`\Sigma` is given by the sum of a low-rank term and a diagonal
@@ -765,24 +777,22 @@ incorporating this particular structure:
     num_factors = 4
     timesteps = 24
 
-    # Generate random factor model parameters
-    sigma_factor = np.diag(np.sqrt(1 + np.arange(num_factors) + np.random.rand(num_factors)))
+    # Generate random factor model, risk is B * sigma_factor * B.T + cov(u)
+    sigma_factor = np.diag(1 + np.arange(num_factors) + np.random.rand(num_factors))
     B = np.random.normal(size=(num_assets, num_factors))
     alpha = np.random.normal(loc=1, size=(num_assets, 1))
     u = np.random.multivariate_normal(np.zeros(num_assets), np.eye(num_assets), timesteps).T
+    risk_specific = np.diag(np.cov(u))
 
     # Time series in factor space
-    TS_factor = np.random.multivariate_normal(np.zeros(num_factors), sigma_factor**2, timesteps).T
+    TS_factor = np.random.multivariate_normal(np.zeros(num_factors), sigma_factor, timesteps).T
 
     # Estimate mu from time series in full space
     mu = np.mean(alpha + B @ TS_factor + u, axis=1)
 
-    # Final covariance data
-    F = B @ sigma_factor
-    risk_specific = np.diag(np.sqrt(np.diag(np.cov(u))))
-
-Note that the matrices ``F`` and ``risk_specific`` are already in the format for the
-optimization model as described in `Using factor models as input`_.
+Note that ``B``, ``sigma_factor`` and ``risk_specific`` are already in the
+format for the optimization model as described in `Using factor models as
+input`_.
 
 Computing frontiers
 ~~~~~~~~~~~~~~~~~~~
@@ -797,7 +807,7 @@ cardinality constraints::
     rr_pairs_con = {1: [], 2: [], 3: []}
 
     for g in gammas:
-        mvp = MeanVariancePortfolio(mu, cov_factors=(F, risk_specific))
+        mvp = MeanVariancePortfolio(mu, cov_factors=(B, sigma_factor, risk_specific))
         # Optimal portfolio w/o cardinality constraints
         pf = mvp.efficient_portfolio(g, verbose=False)
         rr_pairs_unc.append((pf.risk, pf.ret))
