@@ -89,11 +89,6 @@ Basic use examples
             >>> from gurobi_optimods.datasets import load_caseNYopf
             >>> casefile = load_caseNYopf() # make sure you have the right path
             >>> case = read_case_from_mat_file(casefile)  # create main dictionary
-            Reading case file ...
-              Slack bus: 3502
-              Bus 11 ID 3502 is the reference bus.
-            Reading and building time: ...
-            <BLANKLINE>
 
             >>> buses = case['bus']
             >>> buses[101]
