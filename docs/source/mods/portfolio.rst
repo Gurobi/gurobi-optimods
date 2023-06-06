@@ -183,9 +183,7 @@ Using factor models as input
 In the preceding discussion we have assumed that we the covariance matrix
 :math:`\Sigma` was explicitly given.  In many cases, however, the covariance is
 naturally given through a *factor model*.  Mathematically this means that a
-decompopsition
-
-at hand such that the covariance matrix decomposes as
+decomposition
 
 .. math::
 
@@ -193,7 +191,7 @@ at hand such that the covariance matrix decomposes as
     \Sigma = B K B^T + \mbox{diag}(d)
     \end{align*}
 
-where
+of the covariance matrix is known where
 
 * :math:`B` is a n-by-k matrix of factor exposures (or "betas", or "factor
   loadings"),
