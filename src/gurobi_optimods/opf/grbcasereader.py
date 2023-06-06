@@ -662,6 +662,8 @@ def read_case_file_mat(casefile):
     # Buses
     numbuses = 0
     buses = {}
+    if mpcbuses.ndim == 1:
+        raise ValueError("Provided .mat files has only 1 bus")
     for b in mpcbuses:
         numbuses += 1
         buses[numbuses] = {}
@@ -691,6 +693,8 @@ def read_case_file_mat(casefile):
     # Generators
     numgens = 0
     gens = {}
+    if mpcgen.ndim == 1:
+        mpcgen = [mpcgen]
     for g in mpcgen:
         numgens += 1
         gens[numgens] = {}
@@ -721,6 +725,8 @@ def read_case_file_mat(casefile):
     # Branches
     numbranches = 0
     branches = {}
+    if mpcbranch.ndim == 1:
+        mpcbranch = [mpcbranch]
     for b in mpcbranch:
         numbranches += 1
         branches[numbranches] = {}
@@ -743,6 +749,8 @@ def read_case_file_mat(casefile):
     # Generator costs
     numgencosts = 0
     gencosts = {}
+    if mpcgencost.ndim == 1:
+        mpcgencost = [mpcgencost]
     for g in mpcgencost:
         numgencosts += 1
         gencosts[numgencosts] = {}
