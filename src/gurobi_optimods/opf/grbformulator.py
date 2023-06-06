@@ -543,7 +543,7 @@ def fill_result_fields(alldata, model, opftype, result):
                 # Override old values
                 # Voltage magnitude is root of cvar because cvar = square of voltage magnitude given as e^2 + f^2
                 if alldata["doiv"]:  # doiv makes sure that e, f variables are present
-                    resbus["Vm"] = (
+                    resbus["Vm"] = math.sqrt(
                         alldata["LP"]["evar"][databus].X ** 2
                         + alldata["LP"]["fvar"][databus].X ** 2
                     )
@@ -554,16 +554,12 @@ def fill_result_fields(alldata, model, opftype, result):
                 # Need to fill cvar[branch] dictionary to compute angles for IV
                 # Note that there is no cvar dictionary for IV!!!
                 cvar = {}
-                Pvar_f = alldata["LP"]["Pvar_f"]
-                Qvar_f = alldata["LP"]["Qvar_f"]
-                Pvar_t = alldata["LP"]["Pvar_t"]
-                Qvar_t = alldata["LP"]["Qvar_t"]
                 for branch in alldata["branches"].values():
+                    fbus = alldata["buses"][branch.f]
+                    tbus = alldata["buses"][branch.t]
                     cvar[branch] = (
-                        Pvar_f[branch].X
-                        + Qvar_f[branch].X
-                        + Pvar_t[branch].X
-                        + Qvar_t[branch].X
+                        alldata["LP"]["evar"][fbus].X * alldata["LP"]["evar"][tbus].X
+                        + alldata["LP"]["fvar"][fbus].X * alldata["LP"]["fvar"][tbus].X
                     )
 
                 alldata["LP"]["cvar"] = cvar
