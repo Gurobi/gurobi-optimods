@@ -61,7 +61,15 @@ class MeanVariancePortfolio:
             else:
                 raise TypeError("Incompatible type of cov_matrix")
         elif cov_factors is not None:
-            self.covariance = cov_factors
+            # Given: (B, K, d) such that Sigma = B @ K @ B.T + diag(d)
+            # Internally we store (F, sqrt(d)) with F = B @ chol(K) so that
+            # Sigma = F @ F.T + diag(d)
+            #
+            # As part of the transformation it is checked whether K is SPD,
+            # and we let a possible error from chol propagate.
+            B, K, d = cov_factors
+            F = B @ np.linalg.cholesky(K)
+            self.covariance = (F, np.sqrt(d))
             self.index = None
         else:
             raise TypeError("No covariace data given")
@@ -332,26 +340,21 @@ class MeanVariancePortfolio:
             # Basic mean-variance weighted objective
             objexpr = self.mu @ x - 0.5 * gamma * x @ self.covariance @ x
         else:
-            # Idea:   We have given  Sigma =
-            #
-            #   factors[0] @ factors[0].T + ... + factors[l] @ factors[l].T
-            #   =: F_0 @ F_0.T + ... + F_l @ F_l
-            #
-            # so that for each contributing term we can set
-            #
-            #   (x.T @ F_i) @ (F_i.T @ x) =: y_i @ y_i
-            #
-            # giving
-            #
-            #   min \sum_i gamma * y_i @ y_i
-            #   s.t. y_i = F_i.T @ x  for all i
+            F, sqrt_d = self.covariance
+            # We have given Sigma = F @ F.T + diag(sqrt_d) @ diag(sqrt_d)
+            # Auxiliary variables y_F, y_d:
+            #   F.T @ x = y_F
+            #   sqrt_d * x = y_d
 
             objexpr = self.mu @ x
 
-            for idx, F in enumerate(self.covariance):
-                y = m.addMVar(F.shape[1], lb=-float("inf"), name=f"factor{idx:d}")
-                m.addConstr(F.T @ x == y, name=f"link_factor{idx:d}_x")
-                objexpr -= 0.5 * gamma * y @ y
+            y_F = m.addMVar(F.shape[1], lb=-float("inf"), name=f"yF")
+            m.addConstr(F.T @ x == y_F, name=f"link_yF_x")
+
+            y_d = m.addMVar(self.mu.size, lb=-float("inf"), name=f"yd")
+            m.addConstr(sqrt_d * x == y_d, name=f"link_yd_x")
+
+            objexpr -= 0.5 * gamma * (y_F @ y_F + y_d @ y_d)
 
         if rf_return is not None:
             objexpr += rf_return * x_rf
@@ -372,10 +375,14 @@ class MeanVariancePortfolio:
         if not isinstance(self.covariance, tuple):
             risk = x @ self.covariance @ x
         else:
+            F, sqrt_d = self.covariance
             risk = 0.0
-            for F in self.covariance:
-                y = x @ F
-                risk += y @ y
+
+            y = x @ F
+            risk += y @ y
+
+            y = x * sqrt_d
+            risk += y @ y
 
         if rf_return is not None:
             x_rf = x_rf
