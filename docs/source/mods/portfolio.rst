@@ -138,9 +138,9 @@ from this DataFrame:
 Solution
 --------
 
-The return value of the ``efficient_portfolio`` method is a data class instance
-containing information on the computed portfolio.  It has the following
-attributes:
+The method ``efficient_portfolio`` returns an
+:class:`~gurobi_optimods.portfolio.PortfolioResult` instance, containing
+information on the computed portfolio.  It has the following attributes:
 
 * ``x`` : The relative investments :math:`x` for each asset
 * ``ret`` : The estimated return :math:`\mu^T x`
