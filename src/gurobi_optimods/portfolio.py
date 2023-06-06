@@ -36,7 +36,7 @@ class MeanVariancePortfolio:
 
     Raises
     ------
-    LinAlgError
+    np.linalg.LinAlgError
         If the matrix K is not positive definite
 
     """
