@@ -138,7 +138,7 @@ from this DataFrame:
 Solution
 --------
 
-The method ``efficient_portfolio`` returns an
+The method ``efficient_portfolio`` returns a
 :class:`~gurobi_optimods.portfolio.PortfolioResult` instance, containing
 information on the computed portfolio.  It has the following attributes:
 
@@ -182,7 +182,7 @@ Using factor models as input
 
 In the preceding discussion we have assumed that we the covariance matrix
 :math:`\Sigma` was explicitly given.  In many cases, however, the covariance is
-naturally given through a *factor model*.  Mathematically this means that a
+naturally given through a *factor model*.  Mathematically, this means that a
 decomposition
 
 .. math::
@@ -193,19 +193,19 @@ decomposition
 
 of the covariance matrix is known where
 
-* :math:`B` is a n-by-k matrix of factor exposures (or "betas", or "factor
+* :math:`B` is an :math:`n`-by-:math:`k` matrix of factor exposures (or "betas" or "factor
   loadings"),
-* :math:`K` is the k-by-k covariance matrix of the factor return rates,
+* :math:`K` is the :math:`k`-by-:math:`k` covariance matrix of the factor return rates,
 * :math:`d` is the vector of idiosyncratic risk for each asset,
 
-and :math:`\mbox{diag}(d)` denotes the n-by-n diagonal matrix having diagonal values
+and :math:`\mbox{diag}(d)` denotes the :math:`n`-by-:math:`n` diagonal matrix having diagonal values
 :math:`d`.
 
 Examples for this are single- or multi-factor models that divide the individual
 covariances into a general market movement, and an idiosyncratic risk component
 for each asset.  Also CAPM priors and risk factors obtained from principal
 component analysis can be phrased in this form. See `Efficient frontier(s) with
-cardinality constraints`_ for an example for a synthetic multi-factor model.
+cardinality constraints`_ for an example of a synthetic multi-factor model.
 
 Rather than computing the covariance matrix explcitly from the decomposition,
 it is adivised for performance and accuracy reasons to input the individual
