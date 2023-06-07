@@ -52,12 +52,12 @@ class MeanVariancePortfolio:
 
         if cov_matrix is not None:
             if isinstance(cov_matrix, pd.DataFrame):
-                self.result_type = "pandas"
+                self._result_type = "pandas"
                 self._index = cov_matrix.index
                 self._covariance = cov_matrix.to_numpy()
             elif isinstance(cov_matrix, np.ndarray):
                 self._covariance = cov_matrix
-                self.result_type = "numpy"
+                self._result_type = "numpy"
             else:
                 raise TypeError("Incompatible type of cov_matrix")
         elif cov_factors is not None:
@@ -75,11 +75,11 @@ class MeanVariancePortfolio:
             raise TypeError("No covariace data given")
 
         if isinstance(mu, pd.Series):
-            self.result_type = "pandas"
+            self._result_type = "pandas"
             self._mu = mu.to_numpy()
         elif isinstance(mu, np.ndarray):
             self._mu = mu
-            self.result_type = "numpy"
+            self._result_type = "numpy"
         else:
             raise TypeError("Incompatible type of mu")
 
@@ -363,9 +363,9 @@ class MeanVariancePortfolio:
         return (x, x_rf)
 
     def _construct_result(self, x, x_rf, rf_return):
-        if self.result_type == "numpy":
+        if self._result_type == "numpy":
             pass
-        elif self.result_type == "pandas":
+        elif self._result_type == "pandas":
             x = pd.Series(x, index=self._index)
         else:
             assert False
