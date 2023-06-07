@@ -205,7 +205,7 @@ Examples for this are single- or multi-factor models that divide the individual
 covariances into a general market movement, and an idiosyncratic risk component
 for each asset.  Also CAPM priors and risk factors obtained from principal
 component analysis can be phrased in this form. See `Efficient frontier(s) with
-cardinality constraints`_ for an example for a synthetic multi-factor model..
+cardinality constraints`_ for an example for a synthetic multi-factor model.
 
 Rather than computing the covariance matrix explcitly from the decomposition,
 it is adivised for performance and accuracy reasons to input the individual
