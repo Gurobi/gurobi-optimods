@@ -83,6 +83,7 @@ numpydoc_xref_aliases = {
     "QuboResult": "gurobi_optimods.qubo.QuboResult",
     "Graph": "networkx.Graph",
     "DiGraph": "networkx.DiGraph",
+    "LinAlgError": "numpy.linalg.LinAlgError",
 }
 numpydoc_xref_ignore = {"optional", "or", "of"}
 

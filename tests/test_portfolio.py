@@ -53,9 +53,60 @@ class TestMVPBasic(unittest.TestCase):
         cov_matrix = data.cov()
         mu = data.mean()
         L = np.linalg.cholesky(cov_matrix)
+        K = np.eye(L.shape[0])
+        e = np.zeros(mu.size)
 
         with self.assertRaises(TypeError):
-            mvp = MeanVariancePortfolio(mu, cov_matrix=cov_matrix, cov_factors=(L,))
+            mvp = MeanVariancePortfolio(
+                mu, cov_matrix=cov_matrix, cov_factors=(L, K, e)
+            )
+
+    def test_init_2(self):
+        # cov_factors must always be a triple
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        L = np.linalg.cholesky(cov_matrix)
+        K = np.eye(L.shape[0])
+        e = np.zeros(mu.size)
+
+        with self.assertRaises(ValueError):
+            mvp = MeanVariancePortfolio(mu, cov_factors=tuple())
+
+        with self.assertRaises(ValueError):
+            mvp = MeanVariancePortfolio(mu, cov_factors=(L,))
+
+        with self.assertRaises(ValueError):
+            mvp = MeanVariancePortfolio(mu, cov_factors=(L, K))
+
+    def test_init_3(self):
+        # Example input that ought to succeed
+        B = np.random.rand(8, 2)
+        K = np.diag([0.5, 2])
+        d = np.ones(8)
+        mu = np.ones(8)
+        mvp = MeanVariancePortfolio(mu, cov_factors=(B, K, d))
+        # Nothing to test, but shouldn't error
+
+    def test_init_4(self):
+        # cov_factors[1] must be positive definite, this is semi-definite
+        B = np.random.rand(8, 2)
+        K = np.diag([1, 0])
+        d = np.ones(8)
+        mu = np.ones(8)
+
+        with self.assertRaises(np.linalg.LinAlgError):
+            mvp = MeanVariancePortfolio(mu, cov_factors=(B, K, d))
+
+    def test_init_5(self):
+        # cov_factors[1] must be positive definite, this is indefinite
+        B = np.random.rand(8, 2)
+        K = np.diag([1, -1])
+        d = np.ones(8)
+        mu = np.ones(8)
+
+        with self.assertRaises(np.linalg.LinAlgError):
+            mvp = MeanVariancePortfolio(mu, cov_factors=(B, K, d))
 
     def test_outputflag(self):
         data = load_portfolio()
@@ -647,11 +698,13 @@ class TestMVPFeatures(unittest.TestCase):
         data = load_portfolio()
         cov_matrix = data.cov()
         L = np.linalg.cholesky(cov_matrix)
+        K = np.eye(L.shape[0])
         mu = data.mean()
+        e = np.zeros(mu.size)
         gamma = 100.0
 
         # Two equivalent setups: Sigma itself, and its Cholesky factor
-        mvp_factors = MeanVariancePortfolio(mu, None, cov_factors=(L,))
+        mvp_factors = MeanVariancePortfolio(mu, None, cov_factors=(L, K, e))
         mvp_Sigma = MeanVariancePortfolio(mu, cov_matrix)
 
         x_factors = mvp_factors.efficient_portfolio(gamma).x
@@ -663,10 +716,12 @@ class TestMVPFeatures(unittest.TestCase):
         data = load_portfolio()
         cov_matrix = data.cov()
         L = np.linalg.cholesky(cov_matrix)
+        K = np.eye(L.shape[0])
         mu = data.mean()
+        e = np.zeros(mu.size)
         gamma = 100.0
 
-        mvp = MeanVariancePortfolio(mu, None, cov_factors=(L,))
+        mvp = MeanVariancePortfolio(mu, None, cov_factors=(L, K, e))
         pf = mvp.efficient_portfolio(gamma)
 
         self.assertAlmostEqual(pf.ret, mu.to_numpy() @ pf.x)
@@ -687,12 +742,13 @@ class TestMVPFeatures(unittest.TestCase):
         mu = 0.2 + (0.2 * np.random.rand(3) - 0.1)
         s = (0.1 + 0.2 * np.random.rand(3)).reshape((3, 1))
         d = 0.05 + 0.3 * np.random.rand(3)
-        D = np.diag(d)
         cov_matrix = s @ s.T + np.diag(d**2)
 
         # Two equivalent setups: Sigma itself, and its Cholesky factor
         gamma = 20
-        mvp_factors = MeanVariancePortfolio(mu, None, cov_factors=(s, D))
+        mvp_factors = MeanVariancePortfolio(
+            mu, None, cov_factors=(s, np.eye(1), d**2)
+        )
         mvp_Sigma = MeanVariancePortfolio(mu, cov_matrix)
 
         x_factors = mvp_factors.efficient_portfolio(gamma).x
@@ -705,11 +761,10 @@ class TestMVPFeatures(unittest.TestCase):
         mu = 0.2 + (0.2 * np.random.rand(3) - 0.1)
         s = (0.1 + 0.2 * np.random.rand(3)).reshape((3, 1))
         d = 0.05 + 0.3 * np.random.rand(3)
-        D = np.diag(d)
         cov_matrix = s @ s.T + np.diag(d**2)
 
         gamma = 20
-        mvp = MeanVariancePortfolio(mu, None, cov_factors=(s, D))
+        mvp = MeanVariancePortfolio(mu, None, cov_factors=(s, np.eye(1), d**2))
         pf = mvp.efficient_portfolio(gamma)
 
         self.assertAlmostEqual(pf.ret, mu @ pf.x)
