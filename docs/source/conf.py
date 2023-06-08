@@ -111,14 +111,16 @@ def process_signature(app, what, name, obj, options, signature, return_annotatio
 
 
 boilerplate = """
-:param verbose: ``verbose=False`` suppresses all console output (optional, defaults to ``True``)
-:type verbose: :class:`bool`
-:param logfile: Write all mod output to the given file path (optional, defaults to ``None``: no log)
-:type logfile: :class:`str`
-:param solver_params: Gurobi parameters to be passed to the solver (optional)
-:type solver_params: :class:`dict`
+    **verbose** : :ref:`bool <python:bltin-boolean-values>`, optional
+        ``verbose=False`` suppresses all console output
+
+    **logfile** : :class:`python:str`, optional
+        Write all mod output to the given file path
+
+    **solver_params** : :class:`python:dict`, optional
+        Gurobi parameters to be passed to the solver
 """
-boilerplate = boilerplate.strip().split("\n")
+boilerplate = boilerplate.split("\n")
 
 
 def process_docstring(app, what, name, obj, options, lines):
@@ -129,19 +131,16 @@ def process_docstring(app, what, name, obj, options, lines):
         in_paramlist = False
         lineno = None
         for i, line in enumerate(lines):
-            if line.startswith(":return"):
-                lineno = i - 1
-                break
-            if line.startswith(":type") or line.startswith(":param"):
+            if ":Parameters:" in line:
                 in_paramlist = True
-            if in_paramlist and not line.strip():
+            elif in_paramlist and (
+                ":Returns:" in line or "processed by numpydoc" in line
+            ):
                 lineno = i - 1
                 break
 
         if lineno is None:
             raise ValueError(f"Failed to find param list for {name}")
-
-        print(f"Added params to {name} after line {lineno}: '{lines[lineno]}'")
 
         # Insert boilerplate bits
         for line in reversed(boilerplate):
@@ -152,6 +151,6 @@ def process_docstring(app, what, name, obj, options, lines):
         lines.append(f"The following mods can be imported from ``{name}``:")
 
 
-# def setup(app):
-#     app.connect("autodoc-process-signature", process_signature)
-#     app.connect("autodoc-process-docstring", process_docstring)
+def setup(app):
+    app.connect("autodoc-process-signature", process_signature)
+    app.connect("autodoc-process-docstring", process_docstring)
