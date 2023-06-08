@@ -116,10 +116,10 @@ immediately used, with presentation of the results included in the documentation
 page.
 
 The implementation of the Mod (description of the mathematical model or
-algorithms used) should be hidden from the user at first glance. We use tabs to
-do this. Any mathematical and algorithmic details should be placed in a tab and
-clearly indicate that this is advanced detail the user does not need to fully
-understand in order to use the Mod.
+algorithms used) should be hidden from the user at first glance. We use the ``..
+dropdown:`` directive for this. Any mathematical and algorithmic details should
+be placed in a dropdown and clearly indicate that this is advanced detail the
+user does not need to fully understand in order to use the Mod.
 
 Including datasets
 ------------------
