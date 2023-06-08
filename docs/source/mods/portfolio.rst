@@ -206,10 +206,10 @@ for each asset.  Also CAPM priors and risk factors obtained from principal
 component analysis can be phrased in this form. See `Efficient frontier(s) with
 cardinality constraints`_ for an example of a synthetic multi-factor model.
 
-Rather than computing the covariance matrix explcitly from the decomposition,
+Rather than computing the covariance matrix explicitly from the decomposition,
 it is adivised for performance and accuracy reasons to input the individual
 factor matrices directly through the ``cov_factors`` keyword argurment as in
-the following example, which mimicks a single-factor model:
+the following example, which mimics a single-factor model:
 
 .. testcode:: mod
 

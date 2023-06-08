@@ -1,8 +1,8 @@
 Maximum Bipartite Matching
 ==========================
 
-The maximum matching problem is a fundamental problem in graph theory (ref).
-Given a graph, as a set of nodes connected to one another by edges, a matching
+The maximum matching problem is a fundamental problem in graph theory. Given
+a graph, as a set of nodes connected to one another by edges, a matching
 is any subset of those edges which have no vertex in common. The goal of
 maximum matching is to find the largest possible such matching of a given
 graph.
