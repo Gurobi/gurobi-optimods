@@ -1,10 +1,4 @@
-.PHONY: wheel sdist develop test
-
-wheel:
-	python -m build --wheel
-
-sdist:
-	python -m build --sdist
+.PHONY: develop test
 
 develop:
 	python -m pip install pip setuptools wheel --upgrade
