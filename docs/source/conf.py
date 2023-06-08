@@ -79,11 +79,10 @@ rst_prolog = """.. warning::
 numpydoc_xref_param_type = True
 numpydoc_xref_aliases = {
     "DataFrame": "pandas.DataFrame",
-    "spmatrix": "scipy.sparse.spmatrix",
-    "QuboResult": "gurobi_optimods.qubo.QuboResult",
-    "Graph": "networkx.Graph",
     "DiGraph": "networkx.DiGraph",
+    "Graph": "networkx.Graph",
     "LinAlgError": "numpy.linalg.LinAlgError",
+    "spmatrix": "scipy.sparse.spmatrix",
 }
 numpydoc_xref_ignore = {"optional", "or", "of"}
 
