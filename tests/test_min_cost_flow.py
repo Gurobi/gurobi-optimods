@@ -1,3 +1,4 @@
+import io
 import unittest
 
 import numpy as np
@@ -18,10 +19,49 @@ from .test_graph_utils import (
     check_solution_scipy,
 )
 
+edge_data2 = """
+source,target,capacity,cost
+0,1,15,4
+0,2,8,4
+1,3,4,2
+1,2,20,2
+1,4,10,6
+2,3,15,1
+2,4,5,3
+3,4,20,2
+"""
+
+
+node_data2 = """
+,demand
+0,-20
+1,0
+2,0
+3,5
+4,15
+"""
+
+
+def load_graph2_pandas():
+    return (
+        pd.read_csv(io.StringIO(edge_data2)).set_index(["source", "target"]),
+        pd.read_csv(io.StringIO(node_data2), index_col=0),
+    )
+
+
+def load_graph2_networkx():
+    edge_data, node_data = load_graph2_pandas()
+    return datasets._convert_pandas_to_digraph(edge_data, node_data)
+
+
+def load_graph2_scipy():
+    edge_data, node_data = load_graph2_pandas()
+    return datasets._convert_pandas_to_scipy(edge_data, node_data)
+
 
 class TestMinCostFlow(unittest.TestCase):
     def test_pandas(self):
-        edge_data, node_data = datasets.load_graph()
+        edge_data, node_data = datasets.simple_graph_pandas()
         cost, sol = mcf.min_cost_flow(edge_data, node_data)
         sol = sol[sol > 0]
         self.assertEqual(cost, 31)
@@ -30,14 +70,14 @@ class TestMinCostFlow(unittest.TestCase):
         self.assertTrue(check_solution_pandas(sol, [candidate]))
 
     def test_infeasible(self):
-        edge_data, node_data = datasets.load_graph()
+        edge_data, node_data = datasets.simple_graph_pandas()
         # Add a node requesting more flow than is available.
         node_data["demand"].values[-1] = 10.0
         with self.assertRaisesRegex(ValueError, "Unsatisfiable flows"):
             obj, sol = mcf.min_cost_flow(edge_data, node_data)
 
     def test_scipy(self):
-        G, cap, cost, demands = datasets.load_graph_scipy()
+        G, cap, cost, demands = datasets.simple_graph_scipy()
         cost, sol = mcf.min_cost_flow_scipy(G, cap, cost, demands)
         self.assertEqual(cost, 31)
         candidate = np.array(
@@ -54,7 +94,7 @@ class TestMinCostFlow(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        G = datasets.load_graph_networkx()
+        G = datasets.simple_graph_networkx()
         cost, sol = mcf.min_cost_flow_networkx(G)
         self.assertEqual(cost, 31)
         expected = {
@@ -69,7 +109,7 @@ class TestMinCostFlow(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx_renamed(self):
-        G = datasets.load_graph_networkx()
+        G = datasets.simple_graph_networkx()
         G = nx.relabel_nodes(G, {0: "s", 5: "t"})
         cost, sol = mcf.min_cost_flow_networkx(G)
         self.assertEqual(cost, 31)
@@ -86,7 +126,7 @@ class TestMinCostFlow(unittest.TestCase):
 
 class TestMinCostFlow2(unittest.TestCase):
     def test_pandas(self):
-        edge_data, node_data = datasets.load_graph2()
+        edge_data, node_data = load_graph2_pandas()
         cost, sol = mcf.min_cost_flow(edge_data, node_data)
         sol = sol[sol > 0]
         self.assertEqual(cost, 150)
@@ -111,7 +151,7 @@ class TestMinCostFlow2(unittest.TestCase):
         self.assertTrue(check_solution_pandas(sol, [candidate, candidate2]))
 
     def test_scipy(self):
-        G, cap, cost, demands = datasets.load_graph2_scipy()
+        G, cap, cost, demands = load_graph2_scipy()
         cost, sol = mcf.min_cost_flow_scipy(G, cap, cost, demands)
         self.assertEqual(cost, 150)
         expected = np.array(
@@ -126,7 +166,7 @@ class TestMinCostFlow2(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        G = datasets.load_graph2_networkx()
+        G = load_graph2_networkx()
         cost, sol = mcf.min_cost_flow_networkx(G)
         self.assertEqual(cost, 150)
         candidate = {
@@ -151,7 +191,7 @@ class TestMinCostFlow2(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx_renamed(self):
-        G = datasets.load_graph2_networkx()
+        G = load_graph2_networkx()
         G = nx.relabel_nodes(G, {0: "s", 4: "t"})
         cost, sol = mcf.min_cost_flow_networkx(G)
         self.assertEqual(cost, 150)

@@ -41,11 +41,13 @@ def load_workforce():
     )
 
 
-def load_graph(drop_pos=True, capacity=True, cost=True, demand=True):
-    edge_data = pd.read_csv(DATA_FILE_DIR / "graphs/edge_data1.csv").set_index(
+def _load_simple_graph_pandas(drop_pos=True, capacity=True, cost=True, demand=True):
+    edge_data = pd.read_csv(DATA_FILE_DIR / "graphs/simple_graph_edges.csv").set_index(
         ["source", "target"]
     )
-    node_data = pd.read_csv(DATA_FILE_DIR / "graphs/node_data1.csv", index_col=0)
+    node_data = pd.read_csv(
+        DATA_FILE_DIR / "graphs/simple_graph_nodes.csv", index_col=0
+    )
     if drop_pos:
         node_data.drop(columns=["posx", "posy"], inplace=True)
     if not capacity:
@@ -57,37 +59,26 @@ def load_graph(drop_pos=True, capacity=True, cost=True, demand=True):
     return edge_data, node_data
 
 
-def load_graph_networkx(capacity=True, cost=True, demand=True):
-    edge_data, node_data = load_graph(capacity=capacity, cost=cost, demand=demand)
+def simple_graph_pandas():
+    return _load_simple_graph_pandas(capacity=True, cost=True, demand=True)
+
+
+def simple_graph_networkx():
+    edge_data, node_data = _load_simple_graph_pandas(
+        capacity=True, cost=True, demand=True
+    )
     return _convert_pandas_to_digraph(
-        edge_data, node_data, capacity=capacity, cost=cost, demand=demand
+        edge_data, node_data, capacity=True, cost=True, demand=True
     )
 
 
-def load_graph_scipy(capacity=True, cost=True, demand=True):
-    edge_data, node_data = load_graph(capacity=capacity, cost=cost, demand=demand)
+def simple_graph_scipy(capacity=True, cost=True, demand=True):
+    edge_data, node_data = _load_simple_graph_pandas(
+        capacity=True, cost=True, demand=True
+    )
     return _convert_pandas_to_scipy(
-        edge_data, node_data, capacity=capacity, cost=cost, demand=demand
+        edge_data, node_data, capacity=True, cost=True, demand=True
     )
-
-
-def load_graph2():
-    return (
-        pd.read_csv(DATA_FILE_DIR / "graphs/edge_data2.csv").set_index(
-            ["source", "target"]
-        ),
-        pd.read_csv(DATA_FILE_DIR / "graphs/node_data2.csv", index_col=0),
-    )
-
-
-def load_graph2_networkx():
-    edge_data, node_data = load_graph2()
-    return _convert_pandas_to_digraph(edge_data, node_data)
-
-
-def load_graph2_scipy():
-    edge_data, node_data = load_graph2()
-    return _convert_pandas_to_scipy(edge_data, node_data)
 
 
 def load_portfolio():

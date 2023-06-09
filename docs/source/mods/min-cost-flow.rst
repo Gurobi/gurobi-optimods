@@ -87,7 +87,7 @@ An example of these inputs with their respective requirements is shown below.
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
-          >>> G, capacities, cost, demands = datasets.load_graph_scipy()
+          >>> G, capacities, cost, demands = datasets.simple_graph_scipy()
           >>> G
           <5x6 sparse matrix of type '<class 'numpy.int64'>'
                   with 7 stored elements in COOrdinate format>
@@ -127,7 +127,7 @@ An example of these inputs with their respective requirements is shown below.
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
-          >>> G = datasets.load_graph_networkx()
+          >>> G = datasets.simple_graph_networkx()
           >>> for e in G.edges(data=True):
           ...     print(e)
           ...
@@ -157,7 +157,7 @@ An example of these inputs with their respective requirements is shown below.
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
-          >>> edge_data, node_data = datasets.load_graph()
+          >>> edge_data, node_data = datasets.simple_graph_pandas()
           >>> edge_data
                          capacity  cost
           source target
@@ -201,7 +201,7 @@ formats.
 
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.min_cost_flow import min_cost_flow_scipy
-          >>> G, capacities, cost, demands = datasets.load_graph_scipy()
+          >>> G, capacities, cost, demands = datasets.simple_graph_scipy()
           >>> obj, sol = min_cost_flow_scipy(G, capacities, cost, demands, verbose=False)
           >>> obj
           31.0
@@ -226,7 +226,7 @@ formats.
 
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.min_cost_flow import min_cost_flow_networkx
-          >>> G = datasets.load_graph_networkx()
+          >>> G = datasets.simple_graph_networkx()
           >>> obj, sol = min_cost_flow_networkx(G, verbose=False)
           >>> obj
           31.0
@@ -243,7 +243,7 @@ formats.
 
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.min_cost_flow import min_cost_flow
-          >>> edge_data, node_data = datasets.load_graph()
+          >>> edge_data, node_data = datasets.simple_graph_pandas()
           >>> obj, sol = min_cost_flow(edge_data, node_data, verbose=False)
           >>> obj
           31.0
