@@ -69,11 +69,6 @@ bibtex_bibfiles = [
     "refs/workforce.bib",
 ]
 
-rst_prolog = """.. warning::
-    This code is in a pre-release state. It may not be fully functional and breaking changes
-    can occur without notice.
-"""
-
 # -- numpydoc magic linking
 
 numpydoc_xref_param_type = True
