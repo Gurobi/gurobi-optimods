@@ -1,6 +1,6 @@
 # Regular QA workflow (pull requests, main branch)
 
-name: Test
+name: tests
 
 on:
   push:
