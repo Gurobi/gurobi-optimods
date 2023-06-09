@@ -5,7 +5,6 @@ Bipartite Matching
 
 
 import logging
-from typing import List, overload
 
 import gurobipy as gp
 import gurobipy_pandas as gppd
@@ -22,35 +21,6 @@ except ImportError:
 from gurobi_optimods.utils import optimod
 
 logger = logging.getLogger(__name__)
-
-
-@overload
-def maximum_bipartite_matching(
-    graph: sp.spmatrix,
-    nodes1: np.ndarray,
-    nodes2: np.ndarray,
-) -> sp.spmatrix:
-    ...
-
-
-@overload
-def maximum_bipartite_matching(
-    graph: pd.DataFrame,
-    nodes1: str,
-    nodes2: str,
-) -> pd.DataFrame:
-    ...
-
-
-if nx is not None:
-
-    @overload
-    def maximum_bipartite_matching(
-        graph: nx.Graph,
-        nodes1: List,
-        nodes2: List,
-    ) -> nx.Graph:
-        ...
 
 
 @optimod()
