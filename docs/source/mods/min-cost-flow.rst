@@ -81,71 +81,6 @@ An example of these inputs with their respective requirements is shown below.
 
 .. tabs::
 
-  .. group-tab:: pandas
-
-      .. doctest:: load_graph
-          :options: +NORMALIZE_WHITESPACE
-
-          >>> from gurobi_optimods import datasets
-          >>> edge_data, node_data = datasets.load_graph()
-          >>> edge_data
-                         capacity  cost
-          source target
-          0      1              2     9
-                 2              2     7
-          1      3              1     1
-          2      3              1    10
-                 4              2     6
-          3      5              2     1
-          4      5              2     1
-          >>> node_data
-             demand
-          0      -2
-          1       0
-          2      -1
-          3       1
-          4       0
-          5       2
-
-      The ``edge_data`` DataFrame is indexed by ``source`` and ``target``
-      nodes and contains columns labelled ``capacity`` and ``cost`` with the
-      edge attributes.
-
-      The ``node_data`` DataFrame is indexed by node and contains columns
-      labelled ``demand``.
-
-      We assume that nodes labels are integers from :math:`0,\dots,|V|-1`.
-
-  .. group-tab:: NetworkX
-
-      .. doctest:: load_graph_networkx
-          :options: +NORMALIZE_WHITESPACE
-
-          >>> from gurobi_optimods import datasets
-          >>> G = datasets.load_graph_networkx()
-          >>> for e in G.edges(data=True):
-          ...     print(e)
-          ...
-          (0, 1, {'capacity': 2, 'cost': 9})
-          (0, 2, {'capacity': 2, 'cost': 7})
-          (1, 3, {'capacity': 1, 'cost': 1})
-          (2, 3, {'capacity': 1, 'cost': 10})
-          (2, 4, {'capacity': 2, 'cost': 6})
-          (3, 5, {'capacity': 2, 'cost': 1})
-          (4, 5, {'capacity': 2, 'cost': 1})
-          >>> for n in G.nodes(data=True):
-          ...     print(n)
-          ...
-          (0, {'demand': -2})
-          (1, {'demand': 0})
-          (2, {'demand': -1})
-          (3, {'demand': 1})
-          (4, {'demand': 0})
-          (5, {'demand': 2})
-
-      Edges have attributes ``capacity`` and ``cost`` and nodes have
-      attributes ``demand``.
-
   .. group-tab:: scipy.sparse
 
       .. doctest:: load_graph_scipy
@@ -186,7 +121,70 @@ An example of these inputs with their respective requirements is shown below.
       Three separate sparse matrices including the adjacency matrix, edge
       capacity and cost, and a single array with the demands per node.
 
-|
+  .. group-tab:: networkx
+
+      .. doctest:: load_graph_networkx
+          :options: +NORMALIZE_WHITESPACE
+
+          >>> from gurobi_optimods import datasets
+          >>> G = datasets.load_graph_networkx()
+          >>> for e in G.edges(data=True):
+          ...     print(e)
+          ...
+          (0, 1, {'capacity': 2, 'cost': 9})
+          (0, 2, {'capacity': 2, 'cost': 7})
+          (1, 3, {'capacity': 1, 'cost': 1})
+          (2, 3, {'capacity': 1, 'cost': 10})
+          (2, 4, {'capacity': 2, 'cost': 6})
+          (3, 5, {'capacity': 2, 'cost': 1})
+          (4, 5, {'capacity': 2, 'cost': 1})
+          >>> for n in G.nodes(data=True):
+          ...     print(n)
+          ...
+          (0, {'demand': -2})
+          (1, {'demand': 0})
+          (2, {'demand': -1})
+          (3, {'demand': 1})
+          (4, {'demand': 0})
+          (5, {'demand': 2})
+
+      Edges have attributes ``capacity`` and ``cost`` and nodes have
+      attributes ``demand``.
+
+  .. group-tab:: pandas
+
+      .. doctest:: load_graph
+          :options: +NORMALIZE_WHITESPACE
+
+          >>> from gurobi_optimods import datasets
+          >>> edge_data, node_data = datasets.load_graph()
+          >>> edge_data
+                         capacity  cost
+          source target
+          0      1              2     9
+                 2              2     7
+          1      3              1     1
+          2      3              1    10
+                 4              2     6
+          3      5              2     1
+          4      5              2     1
+          >>> node_data
+             demand
+          0      -2
+          1       0
+          2      -1
+          3       1
+          4       0
+          5       2
+
+      The ``edge_data`` DataFrame is indexed by ``source`` and ``target``
+      nodes and contains columns labelled ``capacity`` and ``cost`` with the
+      edge attributes.
+
+      The ``node_data`` DataFrame is indexed by node and contains columns
+      labelled ``demand``.
+
+      We assume that nodes labels are integers from :math:`0,\dots,|V|-1`.
 
 Solution
 --------
@@ -195,6 +193,48 @@ Depending on the input of choice, the solution also comes with different
 formats.
 
 .. tabs::
+
+  .. group-tab:: scipy.sparse
+
+      .. doctest:: min_cost_flow_networkx
+          :options: +NORMALIZE_WHITESPACE
+
+          >>> from gurobi_optimods import datasets
+          >>> from gurobi_optimods.min_cost_flow import min_cost_flow_scipy
+          >>> G, capacities, cost, demands = datasets.load_graph_scipy()
+          >>> obj, sol = min_cost_flow_scipy(G, capacities, cost, demands, verbose=False)
+          >>> obj
+          31.0
+          >>> sol
+          <5x6 sparse matrix of type '<class 'numpy.float64'>'
+                  with 5 stored elements in COOrdinate format>
+          >>> print(sol)
+            (0, 1)        1.0
+            (0, 2)        1.0
+            (1, 3)        1.0
+            (2, 4)        2.0
+            (4, 5)        2.0
+
+      The ``min_cost_flow_scipy`` function returns the cost of the solution as
+      well as a ``sp.sparray`` with the edges where the data is the amount of
+      non-zero flow in the solution.
+
+  .. group-tab:: networkx
+
+      .. doctest:: min_cost_flow_networkx
+          :options: +NORMALIZE_WHITESPACE
+
+          >>> from gurobi_optimods import datasets
+          >>> from gurobi_optimods.min_cost_flow import min_cost_flow_networkx
+          >>> G = datasets.load_graph_networkx()
+          >>> obj, sol = min_cost_flow_networkx(G, verbose=False)
+          >>> obj
+          31.0
+          >>> list(sol.edges(data=True))
+          [(0, 1, {'flow': 1.0}), (0, 2, {'flow': 1.0}), (1, 3, {'flow': 1.0}), (2, 4, {'flow': 2.0}), (4, 5, {'flow': 2.0})]
+
+      The ``min_cost_flow_networkx`` function returns the cost of the solution
+      as well as a dictionary indexed by edge with the non-zero flow.
 
   .. group-tab:: pandas
 
@@ -221,49 +261,6 @@ formats.
       The ``min_cost_flow`` function returns the cost of the solution as well
       as ``pd.Series`` with the flow per edge. Similarly as the input
       DataFrame the resulting series is indexed by ``source`` and ``target``.
-
-
-  .. group-tab:: NetworkX
-
-      .. doctest:: min_cost_flow_networkx
-          :options: +NORMALIZE_WHITESPACE
-
-          >>> from gurobi_optimods import datasets
-          >>> from gurobi_optimods.min_cost_flow import min_cost_flow_networkx
-          >>> G = datasets.load_graph_networkx()
-          >>> obj, sol = min_cost_flow_networkx(G, verbose=False)
-          >>> obj
-          31.0
-          >>> list(sol.edges(data=True))
-          [(0, 1, {'flow': 1.0}), (0, 2, {'flow': 1.0}), (1, 3, {'flow': 1.0}), (2, 4, {'flow': 2.0}), (4, 5, {'flow': 2.0})]
-
-      The ``min_cost_flow_networkx`` function returns the cost of the solution
-      as well as a dictionary indexed by edge with the non-zero flow.
-
-  .. group-tab:: scipy.sparse
-
-      .. doctest:: min_cost_flow_networkx
-          :options: +NORMALIZE_WHITESPACE
-
-          >>> from gurobi_optimods import datasets
-          >>> from gurobi_optimods.min_cost_flow import min_cost_flow_scipy
-          >>> G, capacities, cost, demands = datasets.load_graph_scipy()
-          >>> obj, sol = min_cost_flow_scipy(G, capacities, cost, demands, verbose=False)
-          >>> obj
-          31.0
-          >>> sol
-          <5x6 sparse matrix of type '<class 'numpy.float64'>'
-                  with 5 stored elements in COOrdinate format>
-          >>> print(sol)
-            (0, 1)        1.0
-            (0, 2)        1.0
-            (1, 3)        1.0
-            (2, 4)        2.0
-            (4, 5)        2.0
-
-      The ``min_cost_flow_scipy`` function returns the cost of the solution as
-      well as a ``sp.sparray`` with the edges where the data is the amount of
-      non-zero flow in the solution.
 
 The solution for this example is shown in the figure below. The edge labels
 denote the edge capacity, cost and resulting flow: :math:`(B_{ij}, c_{ij},

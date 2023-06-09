@@ -69,7 +69,7 @@ returned as a sub-graph of the input data structure.
 
 .. tabs::
 
-    .. group-tab:: scipy
+    .. group-tab:: scipy.sparse
 
         When given a scipy sparse array representing the adjacency matrix of
         the graph, the user must also provide the two disjoint node sets as
@@ -169,7 +169,7 @@ Solution
 
 .. tabs::
 
-    .. group-tab:: scipy
+    .. group-tab:: scipy.sparse
 
         The maximum matching is returned as a subgraph of the original bipartite
         graph, as a ``scipy.sparse`` array. Inspecting the result, it is clear that
