@@ -3,7 +3,7 @@ Least Absolute Deviation Regression
 
 Least Absolute Deviation (LAD) regression is an alternative to the more commonly
 used Ordinary Least Squares (OLS) regression method. The distinction between the
-two comes down to the error metrix they use when fitted to training data: LAD
+two comes down to the error metrics they use when fitted to training data: LAD
 minimizes the sum of absolute residuals, while OLS minimizes the sum of
 squares of residuals.
 
