@@ -23,7 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 @optimod()
-def min_cost_flow(arc_data: pd.DataFrame, demand_data: pd.DataFrame, *, create_env):
+def min_cost_flow_pandas(
+    arc_data: pd.DataFrame, demand_data: pd.DataFrame, *, create_env
+):
     """Solve the minimum cost flow problem for a given graph.
 
     The inputs adhere to the following structure::

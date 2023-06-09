@@ -62,7 +62,7 @@ def load_graph2_scipy():
 class TestMinCostFlow(unittest.TestCase):
     def test_pandas(self):
         edge_data, node_data = datasets.simple_graph_pandas()
-        cost, sol = mcf.min_cost_flow(edge_data, node_data)
+        cost, sol = mcf.min_cost_flow_pandas(edge_data, node_data)
         sol = sol[sol > 0]
         self.assertEqual(cost, 31)
         candidate = {(0, 1): 1.0, (0, 2): 1.0, (1, 3): 1.0, (2, 4): 2.0, (4, 5): 2.0}
@@ -74,7 +74,7 @@ class TestMinCostFlow(unittest.TestCase):
         # Add a node requesting more flow than is available.
         node_data["demand"].values[-1] = 10.0
         with self.assertRaisesRegex(ValueError, "Unsatisfiable flows"):
-            obj, sol = mcf.min_cost_flow(edge_data, node_data)
+            obj, sol = mcf.min_cost_flow_pandas(edge_data, node_data)
 
     def test_scipy(self):
         G, cap, cost, demands = datasets.simple_graph_scipy()
@@ -127,7 +127,7 @@ class TestMinCostFlow(unittest.TestCase):
 class TestMinCostFlow2(unittest.TestCase):
     def test_pandas(self):
         edge_data, node_data = load_graph2_pandas()
-        cost, sol = mcf.min_cost_flow(edge_data, node_data)
+        cost, sol = mcf.min_cost_flow_pandas(edge_data, node_data)
         sol = sol[sol > 0]
         self.assertEqual(cost, 150)
         candidate = {

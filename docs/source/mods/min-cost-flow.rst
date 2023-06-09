@@ -242,9 +242,9 @@ formats.
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
-          >>> from gurobi_optimods.min_cost_flow import min_cost_flow
+          >>> from gurobi_optimods.min_cost_flow import min_cost_flow_pandas
           >>> edge_data, node_data = datasets.simple_graph_pandas()
-          >>> obj, sol = min_cost_flow(edge_data, node_data, verbose=False)
+          >>> obj, sol = min_cost_flow_pandas(edge_data, node_data, verbose=False)
           >>> obj
           31.0
           >>> sol
@@ -258,7 +258,7 @@ formats.
           4       5         2.0
           Name: flow, dtype: float64
 
-      The ``min_cost_flow`` function returns the cost of the solution as well
+      The ``min_cost_flow_pandas`` function returns the cost of the solution as well
       as ``pd.Series`` with the flow per edge. Similarly as the input
       DataFrame the resulting series is indexed by ``source`` and ``target``.
 
