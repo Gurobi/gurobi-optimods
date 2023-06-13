@@ -91,8 +91,8 @@ An example of these inputs with their respective requirements is shown below.
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
-          >>> edge_data, _ = datasets.load_graph(cost=False, demand=False)
-          >>> edge_data
+          >>> edge_data, _ = datasets.simple_graph_pandas()
+          >>> edge_data[["capacity"]]
                          capacity
           source target
           0      1              2
@@ -115,17 +115,16 @@ An example of these inputs with their respective requirements is shown below.
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
-          >>> G = datasets.load_graph_networkx(cost=False, demand=False)
-          >>> for e in G.edges(data=True):
-          ...     print(e)
-          ...
-          (0, 1, {'capacity': 2})
-          (0, 2, {'capacity': 2})
-          (1, 3, {'capacity': 1})
-          (2, 3, {'capacity': 1})
-          (2, 4, {'capacity': 2})
-          (3, 5, {'capacity': 2})
-          (4, 5, {'capacity': 2})
+          >>> G = datasets.simple_graph_networkx()
+          >>> for u, v, capacity in G.edges.data("capacity"):
+          ...     print(f"{u} -> {v}: {capacity = }")
+          0 -> 1: capacity = 2
+          0 -> 2: capacity = 2
+          1 -> 3: capacity = 1
+          2 -> 3: capacity = 1
+          2 -> 4: capacity = 2
+          3 -> 5: capacity = 2
+          4 -> 5: capacity = 2
 
       Edges have attributes ``capacity``.
 
@@ -135,7 +134,7 @@ An example of these inputs with their respective requirements is shown below.
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
-          >>> G, capacities, _, _ = datasets.load_graph_scipy(cost=False, demand=False)
+          >>> G, capacities, _, _ = datasets.simple_graph_scipy()
           >>> G
           <5x6 sparse matrix of type '<class 'numpy.int64'>'
                   with 7 stored elements in COOrdinate format>
@@ -176,8 +175,8 @@ formats.
 
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.max_flow import max_flow
-          >>> edge_data, _ = datasets.load_graph(cost=False, demand=False)
-          >>> obj, flow = max_flow(edge_data, 0, 5, silent=True) # Find max-flow between nodes 0 and 5
+          >>> edge_data, _ = datasets.simple_graph_pandas()
+          >>> obj, flow = max_flow(edge_data, 0, 5, verbose=False) # Find max-flow between nodes 0 and 5
           >>> obj
           3.0
           >>> flow
@@ -191,7 +190,7 @@ formats.
           4       5         1.0
           Name: flow, dtype: float64
           >>> from gurobi_optimods.min_cut import min_cut
-          >>> obj, partition, cutset = min_cut(edge_data, 0, 5, silent=True)
+          >>> obj, partition, cutset = min_cut(edge_data, 0, 5, verbose=False)
           >>> obj
           3.0
           >>> partition
@@ -215,8 +214,8 @@ formats.
 
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.max_flow import max_flow
-          >>> G = datasets.load_graph_networkx(cost=False, demand=False)
-          >>> obj, sol = max_flow(G, 0, 5, silent=True)
+          >>> G = datasets.simple_graph_networkx()
+          >>> obj, sol = max_flow(G, 0, 5, verbose=False)
           >>> obj
           3.0
           >>> type(sol)
@@ -224,7 +223,7 @@ formats.
           >>> list(sol.edges(data=True))
           [(0, 1, {'flow': 1.0}), (0, 2, {'flow': 2.0}), (1, 3, {'flow': 1.0}), (2, 3, {'flow': 1.0}), (2, 4, {'flow': 1.0}), (3, 5, {'flow': 2.0}), (4, 5, {'flow': 1.0})]
           >>> from gurobi_optimods.min_cut import min_cut
-          >>> obj, part, cut = min_cut(G, 0, 5, silent=True)
+          >>> obj, part, cut = min_cut(G, 0, 5, verbose=False)
           >>> obj
           3.0
           >>> part
@@ -245,9 +244,9 @@ formats.
 
           >>> from gurobi_optimods import datasets
           >>> from gurobi_optimods.max_flow import max_flow
-          >>> G, capacities, _, _ = datasets.load_graph_scipy(cost=False, demand=False)
+          >>> G, capacities, _, _ = datasets.simple_graph_scipy()
           >>> G.data = capacities.data
-          >>> obj, sol = max_flow(G, 0, 5, silent=True)
+          >>> obj, sol = max_flow(G, 0, 5, verbose=False)
           >>> obj
           3.0
           >>> sol
@@ -261,7 +260,7 @@ formats.
             (3, 5)    1.0
             (4, 5)    2.0
           >>> from gurobi_optimods.min_cut import min_cut
-          >>> obj, part, cutset = min_cut(G, 0, 5, silent=True)
+          >>> obj, part, cutset = min_cut(G, 0, 5, verbose=False)
           >>> obj
           3.0
           >>> part
