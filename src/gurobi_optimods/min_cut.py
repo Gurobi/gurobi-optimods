@@ -6,12 +6,12 @@ Minimum Cut
 import logging
 from typing import Optional, overload
 
+import gurobipy as gp
+import gurobipy_pandas as gppd
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-import gurobipy as gp
 from gurobipy import GRB
-import gurobipy_pandas as gppd
 
 try:
     import networkx as nx
@@ -95,12 +95,8 @@ def _min_cut_pandas(arc_data, source, sink, create_env):
     # Create dummy edge to find maximum flow through (minimum of sum of all
     # outgoing/incoming capacities at the source/sink)
     max_flow = min(
-        arc_data.loc[
-            ([source], slice(None)),
-        ]["capacity"].sum(),
-        arc_data.loc[
-            (slice(None), [sink]),
-        ]["capacity"].sum(),
+        arc_data.loc[([source], slice(None)),]["capacity"].sum(),
+        arc_data.loc[(slice(None), [sink]),]["capacity"].sum(),
     )
     arc_data = pd.concat(
         [
@@ -152,9 +148,7 @@ def _min_cut_pandas(arc_data, source, sink, create_env):
             queue.extend(
                 [
                     a[1]
-                    for a in arc_data.loc[
-                        ([node], slice(None)),
-                    ].index
+                    for a in arc_data.loc[([node], slice(None)),].index
                     if a not in cutset and a[1] not in p1 and a[1] not in queue
                 ]
             )
