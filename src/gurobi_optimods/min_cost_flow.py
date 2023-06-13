@@ -165,8 +165,8 @@ def min_cost_flow_networkx(G, *, create_env):
     Returns
     -------
     tuple
-        Cost of the minimum cost flow (float), dictionary indexed by edges with
-        non-zero flow in the solution (dict)
+        Cost of the minimum cost flow (float), a subgraph of the original graph
+        specifying the flow
     """
     logger.info(
         f"Solving min-cost flow with {len(G.nodes)} nodes and {len(G.edges)} edges"
