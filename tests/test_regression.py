@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from numpy.testing import assert_allclose
 
-from gurobi_optimods.regression import LADRegression, CardinalityConstrainedRegression
+from gurobi_optimods.regression import CardinalityConstrainedRegression, LADRegression
 
 from .utils import large_model
 

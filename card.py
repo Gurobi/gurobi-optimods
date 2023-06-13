@@ -17,9 +17,10 @@ ccr = CardinalityConstrainedRegression(k=10)
 ccr.fit(X_train, y_train, silent=False)
 y_pred = ccr.predict(X_test)
 
+import matplotlib.pyplot as plt
+
 ### Second snippet
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.linear_model import Lasso
 
 lasso = Lasso(alpha=0.1)
@@ -34,8 +35,8 @@ fig.tight_layout()
 
 ### Hyperparameter optimization for CCR
 
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 from sklearn.linear_model import Lasso
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
@@ -56,9 +57,9 @@ pd.DataFrame(models).plot.line(x="k", y=["mae-test", "mae-train"])
 
 ### Hyperparameter optimization for Lasso
 
-import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 models = [

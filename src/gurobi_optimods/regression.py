@@ -92,7 +92,6 @@ class CardinalityConstrainedRegression(RegressionBase):
         records, n_features_in = X_train.shape
 
         with create_env() as env, gp.Model(env=env) as model:
-
             # Create unbounded variables for each column coefficient, and
             # error terms. Keep intercept separate.
             intercept = model.addVar(lb=-GRB.INFINITY, name="intercept")
