@@ -16,7 +16,6 @@ jobs:
     strategy:
       matrix:
         python: ["3.8"]
-        gurobipy: ["10.0.1"]
 
     steps:
       - uses: actions/checkout@v3
@@ -30,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -rdocs/requirements.txt
-          python -m pip install .[examples] gurobipy==${{ matrix.gurobipy }}
+          python -m pip install .[examples]
       - name: Run doctests
         run: |
           cd docs
