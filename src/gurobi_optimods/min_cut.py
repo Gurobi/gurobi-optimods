@@ -62,22 +62,24 @@ if nx is not None:
 def min_cut(graph, source: int, sink: int, *, create_env):
     """Solve the minimum cut problem for a given graph.
 
-    :param graph: A graph, specified either as a scipy.sparse adjacency matrix, networkx
+    Parameters
+    ----------
+    graph : spmatrix or Graph or DataFrame
+        A graph, specified either as a scipy.sparse adjacency matrix, networkx
         graph, or pandas dataframe
-    :type graph: :class:`sp.sparray|nx.Graph|pd.DataFrame`
-    :param source: The source node for the path.
-    :param sink: The sink (or destination) node for the path.
-    :param silent: silent=True suppresses all console output (defaults to False)
-    :type silent: bool
-    :param logfile: Write all mod output to the given file path (defaults to
-        None: no log)
-    :type logfile: str
-    :return: Cut value of the minimum cut.
-    :rtype: :class:`float`
-    :return: Partition of size 2 with cut sets.
-    :rtype: :class:`tuple(set(), set())`
-    :return: Cutset with edges.
-    :rtype: :class:`set(tuple(.,.))`
+    source : int
+        The source (or origin) node for the path.
+    sink : int
+        The sink (or destination) node for the path.
+
+    Returns
+    -------
+    cut: float
+        Cut value of the minimum cut.
+    partition: tuple[set[int], set[int]]
+        Partition of size 2 with cut sets.
+    cutset: set[tuple[int, int]]
+        Cutset with edges.
     """
     if isinstance(graph, sp.spmatrix):
         return _min_cut_scipy(graph, source, sink, create_env)

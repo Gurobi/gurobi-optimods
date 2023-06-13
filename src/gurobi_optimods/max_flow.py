@@ -62,21 +62,22 @@ if nx is not None:
 def max_flow(graph, source: int, sink: int, **kwargs):
     """Solve the maximum flow problem for a given graph.
 
-    :param graph: A graph, specified either as a scipy.sparse adjacency matrix, networkx
+    Parameters
+    ----------
+    graph : spmatrix or Graph or DataFrame
+        A graph, specified either as a scipy.sparse adjacency matrix, networkx
         graph, or pandas dataframe
-    :type graph: :class:`sp.sparray|nx.Graph|pd.DataFrame`
-    :param source: The source node for the path.
-    :type source: :class:`int`
-    :param sink: The sink (or destination) node for the path.
-    :type sink: :class:`int`
-    :param silent: silent=True suppresses all console output (defaults to False)
-    :type silent: bool
-    :param logfile: Write all mod output to the given file path (defaults to None: no log)
-    :type logfile: str
-    :return: Maximum feasible flow through the network.
-    :rtype: :class:`float`
-    :return: A subgraph of the original graph specifying the flow.
-    :rtype: :class:`sp.sparray|nx.Graph|pd.DataFrame`
+    source : int
+        The source (or origin) node for the path.
+    sink : int
+        The sink (or destination) node for the path.
+
+    Returns
+    -------
+    flow: float
+        Maximum feasible flow through the network.
+    subgraph: spmatrix or Graph or DataFrame
+        A subgraph of the original graph specifying the flow.
     """
     if isinstance(graph, sp.spmatrix):
         return _max_flow_scipy(graph, source, sink, **kwargs)
