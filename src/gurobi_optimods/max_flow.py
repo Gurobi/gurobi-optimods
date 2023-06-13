@@ -16,9 +16,9 @@ except ImportError:
     nx = None
 
 from gurobi_optimods.min_cost_flow import (
-    min_cost_flow,
-    min_cost_flow_scipy,
     min_cost_flow_networkx,
+    min_cost_flow_pandas,
+    min_cost_flow_scipy,
 )
 
 logger = logging.getLogger(__name__)
@@ -94,12 +94,8 @@ def _max_flow_pandas(arc_data, source, sink, **kwargs):
     # Find maximum flow through (minumum of sum of all outgoing/incoming
     # capacities at the source/sink)
     max_flow = min(
-        arc_data.loc[
-            ([source], slice(None)),
-        ]["capacity"].sum(),
-        arc_data.loc[
-            (slice(None), [sink]),
-        ]["capacity"].sum(),
+        arc_data.loc[([source], slice(None)),]["capacity"].sum(),
+        arc_data.loc[(slice(None), [sink]),]["capacity"].sum(),
     )
     # Add dummy edge
     arc_data = pd.concat(
@@ -112,7 +108,7 @@ def _max_flow_pandas(arc_data, source, sink, **kwargs):
     )
     demand_data = pd.DataFrame([{"node": source, "demand": 0}]).set_index("node")
     # Solve
-    obj, flow = min_cost_flow(arc_data, demand_data, **kwargs)
+    obj, flow = min_cost_flow_pandas(arc_data, demand_data, **kwargs)
     # Drop dummy edge from solution
     flow.drop((sink, source), inplace=True)
     return -obj, flow

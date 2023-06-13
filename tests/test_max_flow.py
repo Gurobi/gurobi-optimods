@@ -11,9 +11,14 @@ import gurobi_optimods.datasets as datasets
 from gurobi_optimods.max_flow import max_flow
 
 from .test_graph_utils import (
+    check_solution_networkx,
     check_solution_pandas,
     check_solution_scipy,
-    check_solution_networkx,
+)
+from .test_min_cost_flow import (
+    load_graph2_networkx,
+    load_graph2_pandas,
+    load_graph2_scipy,
 )
 
 
@@ -22,13 +27,13 @@ class TestMaxFlow(unittest.TestCase):
         self.expected_max_flow = 3.0
 
     def test_infeasible(self):
-        edge_data, _ = datasets.load_graph()
+        edge_data, _ = datasets.simple_graph_pandas()
         edge_data["capacity"][(0, 1)] = -1.0
         with self.assertRaisesRegex(ValueError, "Unsatisfiable flows"):
             obj, sol = max_flow(edge_data, 0, 5)
 
     def test_pandas(self):
-        edge_data, _ = datasets.load_graph()
+        edge_data, _ = datasets.simple_graph_pandas()
         obj, sol = max_flow(edge_data, 0, 5)
         sol = sol[sol > 0]
         self.assertEqual(obj, self.expected_max_flow)
@@ -52,7 +57,7 @@ class TestMaxFlow(unittest.TestCase):
         self.assertTrue(check_solution_pandas(sol, [candidate, candidate2]))
 
     def test_scipy(self):
-        G, capacity, _, _ = datasets.load_graph_scipy()
+        G, capacity, _, _ = datasets.simple_graph_scipy()
         G.data = capacity.data
         obj, sol = max_flow(G, 0, 5)
         self.assertEqual(obj, self.expected_max_flow)
@@ -69,7 +74,7 @@ class TestMaxFlow(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        G = datasets.load_graph_networkx()
+        G = datasets.simple_graph_networkx()
         obj, sol = max_flow(G, 0, 5)
         self.assertEqual(obj, self.expected_max_flow)
         candidate = {
@@ -97,7 +102,7 @@ class TestMaxFlow2(unittest.TestCase):
         self.expected_max_flow = 23.0
 
     def test_pandas(self):
-        edge_data, _ = datasets.load_graph2()
+        edge_data, _ = load_graph2_pandas()
         obj, sol = max_flow(edge_data, 0, 4)
         sol = sol[sol > 0]
         self.assertEqual(obj, self.expected_max_flow)
@@ -114,7 +119,7 @@ class TestMaxFlow2(unittest.TestCase):
         self.assertTrue(check_solution_pandas(sol, [candidate]))
 
     def test_scipy(self):
-        G, capacity, _, _ = datasets.load_graph2_scipy()
+        G, capacity, _, _ = load_graph2_scipy()
         G.data = capacity.data
         obj, sol = max_flow(G, 0, 4)
         self.assertEqual(obj, self.expected_max_flow)
@@ -130,7 +135,7 @@ class TestMaxFlow2(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        G = datasets.load_graph2_networkx()
+        G = load_graph2_networkx()
         obj, sol = max_flow(G, 0, 4)
         self.assertEqual(obj, self.expected_max_flow)
         candidate = {

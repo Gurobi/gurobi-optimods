@@ -8,10 +8,16 @@ except ImportError:
     nx = None
 
 import gurobi_optimods.datasets as datasets
-from gurobi_optimods.min_cut import min_cut
 from gurobi_optimods.datasets import (
     _convert_pandas_to_digraph,
     _convert_pandas_to_scipy,
+)
+from gurobi_optimods.min_cut import min_cut
+
+from .test_min_cost_flow import (
+    load_graph2_networkx,
+    load_graph2_pandas,
+    load_graph2_scipy,
 )
 
 
@@ -22,13 +28,13 @@ class TestMinCut(unittest.TestCase):
         self.expected_cut_set = set([(0, 2), (1, 3)])
 
     def test_infeasible(self):
-        edge_data, _ = datasets.load_graph()
+        edge_data, _ = datasets.simple_graph_pandas()
         edge_data["capacity"] = [-1] * len(edge_data)
         with self.assertRaisesRegex(ValueError, "Unsatisfiable flows"):
             obj, sol, cutset = min_cut(edge_data, 0, 5)
 
     def test_pandas(self):
-        edge_data, node_data = datasets.load_graph()
+        edge_data, node_data = datasets.simple_graph_pandas()
         cut_value, partition, cutset = min_cut(edge_data, 0, 5)
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
@@ -37,7 +43,7 @@ class TestMinCut(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        G = datasets.load_graph_networkx()
+        G = datasets.simple_graph_networkx()
         cut_value, partition, cutset = min_cut(G, 0, 5)
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
@@ -45,7 +51,7 @@ class TestMinCut(unittest.TestCase):
         self.assertEqual(cutset, self.expected_cut_set)
 
     def test_scipy(self):
-        G, capacity, _, _ = datasets.load_graph_scipy()
+        G, capacity, _, _ = datasets.simple_graph_scipy()
         G.data = capacity.data
         cut_value, partition, cutset = min_cut(G, 0, 5)
         self.assertEqual(cut_value, self.expected_cut_value)
@@ -61,7 +67,7 @@ class TestMinCut2(unittest.TestCase):
         self.expected_cut_set = set([(0, 1), (0, 2)])
 
     def test_pandas(self):
-        edge_data, _ = datasets.load_graph2()
+        edge_data, _ = load_graph2_pandas()
         cut_value, partition, cutset = min_cut(edge_data, 0, 4)
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
@@ -70,7 +76,7 @@ class TestMinCut2(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        G = datasets.load_graph2_networkx()
+        G = load_graph2_networkx()
         cut_value, partition, cutset = min_cut(G, 0, 4)
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
@@ -78,7 +84,7 @@ class TestMinCut2(unittest.TestCase):
         self.assertEqual(cutset, self.expected_cut_set)
 
     def test_scipy(self):
-        G, capacity, _, _ = datasets.load_graph2_scipy()
+        G, capacity, _, _ = load_graph2_scipy()
         G.data = capacity.data
         cut_value, partition, cutset = min_cut(G, 0, 4)
         self.assertEqual(cut_value, self.expected_cut_value)
