@@ -9,52 +9,47 @@ This OptiMod computes the portfolio that maximizes the Sharpe ratio for the give
 Problem Specification
 ---------------------
 
-.. tabs::
+Our goal is to find an investment portfolio that maximizes
 
-    .. tab:: Description
+.. math::
+    \begin{align*}
+        \textrm{Sharpe ratio} &= \frac{\textrm{Expected return} - \textrm{Risk-free rate}}{\textrm{Standard deviation}}.
+    \end{align*}
 
-        Our goal is to find an investment portfolio that maximizes
+.. dropdown:: Background: Mathematical Model
 
-        .. math::
-            \begin{align*}
-                \textrm{Sharpe ratio} &= \frac{\textrm{Expected return} - \textrm{Risk-free rate}}{\textrm{Standard deviation}}.
-            \end{align*}
+    Consider :math:`n` assets. Let :math:`r_f \geq 0` be the risk-free rate. Let :math:`\mu \in \mathbb{R}^n` be the vector of expected returns and let :math:`\Sigma \in \mathbb{R}^{n \times n}` be the positive semidefinite covariance matrix. We assume there exists :math:`i \in \{1, \ldots, n\}` such that :math:`\mu_i > r_f`. If not, the portfolio that maximizes the Sharpe ratio is the one consisting entirely of the risk-free asset.
 
+    We seek a portfolio of weights :math:`x` that maximizes the Sharpe ratio :math:`(\mu^\top x - r_f) / \sqrt{x^\top \Sigma x}`:
 
-    .. tab:: Mathematical Formulation
+    .. math::
+        \begin{alignat*}{2}
+            \max_x\ && \frac{\mu^\top x - r_f}{\sqrt{x^\top \Sigma x}} & \\
+            \textrm{s.t.}\ && \sum_{i=1}^n x_i ={} &1 \qquad \textbf{(1)} \\
+            && x \geq {} &0.
+        \end{alignat*}
 
-        Consider :math:`n` assets. Let :math:`r_f \geq 0` be the risk-free rate. Let :math:`\mu \in \mathbb{R}^n` be the vector of expected returns and let :math:`\Sigma \in \mathbb{R}^{n \times n}` be the positive semidefinite covariance matrix. We assume there exists :math:`i \in \{1, \ldots, n\}` such that :math:`\mu_i > r_f`. If not, the portfolio that maximizes the Sharpe ratio is the one consisting entirely of the risk-free asset.
+    Model :math:`\textbf{(1)}` is non-convex. In general, non-convex problems are very difficult to solve. Fortunately, there exists a convex reformulation of :math:`\textbf{(1)}`. As a step towards that convex reformulation, we first reformulate :math:`\textbf{(1)}` as follows:
 
-        We seek a portfolio of weights :math:`x` that maximizes the Sharpe ratio :math:`(\mu^\top x - r_f) / \sqrt{x^\top \Sigma x}`:
+    .. math::
+        \begin{alignat*}{2}
+            \max_y\ && \frac{1}{\sqrt{y^\top \Sigma y}} \qquad & \\
+            \textrm{s.t.}\enspace && (\mu - r_f)^\top y = {} &1 \qquad \textbf{(2)} \\
+            && y \geq {} &0.
+        \end{alignat*}
 
-        .. math::
-            \begin{alignat*}{2}
-                \max_x\ && \frac{\mu^\top x - r_f}{\sqrt{x^\top \Sigma x}} & \\
-                \textrm{s.t.}\ && \sum_{i=1}^n x_i ={} &1 \qquad \textbf{(1)} \\
-                && x \geq {} &0.
-            \end{alignat*}
+    Models :math:`\textbf{(1)}` and :math:`\textbf{(2)}` are equivalent in the sense that given a solution to either problem, we can construct a solution to the other of equal or better objective value. In particular, any solution :math:`\bar{x}` of :math:`\textbf{(1)}` can be mapped to a solution :math:`\bar{y}` of :math:`\textbf{(2)}` of equivalent objective value using the transformation :math:`\bar{y}_i := \bar{x}_i / \mu^\top \bar{x}` for :math:`i = 1, \ldots, n`. Conversely, any solution :math:`\bar{y}` of :math:`\textbf{(2)}` can be mapped to a solution :math:`\bar{x}` of :math:`\textbf{(1)}` of equivalent objective value using the transformation :math:`\bar{x}_i := \bar{y}_i / \sum_{j = 1}^n \bar{y}_j` for :math:`i = 1, \ldots, n`.
 
-        Model :math:`\textbf{(1)}` is non-convex. In general, non-convex problems are very difficult to solve. Fortunately, there exists a convex reformulation of :math:`\textbf{(1)}`. As a step towards that convex reformulation, we first reformulate :math:`\textbf{(1)}` as follows:
+    Like :math:`\textbf{(1)}`, model :math:`\textbf{(2)}` is non-convex. However, because :math:`\Sigma` is positive semidefinite, maximizing :math:`1 / \sqrt{y^\top \Sigma y}` is equivalent to minimizing :math:`y^\top \Sigma y`. Thus, the optimal solution of :math:`\textbf{(2)}` is equivalent to the optimal solution of the following model:
 
-        .. math::
-            \begin{alignat*}{2}
-                \max_y\ && \frac{1}{\sqrt{y^\top \Sigma y}} \qquad & \\
-                \textrm{s.t.}\enspace && (\mu - r_f)^\top y = {} &1 \qquad \textbf{(2)} \\
-                && y \geq {} &0.
-            \end{alignat*}
+    .. math::
+        \begin{alignat*}{2}
+            \min_y\ && y^\top \Sigma y \qquad \quad & \\
+            \textrm{s.t.}\enspace && (\mu - r_f)^\top y = {} &1 \qquad \textbf{(3)} \\
+            && y \geq {} &0.
+        \end{alignat*}
 
-        Models :math:`\textbf{(1)}` and :math:`\textbf{(2)}` are equivalent in the sense that given a solution to either problem, we can construct a solution to the other of equal or better objective value. In particular, any solution :math:`\bar{x}` of :math:`\textbf{(1)}` can be mapped to a solution :math:`\bar{y}` of :math:`\textbf{(2)}` of equivalent objective value using the transformation :math:`\bar{y}_i := \bar{x}_i / \mu^\top \bar{x}` for :math:`i = 1, \ldots, n`. Conversely, any solution :math:`\bar{y}` of :math:`\textbf{(2)}` can be mapped to a solution :math:`\bar{x}` of :math:`\textbf{(1)}` of equivalent objective value using the transformation :math:`\bar{x}_i := \bar{y}_i / \sum_{j = 1}^n \bar{y}_j` for :math:`i = 1, \ldots, n`.
-
-        Like :math:`\textbf{(1)}`, model :math:`\textbf{(2)}` is non-convex. However, because :math:`\Sigma` is positive semidefinite, maximizing :math:`1 / \sqrt{y^\top \Sigma y}` is equivalent to minimizing :math:`y^\top \Sigma y`. Thus, the optimal solution of :math:`\textbf{(2)}` is equivalent to the optimal solution of the following model:
-
-        .. math::
-            \begin{alignat*}{2}
-                \min_y\ && y^\top \Sigma y \qquad \quad & \\
-                \textrm{s.t.}\enspace && (\mu - r_f)^\top y = {} &1 \qquad \textbf{(3)} \\
-                && y \geq {} &0.
-            \end{alignat*}
-
-        Model :math:`\textbf{(3)}` is convex. In this OptiMod, we solve the convex quadratic program (QP) :math:`\textbf{(3)}`, then map the optimal solution :math:`y^*` back to the original problem :math:`\textbf{(1)}` via the transformation :math:`x^*_i := y^*_i / \sum_{j=1}^n y^*_j` for :math:`i = 1, \ldots, n`.
+    Model :math:`\textbf{(3)}` is convex. In this OptiMod, we solve the convex quadratic program (QP) :math:`\textbf{(3)}`, then map the optimal solution :math:`y^*` back to the original problem :math:`\textbf{(1)}` via the transformation :math:`x^*_i := y^*_i / \sum_{j=1}^n y^*_j` for :math:`i = 1, \ldots, n`.
 
 Interface
 ---------
