@@ -3,11 +3,12 @@ Sharpe Ratio
 ------------
 """
 
+import math
+
 import gurobipy as gp
-from gurobipy import GRB
 import numpy as np
 import pandas as pd
-import math
+from gurobipy import GRB
 
 from gurobi_optimods.utils import optimod
 
