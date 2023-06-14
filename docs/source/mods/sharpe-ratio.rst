@@ -56,7 +56,7 @@ Interface
 
 The ``max_sharpe_ratio`` function requires the following arguments:
 
-* ``cov_matrix``: The covariance matrix :math:`\Sigma`, given as a numpy ndarray or pandas DataFrame (e.g., returned by the `pandas.DataFrame.cov <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.cov.html>`_ method).
+* ``cov_matrix``: The covariance matrix :math:`\Sigma`, given as a numpy ndarray or pandas DataFrame (e.g., returned by the :meth:`pandas.DataFrame.cov` method).
 * ``mu``: The vector of expected returns :math:`\mu`, given as a numpy ndarray or pandas Series.
 
 One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :math:`r_f`. By default, the risk-free rate is 0.
