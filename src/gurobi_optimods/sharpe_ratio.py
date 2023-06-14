@@ -19,16 +19,21 @@ def max_sharpe_ratio(cov_matrix, mu, rf_rate=0, *, create_env):
     Solve the problem of finding a portfolio that maximizes the
     Sharpe ratio.
 
-    :param cov_matrix: 2D positive-semidefinite variance-covariance matrix :math:`\Sigma`
-    :type cov_matrix: :class:`np.ndarray|pd.DataFrame`
-    :param mu: Expected return rates :math:`\mu`
-    :type mu: :class:`np.ndarray|pd.Series`
-    :param rf_rate: Non-negative risk-free rate of return (optional, defaults to ``0``)
-    :type rf_rate: :class:`float` >= 0
-    :return: Portfolio that maximizes the Sharpe ratio
-    :rtype: :class:`np.ndarray|pd.Series`
-    :return: Sharpe ratio of the portfolio
-    :rtype: :class:`float`
+    Parameters
+    ----------
+    cov_matrix : ndarray or DataFrame
+        2D positive-semidefinite variance-covariance matrix :math:`\Sigma`
+    mu : ndarray or Series
+        Expected return rates :math:`\mu`
+    rf_rate : float >= 0, optional
+        Non-negative risk-free rate of return (defaults to ``0``)
+
+    Returns
+    -------
+    portfolio: ndarray or Series
+        Portfolio that maximizes the Sharpe ratio
+    ratio: float
+        Sharpe ratio of the portfolio
     """
     indices = None
 
