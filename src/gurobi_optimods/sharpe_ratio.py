@@ -4,6 +4,8 @@ Sharpe Ratio
 """
 
 import math
+from dataclasses import dataclass
+from typing import Union
 
 import gurobipy as gp
 import numpy as np
@@ -30,10 +32,15 @@ def max_sharpe_ratio(cov_matrix, mu, rf_rate=0, *, create_env):
 
     Returns
     -------
-    portfolio: ndarray or Series
-        Portfolio that maximizes the Sharpe ratio
-    ratio: float
-        Sharpe ratio of the portfolio
+    result : SharpeRatioResult
+        A data class representing the portfolio that maximizes the Sharpe
+        ratio:
+
+        * ``result.x``: The relative portfolio allocations :math:`x`
+        * ``result.sharpe_ratio``: The Sharpe ratio of the portfolio
+        * ``result.ret``: The estimated return :math:`\mu^T x` of the portfolio
+        * ``result.risk``: The estimated risk :math:`x^T \Sigma x` of the
+          portfolio
     """
     indices = None
 
@@ -69,12 +76,12 @@ def max_sharpe_ratio(cov_matrix, mu, rf_rate=0, *, create_env):
             f"No expected returns are greater than risk-free return rate of {rf_rate}"
         )
 
-    portfolio, ratio = _max_sharpe_ratio_numpy(cov_matrix, mu, rf_rate, create_env)
+    result = _max_sharpe_ratio_numpy(cov_matrix, mu, rf_rate, create_env)
 
     if indices is not None:
-        portfolio = pd.Series(data=portfolio, index=indices)
+        result.x = pd.Series(data=result.x, index=indices)
 
-    return portfolio, ratio
+    return result
 
 
 def _max_sharpe_ratio_numpy(cov_matrix, mu, rf_rate, create_env):
@@ -85,5 +92,33 @@ def _max_sharpe_ratio_numpy(cov_matrix, mu, rf_rate, create_env):
 
         model.optimize()
 
-        # Translate solution to original variable space before returning
-        return y.X / y.X.sum(), 1 / math.sqrt(model.ObjVal)
+        # Translate solution to original variable space
+        x = y.X / y.X.sum()
+        ret = mu @ x
+        risk = x @ cov_matrix @ x
+        sharpe_ratio = (ret - rf_rate) / math.sqrt(risk)
+        return SharpeRatioResult(x, sharpe_ratio, ret, risk)
+
+
+@dataclass
+class SharpeRatioResult:
+    """
+    Data class representing the portfolio that maximizes the Sharpe ratio.
+
+
+    Attributes
+    ----------
+    x : ndarray or Series
+        The relative portfolio allocations :math:`x`
+    sharpe_ratio : float
+        The Sharpe ratio of the portfolio
+    ret : float
+        The estimated return :math:`\mu^T x` of the portfolio
+    risk : float
+        The estimated risk :math:`x^T \Sigma x` of the portfolio
+    """
+
+    x: Union[np.ndarray, pd.Series]
+    sharpe_ratio: float
+    ret: float
+    risk: float

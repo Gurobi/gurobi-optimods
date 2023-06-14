@@ -56,8 +56,8 @@ Interface
 
 The ``max_sharpe_ratio`` function requires the following arguments:
 
-* ``cov_matrix``: The covariance matrix :math:`\Sigma`, given as a numpy ndarray or pandas DataFrame (e.g., returned by the :meth:`pandas.DataFrame.cov` method).
-* ``mu``: The vector of expected returns :math:`\mu`, given as a numpy ndarray or pandas Series.
+* ``cov_matrix``: The covariance matrix :math:`\Sigma`, given as a :class:`numpy.ndarray` or :class:`pandas.DataFrame` (e.g., returned by the :meth:`pandas.DataFrame.cov` method).
+* ``mu``: The vector of expected returns :math:`\mu`, given as a :class:`numpy.ndarray` or :class:`pandas.Series`.
 
 One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :math:`r_f`. By default, the risk-free rate is 0.
 
@@ -65,7 +65,7 @@ One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :
 
     .. tab:: ``cov_matrix``
 
-        The covariance matrix :math:`\Sigma`. In the example data, ``cov_matrix`` is provided as a pandas DataFrame:
+        The covariance matrix :math:`\Sigma`. In the example data, ``cov_matrix`` is provided as a :class:`pandas.DataFrame`:
 
         .. doctest:: sharpe-ratio-sigma
             :options: +NORMALIZE_WHITESPACE
@@ -83,7 +83,7 @@ One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :
 
         If the ``cov_matrix`` and ``mu`` arguments passed to the ``max_sharpe_ratio`` function are both pandas objects, their indices should be identical.
 
-        The ``max_sharpe_ratio`` function also accepts the ``cov_matrix`` argument in the form of a numpy ndarray:
+        The ``max_sharpe_ratio`` function also accepts the ``cov_matrix`` argument in the form of a :class:`numpy.ndarray`:
 
         .. doctest:: sharpe-ratio-sigma
             :options: +NORMALIZE_WHITESPACE
@@ -103,7 +103,7 @@ One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :
                     0.04844418]])
 
     .. tab:: ``mu``
-        The expected returns :math:`\mu`. In the example data, ``mu`` is provided as a pandas Series.
+        The expected returns :math:`\mu`. In the example data, ``mu`` is provided as a :class:`pandas.Series`.
 
         .. doctest:: sharpe-ratio-mu
             :options: +NORMALIZE_WHITESPACE
@@ -121,7 +121,7 @@ One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :
 
         If the ``cov_matrix`` and ``mu`` arguments passed to the ``max_sharpe_ratio`` function are both pandas objects, their indices should be identical.
 
-        The ``max_sharpe_ratio`` function also accepts the ``mu`` argument in the form a numpy ndarray:
+        The ``max_sharpe_ratio`` function also accepts the ``mu`` argument in the form a :class:`numpy.ndarray`:
 
         .. doctest:: sharpe-ratio-mu
             :options: +NORMALIZE_WHITESPACE
@@ -130,10 +130,12 @@ One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :
             array([0.38739382, 0.02210171, 0.2336505 , 0.21270397, 0.52249502,
                    0.17467246])
 
-The ``max_sharpe_ratio`` function returns two objects:
+The ``max_sharpe_ratio`` function returns a :class:`~gurobi_optimods.sharpe_ratio.SharpeRatioResult` instance. This object contains information about the computed portfolio. It features the following attributes:
 
-1. The portfolio that maximizes the Sharpe ratio. The values in the portfolio represent the relative weights that should be allocated to each asset. These weights sum to 1. If ``cov_matrix`` and/or ``mu`` were given as a pandas object, the portfolio is a pandas Series. Otherwise, the portfolio is a numpy ndarray.
-2. The Sharpe ratio of the optimal portfolio.
+* ``x``: The portfolio that maximizes the Sharpe ratio. The values in the portfolio represent the relative weights that should be allocated to each asset. These weights sum to 1. If ``cov_matrix`` and/or ``mu`` were given as a pandas object, the portfolio is a :class:`pandas.Series`. Otherwise, the portfolio is a :class:`numpy.ndarray`.
+* ``sharpe_ratio``: The Sharpe ratio of the optimal portfolio.
+* ``ret``: The estimated return of the optimal portfolio.
+* ``risk``: The estimated risk of the optimal portfolio.
 
 Example code
 ------------
@@ -148,9 +150,9 @@ The example code below solves the problem of maximizing the Sharpe ratio for the
     # Load example data
     data = load_sharpe_ratio()
 
-    # Get optimal portfolio and corresponding Sharpe ratio
+    # Compute portfolio that maximizes Sharpe ratio
     # Can pass risk-free rate as third argument; default is 0
-    portfolio, ratio = max_sharpe_ratio(data.cov_matrix, data.mu)
+    portfolio = max_sharpe_ratio(data.cov_matrix, data.mu)
 
 .. testoutput:: sharpe-ratio
     :hide:
@@ -168,7 +170,7 @@ For the example data, the portfolio that maximizes the Sharpe ratio is obtained 
 .. doctest:: sharpe-ratio
     :options: +NORMALIZE_WHITESPACE
 
-    >>> portfolio
+    >>> portfolio.x
     A    4.358499e-01
     B    6.958381e-11
     C    8.004452e-02
@@ -176,15 +178,19 @@ For the example data, the portfolio that maximizes the Sharpe ratio is obtained 
     E    4.841056e-01
     F    2.824517e-08
     dtype: float64
-    >>> ratio
+    >>> portfolio.sharpe_ratio
     1.810906...
+    >>> portfolio.ret
+    0.440490...
+    >>> portfolio.risk
+    0.059167...
 
 Comparison to Monte Carlo simulation
 ------------------------------------
 
 We can compare this optimal portfolio to portfolios acquired via Monte Carlo simulation. In Monte Carlo simluation, a large number of random portfolios are generated. Then, the expected return and standard deviation of the return is calculated for each portfolio using the covariance matrix :math:`\Sigma` and vector of expected returns :math:`\mu`. The portfolio with the highest Sharpe ratio (expected return divided by standard deviation of return) is chosen. The hope is that with enough randomly generated portfolios, at least one of them will have a Sharpe ratio close to optimal.
 
-In the code below, we randomly generate 10000 portfolios for the six assets from the example. Each portfolio is a non-negative vector of length six whose elements sum to 1. We plot each portfolio to visualize the tradeoff between risk and return. To compare these randomly generated portfolios with the one obtained by this OptiMod, we additionally plot the portfolio returned by the ``max_sharpe_ratio`` function using a red star.
+In the code below, we randomly generate 10,000 portfolios for the six assets from the example. Each portfolio is a non-negative vector of length six whose elements sum to 1. We plot each portfolio to visualize the tradeoff between risk and return. To compare these randomly generated portfolios with the one obtained by this OptiMod, we additionally plot the portfolio returned by the ``max_sharpe_ratio`` function using a red star.
 
 .. code-block:: Python
 
@@ -203,17 +209,13 @@ In the code below, we randomly generate 10000 portfolios for the six assets from
     returns = wts @ data.mu
     sharpe_ratios = returns / risks
 
-    # Calculate return and risk for portfolio that maximizes Sharpe ratio
-    opt_risk = np.sqrt(portfolio @ data.cov_matrix @ portfolio)
-    opt_return = portfolio @ data.mu
-
     # Plot the random portfolios and the optimal portfolio
     plt.figure(figsize=(10, 8))
     plt.scatter(risks, returns, c=sharpe_ratios, cmap="plasma")
     plt.colorbar(label="Sharpe ratio")
     plt.xlabel("Risk")
     plt.ylabel("Return")
-    plt.scatter(opt_risk, opt_return, marker="*", c="red", s=200)
+    plt.scatter(portfolio.risk, portfolio.ret, marker="*", c="red", s=200)
 
     plt.show()
 

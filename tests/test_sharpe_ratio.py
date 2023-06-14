@@ -1,10 +1,11 @@
+import math
 import unittest
 
 import numpy as np
 import pandas as pd
 
 from gurobi_optimods.datasets import load_sharpe_ratio
-from gurobi_optimods.sharpe_ratio import max_sharpe_ratio
+from gurobi_optimods.sharpe_ratio import SharpeRatioResult, max_sharpe_ratio
 
 
 class TestSharpeRatio(unittest.TestCase):
@@ -54,34 +55,48 @@ class TestSharpeRatio(unittest.TestCase):
     def test_numpy_inputs(self):
         data = load_sharpe_ratio()
 
-        portfolio, ratio = max_sharpe_ratio(
-            data.cov_matrix.to_numpy(), data.mu.to_numpy()
-        )
-        self.assertIsInstance(portfolio, np.ndarray)
-        self.assertEqual(portfolio.shape, data.mu.to_numpy().shape)
-        self.assertAlmostEqual(portfolio.sum(), 1, delta=1e-6)
-        self.assertIsInstance(ratio, float)
+        pf = max_sharpe_ratio(data.cov_matrix.to_numpy(), data.mu.to_numpy())
+        self.assertIsInstance(pf, SharpeRatioResult)
+        self.assertIsInstance(pf.x, np.ndarray)
+        self.assertIsInstance(pf.sharpe_ratio, float)
+        self.assertIsInstance(pf.ret, float)
+        self.assertIsInstance(pf.risk, float)
+        self.assertEqual(pf.x.shape, data.mu.to_numpy().shape)
+        self.assertAlmostEqual(pf.x.sum(), 1, delta=1e-6)
+        self.assertAlmostEqual(pf.sharpe_ratio, pf.ret / math.sqrt(pf.risk), delta=1e-6)
 
     def test_pandas_inputs(self):
         data = load_sharpe_ratio()
 
-        portfolio, ratio = max_sharpe_ratio(data.cov_matrix, data.mu)
-        self.assertIsInstance(portfolio, pd.Series)
-        self.assertTrue(data.cov_matrix.index.identical(portfolio.index))
-        self.assertAlmostEqual(portfolio.sum(), 1, delta=1e-6)
-        self.assertIsInstance(ratio, float)
+        pf = max_sharpe_ratio(data.cov_matrix, data.mu)
+        self.assertIsInstance(pf, SharpeRatioResult)
+        self.assertIsInstance(pf.x, pd.Series)
+        self.assertIsInstance(pf.sharpe_ratio, float)
+        self.assertIsInstance(pf.ret, float)
+        self.assertIsInstance(pf.risk, float)
+        self.assertTrue(data.cov_matrix.index.identical(pf.x.index))
+        self.assertAlmostEqual(pf.x.sum(), 1, delta=1e-6)
+        self.assertAlmostEqual(pf.sharpe_ratio, pf.ret / math.sqrt(pf.risk), delta=1e-6)
 
-        portfolio, ratio = max_sharpe_ratio(data.cov_matrix, data.mu.to_numpy())
-        self.assertIsInstance(portfolio, pd.Series)
-        self.assertTrue(data.cov_matrix.index.identical(portfolio.index))
-        self.assertAlmostEqual(portfolio.sum(), 1, delta=1e-6)
-        self.assertIsInstance(ratio, float)
+        pf = max_sharpe_ratio(data.cov_matrix, data.mu.to_numpy())
+        self.assertIsInstance(pf, SharpeRatioResult)
+        self.assertIsInstance(pf.x, pd.Series)
+        self.assertIsInstance(pf.sharpe_ratio, float)
+        self.assertIsInstance(pf.ret, float)
+        self.assertIsInstance(pf.risk, float)
+        self.assertTrue(data.cov_matrix.index.identical(pf.x.index))
+        self.assertAlmostEqual(pf.x.sum(), 1, delta=1e-6)
+        self.assertAlmostEqual(pf.sharpe_ratio, pf.ret / math.sqrt(pf.risk), delta=1e-6)
 
-        portfolio, ratio = max_sharpe_ratio(data.cov_matrix.to_numpy(), data.mu)
-        self.assertIsInstance(portfolio, pd.Series)
-        self.assertTrue(data.cov_matrix.index.identical(portfolio.index))
-        self.assertAlmostEqual(portfolio.sum(), 1, delta=1e-6)
-        self.assertIsInstance(ratio, float)
+        pf = max_sharpe_ratio(data.cov_matrix.to_numpy(), data.mu)
+        self.assertIsInstance(pf, SharpeRatioResult)
+        self.assertIsInstance(pf.x, pd.Series)
+        self.assertIsInstance(pf.sharpe_ratio, float)
+        self.assertIsInstance(pf.ret, float)
+        self.assertIsInstance(pf.risk, float)
+        self.assertTrue(data.cov_matrix.index.identical(pf.x.index))
+        self.assertAlmostEqual(pf.x.sum(), 1, delta=1e-6)
+        self.assertAlmostEqual(pf.sharpe_ratio, pf.ret / math.sqrt(pf.risk), delta=1e-6)
 
     def test_mismatched_indices(self):
         data = load_sharpe_ratio()
@@ -97,24 +112,40 @@ class TestSharpeRatio(unittest.TestCase):
     def test_single_asset(self):
         cov_matrix = np.eye(1)
         mu = np.array([0.1])
-        portfolio, ratio = max_sharpe_ratio(cov_matrix, mu)
-        self.assertIsInstance(portfolio, np.ndarray)
-        self.assertEqual(portfolio.shape, (1,))
-        self.assertAlmostEqual(portfolio.sum(), 1, delta=1e-6)
-        self.assertIsInstance(ratio, float)
-        self.assertAlmostEqual(ratio, 0.1 / cov_matrix[0][0] ** 0.5, delta=1e-6)
+        pf = max_sharpe_ratio(cov_matrix, mu)
+        self.assertIsInstance(pf, SharpeRatioResult)
+        self.assertIsInstance(pf.x, np.ndarray)
+        self.assertIsInstance(pf.sharpe_ratio, float)
+        self.assertIsInstance(pf.ret, float)
+        self.assertIsInstance(pf.risk, float)
+        self.assertEqual(pf.x.shape, (1,))
+        self.assertAlmostEqual(pf.x.sum(), 1, delta=1e-6)
+        self.assertAlmostEqual(
+            pf.sharpe_ratio, 0.1 / cov_matrix[0][0] ** 0.5, delta=1e-6
+        )
+        self.assertAlmostEqual(pf.ret, mu[0], delta=1e-6)
+        self.assertAlmostEqual(pf.risk, cov_matrix[0][0], delta=1e-6)
+        self.assertAlmostEqual(pf.sharpe_ratio, pf.ret / math.sqrt(pf.risk), delta=1e-6)
 
     def test_rf_rate(self):
         cov_matrix = np.eye(1)
         mu = np.array([0.1])
         rf_rate = 0.01
-        portfolio, ratio = max_sharpe_ratio(cov_matrix, mu, rf_rate)
-        self.assertIsInstance(portfolio, np.ndarray)
-        self.assertEqual(portfolio.shape, (1,))
-        self.assertAlmostEqual(portfolio.sum(), 1, delta=1e-6)
-        self.assertIsInstance(ratio, float)
+        pf = max_sharpe_ratio(cov_matrix, mu, rf_rate)
+        self.assertIsInstance(pf, SharpeRatioResult)
+        self.assertIsInstance(pf.x, np.ndarray)
+        self.assertIsInstance(pf.sharpe_ratio, float)
+        self.assertIsInstance(pf.ret, float)
+        self.assertIsInstance(pf.risk, float)
+        self.assertEqual(pf.x.shape, (1,))
+        self.assertAlmostEqual(pf.x.sum(), 1, delta=1e-6)
         self.assertAlmostEqual(
-            ratio, (mu[0] - rf_rate) / cov_matrix[0][0] ** 0.5, delta=1e-6
+            pf.sharpe_ratio, (mu[0] - rf_rate) / cov_matrix[0][0] ** 0.5, delta=1e-6
+        )
+        self.assertAlmostEqual(pf.ret, mu[0], delta=1e-6)
+        self.assertAlmostEqual(pf.risk, cov_matrix[0][0], delta=1e-6)
+        self.assertAlmostEqual(
+            pf.sharpe_ratio, (pf.ret - rf_rate) / math.sqrt(pf.risk), delta=1e-6
         )
 
     def test_risk_free_investment_is_best(self):
@@ -132,19 +163,33 @@ class TestSharpeRatio(unittest.TestCase):
     def test_single_asset_with_positive_return(self):
         cov_matrix = np.eye(3)
         mu = np.array([-0.1, -0.01, 0.01])
-        portfolio, ratio = max_sharpe_ratio(cov_matrix, mu)
-        self.assertIsInstance(portfolio, np.ndarray)
-        self.assertEqual(portfolio.shape, (3,))
-        self.assertAlmostEqual(portfolio.sum(), 1, delta=1e-6)
-        self.assertIsInstance(ratio, float)
-        self.assertAlmostEqual(ratio, mu[2] / cov_matrix[0][0] ** 0.5, delta=1e-6)
+        pf = max_sharpe_ratio(cov_matrix, mu)
+        self.assertIsInstance(pf, SharpeRatioResult)
+        self.assertIsInstance(pf.x, np.ndarray)
+        self.assertIsInstance(pf.sharpe_ratio, float)
+        self.assertIsInstance(pf.ret, float)
+        self.assertIsInstance(pf.risk, float)
+        self.assertEqual(pf.x.shape, (3,))
+        self.assertAlmostEqual(pf.x.sum(), 1, delta=1e-6)
+        self.assertAlmostEqual(
+            pf.sharpe_ratio, mu[2] / cov_matrix[0][0] ** 0.5, delta=1e-6
+        )
+        self.assertAlmostEqual(pf.ret, mu[2], delta=1e-6)
+        self.assertAlmostEqual(pf.risk, cov_matrix[0][0], delta=1e-6)
+        self.assertAlmostEqual(pf.sharpe_ratio, pf.ret / math.sqrt(pf.risk), delta=1e-6)
 
     def test_dataset_maximal_ratio(self):
         data = load_sharpe_ratio()
 
-        portfolio, ratio = max_sharpe_ratio(data.cov_matrix, data.mu)
-        self.assertIsInstance(portfolio, pd.Series)
-        self.assertTrue(data.cov_matrix.index.identical(portfolio.index))
-        self.assertAlmostEqual(portfolio.sum(), 1, delta=1e-6)
-        self.assertIsInstance(ratio, float)
-        self.assertAlmostEqual(ratio, 1.8109060196861502, delta=1e-6)
+        pf = max_sharpe_ratio(data.cov_matrix, data.mu)
+        self.assertIsInstance(pf, SharpeRatioResult)
+        self.assertIsInstance(pf.x, pd.Series)
+        self.assertIsInstance(pf.sharpe_ratio, float)
+        self.assertIsInstance(pf.ret, float)
+        self.assertIsInstance(pf.risk, float)
+        self.assertTrue(data.cov_matrix.index.identical(pf.x.index))
+        self.assertAlmostEqual(pf.x.sum(), 1, delta=1e-6)
+        self.assertAlmostEqual(pf.sharpe_ratio, 1.8109060196861502, delta=1e-6)
+        self.assertAlmostEqual(pf.ret, 0.44049074943383937, delta=1e-6)
+        self.assertAlmostEqual(pf.risk, 0.059167301172281334, delta=1e-6)
+        self.assertAlmostEqual(pf.sharpe_ratio, pf.ret / math.sqrt(pf.risk), delta=1e-6)
