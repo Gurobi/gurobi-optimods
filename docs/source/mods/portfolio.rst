@@ -14,7 +14,7 @@ while variances measure the volatility or fluctuation in the asset's returns.
 
 The efficient frontier is a key concept in portfolio optimization. It represents the
 set of portfolios that offer the highest expected returns for a given level of risk.
-This mod returns portfolios on the
+This Mod returns portfolios on the
 efficient frontier given expected returns and variances.
 
 

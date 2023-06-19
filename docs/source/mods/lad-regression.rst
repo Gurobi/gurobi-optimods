@@ -26,9 +26,9 @@ Problem Specification
 
 Scikit-learn's documentation gives a general explanation of `Linear Models
 <https://scikit-learn.org/stable/modules/linear_model.html>`_. The distinction
-between this mod and the Ordinary Least Squares regression from scikit-learn is the
+between this Mod and the Ordinary Least Squares regression from scikit-learn is the
 loss function. ``LADRegression`` chooses coefficients :math:`w` of a linear model
-:math:`y = Xw` to minimize the sum of absolute errors on a training
+:math:`y = Xw` so as to minimize the sum of absolute errors on a training
 dataset :math:`(X, y)`. In other words, it aims to minimize the
 following loss function:
 
@@ -58,7 +58,7 @@ following loss function:
 Example Code
 ------------
 
-This mod implements the fit-predict API used by all predictive models in
+This Mod implements the fit-predict API used by all predictive models in
 scikit-learn (including the :code:`sklearn.linear_model.LinearRegression`
 class). The example below reads in the diabetes dataset from scikit-learn,
 performs a train-test split, fits an LAD regression model to the training data,

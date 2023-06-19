@@ -36,7 +36,7 @@ Documentation
 
 Documentation is a core part of the OptiMods project. All Mods must be
 accompanied by a documentation page explaining their use and providing
-appropriate background information. If new mod features are added, the
+appropriate background information. If new Mod features are added, the
 documentation must reflect the changes.
 
 Development Environment
@@ -55,7 +55,7 @@ To set up your development environment:
 To run the tests:
 
 1. Activate your virtual environment.
-2. Run ``make test``. This command will run the unit tests of all mod
+2. Run ``make test``. This command will run the unit tests of all Mod
    implementations, and the doctests for examples in the documentation.
 
 To build and view the docs:

@@ -7,7 +7,7 @@ is any subset of those edges that have no vertex in common. The goal of
 maximum matching is to find the largest possible such matching in a given
 graph.
 
-In this mod we consider the special case of maximum cardinality matching on
+In this Mod we consider the special case of maximum cardinality matching on
 bipartite graphs, which can be used to solve exclusive assignment
 problems such as the assignment of workers or resources to tasks.
 To give a brief example, if we construct a bipartite graph where one of the
@@ -75,7 +75,7 @@ returned as a sub-graph of the input data structure.
         the adjacency matrix of the graph, where a 1.0 entry in row :math:`u` and
         column :math:`v` indicates an edge :math:`(u,v)`.
         The user must also provide the two disjoint node sets as
-        numpy arrays. The mod will return the adjacency matrix of the matching
+        numpy arrays. The Mod will return the adjacency matrix of the matching
         as a scipy sparse array.
 
         .. testcode:: bipartite_matching_sp
@@ -106,7 +106,7 @@ returned as a sub-graph of the input data structure.
     .. group-tab:: networkx
 
         When given a networkx graph as input, the user must also provide the
-        two disjoint node sets as numpy arrays. The mod will return the matching
+        two disjoint node sets as numpy arrays. The Mod will return the matching
         as a networkx graph (a subgraph of the input).
 
         .. testcode:: bipartite_matching_nx
@@ -132,10 +132,10 @@ returned as a sub-graph of the input data structure.
 
     .. group-tab:: pandas
 
-        The mod accepts pandas dataframes as input, where two columns in the
+        The Mod accepts pandas dataframes as input, where two columns in the
         dataframe describe the source and target vertices of an edge. The user
         must also provide the source and target column names as inputs to the
-        mod. The matching will be returned as a subset of the rows in the
+        Mod. The matching will be returned as a subset of the rows in the
         original dataframe, including all columns present in the original
         dataframe, but only those rows corresponding to the maximum matching.
 

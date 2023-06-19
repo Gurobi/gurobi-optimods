@@ -198,7 +198,7 @@ dataset. The dataset can be imported directly in the environment where
     # Load example data
     data = load_workforce()
 
-    # Solve the mod, get back a schedule
+    # Solve the Mod, get back a schedule
     assigned_shifts = solve_workforce_scheduling(
         availability=data.availability,
         shift_requirements=data.shift_requirements,

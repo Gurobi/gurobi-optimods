@@ -71,7 +71,7 @@ such that:
 Code and Inputs
 ---------------
 
-For this mod, one can use input graphs of different types:
+For this Mod, one can use input graphs of different types:
 
 * pandas: using a ``pd.DataFrame``;
 * NetworkX: using a ``nx.DiGraph`` or ``nx.Graph``;

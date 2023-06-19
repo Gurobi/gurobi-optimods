@@ -5,7 +5,7 @@ in combinatorial optimization with ubiquitous applications and connections to
 other problems. Maximum clique, minimum vertex cover, and maximum matching are
 example problems that can be reduced to a maximum independent set problem.
 
-In this mod, we consider the more general problem of the maximum weighted
+In this Mod, we consider the more general problem of the maximum weighted
 independent set (MWIS) which has applications in various fields such as computer
 vision, pattern recognition, molecular structure matching, social network analysis,
 and genome data mapping. To better understand how a theoretical graph theory
@@ -41,7 +41,7 @@ vertex :math:`i \in V` has a positive weight :math:`w_i`. Find a subset :math:`S
 
 .. dropdown:: Background: Optimization Model
 
-    This mod is implemented by formulating a Binary Integer Programming (BIP)
+    This Mod is implemented by formulating a Binary Integer Programming (BIP)
     model and solving it using Gurobi. For each vertex :math:`i \in V`, define a
     binary decision variable :math:`x_i` as below:
 
@@ -60,7 +60,7 @@ vertex :math:`i \in V` has a positive weight :math:`w_i`. Find a subset :math:`S
                             & x_i \in \{0, 1\} & \forall i \in V
         \end{align}
 
-The input data for this mod includes a scipy sparse matrix in CSR format
+The input data for this Mod includes a scipy sparse matrix in CSR format
 representing the graph :math:`G` adjacency matrix (upper triangular) and a
 numpy array representing the weights of the vertices.
 
