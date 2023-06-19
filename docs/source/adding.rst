@@ -20,12 +20,12 @@ reach out to you on the issue to discuss the proposed topic and design.
 A good Mod:
 
 - solves well-known, well-defined problem from a non-optimization field;
-- has a simple interface which shields the user from interacting with gurobipy
+- has a simple interface that shields the user from interacting with gurobipy
   directly;
 - is self-contained, and follows a clean data-in data-out style leaning on
   standard packages from the python ecosystem (``numpy``, ``scipy``, and
   ``pandas`` are our first-class citizens);
-- is accompanied by clear documentation which provides background information
+- is accompanied by clear documentation that provides background information
   for the topic and a formal statement of the problem in the domain language of
   the target user; and
 - includes runnable examples codes and presentation of results in the
@@ -61,7 +61,7 @@ of a mod takes this form::
 
     @optimod()
     def my_mod(data, *, create_env):
-        """An optimod which solves an important problem
+        """An optimod that solves an important problem
 
         :param data: Description of argument
         :type data: Type of argument
@@ -129,7 +129,7 @@ optimods to enable users to quickly reproduce the examples in your documentation
 
 - Any data files should live under a subdirectory
   ``src/gurobi_optimods/data/<mod-name>`` to reduce clutter.
-- The ``gurobi_optimods.datasets`` module should implement a function which
+- The ``gurobi_optimods.datasets`` module should implement a function that
   fetches the dataset.
 
 Submitting a pull request

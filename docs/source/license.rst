@@ -4,9 +4,9 @@ License
 ``gurobi-optimods`` is distributed under the `Apache License 2.0
 <https://www.apache.org/licenses/LICENSE-2.0.txt>`_, meaning you can use, read,
 and modify the code freely within the license terms. However, it depends on a
-commercial package (gurobipy) which requires a license. When installed via pip
+commercial package (gurobipy) that requires a license. When installed via pip
 or conda, gurobipy ships with a :pypi:`limited trial license <gurobipy>` for the
-Gurobi Optimizer which handles models up to a certain size.
+Gurobi Optimizer that handles models up to a certain size.
 
 The example datasets in the documentation can all be solved using this trial
 license, however when using larger input datasets you may encounter the error

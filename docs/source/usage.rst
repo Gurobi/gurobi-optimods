@@ -3,13 +3,13 @@ Usage
 
 The best way to get started with the OptiMods is to try one out! Check out the
 :doc:`gallery` first to find a Mod that suits you. Each Mod comes complete with
-a page of explanatory documentation which provides background on the problem it
+a page of explanatory documentation that provides background on the problem it
 is intended to solve. The docs also include runnable example codes and datasets
 to help get you started.
 
 Note that you may need to install additional dependencies for some examples, as
-they use optional packages which are not direct dependencies of
-``gurobi-optimods``. The quick way to ensure you have a Python environment which
+they use optional packages that are not direct dependencies of
+``gurobi-optimods``. The quickest way to ensure you have a Python environment that
 can execute all the example snippets in the docs is to run the following::
 
    python -m pip install gurobi-optimods[examples]

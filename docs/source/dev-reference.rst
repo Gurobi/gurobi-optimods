@@ -7,7 +7,7 @@ developers who are working on mods.
 The ``@optimod`` decorator
 --------------------------
 
-The ``@optimod`` decorator should be added to any Mod functions which need to
+The ``@optimod`` decorator should be added to any Mod functions that need to
 create Gurobi models. :doc:`adding` provides a template for how to apply the
 decorator. The decorator provides the following arguments automatically:
 
