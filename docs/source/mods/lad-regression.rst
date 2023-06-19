@@ -61,7 +61,7 @@ Example Code
 This Mod implements the fit-predict API used by all predictive models in
 scikit-learn (including the :code:`sklearn.linear_model.LinearRegression`
 class). The example below reads in the diabetes dataset from scikit-learn,
-performs a train-test split, fits an LAD regression model to the training data,
+performs a train-test split, fits a LAD regression model to the training data,
 and creates predictions for the testing data.
 
 .. testcode:: lad_regression
@@ -130,8 +130,8 @@ coefficients found using Ordinary Least Squares (OLS).
     plt.figure(figsize=(8, 4))
     coefficients.plot.bar(ax=plt.gca())
 
-At this stage there isn't much to observe, the chosen coefficients are broadly
-similar.
+At this stage there isn't much to observe; the chosen coefficients are broadly
+similar:
 
 .. figure:: figures/lad-regression-coeffs.png
     :width: 600
@@ -211,7 +211,7 @@ models.
 The figure below compares the model coefficients trained on the original set and
 the outlier training set for each model type. We can see that the OLS model is
 much more significantly affected by the introduction of outliers. The dominant
-coefficients have approximately doubled in some cases,and some smaller
+coefficients have approximately doubled in some cases, and some smaller
 coefficients have even reversed their sign. By comparison, the LAD model is
 almost unchanged by the introduction of these few outliers.
 
