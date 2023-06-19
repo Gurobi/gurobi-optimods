@@ -71,8 +71,10 @@ returned as a sub-graph of the input data structure.
 
     .. group-tab:: scipy.sparse
 
-        When given a scipy sparse array representing the adjacency matrix of
-        the graph, the user must also provide the two disjoint node sets as
+        The bipartite input graph is provided as a scipy sparse array that captures
+        the adjacency matrix of the graph, where a 1.0 entry in row :math:`u` and
+        column :math:`v` indicates an edge :math:`(u,v)`.
+        The user must also provide the two disjoint node sets as
         numpy arrays. The mod will return the adjacency matrix of the matching
         as a scipy sparse array.
 
