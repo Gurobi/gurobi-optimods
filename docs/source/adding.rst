@@ -93,7 +93,7 @@ handle console output and log files consistently across Mods. The standard
 parameters ``verbose`` and ``logfile`` are also handled by the decorator and will
 be included automatically in the API documentation.
 
-If your Mod needs to produce any output, use the in-built python logging call
+If your Mod needs to produce any output, use the built-in python logging call
 ``logger.info``.
 
 You should also include your Mod in the :doc:`api` by adding appropriate
