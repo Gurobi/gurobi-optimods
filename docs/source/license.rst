@@ -9,7 +9,7 @@ or conda, gurobipy ships with a :pypi:`limited trial license <gurobipy>` for the
 Gurobi Optimizer that handles models up to a certain size.
 
 The example datasets in the documentation can all be solved using this trial
-license, however when using larger input datasets you may encounter the error
+license.  When using larger input datasets, you may encounter the error
 "Given data exceeds Gurobi trial license limits". To run the Mod successfully
 with your larger dataset, you will need a full license for Gurobi.
 

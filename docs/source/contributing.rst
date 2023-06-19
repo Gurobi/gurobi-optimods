@@ -1,7 +1,7 @@
 Contributing to OptiMods
 ========================
 
-We welcome contributions from the commumnity: bug fixes, doc corrections,
+We welcome contributions from the community: bug fixes, doc corrections,
 extensions to existing Mods, or development of new Mods. This page describes
 conventions to follow when contributing, and the development process we follow
 for the project, which is applicable to all contributors. For guidelines on
@@ -47,7 +47,7 @@ To set up your development environment:
 1. Create and activate a Python 3.8 virtual environment using your preferred
    tool. We maintain compatibility with Python 3.8 and above, so developing
    using 3.8 locally will ensure your contributions are compatible.
-2. Run ``make develop`` from the top-level of the repository. This command will
+2. Run ``make develop`` from the top level of the repository. This command will
    install (using ``pip``) all packages required to run the unit tests, run the
    doc tests, and build the sphinx documentation. It will also install
    pre-commit hooks to enforce coding standards.
@@ -75,5 +75,5 @@ We use issues and pull requests to manage and review contributions.
 - Minor doc fixes can be submitted directly as pull requests.
 - Bugs should first be reported as issues before submitting a pull request to
   fix them. Use the 'Bug report' issue template.
-- New Mod proposals should first be submitted as issues for discussion, see
+- New Mod proposals should first be submitted as issues for discussion; see
   :doc:`adding` for further details.

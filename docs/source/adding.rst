@@ -28,7 +28,7 @@ A good Mod:
 - is accompanied by clear documentation that provides background information
   for the topic and a formal statement of the problem in the domain language of
   the target user; and
-- includes runnable examples codes and presentation of results in the
+- includes runnable example codes and presentation of results in the
   documentation so users can hit the ground running.
 
 Starting work on a Mod
@@ -112,7 +112,7 @@ include it in the gallery page and toctree when the documentation is built. You
 should also add an icon to the gallery card for your Mod.
 
 Your documentation page must contain example codes that new users can
-immediately used, with presentation of the results included in the documentation
+immediately use, with presentation of the results included in the documentation
 page.
 
 The implementation of the Mod (description of the mathematical model or
