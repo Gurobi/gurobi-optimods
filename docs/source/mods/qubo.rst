@@ -68,7 +68,7 @@ item pairs :math:`i,j` with :math:`i < j`.
 
     .. math::
         \begin{align}
-        \max \quad        & x' Q x = \sum_{i \in I} \sum_{j \in I} q_{ij} x_i x_j & \\
+        \min \quad        & x' Q x = \sum_{i \in I} \sum_{j \in I} q_{ij} x_i x_j & \\
         \mbox{s.t.} \quad & x \in \{0, 1\}^n &
         \end{align}
 
