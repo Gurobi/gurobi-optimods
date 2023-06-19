@@ -10,7 +10,7 @@ To achieve this, portfolio optimization can take into consideration several fact
 including historical data, market trends, and the investor's risk tolerance.
 Expected returns and variances play a crucial role in the process. Expected returns
 estimate the potential gains an investor anticipates from holding a particular asset,
-while variances measure the volatility or fluctuation in the asset's returns.
+while variances measure the volatility or fluctuation in the assets' returns.
 
 The efficient frontier is a key concept in portfolio optimization. It represents the
 set of portfolios that offer the highest expected returns for a given level of risk.
@@ -207,7 +207,7 @@ component analysis can be phrased in this form. See `Efficient frontier(s) with
 cardinality constraints`_ for an example of a synthetic multi-factor model.
 
 Rather than computing the covariance matrix explicitly from the decomposition,
-it is adivised for performance and accuracy reasons to input the individual
+it is recommended for performance and accuracy reasons to input the individual
 factor matrices directly through the ``cov_factors`` keyword argurment as in
 the following example, which mimics a single-factor model:
 
@@ -305,7 +305,7 @@ portfolio value (130-30 strategy), you can do:
     ...
 
 By incorporating leverage, we now obtain an optimal portfolio with three short
-positions, totaling to about 14% of the wealth:
+positions, totaling about 14% of assets:
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -534,7 +534,7 @@ total number of open positions to three can be achieved as follows:
     Presolved: 27 rows, 25 columns, 65 nonzeros
     ...
 
-The returned solution now suggests to trade only the assets "AA", "DD", "HH".
+The returned solution now suggests to trade only the assets "AA", "DD", and "HH".
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
@@ -703,7 +703,7 @@ using at most two trades:
 
 The traded positions are "AA" and "EE", resulting in one-time fees for one
 long, and one short transaction (in sum 0.3% of the total investment).  As
-explained in `One-time transaction fees`_, these fees are accounted by the
+explained in `One-time transaction fees`_, these fees are accounted for within the
 portfolio itself, reducing the total portfolio value as needed:
 
 .. doctest:: mod
