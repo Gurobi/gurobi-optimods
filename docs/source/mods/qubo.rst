@@ -3,25 +3,29 @@ Quadratic Unconstrained Binary Optimization (QUBO)
 
 Many :math:`\mathcal{NP}`-hard discrete optimization problems that naturally
 arise in application fields such as finance, energy, healthcare, and machine learning,
-can be mapped to a quadratically unconstrained binary optimization (QUBO) problem
-(:footcite:t:`kochenberger2014ubqp`), or equivalently to an Ising Hamiltonian
+can be mapped to quadratically unconstrained binary optimization (QUBO) problems
+(:footcite:t:`kochenberger2014ubqp`), or equivalently to Ising Hamiltonians
 (:footcite:t:`lucas2014ising`).
-Examples of such problems are max-cut, graph colouring, partitioning, and maximum
+Examples of such problems include max-cut, graph colouring, partitioning, and maximum
 independent set. A QUBO model is a mixed-integer quadratic program (MIQP) where
 the decision variables are restricted to take binary values and there are no
 explicit constraints.
 
-Since solving optimization problems typically requires significant computing resources,
-research in the development of novel computing architectures designed to solve QUBO problems
-has flourished in recent years (:footcite:t:`johnson2011quantum,matsubara2018ising,farhi2014quantum`).
-Such devices are fast, general-purpose, and power efficient. However, having to
-transform an optimization problem into a QUBO problem which is not as expressive and rich
-as MIP has significant drawbacks. It can make the problem significantly harder by
-penalizing the constraints into the objective function and expanding the solution space
-including both feasible and infeasible solutions. This remains to be an obstacle to the
-practical usage of special-purpose hardware in solving practically relevant optimization
-problems. Therefore, it is more efficient to avoid QUBO translations, if possible, and
-solve the problem as a MIP where the constraints are directly represented.
+Since solving optimization problems typically requires significant
+computing resources, research in the development of novel computing
+architectures designed to solve QUBO problems has flourished in recent
+years
+(:footcite:t:`johnson2011quantum,matsubara2018ising,farhi2014quantum`).
+Such devices are fast, general-purpose, and power efficient. However,
+QUBO is not nearly as expressive as MIP, so expressing an optimization
+problem in QUBO form can have significant drawbacks.  For example,
+constraints have to be modeled using penalties variables, which can
+greatly expand the solution space and significantly increase the
+difficulty of the problem.  While the lack of expressiveness of QUBO
+will probably be a significant barrier for solving general
+optimization problems, there are some problems that map quite nicely
+to QUBO form.  These problems may see a significant performance boost
+as special-purpose approaches improve over time.
 
 
 Problem Specification
