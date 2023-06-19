@@ -14,12 +14,12 @@ can execute all the example snippets in the docs is to run the following::
 
    python -m pip install gurobi-optimods[examples]
 
-Each Mod is designed to be self-contained, with a clean data-in data-out API.
-Munge your data into the appropriate format using Python tools you already know,
-and run the Mod as outlined in its documentation page to get back a solution.
+Each Mod is designed to be self-contained, with a clean data-in, data-out API.
+To solve a problem, munge your data into the appropriate format using Python
+tools you already know, and run the Mod as outlined in its documentation page.
 
 The documentation pages also include details of the mathematical model
-underlying the Mod, should you be interested to learn more about the
+underlying the Mod, should you be interested in learning more about the
 implementation. These details are explained in sections marked "Background". It
 is not necessary to read and understand these sections in order to use the Mod
 effectively. You can also browse :ghsrc:`the Mod source <src/gurobi_optimods>`
