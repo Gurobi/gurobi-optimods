@@ -10,7 +10,7 @@ squares of residuals.
 Though most machine learning practitioners are probably more familiar with OLS,
 LAD was proposed around 50 years earlier :footcite:p:`birkes2011alternative`.
 OLS gained more popularity partly due to the fact that the computations required
-were simpler. In fact, it was the development of linear programming which made
+were simpler. In fact, it was the development of linear programming that made
 LAD computationally manageable :footcite:p:`bloomfield1980least`.
 
 LAD is generally more robust than OLS in that it is more resistant to outliers

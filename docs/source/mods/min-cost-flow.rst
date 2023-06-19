@@ -23,7 +23,7 @@ For a given graph :math:`G` with set of vertices :math:`V` and edges
 - cost: :math:`c_{ij}\in \mathbb{R}`;
 - and capacity: :math:`B_{ij}\in\mathbb{R}`.
 
-Each vertex :math:`i\in V` has a demand :math:`d_i\in\mathbb{R}` which can be
+Each vertex :math:`i\in V` has a demand :math:`d_i\in\mathbb{R}` that can be
 positive (requesting flow), negative (supplying flow), or zero (a transshipment
 node).
 

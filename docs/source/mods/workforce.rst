@@ -22,7 +22,7 @@ are considered equivalent. Workers provide their availability for shifts, and
 rest requirements and minimum work entitlements are handled through upper and
 lower limits, respectively, on the number of shifts a worker is rostered on for
 in the schedule. Optionally, preferences can be provided, in which case the
-scheduler aims to maximize satisfaction by finding a feasible roster which
+scheduler aims to maximize satisfaction by finding a feasible roster that
 maximizes the sum of preference scores of the assigned shifts.
 
 The workforce scheduling Mod takes the following three dataframes as input:
@@ -60,7 +60,7 @@ worker has been assigned to the given shift.
     assigned shift. Shift :math:`s` requires :math:`r_{s}` workers assigned.
     Each worker must be assigned between :math:`l_{w}` and :math:`u_{w}`
     shifts in total. The model is defined on binary variables :math:`x_{ws}`
-    which satisfy the condition
+    that satisfy the condition
 
     .. math::
 
@@ -166,7 +166,7 @@ below show example data for each frame.
     .. tab:: ``worker_limits``
 
         The following example table lists the minimum and maximum number of
-        shifts in the planning period which each worker is entitled to.
+        shifts in the planning period that each worker is entitled to.
 
         .. doctest:: workforce
             :options: +NORMALIZE_WHITESPACE

@@ -3,7 +3,7 @@ Maximum Bipartite Matching
 
 The maximum matching problem is a fundamental problem in graph theory. Given
 a graph, as a set of nodes connected to one another by edges, a matching
-is any subset of those edges which have no vertex in common. The goal of
+is any subset of those edges that have no vertex in common. The goal of
 maximum matching is to find the largest possible such matching of a given
 graph.
 
@@ -14,7 +14,7 @@ To give a brief example, if we construct a bipartite graph where one of the
 bipartite sets represents tasks, and the other workers, then a matching is a
 set of edges each of which assigns one worker to one task. By the properties
 of a matching, each worker is assigned at most one task and each task is
-completed by at most one worker. The maximum cardinality matching is one which
+completed by at most one worker. The maximum cardinality matching is one that
 maximises the number of completed tasks (and workers given work).
 
 .. Figure generated using networkx, see bipartite-matching-figs.py
