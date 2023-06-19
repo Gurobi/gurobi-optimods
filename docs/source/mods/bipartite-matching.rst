@@ -4,12 +4,12 @@ Maximum Bipartite Matching
 The maximum matching problem is a fundamental problem in graph theory. Given
 a graph, as a set of nodes connected to one another by edges, a matching
 is any subset of those edges that have no vertex in common. The goal of
-maximum matching is to find the largest possible such matching of a given
+maximum matching is to find the largest possible such matching in a given
 graph.
 
 In this mod we consider the special case of maximum cardinality matching on
-bipartite graphs. This problem can be applied to solve exclusive assignment
-problems in practice, such as the assignment of workers or resources to tasks.
+bipartite graphs, which can be used to solve exclusive assignment
+problems such as the assignment of workers or resources to tasks.
 To give a brief example, if we construct a bipartite graph where one of the
 bipartite sets represents tasks, and the other workers, then a matching is a
 set of edges each of which assigns one worker to one task. By the properties
@@ -29,9 +29,9 @@ Problem Specification
 
 Consider a bipartite graph :math:`G(U, V, E)`, where :math:`U` and :math:`V`
 are disjoint vertex sets, and the edge set :math:`E \subseteq U \times V`
-joins only between, not within, the sets. A matching on this graph is any
+connects vertices between, not within, the sets. A matching on this graph is any
 subset of edges such that no vertex is incident to more than one edge.
-Equivalently, the matching is a subgraph of :math:`G` where all vertices
+Equivalently, a matching is a subgraph of :math:`G` where all vertices
 have degree at most one. A maximum matching is the largest possible matching
 on :math:`G`.
 
@@ -133,7 +133,7 @@ returned as a sub-graph of the input data structure.
         The mod accepts pandas dataframes as input, where two columns in the
         dataframe describe the source and target vertices of an edge. The user
         must also provide the source and target column names as inputs to the
-        mode. The matching will be returned as a subset of the rows in the
+        mod. The matching will be returned as a subset of the rows in the
         original dataframe, including all columns present in the original
         dataframe, but only those rows corresponding to the maximum matching.
 
