@@ -1,15 +1,15 @@
 Minimum-Cost Flow
 =================
 
-Minimum-cost flow problems are defined on a graph where the goal is to route
-a certain amount of flow in the cheapest way. It is a fundamental flow problem
-as many other graph problems can be modelled using this framework, for example,
-the shortest-path, maximum flow, or matching problems.
+The minimum-cost flow problem routes flow through a graph
+in the cheapest possible way. It is a fundamental problem in graphs;
+many other problems can be modelled in this form,
+including shortest path, maximum flow, matching, etc.
 
-The first algorithm to solve this problem was proposed by Dantzig
-:footcite:p:`dantzig1951application`, :footcite:p:`dantzig1963linear`, called
+The first algorithm to solve this problem, proposed by Dantzig
+:footcite:p:`dantzig1951application` :footcite:p:`dantzig1963linear`, was called
 the `network simplex` (NS) algorithm. Other methods have been proposed since
-then but NS remains one the most efficient approaches. Competitive methods on
+then, but NS remains one the most efficient approaches. Competitive methods on
 larger networks include cost-scaling methods (e.g. variants of the push-relabel
 algorithm by :footcite:t:`goldberg1990finding`). For a more detailed comparison
 see, for example, :footcite:t:`kovacs2015minimum`.
@@ -18,10 +18,10 @@ Problem Specification
 ---------------------
 
 For a given graph :math:`G` with set of vertices :math:`V` and edges
-:math:`E`. Each edge :math:`(i,j)\in E` has the following attributes:
+:math:`E`. Each edge :math:`(i,j)\in E` has the following pair of attributes:
 
 - cost: :math:`c_{ij}\in \mathbb{R}`;
-- and capacity: :math:`B_{ij}\in\mathbb{R}`.
+- capacity: :math:`B_{ij}\in\mathbb{R}`.
 
 Each vertex :math:`i\in V` has a demand :math:`d_i\in\mathbb{R}` that can be
 positive (requesting flow), negative (supplying flow), or zero (a transshipment
@@ -31,7 +31,7 @@ The problem can be stated as finding the flow with minimal total cost
 such that:
 
 - the demand at each vertex is met exactly; and
-- the flow is capacity feasible.
+- the flow respects the capacity limit.
 
 .. dropdown:: Background: Optimization Model
 
@@ -65,7 +65,7 @@ such that:
     request flow from the network (incoming term is larger).
 
     The last constraints ensure non-negativity of the variables and that the
-    capacity per edge is not exceeded.
+    capacity limit on each edge is not exceeded.
 
 
 Code and Inputs
@@ -75,7 +75,7 @@ For this Mod, one can use input graphs of different types:
 
 * pandas: using a ``pd.DataFrame``;
 * NetworkX: using a ``nx.DiGraph`` or ``nx.Graph``;
-* SciPy.sparse: using some ``sp.sparray`` matrices and NumPy's ``np.ndarray``.
+* SciPy.sparse: using ``sp.sparray`` matrices and NumPy's ``np.ndarray``.
 
 An example of these inputs with their respective requirements is shown below.
 
@@ -118,8 +118,9 @@ An example of these inputs with their respective requirements is shown below.
           >>> print(demands)
           [-2  0 -1  1  0  2]
 
-      Three separate sparse matrices including the adjacency matrix, edge
-      capacity and cost, and a single array with the demands per node.
+      Three separate sparse matrices specify the adjacency matrix, the
+      capacity of each edge, and the cost of each edge.
+      A single array specifies the demand at each node.
 
   .. group-tab:: networkx
 
@@ -216,8 +217,8 @@ formats.
             (4, 5)        2.0
 
       The ``min_cost_flow_scipy`` function returns the cost of the solution as
-      well as a ``sp.sparray`` with the edges where the data is the amount of
-      non-zero flow in the solution.
+      well as a ``sp.sparray`` that provides the amount of flow for each
+      edge in the solution (but only for edges with non-zero flow).
 
   .. group-tab:: networkx
 
