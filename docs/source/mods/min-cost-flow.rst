@@ -3,7 +3,7 @@ Minimum-Cost Flow
 
 The minimum-cost flow problem routes flow through a graph
 in the cheapest possible way. It is a fundamental problem in graphs;
-many other problems can be modelled in this form,
+many other graph problems can be modelled in this form,
 including shortest path, maximum flow, matching, etc.
 
 The first algorithm to solve this problem, proposed by Dantzig
