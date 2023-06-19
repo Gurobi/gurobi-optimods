@@ -10,7 +10,7 @@ involved as worker requirements and entitlements become more complex.
 This Mod implements several basic variants of workforce scheduling. The initial
 example is deliberately simple, while later sections progressively add more
 complexity and enforce additional requirements on the generated schedule. If the
-initial example appears too simple for your use-case, please, read on!
+initial example appears too simple for your use case, please, read on!
 
 Problem Specification
 ---------------------

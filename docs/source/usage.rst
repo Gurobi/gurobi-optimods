@@ -28,5 +28,5 @@ to find out how the mathematical models are implemented in code.
 Finally, we welcome contributions of new Mods, bug fixes and new features for
 existing Mods, and improvements to the documentation. This is intended to be a
 community project that grows over time to handle a wide range of optimization
-use-cases across many different fields. See :doc:`contributing` for more
+use cases across many different fields. See :doc:`contributing` for more
 details.
