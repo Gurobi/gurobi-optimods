@@ -39,7 +39,7 @@ def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
         ``nodes1`` must be a column name. If ``graph`` is a networkx graph,
         ``nodes1`` must be a list.
     nodes2 : ndarray or str
-        Nodes in the first bipartite set. If ``graph`` is a scipy sparse matrix,
+        Nodes in the second bipartite set. If ``graph`` is a scipy sparse matrix,
         ``nodes2`` must be a numpy array. If ``graph`` is a pandas dataframe,
         ``nodes2`` must be a column name. If ``graph`` is a networkx graph,
         ``nodes2`` must be a list.

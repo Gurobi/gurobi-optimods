@@ -10,7 +10,7 @@ squares of residuals.
 Though most machine learning practitioners are probably more familiar with OLS,
 LAD was proposed around 50 years earlier :footcite:p:`birkes2011alternative`.
 OLS gained more popularity partly due to the fact that the computations required
-were simpler. In fact, it was the development of linear programming which made
+were simpler. In fact, it was the development of linear programming that made
 LAD computationally manageable :footcite:p:`bloomfield1980least`.
 
 LAD is generally more robust than OLS in that it is more resistant to outliers
@@ -26,9 +26,9 @@ Problem Specification
 
 Scikit-learn's documentation gives a general explanation of `Linear Models
 <https://scikit-learn.org/stable/modules/linear_model.html>`_. The distinction
-between this mod and the Ordinary Least Squares regression from scikit-learn is the
+between this Mod and the Ordinary Least Squares regression from scikit-learn is the
 loss function. ``LADRegression`` chooses coefficients :math:`w` of a linear model
-:math:`y = Xw` to minimize the sum of absolute errors on a training
+:math:`y = Xw` so as to minimize the sum of absolute errors on a training
 dataset :math:`(X, y)`. In other words, it aims to minimize the
 following loss function:
 
@@ -58,10 +58,10 @@ following loss function:
 Example Code
 ------------
 
-This mod implements the fit-predict API used by all predictive models in
+This Mod implements the fit-predict API used by all predictive models in
 scikit-learn (including the :code:`sklearn.linear_model.LinearRegression`
 class). The example below reads in the diabetes dataset from scikit-learn,
-performs a train-test split, fits an LAD regression model to the training data,
+performs a train-test split, fits a LAD regression model to the training data,
 and creates predictions for the testing data.
 
 .. testcode:: lad_regression
@@ -130,8 +130,8 @@ coefficients found using Ordinary Least Squares (OLS).
     plt.figure(figsize=(8, 4))
     coefficients.plot.bar(ax=plt.gca())
 
-At this stage there isn't much to observe, the chosen coefficients are broadly
-similar.
+At this stage there isn't much to observe; the chosen coefficients are broadly
+similar:
 
 .. figure:: figures/lad-regression-coeffs.png
     :width: 600
@@ -211,7 +211,7 @@ models.
 The figure below compares the model coefficients trained on the original set and
 the outlier training set for each model type. We can see that the OLS model is
 much more significantly affected by the introduction of outliers. The dominant
-coefficients have approximately doubled in some cases,and some smaller
+coefficients have approximately doubled in some cases, and some smaller
 coefficients have even reversed their sign. By comparison, the LAD model is
 almost unchanged by the introduction of these few outliers.
 
