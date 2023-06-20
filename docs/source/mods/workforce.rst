@@ -80,8 +80,8 @@ worker has been assigned to the given shift.
                             & x_{ws} \in \lbrace 0, 1 \rbrace & \forall s \in S, w \in W_{s} \\
         \end{alignat}
 
-    The objective computes the total cost of all shift assignments based on
-    worker pay rates. The first constraint ensures that all shifts are
+    The objective computes the total preference of all shift assignments, which
+    we seek to maximize.  The first constraint ensures that all shifts are
     assigned the required number of workers, while the second constraint
     ensures workers are assigned to an acceptable number of shifts.
 
