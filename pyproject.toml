@@ -32,6 +32,10 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
+develop = [
+    "matplotlib",
+    "pillow",
+]
 examples = [
     "networkx",
     "matplotlib",
