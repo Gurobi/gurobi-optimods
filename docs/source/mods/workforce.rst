@@ -3,8 +3,8 @@ Workforce Scheduling
 
 Workforce scheduling is an extremely widely-used application of optimization in
 practice. It involves balancing many competing concerns such as worker
-availability, cost, and preferences, shift coverage requirements, conditions on
-consecutive shifts or rest breaks, etc. Implementation can become quite
+availability, cost, and preferences; shift coverage requirements; conditions on
+consecutive shifts and rest breaks; and so on. Implementation can become quite
 involved as worker requirements and entitlements become more complex.
 
 This Mod implements several basic variants of workforce scheduling. The initial
@@ -45,11 +45,11 @@ When the main function ``solve_workforce_scheduling`` is called, a model is form
 and solved using Gurobi. Workers will be assigned only to shifts they are
 available for, in such a way that all requirements are covered, minimum and
 maximum shift numbers are respected, and the total sum of worker preference
-scores is maximised. If ``preferences=None``, preferences are not considered and any
+scores is maximized. If ``preferences=None``, preferences are not considered and any
 feasible schedule will be returned.
 
-The returned assignment dataframe is a subset of the availability dataframe,
-with the same columns. A row in the returned dataframe specifies that the given
+The returned assignment dataframe is a subset of the rows of the availability
+dataframe. A row present in the returned dataframe specifies that the given
 worker has been assigned to the given shift.
 
 .. dropdown:: Background: Mathematical Model
