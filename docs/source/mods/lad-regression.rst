@@ -3,20 +3,20 @@ Least Absolute Deviation Regression
 
 Least Absolute Deviation (LAD) regression is an alternative to the more commonly
 used Ordinary Least Squares (OLS) regression method. The distinction between the
-two comes down to the error metrics they use when fitted to training data: LAD
+two is the error metric used to fit the predictive model to training data. LAD
 minimizes the sum of absolute residuals, while OLS minimizes the sum of
 squares of residuals.
 
 Though most machine learning practitioners are probably more familiar with OLS,
 LAD was proposed around 50 years earlier :footcite:p:`birkes2011alternative`.
 OLS gained more popularity partly due to the fact that the computations required
-were simpler. In fact, it was the development of linear programming that made
+were simpler. It was the development of linear programming that made
 LAD computationally manageable :footcite:p:`bloomfield1980least`.
 
-LAD is generally more robust than OLS in that it is more resistant to outliers
-in the response variable :footcite:p:`birkes2011alternative`. A large residual
-for a single data point is amplified in its contribution to the loss function in
-OLS, since the residuals are squared. As a result, a single outlier can have a
+LAD is more robust than OLS in that it is more resistant to outliers
+in the response variable :footcite:p:`birkes2011alternative`. In OLS, a large residual
+for a single data point makes an outsized contribution to the loss function
+since the residuals are squared. As a result, a single outlier can have a
 large effect on the fitted coefficients and skew the resulting model. By
 contrast, a large deviation in an individual point has a less extreme effect on
 the linear loss function of LAD.
@@ -26,7 +26,7 @@ Problem Specification
 
 Scikit-learn's documentation gives a general explanation of `Linear Models
 <https://scikit-learn.org/stable/modules/linear_model.html>`_. The distinction
-between this Mod and the Ordinary Least Squares regression from scikit-learn is the
+between this Mod and the Ordinary Least Squares regression algorithm from scikit-learn is the
 loss function. ``LADRegression`` chooses coefficients :math:`w` of a linear model
 :math:`y = Xw` so as to minimize the sum of absolute errors on a training
 dataset :math:`(X, y)`. In other words, it aims to minimize the
@@ -130,7 +130,7 @@ coefficients found using Ordinary Least Squares (OLS).
     plt.figure(figsize=(8, 4))
     coefficients.plot.bar(ax=plt.gca())
 
-At this stage there isn't much to observe; the chosen coefficients are broadly
+At this stage there isn't much to observe; the chosen coefficients are
 similar:
 
 .. figure:: figures/lad-regression-coeffs.png

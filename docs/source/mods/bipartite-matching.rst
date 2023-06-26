@@ -2,20 +2,21 @@ Maximum Bipartite Matching
 ==========================
 
 The maximum matching problem is a fundamental problem in graph theory. Given
-a graph, as a set of nodes connected to one another by edges, a matching
+a graph as a set of nodes connected by edges, a matching
 is any subset of those edges that have no vertex in common. The goal of
-maximum matching is to find the largest possible such matching in a given
+maximum matching is to find the largest possible matching in a given
 graph.
 
 In this Mod we consider the special case of maximum cardinality matching on
-bipartite graphs, which can be used to solve exclusive assignment
-problems such as the assignment of workers or resources to tasks.
-To give a brief example, if we construct a bipartite graph where one of the
-bipartite sets represents tasks, and the other workers, then a matching is a
-set of edges each of which assigns one worker to one task. By the properties
-of a matching, each worker is assigned at most one task and each task is
-completed by at most one worker. The maximum cardinality matching is one that
-maximises the number of completed tasks (and workers given work).
+bipartite graphs. This theoretical problem can be used to solve practical
+problems such as the assignment of workers or resources to tasks. We
+construct a bipartite graph where one of the bipartite sets represents tasks,
+the other represents workers, and an edge exists between a given worker and task
+if the worker may complete that task. A matching then defines an allocation of
+workers to tasks, such that each worker is allocated to at most
+one task and each task is designated to be completed by at most one worker. The
+maximum cardinality matching maximizes the number of completed tasks and,
+consequently, the number of workers who are given work.
 
 .. Figure generated using networkx, see bipartite-matching-figs.py
 .. figure:: figures/bipartite-matching-example.png
@@ -29,8 +30,8 @@ Problem Specification
 
 Consider a bipartite graph :math:`G(U, V, E)`, where :math:`U` and :math:`V`
 are disjoint vertex sets, and the edge set :math:`E \subseteq U \times V`
-connects vertices between, not within, the sets. A matching on this graph is any
-subset of edges such that no vertex is incident to more than one edge.
+connects vertices between, but not within, the sets. A matching on this graph
+is any subset of edges such that no vertex is incident to more than one edge.
 Equivalently, a matching is a subgraph of :math:`G` where all vertices
 have degree at most one. A maximum matching is the largest possible matching
 on :math:`G`.
@@ -41,10 +42,10 @@ on :math:`G`.
     the problem to a minimum-cost flow problem. To do so, we introduce a source
     vertex as a predecessor to all vertices in :math:`U`, and a sink vertex as a
     successor to all vertices in :math:`V`. Giving every edge unit capacity, a
-    maximum matching is found by maximizing flow from the source to the sink. As
-    a min-cost flow, this is equivalent to adding an edge with a negative cost
-    from the sink to the source and assigning zero cost to all other edges. All
-    edges with non-zero flow in the min-cost flow solution are part of the
+    maximum matching is found by maximizing flow from the source to the sink. To
+    create a minimum-cost flow formulation, an edge with negative cost is added
+    from the sink and the source. All other edges are assigned zero cost. All
+    edges with non-zero flow in the minimum-cost flow solution are part of the
     matching.
 
     .. Figure generated using networkx, see bipartite-matching-figs.py
@@ -54,17 +55,18 @@ on :math:`G`.
 
         A maximum flow network for the bipartite matching problem
 
-    We do not describe the mathematical formulation here, see :doc:`/mods/min-cost-flow`
-    for details. The important point to note is that when this continuous model is
-    solved using the simplex algorithm, we are guaranteed to get an integral solution
-    and thus the solution can be used to select a set of edges for the matching.
+    We do not describe the mathematical formulation here; for further details
+    refer to the :doc:`/mods/min-cost-flow` Mod. The important point to note
+    is that solving this continuous model with the simplex algorithm guarantees
+    an integral solution which can therefore be used to select a set of edges
+    for the matching.
 
 Interface
 ---------
 
 The ``maximum_bipartite_matching`` function supports scipy sparse arrays, pandas
 dataframes, and networkx graphs as possible inputs. The user must also provide
-the bipartite partitioning of the input graph. In all cases, the matching is
+the bipartite partitions of the input graph. In all cases, the matching is
 returned as a sub-graph of the input data structure.
 
 .. tabs::
@@ -162,9 +164,8 @@ returned as a sub-graph of the input data structure.
 
 
 The ``maximum_bipartite_matching`` function formulates a linear program for the
-the network flow model corresponding to the given bipartite graph. Since the
-model is formulated as a network flow, Gurobi will in most cases solve the model
-using a network primal simplex algorithm.
+the minimum-cost network flow problem corresponding to the given bipartite graph.
+Gurobi will in most cases solve the model using a network primal simplex algorithm.
 
 Solution
 --------
