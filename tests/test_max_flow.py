@@ -103,6 +103,7 @@ class TestMaxFlow(unittest.TestCase):
         }
         self.assertTrue(check_solution_networkx(sol, [candidate, candidate2]))
 
+    @unittest.skipIf(nx is None, "networkx is not installed")
     def test_empty_networkx(self):
         G = datasets.simple_graph_networkx()
         nx.set_edge_attributes(G, 0, "capacity")

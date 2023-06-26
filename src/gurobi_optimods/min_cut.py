@@ -33,15 +33,15 @@ class MinCutResult:
     ----------
     cut: float
         Cut value of the minimum cut.
-    partition: tuple[set, set]
+    partition: tuple with sets
         Partition of size 2 with cut sets.
-    cutset: set[tuple]
+    cutset: set of tuple
         Cutset with edges.
     """
 
     cut_value: float
-    partition: tuple[set, set]
-    cutset: set[tuple]
+    partition: tuple
+    cutset: set
 
 
 @optimod()
