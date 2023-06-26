@@ -132,7 +132,7 @@ def min_cost_flow_scipy(
     ones = np.ones(edge_source.shape)
     data = np.column_stack((ones * -1.0, ones)).reshape(-1, order="C")
 
-    A = sp.csc_array((data, indices, indptr))
+    A = sp.csc_matrix((data, indices, indptr))
 
     logger.info("Solving min-cost flow with {0} nodes and {1} edges".format(*A.shape))
 

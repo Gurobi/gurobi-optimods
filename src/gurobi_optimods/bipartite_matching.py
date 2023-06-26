@@ -50,7 +50,7 @@ def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
         A subgraph of the original ``graph`` (with the same data type) specifying
         the maximum matching
     """
-    if isinstance(graph, sp.spmatrix):
+    if sp.issparse(graph):
         return _maximum_bipartite_matching_scipy(graph, nodes1, nodes2, create_env)
     elif isinstance(graph, pd.DataFrame):
         return _maximum_bipartite_matching_pandas(graph, nodes1, nodes2, create_env)
@@ -194,7 +194,7 @@ def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
         indptr = np.arange(0, 2 * from_arc.shape[0] + 2, 2)
         ones = np.ones(from_arc.shape)
         data = np.column_stack((ones * -1.0, ones)).reshape(-1, order="C")
-        A = sp.csc_array((data, indices, indptr))
+        A = sp.csc_matrix((data, indices, indptr))
 
         # Solve model with gurobi, return cost and flows
         x = model.addMVar(A.shape[1], lb=0, ub=capacity)
