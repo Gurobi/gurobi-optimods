@@ -24,41 +24,6 @@ from gurobi_optimods.min_cost_flow import (
 logger = logging.getLogger(__name__)
 
 
-@overload
-def max_flow(
-    graph: sp.spmatrix,
-    source: int,
-    sink: int,
-    silent: bool = False,
-    logfile: Optional[str] = None,
-) -> sp.spmatrix:
-    ...
-
-
-@overload
-def max_flow(
-    graph: pd.DataFrame,
-    source: int,
-    sink: int,
-    silent: bool = False,
-    logfile: Optional[str] = None,
-) -> pd.DataFrame:
-    ...
-
-
-if nx is not None:
-
-    @overload
-    def max_flow(
-        graph: nx.Graph,
-        source: int,
-        sink: int,
-        silent: bool = False,
-        logfile: Optional[str] = None,
-    ) -> nx.Graph:
-        ...
-
-
 def max_flow(graph, source: int, sink: int, **kwargs):
     """Solve the maximum flow problem for a given graph.
 
@@ -67,10 +32,10 @@ def max_flow(graph, source: int, sink: int, **kwargs):
     graph : spmatrix or Graph or DataFrame
         A graph, specified either as a scipy.sparse adjacency matrix, networkx
         graph, or pandas dataframe
-    source : int
-        The source (or origin) node for the path.
-    sink : int
-        The sink (or destination) node for the path.
+    source : int or str
+        The source (or origin) node for the maximum flow.
+    sink : int or str
+        The sink (or destination) node for the maximum flow.
 
     Returns
     -------
@@ -87,6 +52,17 @@ def max_flow(graph, source: int, sink: int, **kwargs):
         return _max_flow_networkx(graph, source, sink, **kwargs)
     else:
         raise ValueError(f"Unknown graph type: {type(graph)}")
+
+
+def _remove_dummy_edge(graph, source, sink):
+    if isinstance(graph, sp.spmatrix):
+        graph = graph.tolil()
+        graph = graph[:-1, :]
+    elif isinstance(graph, pd.Series) or isinstance(graph, pd.DataFrame):
+        graph.drop((sink, source), inplace=True)
+    elif nx is not None and isinstance(graph, nx.Graph):
+        graph.remove_edge(sink, source)
+    return graph
 
 
 def _max_flow_pandas(arc_data, source, sink, **kwargs):
@@ -110,14 +86,13 @@ def _max_flow_pandas(arc_data, source, sink, **kwargs):
     demand_data = pd.DataFrame([{"node": source, "demand": 0}]).set_index("node")
     # Solve
     obj, flow = min_cost_flow_pandas(arc_data, demand_data, **kwargs)
-    # Drop dummy edge from solution
-    flow.drop((sink, source), inplace=True)
+    arc_data = _remove_dummy_edge(arc_data, source, sink)
+    flow = _remove_dummy_edge(flow, source, sink)
     return -obj, flow
 
 
 def _max_flow_scipy(G, source, sink, **kwargs):
     # Create new matrix with dummy edge (sink, source)
-    original_shape = G.shape
     max_flow = G.tolil()[[0], :].sum()
     data = np.append(G.data, max_flow)
     from_arc = np.append(G.row, sink)
@@ -132,11 +107,8 @@ def _max_flow_scipy(G, source, sink, **kwargs):
     demands = np.zeros(G.shape[1], dtype=float)
     # Solve
     obj, flow = min_cost_flow_scipy(G, capacities, costs, demands, **kwargs)
-    # Remove dummy edge
-    flow = flow.tolil()
-    # Remove row
-    if flow.shape != original_shape:
-        flow = flow[:-1, :]
+    G = _remove_dummy_edge(G, source, sink)
+    flow = _remove_dummy_edge(flow, source, sink)
     return -obj, sp.coo_matrix(flow)
 
 
@@ -150,6 +122,7 @@ def _max_flow_networkx(G, source, sink, **kwargs):
     G.add_edge(sink, source, cost=-1, capacity=max_flow)
     # Set cost attribute to -1 for all outgoing edges from source
     obj, flow_graph = min_cost_flow_networkx(G, **kwargs)
-    flow_graph.remove_edge(sink, source)
-    G.remove_edge(sink, source)
+    G = _remove_dummy_edge(G, source, sink)
+    if len(flow_graph.edges) > 0:
+        flow_graph = _remove_dummy_edge(flow_graph, source, sink)
     return -obj, flow_graph

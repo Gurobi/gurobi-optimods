@@ -18,6 +18,12 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/icons/lad-regression.png
 
+    .. grid-item-card:: Maximum-Flow/Mininum-Cut
+        :link: mods/max-flow-min-cut
+        :link-type: doc
+        :text-align: center
+        :img-top: mods/figures/max-flow-min-cut.png
+
     .. grid-item-card:: Minimum-Cost Flow
         :link: mods/min-cost-flow
         :link-type: doc

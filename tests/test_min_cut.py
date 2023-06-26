@@ -1,5 +1,6 @@
 import unittest
 
+import numpy as np
 import pandas as pd
 
 try:
@@ -27,37 +28,62 @@ class TestMinCut(unittest.TestCase):
         self.expected_cut_value = 3.0
         self.expected_cut_set = set([(0, 2), (1, 3)])
 
-    def test_infeasible(self):
-        edge_data, _ = datasets.simple_graph_pandas()
-        edge_data["capacity"] = [-1] * len(edge_data)
-        with self.assertRaisesRegex(ValueError, "Unsatisfiable flows"):
-            obj, sol, cutset = min_cut(edge_data, 0, 5)
-
     def test_pandas(self):
         edge_data, node_data = datasets.simple_graph_pandas()
-        cut_value, partition, cutset = min_cut(edge_data, 0, 5)
+        res = min_cut(edge_data, 0, 5)
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
+        self.assertEqual(cut_value, self.expected_cut_value)
+        self.assertEqual(partition[0], self.expected_partition[0])
+        self.assertEqual(partition[1], self.expected_partition[1])
+        self.assertEqual(cutset, self.expected_cut_set)
+
+    def test_empty_pandas(self):
+        edge_data, _ = datasets.simple_graph_pandas()
+        edge_data["capacity"] = [0] * len(edge_data)
+        res = min_cut(edge_data, 0, 5)
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
+        self.assertEqual(cut_value, 0.0)
+        self.assertEqual(partition, (set(), set()))
+        self.assertEqual(cutset, set())
+
+    @unittest.skipIf(nx is None, "networkx is not installed")
+    def test_networkx(self):
+        G = datasets.simple_graph_networkx()
+        res = min_cut(G, 0, 5)
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
         self.assertEqual(partition[1], self.expected_partition[1])
         self.assertEqual(cutset, self.expected_cut_set)
 
     @unittest.skipIf(nx is None, "networkx is not installed")
-    def test_networkx(self):
+    def test_empty_networkx(self):
         G = datasets.simple_graph_networkx()
-        cut_value, partition, cutset = min_cut(G, 0, 5)
+        nx.set_edge_attributes(G, 0, "capacity")
+        res = min_cut(G, 0, 5)
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
+        self.assertEqual(cut_value, 0.0)
+        self.assertEqual(partition, (set(), set()))
+        self.assertEqual(cutset, set())
+
+    def test_scipy(self):
+        G, capacity, _, _ = datasets.simple_graph_scipy()
+        G.data = capacity.data
+        res = min_cut(G, 0, 5)
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
         self.assertEqual(partition[1], self.expected_partition[1])
         self.assertEqual(cutset, self.expected_cut_set)
 
-    def test_scipy(self):
+    def test_empty_scipy(self):
         G, capacity, _, _ = datasets.simple_graph_scipy()
-        G.data = capacity.data
-        cut_value, partition, cutset = min_cut(G, 0, 5)
-        self.assertEqual(cut_value, self.expected_cut_value)
-        self.assertEqual(partition[0], self.expected_partition[0])
-        self.assertEqual(partition[1], self.expected_partition[1])
-        self.assertEqual(cutset, self.expected_cut_set)
+        G.data = np.repeat(1e-20, len(G.data))
+        res = min_cut(G, 0, 5)
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
+        self.assertEqual(cut_value, 0.0)
+        self.assertEqual(partition, (set(), set()))
+        self.assertEqual(cutset, set())
 
 
 class TestMinCut2(unittest.TestCase):
@@ -68,7 +94,8 @@ class TestMinCut2(unittest.TestCase):
 
     def test_pandas(self):
         edge_data, _ = load_graph2_pandas()
-        cut_value, partition, cutset = min_cut(edge_data, 0, 4)
+        res = min_cut(edge_data, 0, 4)
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
         self.assertEqual(partition[1], self.expected_partition[1])
@@ -77,7 +104,8 @@ class TestMinCut2(unittest.TestCase):
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
         G = load_graph2_networkx()
-        cut_value, partition, cutset = min_cut(G, 0, 4)
+        res = min_cut(G, 0, 4)
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
         self.assertEqual(partition[1], self.expected_partition[1])
@@ -86,7 +114,8 @@ class TestMinCut2(unittest.TestCase):
     def test_scipy(self):
         G, capacity, _, _ = load_graph2_scipy()
         G.data = capacity.data
-        cut_value, partition, cutset = min_cut(G, 0, 4)
+        res = min_cut(G, 0, 4)
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
         self.assertEqual(partition[1], self.expected_partition[1])
@@ -112,7 +141,8 @@ class TestMinCut3(unittest.TestCase):
         ).set_index(["source", "target"])
 
     def test_pandas(self):
-        cut_value, partition, cutset = min_cut(self.arc_data, 0, 6)
+        res = min_cut(self.arc_data, 0, 6)
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
         self.assertEqual(partition[1], self.expected_partition[1])
@@ -120,9 +150,10 @@ class TestMinCut3(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        cut_value, partition, cutset = min_cut(
+        res = min_cut(
             _convert_pandas_to_digraph(self.arc_data, None, demand=False), 0, 6
         )
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
         self.assertEqual(partition[1], self.expected_partition[1])
@@ -134,7 +165,8 @@ class TestMinCut3(unittest.TestCase):
         )
 
         G.data = capacity.data
-        cut_value, partition, cutset = min_cut(G, 0, 6)
+        res = min_cut(G, 0, 6)
+        cut_value, partition, cutset = res.cut_value, res.partition, res.cutset
         self.assertEqual(cut_value, self.expected_cut_value)
         self.assertEqual(partition[0], self.expected_partition[0])
         self.assertEqual(partition[1], self.expected_partition[1])

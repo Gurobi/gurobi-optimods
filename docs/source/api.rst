@@ -11,7 +11,7 @@ API Reference
    :members: min_cost_flow_pandas, min_cost_flow_networkx, min_cost_flow_scipy
 
 .. automodule:: gurobi_optimods.min_cut
-   :members: min_cut
+   :members: min_cut, MinCutResult
 
 .. automodule:: gurobi_optimods.mwis
    :members: maximum_weighted_independent_set

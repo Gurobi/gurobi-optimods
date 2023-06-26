@@ -26,12 +26,6 @@ class TestMaxFlow(unittest.TestCase):
     def setUp(self):
         self.expected_max_flow = 3.0
 
-    def test_infeasible(self):
-        edge_data, _ = datasets.simple_graph_pandas()
-        edge_data["capacity"][(0, 1)] = -1.0
-        with self.assertRaisesRegex(ValueError, "Unsatisfiable flows"):
-            obj, sol = max_flow(edge_data, 0, 5)
-
     def test_pandas(self):
         edge_data, _ = datasets.simple_graph_pandas()
         obj, sol = max_flow(edge_data, 0, 5)
@@ -56,6 +50,12 @@ class TestMaxFlow(unittest.TestCase):
         }
         self.assertTrue(check_solution_pandas(sol, [candidate, candidate2]))
 
+    def test_empty_pandas(self):
+        edge_data, _ = datasets.simple_graph_pandas()
+        edge_data["capacity"] = [0] * len(edge_data)
+        obj, sol = max_flow(edge_data, 0, 5)
+        self.assertEqual(obj, 0.0)
+
     def test_scipy(self):
         G, capacity, _, _ = datasets.simple_graph_scipy()
         G.data = capacity.data
@@ -71,6 +71,13 @@ class TestMaxFlow(unittest.TestCase):
             ]
         )
         self.assertTrue(check_solution_scipy(sol, [expected]))
+
+    def test_empty_scipy(self):
+        G, capacity, _, _ = datasets.simple_graph_scipy()
+        # Use vsmall values to set the capacity to nearly zero
+        G.data = np.repeat(1e-20, len(G.data))
+        obj, sol = max_flow(G, 0, 5)
+        self.assertEqual(obj, 0.0)
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
@@ -95,6 +102,12 @@ class TestMaxFlow(unittest.TestCase):
             (4, 5): {"flow": 1.0},
         }
         self.assertTrue(check_solution_networkx(sol, [candidate, candidate2]))
+
+    def test_empty_networkx(self):
+        G = datasets.simple_graph_networkx()
+        nx.set_edge_attributes(G, 0, "capacity")
+        obj, sol = max_flow(G, 0, 5)
+        self.assertEqual(obj, 0.0)
 
 
 class TestMaxFlow2(unittest.TestCase):

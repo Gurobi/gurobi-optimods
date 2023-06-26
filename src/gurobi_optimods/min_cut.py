@@ -4,7 +4,7 @@ Minimum Cut
 """
 
 import logging
-from typing import Optional, overload
+from dataclasses import dataclass
 
 import gurobipy as gp
 import gurobipy_pandas as gppd
@@ -18,68 +18,51 @@ try:
 except ImportError:
     nx = None
 
+from gurobi_optimods.max_flow import _remove_dummy_edge
 from gurobi_optimods.utils import optimod
 
 logger = logging.getLogger(__name__)
 
 
-@overload
-def min_cut(
-    graph: sp.spmatrix,
-    source: int,
-    sink: int,
-    silent: bool = False,
-    logfile: Optional[str] = None,
-) -> sp.spmatrix:
-    ...
+@dataclass
+class MinCutResult:
+    """
+    Solution to a Minimum-cut problem.
 
+    Attributes
+    ----------
+    cut: float
+        Cut value of the minimum cut.
+    partition: tuple[set, set]
+        Partition of size 2 with cut sets.
+    cutset: set[tuple]
+        Cutset with edges.
+    """
 
-@overload
-def min_cut(
-    graph: pd.DataFrame,
-    source: int,
-    sink: int,
-    silent: bool = False,
-    logfile: Optional[str] = None,
-) -> pd.DataFrame:
-    ...
-
-
-if nx is not None:
-
-    @overload
-    def min_cut(
-        graph: nx.Graph,
-        source: int,
-        sink: int,
-        silent: bool = False,
-        logfile: Optional[str] = None,
-    ) -> nx.Graph:
-        ...
+    cut_value: float
+    partition: tuple[set, set]
+    cutset: set[tuple]
 
 
 @optimod()
-def min_cut(graph, source: int, sink: int, *, create_env):
+def min_cut(graph, source, sink, *, create_env):
     """Solve the minimum cut problem for a given graph.
 
     Parameters
     ----------
-    graph : spmatrix or Graph or DataFrame
+    graph : scipy matrix or networkx graph or pandas dataframe
         A graph, specified either as a scipy.sparse adjacency matrix, networkx
         graph, or pandas dataframe
-    source : int
-        The source (or origin) node for the path.
-    sink : int
-        The sink (or destination) node for the path.
+    source : int or str
+        The source (or origin) node for the cutset.
+    sink : int or str
+        The sink (or destination) node for the cutset.
 
     Returns
     -------
-    cut: float
-        Cut value of the minimum cut.
-    partition: tuple[set[int], set[int]]
-        Partition of size 2 with cut sets.
-    cutset: set[tuple[int, int]]
-        Cutset with edges.
+    min_cut_result: MinCutResult
+        A dataclass containing the cut value, and set of nodes and edges in the
+        minimum cut.
     """
     if isinstance(graph, sp.spmatrix):
         return _min_cut_scipy(graph, source, sink, create_env)
@@ -131,15 +114,19 @@ def _min_cut_pandas(arc_data, source, sink, create_env):
             f"{len(arc_data)-1} edges"
         )
         model.optimize()
+        _remove_dummy_edge(arc_data, source, sink)
 
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
 
         # Construct partition and cutset
-
         cap_pi = capacity_constrs.gppd.Pi
 
-        cutset = set([a for a in arc_data.index if cap_pi[a] > 1e-3])
+        # Find edges in the cutset (excluding the dummy (sink, source) edge.
+        cutset = set([a for a in arc_data.index if cap_pi[a] > 1e-3 if a[0] != sink])
+
+        if len(cutset) == 0:  # No arc in the cutset
+            return MinCutResult(0.0, (set(), set()), set())
 
         p1 = set()
         queue = [source]
@@ -155,11 +142,12 @@ def _min_cut_pandas(arc_data, source, sink, create_env):
                 ]
             )
         p2 = set([n for n in balance_df.index if n not in p1])
-        return model.ObjVal, (p1, p2), cutset
+        return MinCutResult(model.ObjVal, (p1, p2), cutset)
 
 
 def _min_cut_scipy(G, source, sink, create_env):
     # Create new matrix with dummy edge (sink, source)
+    original_shape = G.shape
     max_flow = G.tolil()[[0], :].sum()
 
     data = np.append(G.data, max_flow)
@@ -194,8 +182,9 @@ def _min_cut_scipy(G, source, sink, create_env):
         x = model.addMVar(A.shape[1], lb=0, obj=costs, name="x")
         model.update()
         cap = model.addConstr(x <= capacities, name="capacity")
-        flow = model.addMConstr(A, x, GRB.EQUAL, demands, name="flow")
+        model.addMConstr(A, x, GRB.EQUAL, demands, name="flow")
         model.optimize()
+        _remove_dummy_edge(G, source, sink)
 
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
@@ -205,8 +194,15 @@ def _min_cut_scipy(G, source, sink, create_env):
 
         p1 = set()
         cutset = set(
-            [(i, j) for n, (i, j) in enumerate(zip(G.row, G.col)) if cap_pi[n] > 1e-3]
+            [
+                (i, j)
+                for n, (i, j) in enumerate(zip(G.row, G.col))
+                if cap_pi[n] > 1e-3 and i != sink
+            ]
         )
+        if len(cutset) == 0:  # No arc in the cutset
+            return MinCutResult(0.0, (set(), set()), set())
+
         queue = [source]
         while len(queue) > 0:
             node = queue.pop()
@@ -221,7 +217,7 @@ def _min_cut_scipy(G, source, sink, create_env):
                 ]
             )
         p2 = set([n for n in range(G.shape[1]) if n not in p1])
-        return model.ObjVal, (p1, p2), cutset
+        return MinCutResult(model.ObjVal, (p1, p2), cutset)
 
 
 def _min_cut_networkx(G, source, sink, create_env):
@@ -264,13 +260,21 @@ def _min_cut_networkx(G, source, sink, create_env):
         }
 
         model.optimize()
-        G.remove_edge(sink, source)
+        _remove_dummy_edge(G, source, sink)
 
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
 
         # Construct partition and cutset
-        cutset = set([(i, j) for (i, j) in edges if capacity_constrs[i, j].Pi > 1e-3])
+        cutset = set(
+            [
+                (i, j)
+                for (i, j) in edges
+                if capacity_constrs[i, j].Pi > 1e-3 and i != sink
+            ]
+        )
+        if len(cutset) == 0:
+            return MinCutResult(0.0, (set(), set()), set())
 
         p1 = set()
         queue = [source]
@@ -286,4 +290,4 @@ def _min_cut_networkx(G, source, sink, create_env):
                 ]
             )
         p2 = set([n for n in G.nodes if n not in p1])
-        return model.ObjVal, (p1, p2), cutset
+        return MinCutResult(model.ObjVal, (p1, p2), cutset)
