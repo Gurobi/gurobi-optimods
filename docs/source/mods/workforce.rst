@@ -49,7 +49,7 @@ scores is maximized. If ``preferences=None``, preferences are not considered and
 feasible schedule will be returned.
 
 The returned assignment dataframe is a subset of the rows of the availability
-dataframe. A row present in the returned dataframe specifies that the given
+dataframe. The presence of a row in the returned dataframe signifies that the given
 worker has been assigned to the given shift.
 
 .. dropdown:: Background: Mathematical Model
