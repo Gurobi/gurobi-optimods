@@ -26,7 +26,7 @@ issue.
 
 Full details regarding coding standards, setting up a development environment,
 and continuous integration testing can be found in our
-[online documentation](https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/latest/contributing.html).
+[online documentation](https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/stable/contributing.html).
 
 After a pull request is submitted, the tests will be run automatically, and the
 status will appear on the pull request page. If the tests failed, there is a
