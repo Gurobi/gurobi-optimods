@@ -28,6 +28,7 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinxcontrib.bibtex",
+    "versionwarning.extension",
 ]
 
 pygments_style = "vs"
@@ -81,6 +82,14 @@ numpydoc_xref_aliases = {
 }
 numpydoc_xref_ignore = {"optional", "or", "of"}
 
+# -- sphinx-version-warning config
+
+versionwarning_messages = {
+    "latest": (
+        "This document is for the development version. "
+        'For the stable version documentation, see <a href="/en/stable/">here</a>.'
+    ),
+}
 
 # -- Docstring preprocessing for autodoc
 
