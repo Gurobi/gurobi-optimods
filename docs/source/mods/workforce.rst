@@ -3,8 +3,8 @@ Workforce Scheduling
 
 Workforce scheduling is an extremely widely-used application of optimization in
 practice. It involves balancing many competing concerns such as worker
-availability, cost, and preferences, shift coverage requirements, conditions on
-consecutive shifts or rest breaks, etc. Implementation can become quite
+availability, cost, and preferences; shift coverage requirements; conditions on
+consecutive shifts and rest breaks; and so on. Implementation can become quite
 involved as worker requirements and entitlements become more complex.
 
 This Mod implements several basic variants of workforce scheduling. The initial
@@ -17,7 +17,7 @@ Problem Specification
 
 This first example covers a simple case for a business developing a two-week
 roster. Each shift requires a given number of workers who have identical skills
-and productivity. In other words, any work can cover any shift, and all workers
+and productivity. In other words, any worker can cover any shift, and all workers
 are considered equivalent. Workers provide their availability for shifts.
 Rest requirements and minimum work entitlements are handled through upper and
 lower limits, respectively, on the number of shifts a worker is rostered on
@@ -41,15 +41,15 @@ The workforce scheduling Mod takes the following three pandas dataframes as inpu
   number of shifts the given worker may be assigned in the schedule. There
   must be one row for every unique worker mentioned in ``availability["Worker"]``.
 
-When ``solve_workforce_scheduling`` is called, a model is formulated and solved
-immediately using Gurobi. Workers will be assigned only to shifts they are
+When the main function ``solve_workforce_scheduling`` is called, a model is formulated
+and solved using Gurobi. Workers will be assigned only to shifts they are
 available for, in such a way that all requirements are covered, minimum and
 maximum shift numbers are respected, and the total sum of worker preference
-scores is maximised. If ``preferences=None``, preferences are not considered and any
+scores is maximized. If ``preferences=None``, preferences are not considered and any
 feasible schedule will be returned.
 
-The returned assignment dataframe is a subset of the availability dataframe,
-with the same columns. A row in the returned dataframe specifies that the given
+The returned assignment dataframe is a subset of the rows of the availability
+dataframe. The presence of a row in the returned dataframe signifies that the given
 worker has been assigned to the given shift.
 
 .. dropdown:: Background: Mathematical Model
@@ -60,7 +60,7 @@ worker has been assigned to the given shift.
     assigned shift. Shift :math:`s` requires :math:`r_{s}` workers assigned.
     Each worker must be assigned between :math:`l_{w}` and :math:`u_{w}`
     shifts in total. The model is defined on binary variables :math:`x_{ws}`
-    that satisfy the condition
+    that represent shift assignments as follows:
 
     .. math::
 
@@ -80,7 +80,7 @@ worker has been assigned to the given shift.
                             & x_{ws} \in \lbrace 0, 1 \rbrace & \forall s \in S, w \in W_{s} \\
         \end{alignat}
 
-    The objective computes the total preference of all shift assignments, which
+    The objective computes the total preference value of all shift assignments, which
     we seek to maximize.  The first constraint ensures that all shifts are
     assigned the required number of workers, while the second constraint
     ensures workers are assigned to an acceptable number of shifts.
@@ -188,7 +188,7 @@ below show example data for each frame.
         and :math:`u_w`.
 
 The example code below solves the workforce scheduling problem for the above
-dataset. The dataset can be imported from the ``gurobi-optimods.datasets`` module.
+dataset. The dataset is imported from the ``gurobi-optimods.datasets`` module.
 
 .. testcode:: workforce
 
@@ -350,8 +350,8 @@ set to ``True`` to enforce the new requirement.
     2023-05-13     Y      Y       Y       Y    Y       Y       Y
     2023-05-14     -      Y       Y       Y    Y       Y       -
 
-Notice that Siva's shifts have been adjusted so as to avoid any worker working
-more than five consecutive days.
+Notice that Siva's shifts have been adjusted to meet the requirement that
+not worker should work five or more consecutive days.
 
 Further Requirements
 --------------------
@@ -359,7 +359,7 @@ Further Requirements
 As mentioned in the introduction, this Mod implements some basic cases of
 workforce scheduling, and is limited in scope. However, similar modelling
 approaches to those described here can be applied to handle more complex
-requirements. For further information, see :footcite:t:`ERNST20043` (among many,
-many other references on the topic).
+requirements. For further information, see :footcite:t:`ERNST20043` (one
+among many references on the topic).
 
 .. footbibliography::
