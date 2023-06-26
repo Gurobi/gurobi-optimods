@@ -50,7 +50,7 @@ def min_cut(graph, source, sink, *, create_env):
 
     Parameters
     ----------
-    graph : scipy matrix or networkx graph or pandas dataframe
+    graph : spmatrix or Graph or DataFrame
         A graph, specified either as a scipy.sparse adjacency matrix, networkx
         graph, or pandas dataframe
     source : int or str
