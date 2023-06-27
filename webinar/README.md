@@ -1,3 +1,22 @@
+# Simple one-pager
+
+From this directory, start these two processes:
+
+```
+python -m jupyter notebook --config jupyter_notebook_config.py
+python -m http.server -d pages
+```
+
+then navigate to `http://localhost:8000/empty.html`.
+
+Open as a chrome app for a tidier view:
+
+```
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --app='http://localhost:8000/empty.html'
+```
+
+# Over-complicated Quarto setup
+
 ## Requirements
 
 Any virtualenv with
