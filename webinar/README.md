@@ -23,7 +23,7 @@ python -m jupyter notebook --config jupyter_notebook_config.py
 Start quarto (the port is important, jupyter is configured to allow embedding from localhost:8000):
 
 ```
-quarto preview /Users/bowly/workspaces/optimods/demo/slides.qmd --port 8000 --no-browser
+quarto preview slides.qmd --port 8000 --no-browser
 ```
 
 Open as a chrome app for a tidier view
