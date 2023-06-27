@@ -1,0 +1,25 @@
+.fullpage, html, body {
+  height: 100%;
+}
+
+.fullpage {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebyside {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.notebookwindow {
+  flex: 1;
+  height: 100%;
+}
+
+.docswindow {
+  width: 600px;
+  height: 100%;
+}
