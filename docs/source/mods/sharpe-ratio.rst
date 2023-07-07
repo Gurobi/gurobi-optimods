@@ -49,7 +49,7 @@ Our goal is to find an investment portfolio that maximizes
             && y \geq {} &0.
         \end{alignat*}
 
-    Model :math:`\textbf{(3)}` is convex. In this OptiMod, we solve the convex quadratic program (QP) :math:`\textbf{(3)}`, then map the optimal solution :math:`y^*` back to the original problem :math:`\textbf{(1)}` via the transformation
+    Model :math:`\textbf{(3)}` is convex. In this OptiMod, we solve the convex quadratic program :math:`\textbf{(3)}`, then map the optimal solution :math:`y^*` back to the original problem :math:`\textbf{(1)}` via the transformation
 
     .. math::
         \begin{align*}
