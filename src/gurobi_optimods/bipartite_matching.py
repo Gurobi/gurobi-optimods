@@ -39,7 +39,7 @@ def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
         ``nodes1`` must be a column name. If ``graph`` is a networkx graph,
         ``nodes1`` must be a list.
     nodes2 : ndarray or str
-        Nodes in the first bipartite set. If ``graph`` is a scipy sparse matrix,
+        Nodes in the second bipartite set. If ``graph`` is a scipy sparse matrix,
         ``nodes2`` must be a numpy array. If ``graph`` is a pandas dataframe,
         ``nodes2`` must be a column name. If ``graph`` is a networkx graph,
         ``nodes2`` must be a list.
@@ -50,7 +50,7 @@ def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
         A subgraph of the original ``graph`` (with the same data type) specifying
         the maximum matching
     """
-    if isinstance(graph, sp.spmatrix):
+    if sp.issparse(graph):
         return _maximum_bipartite_matching_scipy(graph, nodes1, nodes2, create_env)
     elif isinstance(graph, pd.DataFrame):
         return _maximum_bipartite_matching_pandas(graph, nodes1, nodes2, create_env)
@@ -194,7 +194,7 @@ def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
         indptr = np.arange(0, 2 * from_arc.shape[0] + 2, 2)
         ones = np.ones(from_arc.shape)
         data = np.column_stack((ones * -1.0, ones)).reshape(-1, order="C")
-        A = sp.csc_array((data, indices, indptr))
+        A = sp.csc_matrix((data, indices, indptr))
 
         # Solve model with gurobi, return cost and flows
         x = model.addMVar(A.shape[1], lb=0, ub=capacity)
