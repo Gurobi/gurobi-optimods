@@ -126,8 +126,8 @@ def lpformulator_ac_create_vars(alldata, model):
                 f"Broken assumption 1: branch j {j} f {f} t {t} minanglerad {branch.minangle_rad} maxanglerad {branch.maxangle_rad}."
             )
 
-        ubound = ubasic = maxprod
-        lbound = lbasic = -maxprod
+        ubound = maxprod
+        lbound = -maxprod
         maxanglerad = branch.maxangle_rad
         minanglerad = branch.minangle_rad
 
@@ -499,7 +499,7 @@ def lpformulator_ac_create_efvars(alldata, model):
 
     numbuses = alldata["numbuses"]
     buses = alldata["buses"]
-    IDtoCountmap = alldata["IDtoCountmap"]
+    alldata["IDtoCountmap"]
     efvarcount = 0
 
     logger.info("  Creating e, f variables.")
@@ -832,7 +832,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         if bus.Gs != 0:
             expr.add(bus.Gs * cvar[bus])
 
-        if alldata["branchswitching_comp"] == False:
+        if alldata["branchswitching_comp"] is False:
             for branchid in bus.frombranchids.values():
                 expr.add(Pvar_f[branches[branchid]])
 
@@ -863,7 +863,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         if bus.Bs != 0:
             expr.add(-bus.Bs * cvar[bus])
 
-        if alldata["branchswitching_comp"] == False:
+        if alldata["branchswitching_comp"] is False:
             for branchid in bus.frombranchids.values():
                 expr.add(Qvar_f[branches[branchid]])
 
@@ -920,7 +920,7 @@ def lpformulator_ac_create_constraints(alldata, model):
     for j in range(1, 1 + numbranches):
         branch = branches[j]
 
-        if not branch.status or branch.unboundedlimit == True:
+        if not branch.status or branch.unboundedlimit is True:
             continue
 
         f = branch.f
@@ -944,7 +944,7 @@ def lpformulator_ac_create_constraints(alldata, model):
     logger.info(f"    {count} branch limits added.")
 
     # JABR.
-    if alldata["skipjabr"] == False:
+    if alldata["skipjabr"] is False:
         logger.info("  Adding Jabr constraints.")
         count = 0
         for j in range(1, 1 + numbranches):
@@ -968,7 +968,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         logger.info("  Skipping Jabr inequalities.")
 
     # Active loss constraints.
-    if alldata["useactivelossineqs"] == True:
+    if alldata["useactivelossineqs"] is True:
         logger.info("  Adding active loss constraints.")
         count = 0
         for j in range(1, 1 + numbranches):
@@ -1250,7 +1250,7 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
             xbuffer[fvar[bus]] = bus.inputf
         logger.info("Derived e, f values.")
 
-    if alldata["dopolar"] == False:
+    if alldata["dopolar"] is False:
         for j in range(1, numbuses + 1):
             bus = buses[j]
             xbuffer[cvar[bus]] = bus.inpute * bus.inpute + bus.inputf * bus.inputf
@@ -1389,7 +1389,7 @@ def lpformulator_ac_strictchecker(alldata, model):
     Vmagviol = alldata["violation"]["Vmagviol"] = {}
     IPviol = alldata["violation"]["IPviol"] = {}
     IQviol = alldata["violation"]["IQviol"] = {}
-    branchlimitviol = alldata["violation"]["branchlimit"] = {}
+    alldata["violation"]["branchlimit"] = {}
     for j in range(1, numbuses + 1):
         bus = buses[j]
         alldata["violation"][bus] = {}
@@ -1629,8 +1629,8 @@ def lpformulator_ac_strictchecker(alldata, model):
                 myPubound += gens[gencounter].Pmax
                 myPlbound += gens[gencounter].Pmin
 
-        minnetgen = myPlbound - bus.Pd
-        maxnetgen = myPubound - bus.Pd
+        myPlbound - bus.Pd
+        myPubound - bus.Pd
         # minnetgen, maxnetgen are (resp.) min and max net generation at the given bus.
 
         # compute candidate
@@ -1686,8 +1686,8 @@ def lpformulator_ac_strictchecker(alldata, model):
                 myQubound += gens[gencounter].Qmax
                 myQlbound += gens[gencounter].Qmin
 
-        minnetgen = myQlbound - bus.Qd
-        maxnetgen = myQubound - bus.Qd
+        myQlbound - bus.Qd
+        myQubound - bus.Qd
 
         candmaxviol = alldata["violation"][bus]["Qinjmax"]
         if candmaxviol < alldata["violation"][bus]["Qinjmin"]:
@@ -1802,7 +1802,7 @@ def worstboundviol_report(badvar, maxviol, boundtype):
     :type boundtype: str
     """
 
-    if badvar != None:
+    if badvar is not None:
         logger.info(
             f"Worst {boundtype} bound violation by {badvar.Varname} viol {maxviol}."
         )

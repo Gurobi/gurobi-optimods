@@ -42,7 +42,6 @@ def lpformulator_iv_create_vars(alldata, model):
     buses = alldata["buses"]
     IDtoCountmap = alldata["IDtoCountmap"]
     gens = alldata["gens"]
-    cffvar = {}
 
     """
     for j in range(1,numbuses+1):
@@ -76,8 +75,8 @@ def lpformulator_iv_create_vars(alldata, model):
     for j in range(1, numbuses + 1):
         bus = buses[j]
         # First, injection variables
-        maxprod = bus.Vmax * bus.Vmax
-        minprod = bus.Vmin * bus.Vmin
+        bus.Vmax * bus.Vmax
+        bus.Vmin * bus.Vmin
 
         for genid in bus.genidsbycount:
             gen = gens[genid]
@@ -122,12 +121,12 @@ def lpformulator_iv_create_vars(alldata, model):
             count_of_t = IDtoCountmap[t]
             busf = buses[count_of_f]
             bust = buses[count_of_t]
-            maxprod = buses[count_of_f].Vmax * buses[count_of_t].Vmax
-            minprod = buses[count_of_f].Vmin * buses[count_of_t].Vmin
+            buses[count_of_f].Vmax * buses[count_of_t].Vmax
+            buses[count_of_f].Vmin * buses[count_of_t].Vmin
             if branch.constrainedflow:
-                limit = branch.limit
+                pass
             else:
-                limit = 2 * (
+                2 * (
                     abs(alldata["summaxgenP"]) + abs(alldata["summaxgenQ"])
                 )  # Generous: assumes line charging up to 100%. However it still amounts to an assumption.
 
@@ -614,7 +613,7 @@ def lpformulator_iv_create_constraints(alldata, model):
     for j in range(1, 1 + numbranches):
         branch = branches[j]
 
-        if branch.status and branch.unboundedlimit == False:
+        if branch.status and branch.unboundedlimit is False:
             f = branch.f
             t = branch.t
             count_of_f = IDtoCountmap[f]
@@ -637,7 +636,7 @@ def lpformulator_iv_create_constraints(alldata, model):
     logger.info(f"    {count} branch limits added.")
 
     # Active loss inequalities.
-    if alldata["useactivelossineqs"] == True:
+    if alldata["useactivelossineqs"] is True:
         logger.info("  Adding active loss constraints in weak form.")
         count = 0
         for j in range(1, 1 + numbranches):

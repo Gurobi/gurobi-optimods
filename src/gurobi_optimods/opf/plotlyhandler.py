@@ -128,7 +128,7 @@ class Plotlyhandler:
         # process each group
         traces = []
         for (color, width), edges in groups.items():
-            x, y, z = [], [], []
+            x, y = [], []
             for v, u in edges:
                 x += [self.pos[v][0], self.pos[u][0], None]
                 y += [self.pos[v][1], self.pos[u][1], None]
@@ -167,7 +167,7 @@ class Plotlyhandler:
         :rtype: :class: `plotly.graph_objects.Scatter`
         """
 
-        x, y, z = [], [], []
+        x, y = [], []
         for v in self.gG.vertices.values():
             x += [self.pos[v][0]]
             y += [self.pos[v][1]]

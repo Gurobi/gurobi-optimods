@@ -232,18 +232,18 @@ class Branch:
         self.z = z = r + x * 1j
         self.y = y = 1 / z
         self.ynorm2 = (y.real) * (y.real) + (y.imag) * (y.imag)
-        self.Yff = Yff = (y + bc / 2 * 1j) * invratio2
-        self.Yft = Yft = -y * multft
-        self.Ytf = Ytf = -y * multtf
-        self.Ytt = Ytt = y + bc / 2 * 1j
-        self.Gff = Gff = (self.Yff).real
-        self.Bff = Bff = (self.Yff).imag
-        self.Gft = Gft = (self.Yft).real
-        self.Bft = Bft = (self.Yft).imag
-        self.Gtf = Gtf = (self.Ytf).real
-        self.Btf = Btf = (self.Ytf).imag
-        self.Gtt = Gtt = (self.Ytt).real
-        self.Btt = Btt = (self.Ytt).imag
+        self.Yff = (y + bc / 2 * 1j) * invratio2
+        self.Yft = -y * multft
+        self.Ytf = -y * multtf
+        self.Ytt = y + bc / 2 * 1j
+        self.Gff = (self.Yff).real
+        self.Bff = (self.Yff).imag
+        self.Gft = (self.Yft).real
+        self.Bft = (self.Yft).imag
+        self.Gtf = (self.Ytf).real
+        self.Btf = (self.Ytf).imag
+        self.Gtt = (self.Ytt).real
+        self.Btt = (self.Ytt).imag
 
         self.isacline = (ratio == 1) and (
             self.angle_rad == 0
@@ -683,7 +683,6 @@ def read_case_file_mat(casefile):
         buses[numbuses]["Vmin"] = b[12]
         if buses[numbuses]["type"] == 3:
             slackbus = buses[numbuses]["bus_i"]
-            refbus = numbuses
             logger.info(f"    Slack bus: {slackbus}")
             logger.info(
                 f"    Bus {numbuses} ID {buses[numbuses]['bus_i']} is the reference bus."

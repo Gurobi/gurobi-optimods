@@ -76,7 +76,7 @@ def check_settings_for_correct_type(settings):
                 "gurobiparamfile",
                 "ivtype",
             ]
-            and settingval != None
+            and settingval is not None
             and not isinstance(settingval, str)
         ):
             wrongsetting = settingname
@@ -117,5 +117,5 @@ def check_settings_for_correct_type(settings):
             settingtype = "Int or Float"
             break
 
-    if wrongsetting != None:
+    if wrongsetting is not None:
         raise ValueError(f"Setting {wrongsetting} is not of type {settingtype}.")

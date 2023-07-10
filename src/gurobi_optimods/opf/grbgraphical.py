@@ -81,7 +81,7 @@ def generate_violations_figure(alldata, violations):
     :rtype: :class: `plotly.graph_objects.Figure`
     """
 
-    logger.info(f"Generating violations figure.")
+    logger.info("Generating violations figure.")
 
     alldata["violation"] = {}
     alldata["violation"]["Vmagviol"] = {}  # Vm entry
@@ -242,7 +242,7 @@ def grbgraphical(alldata, plottype, textlist):
                 Pload,
             )
             # Default value for buses with load > 50 and that are not generating much
-            if Pload > 50 and largegen == False:
+            if Pload > 50 and largegen is False:
                 mynode_size[j - 1] = 7
                 mynode_color[j - 1] = "blue"
 
@@ -413,7 +413,7 @@ def graphplot(
 
         for k in range(degmine):
             j = myedge_list_consolidated[scannedordpair][k]
-            jprime = scanned_list_consolidated[scannedordpair][k]
+            scanned_list_consolidated[scannedordpair][k]
             color = myedge_color[j]
             width = myedge_width[j]
             text = myedge_text[j]
@@ -428,7 +428,7 @@ def graphplot(
     deltax = np.max(vertexx) - np.min(vertexx)  # min should be 0 now
     deltay = np.max(vertexy) - np.min(vertexy)  # min should be 0 now
 
-    ratioxy = deltax / deltay
+    deltax / deltay
 
     scaley = 290
     scalex = 200  # ratio approximately 1.5, mimicking the ratio between one degree of latitute and longitude

@@ -65,7 +65,7 @@ def construct_and_solve_model(alldata):
         )
 
         # Write model to file if requested by user
-        if alldata["lpfilename"] != None:
+        if alldata["lpfilename"] is not None:
             model.write(alldata["lpfilename"])
             logger.info(f"Wrote LP to {alldata['lpfilename']}.")
 
@@ -184,7 +184,7 @@ def lpformulator_optimize(alldata, model, opftype):
         model.Params.OptimalityTol = 1.0e-4
 
     # Use user specified parameters
-    if alldata["gurobiparamfile"] != None:
+    if alldata["gurobiparamfile"] is not None:
         model.read(alldata["gurobiparamfile"])
 
     # Always use a pre-defined MIPStart for DC if we have binary variables
@@ -658,7 +658,7 @@ def compute_voltage_angles(alldata, result):
         nextbusindex = nextb[1]
         nextbus = buses[nextbusindex]
         knownbusindex = nextb[0]
-        knownbus = buses[knownbusindex]
+        buses[knownbusindex]
         if alldata["doiv"]:
             # For IV, we filled the values manually so they are not Gurobi variables
             cvarval = cvar[branches[nextb[2]]]
