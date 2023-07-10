@@ -1,3 +1,8 @@
+"""
+Optimal Power Flow
+------------------
+"""
+
 import logging
 
 from gurobi_optimods.opf.grbcasereader import (
@@ -55,54 +60,36 @@ def solve_opf_model(
     - ``result["branch"][i]["Qt"]`` for reactive power injected into "from" end of branch at branch `i` (AC only)
     - ``result["branch"][i]["switching"]`` states whether a branch `i` is turned on or off in the final solution
 
-    :param case: Dictionary holding case data
-    :type case: dict
-    :param logfile: Name of log file, defaults to ""
-    :type logfile: str, optional
-    :param opftype: String telling the desired OPF model type. Available are `AC`, `DC`, `IV`, defaults to `AC`
-    :type opftype: str, optional
-    :param polar: Controls whether polar formulation should be used, defaults to `False`. Only affects `AC` formulation
-    :type polar: bool, optional
-    :param useef: Controls whether bilinear variables e, f and corresponding constraints should be used, defaults to `True`.
-                  Has only an effect if ``opftype`` equals `AC`
-    :type useef: bool, optional
-    :param usejabr: Controls whether JABR inequalities should be added, defaults to `True`.
-                    Has only an effect if ``opftype`` equals `AC`
-    :type usejabr: bool, optional
-    :param ivtype: States what type of IV formulation should be used. Availale are `aggressive` and `plain`,
-                   defaults to `aggressive`
-    :type ivtype: str, optional
-    :param branchswitching: Controls whether discrete variable for turning on/off branches should be used.
+    Plan to re-jig the arguments a bit. Notes (to remove):
+        - polar=False always (for now, polar=True does not work well)
+        - (opftype="AC_Relax") === (opftype="AC", polar=False, useef=False)
+        - usemipstart=True always
 
-                            - 0 = don't use discrete variables (all branches are on)
-                            - 1 = use binary variables to constrain bounds of (re)active power injections
-                            - 2 = use binary variables and multiply them with the (re)active power injections (only available for AC)
+    Parameters
+    ----------
+    case : dict
+        Dictionary holding case data
+    opf_type : str
+        Desired OPF model type. One of ``AC``, ``AC_Relax``, ``DC``, or
+        ``IV``.
+    min_active_branches : float, optional
+        If provided, enables branch switching (by default, all branches are
+        active). Defines the minimum number of branches that must be turned on
+        when branch switching is active, i.e. the minimum number of turned on
+        branches is equal to ``numbranches * min_active_branches``.
+    iv_type : str, optional
+        What type of IV formulation should be used. Available types are
+        ``aggressive`` and ``plain``. Defaults to ``aggressive``.
+    valid_inequalities : str, optional
+        Whether to include outer approximations for the AC formulation. Options
+        are ``activeloss`` (the default), ``jabr``, or ``disable``. `jabr` uses
+        SOCP constraints, ``activeloss`` uses linear outer approximations to the
+        jabr inequalities, while ``disable`` does not generate valid inequalities.
 
-                            Usually, setting 1 works better than 2. Defaults to 0
-    :type branchswitching: int, optional
-    :param usemipstart: Controls whether a pre-defined MIPStart should be used. Has only an effect if
-                        branchswitching > 0. Defaults to `True`
-    :type usemipstart: bool, optional
-    :param minactivebranches: Controls the minimum number of branches that has to be turned on when branchswitching is active, i.e.,
-                              the minimum number of turned on branches is equal to ``numbranches * minactivebranches``. Defaults to
-                              0.95, i.e., at least 95% of branches have to be turned on
-    :type minactivebranches: float, optional
-    :param useactivelossineqs: Controls whether active loss constraints are used. These are linear outer approximation of the JABR
-                              constraints. Usually, they provide a very good lower bound while still being linear.
-                              Defaults to `False`.
-    :type useactivelossineqs: bool, optional
-    :param additional_settings: Dictionary holding additional settings. Additional settings are:
-
-                                - ``lpfilename`` which if evaluated to a non-empty string, makes Gurobi write a `.lp`
-                                  file holding the generated model
-                                - ``gurobiparamfile`` which if evaluated to a non-empty string, makes Gurobi read in
-                                  a parameter file.
-
-                                Defaults to an empty dictionary
-    :type additional_settings: dict, optional
-
-    :return: Case dictionary following MATPOWER notation with additional result fields
-    :rtype: dict
+    Returns
+    -------
+    dict
+        Case dictionary following MATPOWER notation with additional result fields
     """
 
     # Initialize settings dictionary
