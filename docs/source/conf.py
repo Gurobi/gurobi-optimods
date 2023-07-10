@@ -74,6 +74,7 @@ bibtex_bibfiles = [
 numpydoc_xref_param_type = True
 numpydoc_xref_aliases = {
     "DataFrame": "pandas.DataFrame",
+    "Series": "pandas.Series",
     "DiGraph": "networkx.DiGraph",
     "Graph": "networkx.Graph",
     "LinAlgError": "numpy.linalg.LinAlgError",
