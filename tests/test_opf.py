@@ -90,66 +90,114 @@ class TestOpf(unittest.TestCase):
         self.assertTrue(solution["success"] == 1)
         self.assertTrue(solution["f"] is not None)
 
-    # test all possible combinations of user-relevant settings
-    @unittest.skip(
-        "Skipping test_settings, because it takes too much time. It should be run manually"
-    )
-    def test_settings(self):
-        # construct all possible combinations of user-relevant settings
+    def test_ac_polar(self):
+        # Test polar formulation. It's expensive to test all combinations,
+        # so for now just test the defaults.
+        casefile = load_caseopfmat("9")
+        case = read_case_from_mat_file(casefile)
+        solution = solve_opf_model(
+            case,
+            opftype="AC",
+            polar=True,
+            solver_params={"SolutionLimit": 1},
+        )
+        self.assertTrue(solution is not None)
+        self.assertTrue(solution["success"] == 1)
+
+    def test_ac_nonpolar_settings(self):
+        # Test all AC solver options with polar=False.
         settingslist = [
-            (
-                type,
-                polar,
-                ef,
-                usejabr,
-                ivtype,
-                branchswitching,
-                usemipstart,
-                useactivelossineqs,
-                minactivebranches,
+            dict(
+                opftype="AC",
+                polar=False,
+                useef=useef,
+                usejabr=usejabr,
+                branchswitching=branchswitching,
+                usemipstart=usemipstart,
+                useactivelossineqs=useactivelossineqs,
+                minactivebranches=minactivebranches,
             )
-            for type in ["AC", "DC", "IV"]
-            for polar in [False, True]
-            for ef in [False, True]
+            for useef in [False, True]
             for usejabr in [False, True]
-            for ivtype in ["plain", "aggressive"]
             for branchswitching in [0, 1, 2]
             for usemipstart in [False, True]
             for useactivelossineqs in [False, True]
             for minactivebranches in [0, 0.5, 0.95]
         ]
-        # load path to case file
+
+        # Solve opf model for the same case and return a solution.
+        # The model has to be feasible for every setting combination.
         casefile = load_caseopfmat("9")
-        # read case file and return a case dictionary
         case = read_case_from_mat_file(casefile)
-        # solve opf model and return a solution
-        for s in settingslist:
-            # gurobi param.prm file should read
-            # SolutionLimit 1
-            # MIPGap 0.01
-            solution = solve_opf_model(
-                case,
-                logfile="",
-                opftype=s[0],
-                polar=s[1],
-                useef=s[2],
-                usejabr=s[3],
-                ivtype=s[4],
-                branchswitching=s[5],
-                usemipstart=s[6],
-                useactivelossineqs=s[7],
-                minactivebranches=s[8],
-                additional_settings={"gurobiparamfile": "param.prm"},
+        for acopf_settings in settingslist:
+            with self.subTest(acopf_settings):
+                solution = solve_opf_model(
+                    case,
+                    solver_params={"SolutionLimit": 1},
+                    **acopf_settings,
+                )
+                self.assertTrue(solution is not None)
+                self.assertTrue(solution["success"] == 1)
+
+    def test_dc_settings(self):
+        # DC has more limited configurations: polar, ef, jabr,
+        # branchswitching=2, and ivtype are not available
+        settingslist = [
+            dict(
+                opftype="DC",
+                branchswitching=branchswitching,
+                usemipstart=usemipstart,
+                useactivelossineqs=useactivelossineqs,
+                minactivebranches=minactivebranches,
             )
-            print(
-                f"running setting opftype={s[0]}, polar={s[1]}, useef={s[2]}, usejabr={s[3]}, ivtype={s[4]},\n"
-                f"branchswitching={s[5]}, usemipstart={s[6]}, useactivelossineqs={s[7]}, minactivebranches={s[8]}"
+            for branchswitching in [0, 1]
+            for usemipstart in [False, True]
+            for useactivelossineqs in [False, True]
+            for minactivebranches in [0, 0.5, 0.95]
+        ]
+
+        # Solve opf model for the same case and return a solution.
+        # The model has to be feasible for every setting combination.
+        casefile = load_caseopfmat("9")
+        case = read_case_from_mat_file(casefile)
+        for acopf_settings in settingslist:
+            with self.subTest(acopf_settings):
+                solution = solve_opf_model(
+                    case,
+                    solver_params={"SolutionLimit": 1},
+                    **acopf_settings,
+                )
+                self.assertTrue(solution is not None)
+                self.assertTrue(solution["success"] == 1)
+
+    def test_iv_settings(self):
+        # IV has more limited configurations: polar, ef, jabr,
+        # branchswitching, and mipstart are not available
+        settingslist = [
+            dict(
+                opftype="IV",
+                ivtype=ivtype,
+                useactivelossineqs=useactivelossineqs,
+                minactivebranches=minactivebranches,
             )
-            print(s)
-            self.assertTrue(solution is not None)
-            self.assertTrue(
-                solution["success"] == 1
-            )  # the model has to be feasible for every setting combination
+            for ivtype in ["plain", "aggressive"]
+            for useactivelossineqs in [False, True]
+            for minactivebranches in [0, 0.5, 0.95]
+        ]
+
+        # Solve opf model for the same case and return a solution.
+        # The model has to be feasible for every setting combination.
+        casefile = load_caseopfmat("9")
+        case = read_case_from_mat_file(casefile)
+        for acopf_settings in settingslist:
+            with self.subTest(acopf_settings):
+                solution = solve_opf_model(
+                    case,
+                    solver_params={"SolutionLimit": 1},
+                    **acopf_settings,
+                )
+                self.assertTrue(solution is not None)
+                self.assertTrue(solution["success"] == 1)
 
     def test_infeasible(self):
         case = load_opfdictcase()
