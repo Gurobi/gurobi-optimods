@@ -204,8 +204,6 @@ def lpformulator_optimize(alldata, model, opftype):
             branch = branches[j]
             zvar[branch].Start = 1.0
 
-        # writemipstart(alldata) # For debugging
-
     model.optimize()
 
     # Activate logging handlers
@@ -727,26 +725,3 @@ def fill_violations_fields(alldata, opftype, result):
         resbranch["limitviol"] = (
             alldata["violation"]["branchlimit"][databranch] * baseMVA
         )
-
-
-def writemipstart(alldata):
-    """
-    Helper function for writing a mip start to `mipstart.mst` file.
-    Mainly used for debugging numerically difficult cases
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    """
-
-    filename = "mipstart.mst"
-    f = open(filename, "w")
-    logger.info(f"Writing mipstart in file {filename}.")
-
-    zvar = alldata["MIP"]["zvar"]
-    branches = alldata["branches"]
-    numbranches = alldata["numbranches"]
-    for j in range(1, 1 + numbranches):
-        branch = branches[j]
-        f.write(f"{zvar[branch].Varname} 1.0\n")
-
-    f.close()
