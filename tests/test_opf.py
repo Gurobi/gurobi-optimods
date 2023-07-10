@@ -436,6 +436,7 @@ class TestOpfGraphics(unittest.TestCase):
             self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
             fig.show()
 
+    @unittest.skipIf(size_limited_license(), "size-limited-license")
     def test_NY_branchswitching(self):
         # load path to case file
         casefile = load_caseNYopf()
