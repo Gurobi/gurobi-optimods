@@ -194,8 +194,7 @@ def lpformulator_optimize(alldata, model, opftype):
         alldata["usemipstart"]
         and (alldata["branchswitching_mip"] or alldata["branchswitching_comp"])
     ):
-        # Logging level needs to be critical because INFO is disabled
-        logger.critical("Using mip start with all branches kept on.")
+        logger.info("Using mip start with all branches kept on.")
         # MIP start
         # Turn on all branches and hope for the best
         zvar = alldata["MIP"]["zvar"]
