@@ -388,10 +388,6 @@ class TestOpfGraphics(unittest.TestCase):
             self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
             fig.show()
 
-    @unittest.skip(
-        "Skipping test_NY_branchswitching, because it takes too much time. It should be run manually.\
-        Or we have to pass gurobi settings with a TimeLimit via a .prm file."
-    )
     def test_NY_branchswitching(self):
         # load path to case file
         casefile = load_caseNYopf()
@@ -400,7 +396,11 @@ class TestOpfGraphics(unittest.TestCase):
 
         # solve opf model and return a solution
         solution = solve_opf_model(
-            case, opftype="DC", branchswitching=True, minactivebranches=0.999
+            case,
+            opftype="DC",
+            branchswitching=True,
+            minactivebranches=0.999,
+            solver_params={"TimeLimit": 1},
         )
         self.assertTrue(solution is not None)
         self.assertTrue(solution["success"] == 1)
