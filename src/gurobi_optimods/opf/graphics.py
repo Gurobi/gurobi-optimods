@@ -1,12 +1,9 @@
+from gurobi_optimods.opf.grbcasereader import read_case
+from gurobi_optimods.opf.grbfile import grbmap_coords_from_dict, initialize_data_dict
 from gurobi_optimods.opf.grbgraphical import (
     generate_solution_figure,
     generate_violations_figure,
 )
-from gurobi_optimods.opf.grbfile import (
-    initialize_data_dict,
-    grbmap_coords_from_dict,
-)
-from gurobi_optimods.opf.grbcasereader import read_case
 
 
 def generate_opf_solution_figure(case, coords, solution):

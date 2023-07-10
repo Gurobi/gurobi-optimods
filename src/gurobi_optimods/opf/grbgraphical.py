@@ -1,5 +1,6 @@
 import logging
 import math
+
 import numpy as np
 
 from gurobi_optimods.opf.grbgraph import Grbgraph
@@ -214,7 +215,6 @@ def grbgraphical(alldata, plottype, textlist):
                 myedge_color[j] = "red"
 
     elif plottype == "branchswitching":
-
         gholder = alldata["MIP"]["gholder"]
         for j in range(1, numbuses + 1):
             bus = buses[j]

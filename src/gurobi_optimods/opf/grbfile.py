@@ -1,11 +1,10 @@
-import time
-import math
 import csv
 import logging
+import math
 
 from gurobi_optimods.opf.utils import (
-    get_default_optimization_settings,
     check_settings_for_correct_type,
+    get_default_optimization_settings,
 )
 
 logger = logging.getLogger(__name__)

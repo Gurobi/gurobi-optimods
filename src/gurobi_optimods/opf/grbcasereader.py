@@ -1,9 +1,10 @@
-import math
 import cmath
-import time
 import logging
-import scipy
+import math
+import time
+
 import numpy as np
+import scipy
 
 logger = logging.getLogger(__name__)
 

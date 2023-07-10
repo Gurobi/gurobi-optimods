@@ -1,5 +1,6 @@
-import math
 import logging
+import math
+
 import gurobipy as gp
 from gurobipy import GRB
 
@@ -992,7 +993,6 @@ def lpformulator_ac_create_constraints(alldata, model):
             for j in range(1, 1 + numbranches):
                 branch = branches[j]
                 if branch.status and (branch.nongaining):  # (branch.isacline == True):
-
                     f = branch.f
                     t = branch.t
                     count_of_f = IDtoCountmap[f]
@@ -1251,7 +1251,6 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
         logger.info("Derived e, f values.")
 
     if alldata["dopolar"] == False:
-
         for j in range(1, numbuses + 1):
             bus = buses[j]
             xbuffer[cvar[bus]] = bus.inpute * bus.inpute + bus.inputf * bus.inputf

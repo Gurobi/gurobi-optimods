@@ -62,7 +62,6 @@ class Plotlyhandler:
         edge_text=None,
         vertex_text=None,
     ):
-
         vertex_opacity = 0.8
         edge_opacity = 0.8
         vertex_text_position = "middle center"
@@ -241,7 +240,7 @@ class Plotlyhandler:
         showscale=False,
         colorbar_title="",
         reversescale=False,
-        **params
+        **params,
     ) -> go.Figure:
         """
         Creates a :class: `plotly.graph_objects.Figure` object

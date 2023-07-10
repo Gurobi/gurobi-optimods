@@ -1,5 +1,6 @@
-import math
 import logging
+import math
+
 import gurobipy as gp
 from gurobipy import GRB
 

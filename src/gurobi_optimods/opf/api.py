@@ -1,22 +1,20 @@
 import logging
 
-import gurobipy as gp
-
 from gurobi_optimods.opf.grbcasereader import (
     read_case,
     read_case_file_mat,
     turn_opf_dict_into_mat_file,
 )
 from gurobi_optimods.opf.grbfile import (
-    initialize_data_dict,
     construct_settings_dict,
-    read_optimization_settings,
-    read_file_csv,
     grbmap_volts_from_dict,
+    initialize_data_dict,
+    read_file_csv,
+    read_optimization_settings,
 )
 from gurobi_optimods.opf.grbformulator import (
-    construct_and_solve_model,
     compute_violations_from_voltages,
+    construct_and_solve_model,
 )
 
 logger = logging.getLogger(__name__)

@@ -2,19 +2,19 @@ import unittest
 
 import gurobipy as gp
 
+from gurobi_optimods.datasets import (
+    load_case9solution,
+    load_caseNYopf,
+    load_caseopfmat,
+    load_filepath,
+    load_opfdictcase,
+)
 from gurobi_optimods.opf import (
-    solve_opf_model,
+    compute_violations_from_given_voltages,
+    read_case_from_mat_file,
     read_coords_from_csv_file,
     read_voltages_from_csv_file,
-    read_case_from_mat_file,
-    compute_violations_from_given_voltages,
-)
-from gurobi_optimods.datasets import (
-    load_caseopfmat,
-    load_caseNYopf,
-    load_opfdictcase,
-    load_filepath,
-    load_case9solution,
+    solve_opf_model,
 )
 
 # If plotly is not installed, some tests will be skipped
@@ -42,7 +42,6 @@ def size_limited_license():
 
 
 class TestOpf(unittest.TestCase):
-
     numcases = 5
     cases = ["9", "14", "57", "118", "300"]
     # DC test values
@@ -199,7 +198,6 @@ class TestOpf(unittest.TestCase):
     # test DC formulation
     @unittest.skipIf(size_limited_license(), "size-limited-license")
     def test_dcopf(self):
-
         for i in range(self.numcases):
             # load path to case file in .m and .mat format
             casefile = load_caseopfmat(self.cases[i])
@@ -220,7 +218,6 @@ class TestOpf(unittest.TestCase):
     # test AC formulation
     @unittest.skipIf(size_limited_license(), "size-limited-license")
     def test_acopf(self):
-
         for i in range(2):
             # load path to case file in .m and .mat format
             casefile = load_caseopfmat(self.cases[i])
@@ -241,7 +238,6 @@ class TestOpf(unittest.TestCase):
     # test AC formulation relaxation
     @unittest.skipIf(size_limited_license(), "size-limited-license")
     def test_acopfconvex(self):
-
         for i in range(self.numcases):
             # load path to case file in .m and .mat format
             casefile = load_caseopfmat(self.cases[i])
@@ -297,7 +293,6 @@ class TestOpf(unittest.TestCase):
 
 @unittest.skipIf(plotly is None, "plotly is not installed")
 class TestOpfGraphics(unittest.TestCase):
-
     # Currently, this is just a convenience setting while working on OptiMod
     plot_graphics = False
 
