@@ -16,13 +16,14 @@ from gurobi_optimods.opf.grbformulator import (
     compute_violations_from_voltages,
     construct_and_solve_model,
 )
+from gurobi_optimods.utils import optimod
 
 logger = logging.getLogger(__name__)
 
 
+@optimod()
 def solve_opf_model(
     case,
-    logfile="",
     opftype="AC",
     polar=False,
     useef=True,
@@ -32,7 +33,8 @@ def solve_opf_model(
     usemipstart=True,
     minactivebranches=0.9,
     useactivelossineqs=False,
-    additional_settings=dict(),
+    *,
+    create_env,
 ):
     """
     Constructs an OPF model from given data and solves it with Gurobi.
@@ -114,11 +116,11 @@ def solve_opf_model(
         usemipstart,
         minactivebranches,
         useactivelossineqs,
-        additional_settings,
+        dict(),
     )
 
     # Initilize data dictionary
-    alldata = initialize_data_dict(logfile)
+    alldata = initialize_data_dict()
 
     # Read settings file/dict and save them into the alldata dict
     read_optimization_settings(alldata, settings)
@@ -127,7 +129,7 @@ def solve_opf_model(
     read_case(alldata, case)
 
     # Construct and solve model using given case data and user settings
-    solution = construct_and_solve_model(alldata)
+    solution = construct_and_solve_model(create_env, alldata)
 
     return solution
 
