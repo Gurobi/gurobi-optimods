@@ -5,15 +5,13 @@ Bipartite Matching
 
 
 import logging
-from typing import List, overload
 
+import gurobipy as gp
+import gurobipy_pandas as gppd
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-
-import gurobipy as gp
 from gurobipy import GRB
-import gurobipy_pandas as gppd
 
 try:
     import networkx as nx
@@ -25,55 +23,34 @@ from gurobi_optimods.utils import optimod
 logger = logging.getLogger(__name__)
 
 
-@overload
-def maximum_bipartite_matching(
-    graph: sp.spmatrix,
-    nodes1: np.ndarray,
-    nodes2: np.ndarray,
-) -> sp.spmatrix:
-    ...
-
-
-@overload
-def maximum_bipartite_matching(
-    graph: pd.DataFrame,
-    nodes1: str,
-    nodes2: str,
-) -> pd.DataFrame:
-    ...
-
-
-if nx is not None:
-
-    @overload
-    def maximum_bipartite_matching(
-        graph: nx.Graph,
-        nodes1: List,
-        nodes2: List,
-    ) -> nx.Graph:
-        ...
-
-
 @optimod()
 def maximum_bipartite_matching(graph, nodes1, nodes2, *, create_env):
     """Solve a maximum cardinality bipartite matching problem on the
     given graph.
 
-    :param graph: A graph, specified either as a scipy.sparse adjacency matrix, networkx
-        graph, or pandas dataframe
-    :type graph: :class:`sp.sparray|nx.Graph|pd.DataFrame`
-    :param nodes1: Nodes in the first bipartite set. If ``graph`` is a pandas dataframe,
-        nodes1 must be a column name. Otherwise, it is a numpy array of nodes in the first
-        bipartite set.
-    :type nodes1: :class:`np.array|List|str`
-    :param nodes2: Nodes in the second bipartite set. If ``graph`` is a pandas dataframe,
-        nodes2 must be a column name. Otherwise, it is a numpy array of nodes in the second
-        bipartite set.
-    :type nodes2: :class:`np.array|List|str`
-    :return: A subgraph of the original graph specifying the maximum matching
-    :rtype: :class:`sp.sparray|nx.Graph|pd.DataFrame`
+    Parameters
+    ----------
+    graph : spmatrix or Graph or DataFrame
+        A graph, specified either as a scipy.sparse adjacency matrix, networkx
+        graph, or pandas dataframe.
+    nodes1 : ndarray or str
+        Nodes in the first bipartite set. If ``graph`` is a scipy sparse matrix,
+        ``nodes1`` must be a numpy array. If ``graph`` is a pandas dataframe,
+        ``nodes1`` must be a column name. If ``graph`` is a networkx graph,
+        ``nodes1`` must be a list.
+    nodes2 : ndarray or str
+        Nodes in the second bipartite set. If ``graph`` is a scipy sparse matrix,
+        ``nodes2`` must be a numpy array. If ``graph`` is a pandas dataframe,
+        ``nodes2`` must be a column name. If ``graph`` is a networkx graph,
+        ``nodes2`` must be a list.
+
+    Returns
+    -------
+    spmatrix or Graph or DataFrame
+        A subgraph of the original ``graph`` (with the same data type) specifying
+        the maximum matching
     """
-    if isinstance(graph, sp.spmatrix):
+    if sp.issparse(graph):
         return _maximum_bipartite_matching_scipy(graph, nodes1, nodes2, create_env)
     elif isinstance(graph, pd.DataFrame):
         return _maximum_bipartite_matching_pandas(graph, nodes1, nodes2, create_env)
@@ -88,49 +65,32 @@ def _maximum_bipartite_matching_pandas(frame, n1_column, n2_column, create_env):
     already in a pandas dataframe."""
 
     with create_env() as env, gp.Model(env=env) as model:
-        df = (
-            pd.concat(
-                [
-                    frame.assign(_original_edge=True),
-                    pd.DataFrame(
-                        {
-                            n1_column: "source",
-                            n2_column: frame[n1_column].unique(),
-                            "_original_edge": False,
-                        }
-                    ),
-                    pd.DataFrame(
-                        {
-                            n1_column: frame[n2_column].unique(),
-                            n2_column: "sink",
-                            "_original_edge": False,
-                        }
-                    ),
-                ]
-            )
-            .set_index([n1_column, n2_column])
-            .gppd.add_vars(model, ub=1, name="flow")
+        # Directed flow variables between bipartite sets
+        df = frame.set_index([n1_column, n2_column]).gppd.add_vars(
+            model, ub=1, name="flow"
         )
-        df.loc[("sink", "source"), "flow"] = model.addVar(
-            obj=1, name="flow[sink,source]"
-        )
-        df.loc[("sink", "source"), "_original_edge"] = False
-        model.ModelSense = GRB.MAXIMIZE
 
-        gppd.add_constrs(
-            model,
-            df["flow"].groupby(n1_column).sum(),
-            GRB.EQUAL,
-            df["flow"].groupby(n2_column).sum(),
-            name="balance",
-        )
+        # Inflow variables and flow balance on n1
+        n1_outflows = df["flow"].groupby(n1_column).sum()
+        n1_inflows = gppd.add_vars(model, n1_outflows.index, ub=1, name="src_flow")
+        gppd.add_constrs(model, n1_inflows, GRB.EQUAL, n1_outflows, name="n1_balance")
+
+        # Outflow variables and flow balance on n2
+        n2_inflows = df["flow"].groupby(n2_column).sum()
+        n2_outflows = gppd.add_vars(model, n2_inflows.index, ub=1, name="sink_flow")
+        gppd.add_constrs(model, n2_inflows, GRB.EQUAL, n2_outflows, name="n2_balance")
+
+        # sink-source flow variable and flow balances
+        sink_source_flow = model.addVar(name="sink_source_flow")
+        model.addConstr(sink_source_flow == n1_inflows.sum(), name="src_balance")
+        model.addConstr(n2_outflows.sum() == sink_source_flow, name="sink_balance")
+
+        # max flow
+        model.setObjective(sink_source_flow, sense=GRB.MAXIMIZE)
+
+        # solve and extract solution
         model.optimize()
-
-        return (
-            df[df["flow"].gppd.X.gt(0.1) & df._original_edge]
-            .drop(columns=["flow", "_original_edge"])
-            .reset_index()
-        )
+        return df.loc[df["flow"].gppd.X.gt(0.1)].reset_index().drop(columns=["flow"])
 
 
 def _maximum_bipartite_matching_networkx(graph, nodes1, nodes2, create_env):
@@ -234,7 +194,7 @@ def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
         indptr = np.arange(0, 2 * from_arc.shape[0] + 2, 2)
         ones = np.ones(from_arc.shape)
         data = np.column_stack((ones * -1.0, ones)).reshape(-1, order="C")
-        A = sp.csc_array((data, indices, indptr))
+        A = sp.csc_matrix((data, indices, indptr))
 
         # Solve model with gurobi, return cost and flows
         x = model.addMVar(A.shape[1], lb=0, ub=capacity)

@@ -1,11 +1,7 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/gurobi-optimods.svg)](https://pypi.org/project/gurobi-optimods)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/gurobi-optimods.svg)](https://pypi.org/project/gurobi-optimods)
 [![Tests](https://github.com/Gurobi/gurobi-optimods/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Gurobi/gurobi-optimods/actions/workflows/test.yml?query=branch%3Amain++)
-[![Docs](https://readthedocs.com/projects/gurobi-optimization-gurobi-optimods/badge/?version=latest)](https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/latest)
-
-**⚠ Warning**
-
-```This code is in a pre-release state. It may not be fully functional and breaking changes can occur without notice.```
+[![Docs](https://readthedocs.com/projects/gurobi-optimization-gurobi-optimods/badge/?version=stable)](https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/stable)
 
 # gurobi-optimods: nice APIs for common optimization tasks
 
@@ -39,7 +35,7 @@ pip install gurobi-optimods
 
 ## Documentation
 
-Full documentation for `gurobi-optimods` is hosted on [readthedocs](https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/latest).
+Full documentation for `gurobi-optimods` is hosted on [readthedocs](https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/stable).
 
 ## License
 

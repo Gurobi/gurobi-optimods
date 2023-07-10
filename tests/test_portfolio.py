@@ -1,12 +1,15 @@
-from contextlib import redirect_stdout
 import io
+import os
+import tempfile
 import unittest
+from contextlib import redirect_stdout
+
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_allclose, assert_array_equal
 
 from gurobi_optimods.datasets import load_portfolio
-from gurobi_optimods.portfolio import MeanVariancePortfolio
+from gurobi_optimods.portfolio import MeanVariancePortfolio, PortfolioResult
 
 
 class TestMVPBasic(unittest.TestCase):
@@ -50,9 +53,60 @@ class TestMVPBasic(unittest.TestCase):
         cov_matrix = data.cov()
         mu = data.mean()
         L = np.linalg.cholesky(cov_matrix)
+        K = np.eye(L.shape[0])
+        e = np.zeros(mu.size)
 
         with self.assertRaises(TypeError):
-            mvp = MeanVariancePortfolio(mu, cov_matrix=cov_matrix, cov_factors=(L,))
+            mvp = MeanVariancePortfolio(
+                mu, cov_matrix=cov_matrix, cov_factors=(L, K, e)
+            )
+
+    def test_init_2(self):
+        # cov_factors must always be a triple
+        data = load_portfolio()
+        cov_matrix = data.cov()
+        mu = data.mean()
+        L = np.linalg.cholesky(cov_matrix)
+        K = np.eye(L.shape[0])
+        e = np.zeros(mu.size)
+
+        with self.assertRaises(ValueError):
+            mvp = MeanVariancePortfolio(mu, cov_factors=tuple())
+
+        with self.assertRaises(ValueError):
+            mvp = MeanVariancePortfolio(mu, cov_factors=(L,))
+
+        with self.assertRaises(ValueError):
+            mvp = MeanVariancePortfolio(mu, cov_factors=(L, K))
+
+    def test_init_3(self):
+        # Example input that ought to succeed
+        B = np.random.rand(8, 2)
+        K = np.diag([0.5, 2])
+        d = np.ones(8)
+        mu = np.ones(8)
+        mvp = MeanVariancePortfolio(mu, cov_factors=(B, K, d))
+        # Nothing to test, but shouldn't error
+
+    def test_init_4(self):
+        # cov_factors[1] must be positive definite, this is semi-definite
+        B = np.random.rand(8, 2)
+        K = np.diag([1, 0])
+        d = np.ones(8)
+        mu = np.ones(8)
+
+        with self.assertRaises(np.linalg.LinAlgError):
+            mvp = MeanVariancePortfolio(mu, cov_factors=(B, K, d))
+
+    def test_init_5(self):
+        # cov_factors[1] must be positive definite, this is indefinite
+        B = np.random.rand(8, 2)
+        K = np.diag([1, -1])
+        d = np.ones(8)
+        mu = np.ones(8)
+
+        with self.assertRaises(np.linalg.LinAlgError):
+            mvp = MeanVariancePortfolio(mu, cov_factors=(B, K, d))
 
     def test_outputflag(self):
         data = load_portfolio()
@@ -96,9 +150,11 @@ class TestMVPBasic(unittest.TestCase):
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
-        pf = mvp.efficient_portfolio(0.5, logfile="more_bananas.log")
-        with open("more_bananas.log", "rt") as fh:
-            content = fh.read()
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            logfile = os.path.join(tmpdirname, "more_bananas.log")
+            pf = mvp.efficient_portfolio(0.5, logfile=logfile)
+            with open(logfile, "rt") as fh:
+                content = fh.read()
         self.assertIn("Gurobi Optimizer", content)
 
     def test_params(self):
@@ -123,24 +179,21 @@ class TestMVPFeatures(unittest.TestCase):
         mu = np.array([1, -0.1])
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         pf = mvp.efficient_portfolio(0.5)
-        self.assertIn("x", pf)
-        assert_allclose(pf["x"], [0.925, 0.075], atol=1e-6)
+        assert_allclose(pf.x, [0.925, 0.075], atol=1e-6)
 
     def test_two_assets_return(self):
         cov_matrix = np.array([[3, 0.5], [0.5, 2]])
         mu = np.array([1, -0.1])
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         pf = mvp.efficient_portfolio(0.5)
-        self.assertIn("return", pf)
-        self.assertAlmostEqual(pf["return"], pf["x"] @ mu)
+        self.assertAlmostEqual(pf.ret, pf.x @ mu)
 
     def test_two_assets_risk(self):
         cov_matrix = np.array([[3, 0.5], [0.5, 2]])
         mu = np.array([1, -0.1])
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         pf = mvp.efficient_portfolio(0.5)
-        self.assertIn("risk", pf)
-        self.assertAlmostEqual(pf["risk"], pf["x"] @ cov_matrix @ pf["x"])
+        self.assertAlmostEqual(pf.risk, pf.x @ cov_matrix @ pf.x)
 
     def test_example_data_result(self):
         data = load_portfolio()
@@ -150,12 +203,11 @@ class TestMVPFeatures(unittest.TestCase):
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         pf = mvp.efficient_portfolio(gamma)
-        self.assertIn("x", pf)
-        self.assertIn("return", pf)
-        self.assertIn("risk", pf)
+        self.assertIsInstance(pf, PortfolioResult)
 
-        self.assertAlmostEqual(pf["return"], pf["x"] @ mu)
-        self.assertAlmostEqual(pf["risk"], pf["x"] @ cov_matrix @ pf["x"])
+        self.assertAlmostEqual(pf.ret, pf.x @ mu)
+        self.assertAlmostEqual(pf.risk, pf.x @ cov_matrix @ pf.x)
+        self.assertIsNone(pf.x_rf)
 
     def test_number_of_trades(self):
         data = load_portfolio()
@@ -164,10 +216,10 @@ class TestMVPFeatures(unittest.TestCase):
         gamma = 100.0
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
-        x_unconstrained = mvp.efficient_portfolio(gamma)["x"]
+        x_unconstrained = mvp.efficient_portfolio(gamma).x
         self.assertGreater((x_unconstrained > 1e-4).sum(), 3)
 
-        x_3 = mvp.efficient_portfolio(gamma, max_trades=3)["x"]
+        x_3 = mvp.efficient_portfolio(gamma, max_trades=3).x
         self.assertLessEqual((x_3 > 1e-4).sum(), 3)
 
     def test_transaction_fees_long(self):
@@ -178,7 +230,7 @@ class TestMVPFeatures(unittest.TestCase):
         fees_buy = 1e-4
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
-        x = mvp.efficient_portfolio(gamma, fees_buy=fees_buy)["x"]
+        x = mvp.efficient_portfolio(gamma, fees_buy=fees_buy).x
         n_trades = (x > 1e-4).sum()
         self.assertLessEqual(x.sum(), 1 - n_trades * fees_buy)
 
@@ -191,15 +243,13 @@ class TestMVPFeatures(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
         # Ensure that we go short somewhere
-        x = mvp.efficient_portfolio(gamma, max_total_short=0.3)["x"]
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.3).x
         n_trades = (x < 0).sum()
         self.assertGreater(n_trades, 0)
         self.assertAlmostEqual(x.sum(), 1)
 
         # Ensure that transaction fees are paid out of the portfolio
-        x = mvp.efficient_portfolio(gamma, max_total_short=0.3, fees_sell=fees_sell)[
-            "x"
-        ]
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.3, fees_sell=fees_sell).x
         n_trades = (x < 0).sum()
         self.assertGreater(n_trades, 0)
         self.assertLessEqual(x.sum(), 1 - n_trades * fees_sell + 1e-8)
@@ -213,12 +263,12 @@ class TestMVPFeatures(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
         # Ensure that we _have_ a small trade w/o minimum buy in
-        x = mvp.efficient_portfolio(gamma, min_long=0.0)["x"]
+        x = mvp.efficient_portfolio(gamma, min_long=0.0).x
         small_trades = (x > 1e-6) & (x < (0.03 - 1e-6))
         self.assertGreater(small_trades.sum(), 0)
 
         # Ensure that we _don't_ have a small trade w minimum buy in
-        x = mvp.efficient_portfolio(gamma, min_long=0.03)["x"]
+        x = mvp.efficient_portfolio(gamma, min_long=0.03).x
         small_trades = (x > 1e-6) & (x < (0.03 - 1e-6))
         self.assertEqual(small_trades.sum(), 0)
 
@@ -231,11 +281,11 @@ class TestMVPFeatures(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
         # Ensure that by default we don't go short
-        x = mvp.efficient_portfolio(gamma)["x"]
+        x = mvp.efficient_portfolio(gamma).x
         self.assertEqual((x < 0).sum(), 0)
 
         # Ensure that we take advantage of leverage
-        x = mvp.efficient_portfolio(gamma, max_total_short=0.1)["x"]
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.1).x
         self.assertGreaterEqual(x[x < 0].sum(), -0.1 - 1e-6)
         self.assertLess(x[x < 0].sum(), -1e-3)
         self.assertAlmostEqual(x.sum(), 1.0)
@@ -250,11 +300,11 @@ class TestMVPFeatures(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
         # Ensure that by default we don't go short
-        x = mvp.efficient_portfolio(gamma)["x"]
+        x = mvp.efficient_portfolio(gamma).x
         self.assertEqual((x < 0).sum(), 0)
 
         # Adding a min_short constraint doesn't change a thing
-        x_other = mvp.efficient_portfolio(gamma, min_short=0.01)["x"]
+        x_other = mvp.efficient_portfolio(gamma, min_short=0.01).x
         assert_allclose(x.to_numpy(), x_other.to_numpy())
 
     def test_min_short_1(self):
@@ -264,14 +314,14 @@ class TestMVPFeatures(unittest.TestCase):
         gamma = 100.0
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
-        x = mvp.efficient_portfolio(gamma, max_total_short=0.5)["x"]
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.5).x
 
         # Ensure that we do have tiny short positions
         small_trades = (x < -1e-6) & (x > (-0.05 + 1e-6))
         self.assertGreater(small_trades.sum(), 0)
 
         # Ensure that we still have short positions but beyond the threshold
-        x = mvp.efficient_portfolio(gamma, max_total_short=0.5, min_short=0.05)["x"]
+        x = mvp.efficient_portfolio(gamma, max_total_short=0.5, min_short=0.05).x
         self.assertGreater((x <= -0.05).sum(), 0)
         small_trades = (x < -1e-6) & (x > (-0.05 + 1e-6))
         self.assertEqual(small_trades.sum(), 0)
@@ -284,8 +334,8 @@ class TestMVPFeatures(unittest.TestCase):
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         x0 = np.zeros(mu.shape)
-        x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0)["x"]
-        x_without = mvp.efficient_portfolio(gamma, initial_holdings=None)["x"]
+        x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0).x
+        x_without = mvp.efficient_portfolio(gamma, initial_holdings=None).x
         assert_array_equal(x_with, x_without)
 
     def test_start_portfolio_invalid(self):
@@ -310,8 +360,8 @@ class TestMVPFeatures(unittest.TestCase):
         # should be the same as without initial holdings sunk-cost-fallacy
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         x0 = 1.0 / mu.size * np.ones(mu.size)
-        x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0)["x"]
-        x_without = mvp.efficient_portfolio(gamma, initial_holdings=None)["x"]
+        x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0).x
+        x_without = mvp.efficient_portfolio(gamma, initial_holdings=None).x
         assert_allclose(x_with, x_without, atol=1e-6)
 
     def test_start_portfolio_not_fully_invested(self):
@@ -324,8 +374,8 @@ class TestMVPFeatures(unittest.TestCase):
         # should be the same as without initial holdings sunk-cost-fallacy
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         x0 = 0.5 / mu.size * np.ones(mu.size)
-        x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0)["x"]
-        x_without = mvp.efficient_portfolio(gamma, initial_holdings=None)["x"]
+        x_with = mvp.efficient_portfolio(gamma, initial_holdings=x0).x
+        x_without = mvp.efficient_portfolio(gamma, initial_holdings=None).x
         assert_allclose(x_with, x_without, atol=1e-6)
 
     def test_start_portfolio_limit_trades(self):
@@ -337,14 +387,14 @@ class TestMVPFeatures(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         x0 = 1.0 / mu.size * np.ones(mu.size)
         # Ensure that we use more than 3 trades if there is no limit
-        x1_nomaxtrades = mvp.efficient_portfolio(gamma, initial_holdings=x0)["x"]
+        x1_nomaxtrades = mvp.efficient_portfolio(gamma, initial_holdings=x0).x
         trades = ((x1_nomaxtrades - x0) > 1e-4) | ((x1_nomaxtrades - x0) < -1e-4)
         self.assertGreater(trades.sum(), 3)
 
         # Ensure that we only use 3 trades with the limit
         x1_maxtrades = mvp.efficient_portfolio(
             gamma, initial_holdings=x0, max_trades=3
-        )["x"]
+        ).x
         trades = ((x1_maxtrades - x0) > 1e-4) | ((x1_maxtrades - x0) < -1e-4)
         self.assertLessEqual(trades.sum(), 3)
 
@@ -360,7 +410,7 @@ class TestMVPFeatures(unittest.TestCase):
         # Ensure that we take advantage of leverage
         x = mvp.efficient_portfolio(
             gamma, initial_holdings=x0, max_trades=6, max_total_short=0.1
-        )["x"]
+        ).x
 
         self.assertGreaterEqual((x[x < 0]).sum(), -0.1 - 1e-6)
         self.assertLess(x[x < 0].sum(), -1e-3)
@@ -379,13 +429,13 @@ class TestMVPFeatures(unittest.TestCase):
         x0 = np.array([0.4, 0, 0, 0.2, 0, 0.1, 0.03, 0.2, 0.07, 0])
         x0 /= x0.sum()  # To avoid 1+eps results due to rounding
         # Ensure that we _do_ have a small trade w/o minimum buy
-        x = mvp.efficient_portfolio(gamma, min_long=0.0, initial_holdings=x0)["x"]
+        x = mvp.efficient_portfolio(gamma, min_long=0.0, initial_holdings=x0).x
         trades = x - x0
         small_trades = (trades > 1e-6) & (trades < (0.03 - 1e-6))
         self.assertGreater(small_trades.sum(), 0)
 
         # Ensure that we _don't_ have a small trade w/ minimum buy
-        x = mvp.efficient_portfolio(gamma, min_long=0.03, initial_holdings=x0)["x"]
+        x = mvp.efficient_portfolio(gamma, min_long=0.03, initial_holdings=x0).x
         trades = x - x0
         small_trades = (trades > 1e-6) & (trades < (0.03 - 1e-6))
         self.assertEqual(small_trades.sum(), 0)
@@ -400,7 +450,7 @@ class TestMVPFeatures(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
         # Determine efficient portfolio without fees
-        x0 = mvp.efficient_portfolio(gamma, max_total_short=0.1)["x"]
+        x0 = mvp.efficient_portfolio(gamma, max_total_short=0.1).x
 
         # Ensure that this is not changed when we compute the portfolio again
         # with x0 as start and fees.  We need min_long and min_short to avoid
@@ -414,7 +464,7 @@ class TestMVPFeatures(unittest.TestCase):
             fees_sell=fees,
             min_long=0.02,
             min_short=0.02,
-        )["x"]
+        ).x
         assert_allclose(x0, x, atol=1e-6)
 
     def test_start_portfolio_fees_buy(self):
@@ -434,7 +484,7 @@ class TestMVPFeatures(unittest.TestCase):
             fees_buy=fees,
             min_long=0.02,
             min_short=0.02,
-        )["x"]
+        ).x
         buy_trades = (x - x0) > 1e-4
         # Ensure that there have been buy trades
         self.assertGreater(buy_trades.sum(), 0)
@@ -457,7 +507,7 @@ class TestMVPFeatures(unittest.TestCase):
             fees_sell=fees,
             min_long=0.02,
             min_short=0.02,
-        )["x"]
+        ).x
         sell_trades = (x0 - x) > 1e-4
         # Ensure that there have been sell trades
         self.assertGreater(sell_trades.sum(), 0)
@@ -470,7 +520,7 @@ class TestMVPFeatures(unittest.TestCase):
         gamma = 100.0
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
-        x = mvp.efficient_portfolio(gamma, max_positions=3)["x"]
+        x = mvp.efficient_portfolio(gamma, max_positions=3).x
         self.assertLessEqual((x > 1e-4).sum(), 3)
 
     def test_max_positions_start_portfolio(self):
@@ -487,7 +537,7 @@ class TestMVPFeatures(unittest.TestCase):
             initial_holdings=x0,
             max_positions=6,
             max_trades=5,
-        )["x"]
+        ).x
 
         self.assertLessEqual((x > 1e-4).sum(), 6)
         # In order to satisfy max_positions=6 with max_trades=5,
@@ -520,7 +570,7 @@ class TestMVPFeatures(unittest.TestCase):
         costs = 0.0025
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
-        x = mvp.efficient_portfolio(gamma, costs_buy=costs)["x"]
+        x = mvp.efficient_portfolio(gamma, costs_buy=costs).x
         value_trades = x.sum()
         self.assertAlmostEqual(x.sum(), 1 - costs * value_trades, delta=1e-6)
 
@@ -533,7 +583,7 @@ class TestMVPFeatures(unittest.TestCase):
         fees = 1e-4
 
         mvp = MeanVariancePortfolio(mu, cov_matrix)
-        x = mvp.efficient_portfolio(gamma, costs_buy=costs, fees_buy=fees)["x"]
+        x = mvp.efficient_portfolio(gamma, costs_buy=costs, fees_buy=fees).x
         n_trades = (x > 1e-4).sum()
         value_trades = x.sum()
         self.assertAlmostEqual(
@@ -554,7 +604,7 @@ class TestMVPFeatures(unittest.TestCase):
             max_total_short=0.3,
             fees_sell=fees,
             costs_sell=costs,
-        )["x"]
+        ).x
         n_trades = (x < 0).sum()
         value_trades = -x[x < 0].sum()
 
@@ -579,7 +629,7 @@ class TestMVPFeatures(unittest.TestCase):
             fees_sell=fees,
             costs_buy=costs,
             costs_sell=costs,
-        )["x"]
+        ).x
         trades = (x < -1e-6) | (x > 1e-6)
         n_trades = trades.sum()
         long_trades_value = x[x > 0].sum()
@@ -610,7 +660,7 @@ class TestMVPFeatures(unittest.TestCase):
             min_long=0.02,
             min_short=0.02,
             max_trades=6,
-        )["x"]
+        ).x
         trades = x - x0
         buy_trades = trades > 1e-4
         sell_trades = trades < -1e-4
@@ -640,7 +690,7 @@ class TestMVPFeatures(unittest.TestCase):
             max_total_short=0.1,
             fees_buy=0.001,
             fees_sell=0.002,
-        )["x"]
+        ).x
 
         self.assertAlmostEqual(x[x < 0].sum(), -0.1)
 
@@ -648,15 +698,17 @@ class TestMVPFeatures(unittest.TestCase):
         data = load_portfolio()
         cov_matrix = data.cov()
         L = np.linalg.cholesky(cov_matrix)
+        K = np.eye(L.shape[0])
         mu = data.mean()
+        e = np.zeros(mu.size)
         gamma = 100.0
 
         # Two equivalent setups: Sigma itself, and its Cholesky factor
-        mvp_factors = MeanVariancePortfolio(mu, None, cov_factors=(L,))
+        mvp_factors = MeanVariancePortfolio(mu, None, cov_factors=(L, K, e))
         mvp_Sigma = MeanVariancePortfolio(mu, cov_matrix)
 
-        x_factors = mvp_factors.efficient_portfolio(gamma)["x"]
-        x_Sigma = mvp_Sigma.efficient_portfolio(gamma)["x"]
+        x_factors = mvp_factors.efficient_portfolio(gamma).x
+        x_Sigma = mvp_Sigma.efficient_portfolio(gamma).x
 
         assert_allclose(x_factors, x_Sigma, atol=1e-6)
 
@@ -664,14 +716,16 @@ class TestMVPFeatures(unittest.TestCase):
         data = load_portfolio()
         cov_matrix = data.cov()
         L = np.linalg.cholesky(cov_matrix)
+        K = np.eye(L.shape[0])
         mu = data.mean()
+        e = np.zeros(mu.size)
         gamma = 100.0
 
-        mvp = MeanVariancePortfolio(mu, None, cov_factors=(L,))
+        mvp = MeanVariancePortfolio(mu, None, cov_factors=(L, K, e))
         pf = mvp.efficient_portfolio(gamma)
 
-        self.assertAlmostEqual(pf["return"], mu.to_numpy() @ pf["x"])
-        self.assertAlmostEqual(pf["risk"], cov_matrix.to_numpy() @ pf["x"] @ pf["x"])
+        self.assertAlmostEqual(pf.ret, mu.to_numpy() @ pf.x)
+        self.assertAlmostEqual(pf.risk, cov_matrix.to_numpy() @ pf.x @ pf.x)
 
     def test_risk_factors_equivalent_1(self):
         # Use case: Data that would emerge from a Single factor model
@@ -688,16 +742,17 @@ class TestMVPFeatures(unittest.TestCase):
         mu = 0.2 + (0.2 * np.random.rand(3) - 0.1)
         s = (0.1 + 0.2 * np.random.rand(3)).reshape((3, 1))
         d = 0.05 + 0.3 * np.random.rand(3)
-        D = np.diag(d)
         cov_matrix = s @ s.T + np.diag(d**2)
 
         # Two equivalent setups: Sigma itself, and its Cholesky factor
         gamma = 20
-        mvp_factors = MeanVariancePortfolio(mu, None, cov_factors=(s, D))
+        mvp_factors = MeanVariancePortfolio(
+            mu, None, cov_factors=(s, np.eye(1), d**2)
+        )
         mvp_Sigma = MeanVariancePortfolio(mu, cov_matrix)
 
-        x_factors = mvp_factors.efficient_portfolio(gamma)["x"]
-        x_Sigma = mvp_Sigma.efficient_portfolio(gamma)["x"]
+        x_factors = mvp_factors.efficient_portfolio(gamma).x
+        x_Sigma = mvp_Sigma.efficient_portfolio(gamma).x
 
         assert_allclose(x_factors, x_Sigma, atol=1e-5)
 
@@ -706,15 +761,14 @@ class TestMVPFeatures(unittest.TestCase):
         mu = 0.2 + (0.2 * np.random.rand(3) - 0.1)
         s = (0.1 + 0.2 * np.random.rand(3)).reshape((3, 1))
         d = 0.05 + 0.3 * np.random.rand(3)
-        D = np.diag(d)
         cov_matrix = s @ s.T + np.diag(d**2)
 
         gamma = 20
-        mvp = MeanVariancePortfolio(mu, None, cov_factors=(s, D))
+        mvp = MeanVariancePortfolio(mu, None, cov_factors=(s, np.eye(1), d**2))
         pf = mvp.efficient_portfolio(gamma)
 
-        self.assertAlmostEqual(pf["return"], mu @ pf["x"])
-        self.assertAlmostEqual(pf["risk"], cov_matrix @ pf["x"] @ pf["x"])
+        self.assertAlmostEqual(pf.ret, mu @ pf.x)
+        self.assertAlmostEqual(pf.risk, cov_matrix @ pf.x @ pf.x)
 
     def test_costs_per_asset_long(self):
         data = load_portfolio()
@@ -726,7 +780,7 @@ class TestMVPFeatures(unittest.TestCase):
         costs = np.array(
             [0.01, 0.01, 0.01, 0.02, 0.02, 0.02, 0.0025, 0.0025, 0.0025, 0.0025]
         )
-        x = mvp.efficient_portfolio(gamma, costs_buy=costs)["x"]
+        x = mvp.efficient_portfolio(gamma, costs_buy=costs).x
 
         self.assertAlmostEqual(x.sum(), 1 - (costs * x.to_numpy()).sum(), delta=1e-6)
 
@@ -738,7 +792,7 @@ class TestMVPFeatures(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
         costs = np.random.rand(mu.size) * 0.05
-        x = mvp.efficient_portfolio(gamma, costs_buy=costs)["x"]
+        x = mvp.efficient_portfolio(gamma, costs_buy=costs).x
 
         self.assertAlmostEqual(x.sum(), 1 - (costs * x.to_numpy()).sum(), delta=1e-6)
 
@@ -757,7 +811,7 @@ class TestMVPFeatures(unittest.TestCase):
         )
         x = mvp.efficient_portfolio(
             gamma, costs_buy=costs_buy, costs_sell=costs_sell, max_total_short=0.1
-        )["x"]
+        ).x
 
         df_buy = pd.Series(costs_buy, index=mu.index)
         df_sell = pd.Series(costs_sell, index=mu.index)
@@ -779,7 +833,7 @@ class TestMVPFeatures(unittest.TestCase):
         costs_sell = np.random.rand(mu.size) * 0.05
         x = mvp.efficient_portfolio(
             gamma, costs_buy=costs_buy, costs_sell=costs_sell, max_total_short=0.1
-        )["x"]
+        ).x
 
         df_buy = pd.Series(costs_buy, index=mu.index)
         df_sell = pd.Series(costs_sell, index=mu.index)
@@ -799,7 +853,7 @@ class TestMVPFeatures(unittest.TestCase):
         fees = np.array(
             [0.01, 0.003, 0.01, 0.004, 0.001, 0.0002, 0.002, 0.006, 0.005, 0.004]
         )
-        x = mvp.efficient_portfolio(gamma, fees_buy=fees, max_trades=4)["x"]
+        x = mvp.efficient_portfolio(gamma, fees_buy=fees, max_trades=4).x
         df_buy = pd.Series(fees, index=mu.index)
         total_fees = df_buy[x > 1e-6].sum()
 
@@ -813,7 +867,7 @@ class TestMVPFeatures(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
 
         fees = np.random.rand(10) * 0.01
-        x = mvp.efficient_portfolio(gamma, fees_buy=fees, max_trades=4)["x"]
+        x = mvp.efficient_portfolio(gamma, fees_buy=fees, max_trades=4).x
         df_buy = pd.Series(fees, index=mu.index)
         total_fees = df_buy[x > 1e-6].sum()
 
@@ -834,7 +888,7 @@ class TestMVPFeatures(unittest.TestCase):
             fees_sell=fees_sell,
             max_trades=4,
             max_total_short=0.1,
-        )["x"]
+        ).x
         df_buy = pd.Series(fees_buy, index=mu.index)
         df_sell = pd.Series(fees_sell, index=mu.index)
         total_fees = df_buy[x > 1e-6].sum() + df_sell[x < -1e-6].sum()
@@ -882,6 +936,5 @@ class TestMVPFeatures(unittest.TestCase):
         mvp = MeanVariancePortfolio(mu, cov_matrix)
         pf = mvp.efficient_portfolio(gamma, rf_return=0.0025)
 
-        self.assertIn("x_rf", pf)
-        self.assertGreater(pf["x_rf"], 0.1)
-        self.assertAlmostEqual(pf["return"], mu @ pf["x"] + 0.0025 * pf["x_rf"])
+        self.assertGreater(pf.x_rf, 0.1)
+        self.assertAlmostEqual(pf.ret, mu @ pf.x + 0.0025 * pf.x_rf)

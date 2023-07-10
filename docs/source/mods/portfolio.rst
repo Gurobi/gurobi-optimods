@@ -10,42 +10,41 @@ To achieve this, portfolio optimization can take into consideration several fact
 including historical data, market trends, and the investor's risk tolerance.
 Expected returns and variances play a crucial role in the process. Expected returns
 estimate the potential gains an investor anticipates from holding a particular asset,
-while variances measure the volatility or fluctuation in the asset's returns.
+while variances measure the volatility or fluctuation in the assets' returns.
 
 The efficient frontier is a key concept in portfolio optimization. It represents the
 set of portfolios that offer the highest expected returns for a given level of risk.
-This mod returns portfolios on the
+This Mod returns portfolios on the
 efficient frontier given expected returns and variances.
 
 
 Problem Specification
 ---------------------
 
-.. tabs::
-
-    .. tab:: Description
-
-        We consider a single-period portfolio optimization problem where want
-        to allocate wealth into :math:`n` risky assets. The returned portfolio
-        :math:`x` is an efficient mean-variance portfolio for given returns
-        :math:`\mu`, covariance matrix :math:`\Sigma` and risk aversion
-        :math:`\gamma`.
+We consider a single-period portfolio optimization problem where want
+to allocate wealth into :math:`n` risky assets. The returned portfolio
+:math:`x` is an efficient mean-variance portfolio for given returns
+:math:`\mu`, covariance matrix :math:`\Sigma` and risk aversion
+:math:`\gamma`.
 
 
-    .. tab:: Mathematical Formulation
+.. dropdown:: Background: Mathematical Formulation
 
-        .. math::
+    The most basic version of this Mod is implemented by formulating a Quadratic
+    Program (QP) and solving it using Gurobi. The formulation is as follows:
 
-            \begin{alignat}{2}
-            \max \quad        & \mu^\top x - \tfrac12 \gamma\ x^\top\Sigma x \\
-            \mbox{s.t.} \quad & 1^\top x = 1 \\
-            \end{alignat}
+    .. math::
 
-        * :math:`\mu` is the vector of expected returns.
-        * :math:`\Sigma` is the return covariance matrix.
-        * :math:`x` is the portfolio where :math:`x_i` denotes the fraction of
-          wealth invested in the risky asset :math:`i`.
-        * :math:`\gamma\geq0` is the risk aversion coefficient.
+        \begin{alignat}{2}
+        \max \quad        & \mu^\top x - \tfrac12 \gamma\ x^\top\Sigma x \\
+        \mbox{s.t.} \quad & 1^\top x = 1 \\
+        \end{alignat}
+
+    * :math:`\mu` is the vector of expected returns.
+    * :math:`\Sigma` is the return covariance matrix.
+    * :math:`x` is the portfolio where :math:`x_i` denotes the fraction of
+        wealth invested in the risky asset :math:`i`.
+    * :math:`\gamma\geq0` is the risk aversion coefficient.
 
 
 This description refers only to the simple base model.  Further down in
@@ -138,19 +137,12 @@ from this DataFrame:
 Solution
 --------
 
-The return value of the ``efficient_portfolio`` method is a dict containing
-information on the computed portfolio.
-
-.. doctest:: mod
-    :options: +NORMALIZE_WHITESPACE
-
-    >>> pf.keys()
-    dict_keys(['x', 'return', 'risk'])
-
-The data returned is as follows:
+The method ``efficient_portfolio`` returns a
+:class:`~gurobi_optimods.portfolio.PortfolioResult` instance, containing
+information on the computed portfolio.  It has the following attributes:
 
 * ``x`` : The relative investments :math:`x` for each asset
-* ``return`` : The estimated return :math:`\mu^T x`
+* ``ret`` : The estimated return :math:`\mu^T x`
 * ``risk`` : The estimated risk :math:`x^T \Sigma x`
 
 In this example the solution suggests to spread the investments over five
@@ -159,7 +151,7 @@ positions (AA, DD, GG, HH, II).  The other allocations are negligible.
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>> pf["x"]
+    >>> pf.x
     AA    4.236507e-01
     BB    1.743570e-07
     CC    7.573610e-10
@@ -173,14 +165,13 @@ positions (AA, DD, GG, HH, II).  The other allocations are negligible.
     dtype: float64
 
 The estimated risk and return are:
-positions (AA, DD, GG, HH, II).  The other allocations are negligible.
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
 
-    >>> round(pf["risk"], ndigits=8)
+    >>> round(pf.risk, ndigits=8)
     0.00017552
-    >>> round(pf["return"], ndigits=8)
+    >>> round(pf.ret, ndigits=8)
     0.00365177
 
 .. _factor models:
@@ -190,24 +181,35 @@ Using factor models as input
 
 In the preceding discussion we have assumed that we the covariance matrix
 :math:`\Sigma` was explicitly given.  In many cases, however, the covariance is
-naturally given through a *factor model*.  Mathematically this means that a
+naturally given through a *factor model*.  Mathematically, this means that a
 decomposition
 
 .. math::
 
     \begin{align*}
-    \Sigma = F_1 F_1^T + F_2 F_2^T + \cdots + F_l F_l^T
+    \Sigma = B K B^T + \mbox{diag}(d)
     \end{align*}
 
-is known.  Examples for this are single- or multi-factor models that divide the
-individual covariances into a general market movement, and an idiosyncratic
-risk component for each asset.  See `Efficient frontier(s) with cardinality
-constraints`_ for an example.
+of the covariance matrix is known where
 
-Rather than computing the covariance matrix explcitly from the decomposition,
-it is adivised to input the individual factor matrices directly through the
-``cov_factors`` keyword argurment as in the following example, which mimicks a
-single-factor model:
+* :math:`B` is an :math:`n`-by-:math:`k` matrix of factor exposures (or "betas" or "factor
+  loadings"),
+* :math:`K` is the :math:`k`-by-:math:`k` covariance matrix of the factor return rates,
+* :math:`d` is the vector of idiosyncratic risk for each asset,
+
+and :math:`\mbox{diag}(d)` denotes the :math:`n`-by-:math:`n` diagonal matrix having diagonal values
+:math:`d`.
+
+Examples for this are single- or multi-factor models that divide the individual
+covariances into a general market movement, and an idiosyncratic risk component
+for each asset.  Also CAPM priors and risk factors obtained from principal
+component analysis can be phrased in this form. See `Efficient frontier(s) with
+cardinality constraints`_ for an example of a synthetic multi-factor model.
+
+Rather than computing the covariance matrix explicitly from the decomposition,
+it is recommended for performance and accuracy reasons to input the individual
+factor matrices directly through the ``cov_factors`` keyword argurment as in
+the following example, which mimics a single-factor model:
 
 .. testcode:: mod
 
@@ -219,18 +221,17 @@ single-factor model:
     # Factors relating market variance to assets
     beta = np.array([[0.93797928], [1.71942161], [1.15652896]])
     # Idiosyncratic risk
-    asset_risk = np.array([0.23745675, 0.19140259, 0.34325066])
+    asset_risk = np.array([0.23745675, 0.19140259, 0.34325066])**2
 
     # Full covariance matrix according to single factor model
-    Sigma = beta @ beta.T * market_variance**2 + np.diag(asset_risk**2)
+    Sigma = beta @ beta.T * market_variance**2 + np.diag(asset_risk)
     mvp_matrix = MeanVariancePortfolio(mu, cov_matrix=Sigma)
-    x_matrix = mvp_matrix.efficient_portfolio(20)["x"]
+    x_matrix = mvp_matrix.efficient_portfolio(20).x
 
-    # Better use known factorization
-    F1 = beta * market_variance
-    F2 = np.diag(asset_risk)
-    mvp_factors = MeanVariancePortfolio(mu, cov_factors=(F1, F2))
-    x_factors = mvp_factors.efficient_portfolio(20)["x"]
+    # Same model, but taking advantage of the factor structure
+    mvp_factors = MeanVariancePortfolio(mu, cov_factors=(
+        beta, market_variance**2 * np.eye(1), asset_risk))
+    x_factors = mvp_factors.efficient_portfolio(20).x
 
 .. testoutput:: mod
     :hide:
@@ -290,7 +291,7 @@ portfolio value (130-30 strategy), you can do:
     mu = data.mean()
     gamma = 100.0
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, max_total_short=0.3)["x"]
+    x = mvp.efficient_portfolio(gamma, max_total_short=0.3).x
 
 .. testoutput:: mod
     :hide:
@@ -304,7 +305,7 @@ portfolio value (130-30 strategy), you can do:
     ...
 
 By incorporating leverage, we now obtain an optimal portfolio with three short
-positions, totaling to about 14% of the wealth:
+positions, totaling about 14% of assets:
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -345,7 +346,7 @@ optimal portfolio :math:`x`, you can use the keyword parameters ``fees_buy``
     gamma = 100.0
 
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, fees_buy=0.005)["x"]
+    x = mvp.efficient_portfolio(gamma, fees_buy=0.005).x
 
 .. testoutput:: mod
     :hide:
@@ -402,7 +403,7 @@ trades) keyword parameters as follows:
     gamma = 100.0
 
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, costs_buy=0.0025)["x"]
+    x = mvp.efficient_portfolio(gamma, costs_buy=0.0025).x
 
 .. testoutput:: mod
     :hide:
@@ -458,8 +459,8 @@ allocated to each trade:
     mu = data.mean()
     gamma = 100.0
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x_plain = mvp.efficient_portfolio(gamma, max_total_short=0.3)["x"]
-    x_minpos = mvp.efficient_portfolio(gamma, max_total_short=0.3, min_long=0.05, min_short=0.05)["x"]
+    x_plain = mvp.efficient_portfolio(gamma, max_total_short=0.3).x
+    x_minpos = mvp.efficient_portfolio(gamma, max_total_short=0.3, min_long=0.05, min_short=0.05).x
 
 .. testoutput:: mod
     :hide:
@@ -520,7 +521,7 @@ total number of open positions to three can be achieved as follows:
     gamma = 100.0
 
     mvp = MeanVariancePortfolio(mu, cov_matrix)
-    x = mvp.efficient_portfolio(gamma, max_positions=3)["x"]
+    x = mvp.efficient_portfolio(gamma, max_positions=3).x
 
 .. testoutput:: mod
     :hide:
@@ -533,7 +534,7 @@ total number of open positions to three can be achieved as follows:
     Presolved: 27 rows, 25 columns, 65 nonzeros
     ...
 
-The returned solution now suggests to trade only the assets "AA", "DD", "HH".
+The returned solution now suggests to trade only the assets "AA", "DD", and "HH".
 
 .. doctest:: mod
     :options: +NORMALIZE_WHITESPACE
@@ -597,15 +598,16 @@ the risk-free return rate is 0.25%:
     Presolved: 1 rows, 11 columns, 11 nonzeros
     ...
 
-If a risk-free return rate has been specified, the returned portfolio
-information has an additional key ``x_rf`` that tells the proportion of
+If a risk-free return rate has been specified, the returned
+:class:`~gurobi_optimods.portfolio.PortfolioResult` instance's ``x_rf``
+attribute tells the proportion of
 investment into the risk-free asset.  In this example the optimal portfolio
 allocates about 17% into the risk-free asset:
 
 .. testcode:: mod
 
-   print(f"risky     investment: {100*pf['x'].sum():.2f}%")
-   print(f"risk-less investment: {100*pf['x_rf']:.2f}%")
+   print(f"risky     investment: {100*pf.x.sum():.2f}%")
+   print(f"risk-less investment: {100*pf.x_rf:.2f}%")
 
 .. testoutput:: mod
 
@@ -613,8 +615,8 @@ allocates about 17% into the risk-free asset:
    risk-less investment: 16.82%
 
 
-Note that the contribution of ``rf_return * x_rf`` to the portfolio's expected
-value is already included in ``pf["return"]``.
+Note that the contribution of ``rf_return * pf.x_rf`` to the portfolio's expected
+value is already included in ``pf.ret``.
 
 Starting portfolio & rebalancing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -670,7 +672,7 @@ using at most two trades:
     )
 
     x = mvp.efficient_portfolio(gamma, initial_holdings=x0, max_trades=2,
-        fees_buy=0.001, fees_sell=0.002)["x"]
+        fees_buy=0.001, fees_sell=0.002).x
 
 .. testoutput:: mod
     :hide:
@@ -701,7 +703,7 @@ using at most two trades:
 
 The traded positions are "AA" and "EE", resulting in one-time fees for one
 long, and one short transaction (in sum 0.3% of the total investment).  As
-explained in `One-time transaction fees`_, these fees are accounted by the
+explained in `One-time transaction fees`_, these fees are accounted for within the
 portfolio itself, reducing the total portfolio value as needed:
 
 .. doctest:: mod
@@ -755,7 +757,7 @@ covariance matrix decomposes algebraically as follows:
 .. math::
 
     \begin{equation*}
-      \Sigma = F F^T + \mbox{cov}(u)
+      \Sigma = B K B^T + \mbox{cov}(u)
     \end{equation*}
 
 That is, :math:`\Sigma` is given by the sum of a low-rank term and a diagonal
@@ -772,24 +774,22 @@ incorporating this particular structure:
     num_factors = 4
     timesteps = 24
 
-    # Generate random factor model parameters
-    sigma_factor = np.diag(np.sqrt(1 + np.arange(num_factors) + np.random.rand(num_factors)))
+    # Generate random factor model, risk is B * sigma_factor * B.T + cov(u)
+    sigma_factor = np.diag(1 + np.arange(num_factors) + np.random.rand(num_factors))
     B = np.random.normal(size=(num_assets, num_factors))
     alpha = np.random.normal(loc=1, size=(num_assets, 1))
     u = np.random.multivariate_normal(np.zeros(num_assets), np.eye(num_assets), timesteps).T
+    risk_specific = np.diag(np.cov(u))
 
     # Time series in factor space
-    TS_factor = np.random.multivariate_normal(np.zeros(num_factors), sigma_factor**2, timesteps).T
+    TS_factor = np.random.multivariate_normal(np.zeros(num_factors), sigma_factor, timesteps).T
 
     # Estimate mu from time series in full space
     mu = np.mean(alpha + B @ TS_factor + u, axis=1)
 
-    # Final covariance data
-    F = B @ sigma_factor
-    risk_specific = np.diag(np.sqrt(np.diag(np.cov(u))))
-
-Note that the matrices ``F`` and ``risk_specific`` are already in the format for the
-optimization model as described in `Using factor models as input`_.
+Note that ``B``, ``sigma_factor`` and ``risk_specific`` are already in the
+format for the optimization model as described in `Using factor models as
+input`_.
 
 Computing frontiers
 ~~~~~~~~~~~~~~~~~~~
@@ -804,14 +804,14 @@ cardinality constraints::
     rr_pairs_con = {1: [], 2: [], 3: []}
 
     for g in gammas:
-        mvp = MeanVariancePortfolio(mu, cov_factors=(F, risk_specific))
+        mvp = MeanVariancePortfolio(mu, cov_factors=(B, sigma_factor, risk_specific))
         # Optimal portfolio w/o cardinality constraints
         pf = mvp.efficient_portfolio(g, verbose=False)
-        rr_pairs_unc.append((pf["risk"], pf["return"]))
+        rr_pairs_unc.append((pf.risk, pf.ret))
         for max_positions in [1, 2, 3]:
             # Optimal portfolio with cardinality constraints
             pf = mvp.efficient_portfolio(g, max_positions=max_positions, verbose=False)
-            rr_pairs_con[max_positions].append((pf["risk"], pf["return"]))
+            rr_pairs_con[max_positions].append((pf.risk, pf.ret))
 
 Comparison
 ~~~~~~~~~~

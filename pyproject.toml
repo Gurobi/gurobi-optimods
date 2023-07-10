@@ -8,13 +8,13 @@ description = "Nice APIs for common optimization tasks"
 readme = "README.md"
 requires-python = ">=3.8"
 license = "Apache-2.0"
-keywords = ["optimization", "gurobipy", "pandas"]
+keywords = ["optimization", "gurobipy", "pandas", "scipy"]
 authors = [
     { name = "Simon Bowly", email = "bowly@gurobi.com" },
     { name = "Robert Luce", email = "luce@gurobi.com" },
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -23,11 +23,11 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "gurobipy>=10.0.0",
+    "gurobipy>=10.0.1",
     "gurobipy-pandas>=1.0.0",
     "numpy",
     "pandas",
-    "scipy",
+    "scipy>=1.8.0",
 ]
 dynamic = ["version"]
 
@@ -40,3 +40,6 @@ examples = [
 
 [tool.hatch.version]
 path = "src/gurobi_optimods/__init__.py"
+
+[tool.isort]
+profile = "black"

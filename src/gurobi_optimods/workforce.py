@@ -4,6 +4,7 @@ Workforce Scheduling
 """
 
 import logging
+from typing import Optional
 
 import gurobipy as gp
 import gurobipy_pandas as gppd
@@ -17,39 +18,56 @@ logger = logging.getLogger(__name__)
 
 @optimod()
 def solve_workforce_scheduling(
-    preferences: pd.DataFrame,
+    availability: pd.DataFrame,
     shift_requirements: pd.DataFrame,
     worker_limits: pd.DataFrame,
+    preferences: Optional[str] = None,
     rolling_limits: bool = False,
     *,
     create_env,
 ) -> pd.DataFrame:
     """Solve a workforce scheduling model.
 
-    :param preferences: Dataframe with columns 'Worker' and 'Shift' defining
-        all allowable worker-shift combinations
-    :type preferences: :class:`pd.DataFrame`
-    :param shift_requirements: Dataframe with columns 'Shift' and 'Required'
-        specifying the number of staff required for every shift
-    :type shift_requirements: :class:`pd.DataFrame`
-    :param worker_limits: Dataframe with columns 'Worker', 'MinShifts', and
-        'MaxShifts' specifying the maximum and minimum number of shifts each
-        worker may be assigned
-    :type worker_limits: :class:`pd.DataFrame`
-    :param rolling_limits: Whether to enforce worker shift limits on a rolling
-        window basis. If True, worker_limits must contain an additional 'Window'
-        column specifying the rolling window for each worker
-    :type rolling_limits: :class:`bool`
-    :return: Assigned shifts as a subset of the preferences dataframe
-    :rtype: :class:`pd.DataFrame`
+    Parameters
+    ----------
+    availability : DataFrame
+        Dataframe with columns 'Worker' and 'Shift' defining all allowable
+        worker-shift combinations. The 'Preference' column optionally assigns a
+        preference value to the given combination.
+    shift_requirements : DataFrame
+        Dataframe with columns 'Shift' and 'Required' specifying the number of
+        staff required for every shift.
+    worker_limits : DataFrame
+        Dataframe with columns 'Worker', 'MinShifts', and 'MaxShifts' specifying
+        the maximum and minimum number of shifts each worker may be assigned in
+        the schedule.
+    preferences : str, optional
+        The name of a column in the availability dataframe containing preference
+        values. If provided, the mod returns a schedule which maximises the sum
+        of preference values of assigned shifts.
+    rolling_limits : bool
+        Whether to enforce worker shift limits on a rolling window basis. If
+        True, worker_limits must contain an additional 'Window' column
+        specifying the rolling window for each worker.
+
+    Returns
+    -------
+    DataFrame
+        Shift assignments as a subset of the availability dataframe
+
+    Raises
+    ------
+    ValueError
+        If a feasible set of shift assignments cannot be constructed from the
+        input data
     """
     with create_env() as env, gp.Model(env=env) as m:
-
         # Create binary variables for all valid shift assignments and
         # create preference maximization objective
         m.ModelSense = GRB.MAXIMIZE
-        assignments = preferences.set_index(["Worker", "Shift"]).gppd.add_vars(
-            m, obj="Preference", vtype=GRB.BINARY, name="assign"
+        preference_value = 0.0 if preferences is None else preferences
+        assignments = availability.set_index(["Worker", "Shift"]).gppd.add_vars(
+            m, obj=preference_value, vtype=GRB.BINARY, name="assign"
         )
 
         # Enforce shift coverage requirements
@@ -100,7 +118,7 @@ def solve_workforce_scheduling(
             )
 
         # Solve the model and return the shift assignments as a subset of the
-        # input preferences dataframe. Raise an exception if a feasible schedule
+        # input availability dataframe. Raise an exception if a feasible schedule
         # does not exist.
 
         m.optimize()

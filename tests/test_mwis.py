@@ -1,8 +1,8 @@
 import unittest
-
 from itertools import combinations
-import scipy.sparse as sp
+
 import numpy as np
+import scipy.sparse as sp
 from numpy.testing import assert_array_equal
 
 from gurobi_optimods.mwis import maximum_weighted_independent_set

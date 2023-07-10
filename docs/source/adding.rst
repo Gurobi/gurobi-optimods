@@ -6,29 +6,29 @@ repository of implemented optimization use cases. Each use case will have clear,
 informative, and pretty documentation that explains both how to use it and the
 mathematical model behind it for interested readers.
 
-We hope to grow the collection of mods over time, and welcome your
-contributions. This page outlines what makes a good mod, and what you will need
+We hope to grow the collection of Mods over time, and welcome your
+contributions. This page outlines what makes a good Mod, and what you will need
 to consider when developing your contribution.
 
 Proposing a new Mod
 -------------------
 
-To propose a new mod, create an issue in our repository using the 'New Mod
+To propose a new Mod, create an issue in our repository using the 'New Mod
 Proposal' template to gather the required details. One of the maintainers will
 reach out to you on the issue to discuss the proposed topic and design.
 
 A good Mod:
 
 - solves well-known, well-defined problem from a non-optimization field;
-- has a simple interface which shields the user from interacting with gurobipy
+- has a simple interface that shields the user from interacting with gurobipy
   directly;
 - is self-contained, and follows a clean data-in data-out style leaning on
   standard packages from the python ecosystem (``numpy``, ``scipy``, and
   ``pandas`` are our first-class citizens);
-- is accompanied by clear documentation which provides background information
+- is accompanied by clear documentation that provides background information
   for the topic and a formal statement of the problem in the domain language of
   the target user; and
-- includes runnable examples codes and presentation of results in the
+- includes runnable example codes and presentation of results in the
   documentation so users can hit the ground running.
 
 Starting work on a Mod
@@ -49,7 +49,7 @@ Implementation and tests
 
 Create ``src/gurobi_optimods/<mod>.py`` where your implementation will live, and
 ``tests/test_<mod>.py`` where your unit tests will live. A basic implementation
-of a mod takes this form::
+of a Mod takes this form::
 
     import logging
 
@@ -61,7 +61,7 @@ of a mod takes this form::
 
     @optimod()
     def my_mod(data, *, create_env):
-        """An optimod which solves an important problem
+        """An optimod that solves an important problem
 
         :param data: Description of argument
         :type data: Type of argument
@@ -85,41 +85,41 @@ of a mod takes this form::
             return solution
 
 Mods should be stateless with respect to ``gurobipy`` objects. This means Gurobi
-environments and models are created within a mod function, and closed before the
+environments and models are created within a Mod function, and closed before the
 function returns using context managers. Gurobi environments should be created
-by calling ``create_env``. This function is provided to your mod by the
+by calling ``create_env``. This function is provided to your Mod by the
 ``@optimod()`` decorator and supplies some necessary parameters to Gurobi to
-handle console output and log files consistently across mods. The standard
+handle console output and log files consistently across Mods. The standard
 parameters ``verbose`` and ``logfile`` are also handled by the decorator and will
 be included automatically in the API documentation.
 
-If your mod needs to produce any output, use the in-built python logging call
+If your Mod needs to produce any output, use the built-in python logging call
 ``logger.info``.
 
-You should also include your mod in the :doc:`api` by adding appropriate
+You should also include your Mod in the :doc:`api` by adding appropriate
 `autodoc <https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html>`_
 references to ``docs/source/api.rst``.
 
 Preparing documentation
 -----------------------
 
-Create ``docs/source/mods/<mod>.rst`` as the documentation page for your mod. As
-each mod is different, there is no specific template for this, but please use
-the existing mod pages as a guide.
+Create ``docs/source/mods/<mod>.rst`` as the documentation page for your Mod. As
+each Mod is different, there is no specific template for this, but please use
+the existing Mod pages as a guide.
 
 A reference to your page must also be added to ``docs/source/gallery.rst`` to
 include it in the gallery page and toctree when the documentation is built. You
-should also add an icon to the gallery card for your mod.
+should also add an icon to the gallery card for your Mod.
 
 Your documentation page must contain example codes that new users can
-immediately used, with presentation of the results included in the documentation
+immediately use, with presentation of the results included in the documentation
 page.
 
 The implementation of the Mod (description of the mathematical model or
-algorithms used) should be hidden from the user at first glance. We use tabs to
-do this. Any mathematical and algorithmic details should be placed in a tab and
-clearly indicate that this is advanced detail the user does not need to fully
-understand in order to use the Mod.
+algorithms used) should be hidden from the user at first glance. We use the ``..
+dropdown:`` directive for this. Any mathematical and algorithmic details should
+be placed in a dropdown and clearly indicate that this is advanced detail the
+user does not need to fully understand in order to use the Mod.
 
 Including datasets
 ------------------
@@ -129,17 +129,17 @@ optimods to enable users to quickly reproduce the examples in your documentation
 
 - Any data files should live under a subdirectory
   ``src/gurobi_optimods/data/<mod-name>`` to reduce clutter.
-- The ``gurobi_optimods.datasets`` module should implement a function which
+- The ``gurobi_optimods.datasets`` module should implement a function that
   fetches the dataset.
 
 Submitting a pull request
 -------------------------
 
 You can submit your pull request at any time in draft mode so the maintainers
-are aware your mod is actively being worked on. This should be a pull request
+are aware your Mod is actively being worked on. This should be a pull request
 from a branch on your fork into ``gurobi-optimods/main``. Pull requests include
-a checklist of features to ensure your mod is correctly included in the Python
+a checklist of features to ensure your Mod is correctly included in the Python
 package and the built documentation.
 
-When your mod is ready for review, take your PR out of draft mode and request a
+When your Mod is ready for review, take your PR out of draft mode and request a
 review.

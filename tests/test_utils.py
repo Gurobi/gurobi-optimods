@@ -6,6 +6,7 @@ found in tests/utils.py
 import io
 import os
 import tempfile
+import traceback
 import unittest
 import warnings
 from contextlib import redirect_stderr, redirect_stdout
@@ -71,6 +72,50 @@ class TestOptimodDecorator(unittest.TestCase):
             logfile = os.path.join(tempdir, "tmp.log")
             self.mod(logfile=logfile)
             assert not w
+
+    def test_license_limit(self):
+        # Ensure that we point to an appropriate license limit KB
+
+        # Step 1: Are we using the pip license at all?
+        is_limited = False
+        with gp.Env() as env, gp.Model(env=env) as model:
+            model.addVars(2001)
+            try:
+                model.optimize()
+            except gp.GurobiError as ge:
+                if ge.errno == gp.GRB.ERROR_SIZE_LIMIT_EXCEEDED:
+                    is_limited = True
+
+        if not is_limited:
+            self.skipTest("No pip license in use")
+
+        # Step 2: Trigger a license limit error through env creation wrapper
+        @optimod()
+        def too_large_mod(*, create_env):
+            with create_env() as env, gp.Model(env=env) as model:
+                model.addVars(2001)
+                model.optimize()
+
+        # We expect a ValueError; getting the standard license limit error is a
+        # fail, everything else an error
+        re_expect_message = (
+            "Given data exceeds Gurobi trial license limits; please see "
+            "https://support.gurobi.com.*to resolve this issue"
+        )
+        with self.assertRaisesRegex(ValueError, re_expect_message):
+            try:
+                too_large_mod()
+            except gp.GurobiError as ge:
+                self.assertNotEqual(ge.errno, gp.GRB.ERROR_SIZE_LIMIT_EXCEEDED)
+            except ValueError:
+                # Avoid any trace of the gurobipy-specific error in the traceback
+                self.assertNotIn(
+                    "Model too large for size-limited license", traceback.format_exc()
+                )
+                self.assertNotIn(
+                    "https://www.gurobi.com/free-trial", traceback.format_exc()
+                )
+                raise
 
 
 class TestOverrideParams(unittest.TestCase):

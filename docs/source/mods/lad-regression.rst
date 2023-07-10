@@ -3,20 +3,20 @@ Least Absolute Deviation Regression
 
 Least Absolute Deviation (LAD) regression is an alternative to the more commonly
 used Ordinary Least Squares (OLS) regression method. The distinction between the
-two comes down to the error metrix they use when fitted to training data: LAD
+two is the error metric used to fit the predictive model to training data. LAD
 minimizes the sum of absolute residuals, while OLS minimizes the sum of
 squares of residuals.
 
 Though most machine learning practitioners are probably more familiar with OLS,
 LAD was proposed around 50 years earlier :footcite:p:`birkes2011alternative`.
 OLS gained more popularity partly due to the fact that the computations required
-were simpler. In fact, it was the development of linear programming which made
+were simpler. It was the development of linear programming that made
 LAD computationally manageable :footcite:p:`bloomfield1980least`.
 
-LAD is generally more robust than OLS in that it is more resistant to outliers
-in the response variable :footcite:p:`birkes2011alternative`. A large residual
-for a single data point is amplified in its contribution to the loss function in
-OLS, since the residuals are squared. As a result, a single outlier can have a
+LAD is more robust than OLS in that it is more resistant to outliers
+in the response variable :footcite:p:`birkes2011alternative`. In OLS, a large residual
+for a single data point makes an outsized contribution to the loss function
+since the residuals are squared. As a result, a single outlier can have a
 large effect on the fitted coefficients and skew the resulting model. By
 contrast, a large deviation in an individual point has a less extreme effect on
 the linear loss function of LAD.
@@ -26,48 +26,42 @@ Problem Specification
 
 Scikit-learn's documentation gives a general explanation of `Linear Models
 <https://scikit-learn.org/stable/modules/linear_model.html>`_. The distinction
-between this mod and the Ordinary Least Squares regression from scikit-learn is the
-loss function.
+between this Mod and the Ordinary Least Squares regression algorithm from scikit-learn is the
+loss function. ``LADRegression`` chooses coefficients :math:`w` of a linear model
+:math:`y = Xw` so as to minimize the sum of absolute errors on a training
+dataset :math:`(X, y)`. In other words, it aims to minimize the
+following loss function:
 
-.. tabs::
+.. math::
 
-    .. tab:: Loss Function
+    \min_w \lvert Xw - y \rvert
 
-        :code:`LADRegression` chooses coefficients :math:`w` of a linear model
-        :math:`y = Xw` to minimize the sum of absolute errors on a training
-        dataset :math:`(X, y)`. In other words, it aims to minimize the
-        following loss function:
+.. dropdown:: Background: Mathematical Model
 
-        .. math::
+    The fitting algorithm of the LAD regression Mod is implemented by
+    formulating the loss function as a Linear Program (LP), which is then solved
+    using Gurobi. Here :math:`I` is the set of observations and :math:`J` the
+    set of fields. Response values :math:`y_i` are predicted from predictor
+    values :math:`x_{ij}` by fitting coefficients :math:`w_j`. To handle the
+    absolute value in the loss function, auxiliary non-negative variables
+    :math:`u_i` and :math:`v_i` are introduced.
 
-            \min_w \lvert Xw - y \rvert
+    .. math::
 
-    .. tab:: Optimization Model
-
-        To model the L1 regression loss function using linear programming, a a
-        number of auxiliary variables are introduced. Here :math:`I` is the set
-        of observations and :math:`J` the set of fields. Response values
-        :math:`y_i` are predicted from predictor values :math:`x_{ij}` by
-        fitting coefficients :math:`w_j`. To handle the absolute value in the
-        loss function, non-negative variables :math:`u_i` and :math:`v_i` are
-        introduced.
-
-        .. math::
-
-            \begin{alignat}{2}
-            \min \quad        & \sum_i u_i + v_i \\
-            \mbox{s.t.} \quad & \sum_j w_j x_{ij} + u_i - v_i = y_i \quad & \forall i \in I \\
-                              & u_i, v_i \ge 0                      \quad & \forall i \in I \\
-                              & w_j \,\, \text{free}                \quad & \forall j \in J \\
-            \end{alignat}
+        \begin{alignat}{2}
+        \min \quad        & \sum_i u_i + v_i \\
+        \mbox{s.t.} \quad & \sum_j w_j x_{ij} + u_i - v_i = y_i \quad & \forall i \in I \\
+                          & u_i, v_i \ge 0                      \quad & \forall i \in I \\
+                          & w_j \,\, \text{free}                \quad & \forall j \in J \\
+        \end{alignat}
 
 Example Code
 ------------
 
-This mod implements the fit-predict API used by all predictive models in
+This Mod implements the fit-predict API used by all predictive models in
 scikit-learn (including the :code:`sklearn.linear_model.LinearRegression`
 class). The example below reads in the diabetes dataset from scikit-learn,
-performs a train-test split, fits an LAD regression model to the training data,
+performs a train-test split, fits a LAD regression model to the training data,
 and creates predictions for the testing data.
 
 .. testcode:: lad_regression
@@ -136,8 +130,8 @@ coefficients found using Ordinary Least Squares (OLS).
     plt.figure(figsize=(8, 4))
     coefficients.plot.bar(ax=plt.gca())
 
-At this stage there isn't much to observe, the chosen coefficients are broadly
-similar.
+At this stage there isn't much to observe; the chosen coefficients are
+similar:
 
 .. figure:: figures/lad-regression-coeffs.png
     :width: 600
@@ -217,7 +211,7 @@ models.
 The figure below compares the model coefficients trained on the original set and
 the outlier training set for each model type. We can see that the OLS model is
 much more significantly affected by the introduction of outliers. The dominant
-coefficients have approximately doubled in some cases,and some smaller
+coefficients have approximately doubled in some cases, and some smaller
 coefficients have even reversed their sign. By comparison, the LAD model is
 almost unchanged by the introduction of these few outliers.
 

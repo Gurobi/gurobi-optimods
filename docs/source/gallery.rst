@@ -12,12 +12,6 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/bipartite-matching-example.png
 
-    .. grid-item-card:: Stigler Diet Problem
-        :link: mods/diet
-        :link-type: doc
-        :text-align: center
-        :img-top: mods/figures/pie.png
-
     .. grid-item-card:: Least Absolute Deviation Regression
         :link: mods/lad-regression
         :link-type: doc
@@ -66,7 +60,6 @@ The OptiMods Gallery
    :hidden:
 
    mods/bipartite-matching
-   mods/diet
    mods/lad-regression
    mods/min-cost-flow
    mods/mwis

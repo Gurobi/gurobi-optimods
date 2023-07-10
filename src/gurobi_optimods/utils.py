@@ -1,19 +1,24 @@
-# One possible idea for handling output suppression/file logging. Mods need
-# to be decorated with @optimod and accept a create_env keyword argument. This
-# factory function should be used to create the mod's gurobi environments.
-#
-#   @optimod(mod_logger=logger)  # pass the mod's module logger
-#   def my_mod(inputs, *, create_env):
-#       with create_env() as env, gp.Model(env=env) as model:
-#           # do stuff with model
-#
-# The mod then gets two arguments for free: `verbose`, where `verbose=False`
-# suppresses all output, and logfile=<file-path>, which creates a log file
-# including logger output from the mod and gurobi output.
-#
-# Note that this won't handle multi-threaded stuff well (context manipulates
-# global logger handlers). But it's simpler to implement in the mods than
-# passing some funky log collecting object around.
+"""
+Mods must be decorated with @optimod and accept a create_env keyword argument.
+This factory function should be used to create the mod's gurobi environments::
+
+   @optimod()
+   my_mod(inputs, *, create_env):
+       with create_env() as env, gp.Model(env=env) as model:
+           # formulate and solve model
+
+The mod then gets some arguments for free:
+
+- `verbose`, where `verbose=False` suppresses all output;
+- logfile=<file-path>, which writes output to a log file; and
+- solver_params, which the Mod caller can use to pass parameters to Gurobi.
+
+Parameters can also be passed as a dictionary to create_env if the Mod requires
+some specific settings.
+
+Note that this captures output via the gurobipy and optimod python loggers. It
+may not work as expected when multithreading in Python.
+"""
 
 import functools
 import logging
@@ -115,7 +120,24 @@ def optimod(mod_logger=None):
                 log_to_file=logfile,
                 user_params=solver_params,
             ) as create_env:
-                return func(*args, create_env=create_env, **kwargs)
+                try:
+                    return func(*args, create_env=create_env, **kwargs)
+
+                except gp.GurobiError as ge:
+                    if ge.errno == gp.GRB.ERROR_SIZE_LIMIT_EXCEEDED:
+                        pass  # fall through
+                    else:
+                        raise
+
+                # We can only fall through to here due to SIZE_LIMIT_EXCEEDED,
+                # so raise a more optimods-appropriate error. Raise here
+                # (instead of directly in the except block above) to avoid a
+                # confusing double stack trace.
+                raise ValueError(
+                    "Given data exceeds Gurobi trial license limits; please see "
+                    "https://support.gurobi.com/hc/en-us/articles/15801588452241 "
+                    "to resolve this issue"
+                )
 
         optimod_decorated._decorated_mod = True
         return optimod_decorated
