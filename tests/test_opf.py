@@ -1,3 +1,4 @@
+import collections
 import unittest
 
 import gurobipy as gp
@@ -39,6 +40,333 @@ def size_limited_license():
             return False
         except gp.GurobiError:
             return True
+
+
+class TestCase9(unittest.TestCase):
+    # Test various configurations with known optimal values
+
+    def setUp(self):
+        self.case = read_case_from_mat_file(load_caseopfmat("9"))
+
+    def test_ac(self):
+        solution = solve_opf_model(
+            self.case,
+            opftype="AC",
+            polar=False,
+            useef=True,
+            usejabr=True,
+            useactivelossineqs=False,
+            branchswitching=0,
+            usemipstart=False,
+        )
+
+        # Characteristic of the ac solution?
+        self.assertIsNotNone(solution)
+        self.assertTrue(solution["success"])
+        self.assertEqual(round(solution["f"]), 5297.0)
+        for bus in solution["bus"].values():
+            self.assertGreater(bus["Vm"], 1.0)
+
+    def test_acrelax(self):
+        solution = solve_opf_model(
+            self.case,
+            opftype="AC",
+            polar=False,
+            useef=False,
+            usejabr=False,
+            useactivelossineqs=False,
+            branchswitching=0,
+            usemipstart=False,
+        )
+
+        # Characteristic of the ac relaxation?
+        self.assertIsNotNone(solution)
+        self.assertTrue(solution["success"])
+        self.assertEqual(round(solution["f"]), 5297.0)
+        for bus in solution["bus"].values():
+            self.assertEqual(bus["Va"], 0.0)
+            self.assertEqual(bus["Vm"], 1.0)
+
+    def test_dc(self):
+        solution = solve_opf_model(
+            self.case,
+            opftype="DC",
+            branchswitching=0,
+            usemipstart=False,
+        )
+
+        # Characteristic of the dc solution?
+        self.assertIsNotNone(solution)
+        self.assertTrue(solution["success"])
+        self.assertEqual(round(solution["f"]), 5216.0)
+        for bus in solution["bus"].values():
+            self.assertGreaterEqual(abs(bus["Va"]), 0.01)
+            self.assertEqual(bus["Vm"], 1.0)
+
+
+class TestBranchSwitching(unittest.TestCase):
+    # Test a simple case with a redundant branch.
+    #
+    #             /  branch1 \
+    #            /            \
+    #      bus1                 bus2
+    #  gen1 Pmax=250           Pd=125
+    #            \            /
+    #             \  branch2 /
+    #
+
+    def setUp(self):
+        self.case = {
+            "baseMVA": 100.0,
+            "bus": {
+                1: {
+                    "bus_i": 1,
+                    "type": 3,
+                    "Pd": 0.0,
+                    "Qd": 0.0,
+                    "Gs": 0.0,
+                    "Bs": 0.0,
+                    "area": 0.0,
+                    "Vm": 1.0,
+                    "Va": 1.0,
+                    "baseKV": 345.0,
+                    "zone": 1.0,
+                    "Vmax": 1.1,
+                    "Vmin": 0.9,
+                },
+                2: {
+                    "bus_i": 2,
+                    "type": 3,
+                    "Pd": 125.0,
+                    "Qd": 0.0,
+                    "Gs": 0.0,
+                    "Bs": 0.0,
+                    "area": 0.0,
+                    "Vm": 1.0,
+                    "Va": 1.0,
+                    "baseKV": 345.0,
+                    "zone": 1.0,
+                    "Vmax": 1.1,
+                    "Vmin": 0.9,
+                },
+            },
+            "gen": {
+                1: {
+                    "bus": 1,
+                    "Pg": 0.0,
+                    "Qg": 0.0,
+                    "Qmax": 300.0,
+                    "Qmin": -300.0,
+                    "Vg": 1,
+                    "mBase": 100,
+                    "status": 1,
+                    "Pmax": 250.0,
+                    "Pmin": 10.0,
+                    "Pc1": 0,
+                    "Pc2": 0,
+                    "Qc1min": 0,
+                    "Qc1max": 0,
+                    "Qc2min": 0,
+                    "Qc2max": 0,
+                    "ramp_agc": 0,
+                    "ramp_10": 0,
+                    "ramp_30": 0,
+                    "ramp_q": 0,
+                    "apf": 0,
+                },
+            },
+            "branch": {
+                1: {
+                    "fbus": 1,
+                    "tbus": 2,
+                    "r": 0.0,
+                    "x": 0.0576,
+                    "b": 0.0,
+                    "rateA": 250.0,
+                    "rateB": 250.0,
+                    "rateC": 250.0,
+                    "ratio": 1.0,
+                    "angle": 0.0,
+                    "status": 1,
+                    "angmin": -360.0,
+                    "angmax": 360.0,
+                },
+                2: {
+                    "fbus": 1,
+                    "tbus": 2,
+                    "r": 0.0,
+                    "x": 0.0576,
+                    "b": 0.0,
+                    "rateA": 250.0,
+                    "rateB": 250.0,
+                    "rateC": 250.0,
+                    "ratio": 1.0,
+                    "angle": 0.0,
+                    "status": 1,
+                    "angmin": -360.0,
+                    "angmax": 360.0,
+                },
+            },
+            "gencost": {
+                1: {
+                    "costtype": 2,
+                    "startup": 1500,
+                    "shutdown": 0,
+                    "n": 3,
+                    "costvector": [0.11, 5, 150],
+                },
+            },
+        }
+
+    def test_ac_defaults(self):
+        # no branch switching, both branches should be on
+        for usemipstart in [True, False]:
+            with self.subTest(usemipstart=usemipstart):
+                solution = solve_opf_model(
+                    self.case,
+                    opftype="AC",
+                    branchswitching=0,
+                    polar=False,
+                    useef=True,
+                    usejabr=True,
+                    useactivelossineqs=False,
+                    usemipstart=usemipstart,
+                )
+                counts = collections.Counter(
+                    branch["switching"] for branch in solution["branch"].values()
+                )
+                self.assertEqual(counts, {1: 2})
+
+    def test_ac_branchswitching(self):
+        # branch switching with no minimum, one branch should be on
+        for usemipstart in [True, False]:
+            with self.subTest(usemipstart=usemipstart):
+                solution = solve_opf_model(
+                    self.case,
+                    opftype="AC",
+                    branchswitching=1,
+                    minactivebranches=0,
+                    polar=False,
+                    useef=True,
+                    usejabr=True,
+                    useactivelossineqs=False,
+                    usemipstart=usemipstart,
+                )
+                counts = collections.Counter(
+                    branch["switching"] for branch in solution["branch"].values()
+                )
+                self.assertEqual(counts, {0: 1, 1: 1})
+
+    def test_ac_minactivebranches(self):
+        # branch switching with 90% minimum, both branches should be on
+        for usemipstart in [True, False]:
+            with self.subTest(usemipstart=usemipstart):
+                solution = solve_opf_model(
+                    self.case,
+                    opftype="AC",
+                    branchswitching=1,
+                    minactivebranches=0.9,
+                    polar=False,
+                    useef=True,
+                    usejabr=True,
+                    useactivelossineqs=False,
+                    usemipstart=usemipstart,
+                )
+                counts = collections.Counter(
+                    branch["switching"] for branch in solution["branch"].values()
+                )
+                self.assertEqual(counts, {1: 2})
+
+    def test_acrelax_defaults(self):
+        # no branch switching, both branches should be on
+        solution = solve_opf_model(
+            self.case,
+            opftype="AC",
+            branchswitching=0,
+            polar=False,
+            useef=False,
+            usejabr=False,
+            useactivelossineqs=False,
+            usemipstart=False,
+        )
+        counts = collections.Counter(
+            branch["switching"] for branch in solution["branch"].values()
+        )
+        self.assertEqual(counts, {1: 2})
+
+    def test_acrelax_branchswitching(self):
+        # branch switching with no minimum, one branch should be on
+        solution = solve_opf_model(
+            self.case,
+            opftype="AC",
+            branchswitching=1,
+            minactivebranches=0,
+            polar=False,
+            useef=False,
+            usejabr=False,
+            useactivelossineqs=False,
+            usemipstart=False,
+        )
+        counts = collections.Counter(
+            branch["switching"] for branch in solution["branch"].values()
+        )
+        self.assertEqual(counts, {0: 1, 1: 1})
+
+    def test_acrelax_minactivebranches(self):
+        # branch switching with 90% minimum, both branches should be on
+        solution = solve_opf_model(
+            self.case,
+            opftype="AC",
+            branchswitching=1,
+            minactivebranches=0.9,
+            polar=False,
+            useef=False,
+            usejabr=False,
+            useactivelossineqs=False,
+            usemipstart=False,
+        )
+        counts = collections.Counter(
+            branch["switching"] for branch in solution["branch"].values()
+        )
+        self.assertEqual(counts, {1: 2})
+
+    def test_dc_defaults(self):
+        # no branch switching, both branches should be on
+        solution = solve_opf_model(
+            self.case,
+            opftype="DC",
+            branchswitching=0,
+        )
+        counts = collections.Counter(
+            branch["switching"] for branch in solution["branch"].values()
+        )
+        self.assertEqual(counts, {1: 2})
+
+    def test_dc_branchswitching(self):
+        # branch switching with no minimum, one branch should be on
+        solution = solve_opf_model(
+            self.case,
+            opftype="DC",
+            branchswitching=1,
+            minactivebranches=0,
+        )
+        counts = collections.Counter(
+            branch["switching"] for branch in solution["branch"].values()
+        )
+        self.assertEqual(counts, {0: 1, 1: 1})
+
+    def test_dc_minactivebranches(self):
+        # branch switching with 90% minimum, both branches should be on
+        solution = solve_opf_model(
+            self.case,
+            opftype="DC",
+            branchswitching=1,
+            minactivebranches=0.9,
+        )
+        counts = collections.Counter(
+            branch["switching"] for branch in solution["branch"].values()
+        )
+        self.assertEqual(counts, {1: 2})
 
 
 class TestOpf(unittest.TestCase):
