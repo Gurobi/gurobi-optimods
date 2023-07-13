@@ -3,7 +3,7 @@
 [![Tests](https://github.com/Gurobi/gurobi-optimods/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Gurobi/gurobi-optimods/actions/workflows/test.yml?query=branch%3Amain++)
 [![Docs](https://readthedocs.com/projects/gurobi-optimization-gurobi-optimods/badge/?version=stable)](https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/stable)
 
-# gurobi-optimods: nice APIs for common optimization tasks
+# gurobi-optimods: data-driven APIs for common optimization tasks
 
 ``gurobi-optimods`` is an open-source Python repository of implemented
 optimization use cases, each with clear, informative, and pretty documentation

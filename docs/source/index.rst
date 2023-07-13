@@ -1,7 +1,7 @@
 Welcome to Gurobi OptiMods's documentation!
 ===========================================
 
-**Gurobi OptiMods**: nice APIs for common optimization tasks.
+**Gurobi OptiMods**: data-driven APIs for common optimization tasks.
 
 `Gurobi/gurobi-optimods <https://github.com/Gurobi/gurobi-optimods>`_
 is an open-source Python repository of implemented
