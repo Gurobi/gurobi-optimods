@@ -640,7 +640,6 @@ def read_case_file_mat(casefile):
 
     starttime = time.time()
     case_dict = {}
-    case_dict["refbus"] = -1
 
     logger.info("Reading case file %s." % casefile)
     mat = loadmat(casefile)

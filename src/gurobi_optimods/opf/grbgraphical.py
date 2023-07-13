@@ -57,7 +57,7 @@ def generate_solution_figure(alldata, solution):
     else:
         textlist.append(["No lines turned off", "black"])
     textlist.append(["Black bus: generation <= 75 and load < 50", "black"])
-    textlist.append(["Blue bus: generation <= 75 and load > 50", "blue"])
+    textlist.append(["Blue bus: generation <= 75 and load >= 50", "blue"])
     textlist.append(["Purple bus: generation >  75", "purple"])
     textlist.append(["Orange bus: generation >  150", "orange"])
     textlist.append(["Red bus: generation >  500", "red"])
@@ -242,7 +242,7 @@ def grbgraphical(alldata, plottype, textlist):
                 Pload,
             )
             # Default value for buses with load > 50 and that are not generating much
-            if Pload > 50 and largegen is False:
+            if Pload >= 50 and largegen is False:
                 mynode_size[j - 1] = 7
                 mynode_color[j - 1] = "blue"
 
