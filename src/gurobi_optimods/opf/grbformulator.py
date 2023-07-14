@@ -107,7 +107,7 @@ def lpformulator_body(alldata, model, opftype):
         raise ValueError("Unknown OPF type.")
 
 
-def compute_violations_from_voltages(alldata):
+def compute_violations_from_voltages(env, alldata):
     """
     Calls the corresponding violation checker function
 
@@ -126,7 +126,7 @@ def compute_violations_from_voltages(alldata):
     logger.info("Computing violations from given voltage inputs.")
     violations = None
     # Create model
-    with gp.Env() as env, gp.Model("AC_Violations_Model", env=env) as model:
+    with gp.Model("AC_Violations_Model", env=env) as model:
         # Add model variables and constraints
         lpformulator_body(alldata, model, OpfType.AC)
         # Compute violations

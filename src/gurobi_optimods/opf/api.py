@@ -121,7 +121,8 @@ def solve_opf_model(
     return solution
 
 
-def compute_violations_from_given_voltages(case, voltages, polar=False):
+@optimod()
+def compute_violations_from_given_voltages(case, voltages, polar=False, *, create_env):
     """
     Constructs an OPF model from given case data and computes a violation dictionary
     out of given voltage values.
@@ -142,15 +143,20 @@ def compute_violations_from_given_voltages(case, voltages, polar=False):
     The violation dictionary can be used to generate a violations figure with the
     ``generate_opf_violations_figure`` function
 
-    :param case: Dictionary holding case data
-    :type case: dict
-    :param voltages: Dictionary holding bus input voltage data
-    :type voltages: dict
-    :param polar: Controls whether polar formulation should be used when checking violations, defaults to `False`
-    :type polar: bool, optional
+    Parameters
+    ----------
+    case : dict
+        Dictionary holding case data
+    voltages : dict
+        Dictionary holding bus input voltage data
+    polar: bool, optional
+        If True, use polar formulation when checking violations, defaults to False
 
-    :return: Case dictionary following MATPOWER notation with additional violations fields
-    :rtype: dict
+    Returns
+    -------
+    dict
+        Case dictionary following MATPOWER notation with additional violations fields
+
     """
 
     # Initialize fixed settings dictionary
@@ -181,7 +187,8 @@ def compute_violations_from_given_voltages(case, voltages, polar=False):
     grbmap_volts_from_dict(alldata, voltages)
 
     # Compute model violations based on user input voltages
-    violations = compute_violations_from_voltages(alldata)
+    with create_env() as env:
+        violations = compute_violations_from_voltages(env, alldata)
 
     return violations
 
