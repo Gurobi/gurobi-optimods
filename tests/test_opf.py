@@ -54,7 +54,7 @@ class TestCase9(unittest.TestCase):
             opftype="AC",
             polar=False,
             useef=True,
-            usejabr=True,  # JABR is the SOCP relaxation
+            usejabr=True,
             useactivelossineqs=False,
             branchswitching=0,
             usemipstart=False,
@@ -73,7 +73,7 @@ class TestCase9(unittest.TestCase):
             opftype="AC",
             polar=False,
             useef=False,
-            usejabr=True,
+            usejabr=False,
             useactivelossineqs=False,
             branchswitching=0,
             usemipstart=False,
@@ -104,7 +104,6 @@ class TestCase9(unittest.TestCase):
             self.assertEqual(bus["Vm"], 1.0)
 
 
-@unittest.skip  # just for as long as we don't have a small example
 class TestBranchSwitching(unittest.TestCase):
     # Test a simple case with a redundant branch.
     #
