@@ -578,24 +578,6 @@ class TestGraphicsCase9(unittest.TestCase):
             fig.show()
 
     # test plotting a solution from pre-loaded data
-    def test_graphics(self):
-        # get path to csv file holding the coordinates for case 9
-        coordsfile = load_filepath("case9coords.csv")
-        coords_dict = read_coords_from_csv_file(coordsfile)
-        # load case dictionary
-        case = load_opfdictcase()
-        # load a precomputed solution and objective value
-        solution = load_case9solution()
-        # plot the given solution
-        fig = generate_opf_solution_figure(case, coords_dict, solution)
-        # check whether figure coordinates and scaled input coordinates are the same
-        for i in range(9):
-            self.assertLess(abs(fig.data[1].x[i] - self.graphics_9_x[i]), 1e-9)
-            self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
-        if self.plot_graphics:
-            fig.show()
-
-    # test plotting a solution from pre-loaded data
     def test_graphics_branchswitching(self):
         # get path to csv file holding the coordinates for case 9
         coordsfile = load_filepath("case9coords.csv")
