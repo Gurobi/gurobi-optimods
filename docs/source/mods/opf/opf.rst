@@ -3,7 +3,7 @@ Optimal Power Flow
 
 The operation of power systems relies on a number of optimization tasks, known as *optimal power flow* (*OPF*) problems. The objective of a standard OPF problem is to minimize operation cost such that the underlying grid constraints, such as generation, demand, and voltage limits, are satisfied.
 
-In this mod, we consider the cases of *alternating current* (*AC*) and *direct current* (*DC*) OPF formulations. The ACOPF problem in its natural form requires the introduction of complex numbers in order to formulate the voltage. We circumvent the usage of complex numbers by using the so-called cartesian-coordinates formulation where we introduce additional optimization variables to formulate the complex terms via nonconvex quadratic relationships. The DCOPF problem is an approximation of the ACOPF problem where additional assumptions are made in order to make the optimization model linear. While the additional assumptions result in potential loss of solution accuracy, they make the DCOPF problem a lot easier to solve. This is especially useful if the solution accuracy can be neglected in favor of solution time and problem size. For additional information regarding the formulations, please refer to `More Complete Descriptions`_.
+In this mod, we consider the cases of *alternating current* (*AC*) and *direct current* (*DC*) OPF formulations. The ACOPF problem in its natural form requires the introduction of complex numbers in order to formulate the voltage. We circumvent the usage of complex numbers by using the so-called cartesian-coordinates formulation where we introduce additional optimization variables to formulate the complex terms via nonconvex quadratic relationships. The DCOPF problem is an approximation of the ACOPF problem where additional assumptions are made in order to make the optimization model linear. While the additional assumptions result in potential loss of solution accuracy, they make the DCOPF problem a lot easier to solve. This is especially useful if the solution accuracy can be neglected in favor of solution time and problem size. For additional information regarding the formulations, please refer to the :doc:`opf_specification`.
 
 Here we assume basic familiarity with concepts such as *voltage* (potential energy), *current* (charge flow), and *power* (instantaneous energy generation or consumption).  The engineering community also uses the term *bus* (nodes in a network, with some simplification) and *branch* (arc in a network, a connection between two buses, typically a line or a transformer). For more details and more comprehensive descriptions of power systems and the underlying problems, please refer to the `Recommended Literature`_ section found further down below.
 
@@ -11,46 +11,12 @@ Here we assume basic familiarity with concepts such as *voltage* (potential ener
 Problem Specification
 ---------------------
 
-As input data for an OPF problem we have a power system (*power grid* for non-engineers) consisting of a network of buses and branches. Each branch is given as
-an ordered pair :math:`km`, where :math:`k` is the *from* bus and :math:`m` is the *to* bus.
-
-1. For each branch :math:`km` we have a complex :math:`2\times 2` matrix :math:`Y_{km}`, the admittance-matrix. The following notation will be used below
-
-       .. math::
-
-           Y _{km} =  \left( \begin{array}{c c}
-	   G_{kk} +j B_{kk} & G_{km} +j B_{km}\\
-	   G_{mk} +j B_{mk} & G_{mm} +j B_{mm}
-	   \end{array} \right).
-
-   We also have a value :math:`L_{km}` defining the branch limit.
-
-2. For every bus :math:`k` we have two positive values, :math:`L_k \, \text{and} \, U_k` with :math:`L_k \leq U_k`, defining the voltage limits.
-
-3. For every bus :math:`k` we have two values, :math:`P^{d}_k \, \text{and} \, Q^{d}_k`, the active and reactive loads (demands), respectively.
-
-4. For every generator :math:`i` we have the active and reactive generation limits, :math:`P^{\min}_i, \, P^{\max}_i, \, Q^{\min}_i, \, \text{and} \, Q^{\max}_i` with :math:`P^{\min}_i, \leq P^{\max}_i, \, Q^{\min}_i, \leq Q^{\max}_i`, as well as a (convex) function :math:`F_i` defining the generation cost.
-
-5. At a bus :math:`k` we have a set :math:`G(k)` defining the set of generators located at bus :math:`k`.
-
-6. For a bus :math:`k`, denote by :math:`\delta^+(k) \, \text{and} \, \delta^-(k)` the set of branches outgoing and incoming branches of the form :math:`km \, \text{and} \, mk`, respectively.
-
-7. There may be multiple parallel branches :math:`km` but in this writeup, for the sake of simplicity, this is being ignored (the mathematical description is easily adapted).  There may be multiple generators at a given bus (we account for this explicitly).  The same bus may have generators and a nonzero load (demand).  In this simple description we ignore bus shunts.
-
-8. Associated with each branch :math:`km` there are values :math:`\tau_{km} > 0` (ratio) and :math:`\phi_{km}` (angle).  These are meaningful in the case of transformers; for a non-transformer branch we set :math:`\tau_{km} = 1` and :math:`\phi_{km} = 0`.
-
-9. In modern versions discussed in the `Recommended Literature`_, network devices such as FACTS, phase-shifters, and impedance corrections are also incorporated into the model. We do not account for these in this mod.
-
-
-More Complete Descriptions
---------------------------
+The problem specification of an OPF problem is quite involved and lengthy. Thus, we ask the reader to refer to the
 
 .. toctree::
-   :maxdepth: 1
+    :maxdepth: 1
 
-   acopf
-   dcopf
-
+    opf_specification
 
 Solving an OPF Problem
 ----------------------
@@ -364,6 +330,7 @@ Similar to generating a graphical representation of a feasible solution, it is a
 
 In the above image, you can see the power grid generated out of the given network data together with the coordinate and violation information. The red circles depict buses where the voltage magnitude or real or reactive power injections are violated. Red marked branches depict branches with violated limits.
 
+.. _recommended-label:
 Recommended Literature
 ----------------------
 
