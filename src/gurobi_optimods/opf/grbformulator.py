@@ -172,16 +172,23 @@ def lpformulator_optimize(alldata, model, opftype):
     if GRB.VERSION_MAJOR >= 11:
         model.setParam("FuncNonlinear", 1)
     # Specific settings for better convergence
+    gap = model.getParamInfo("MIPGap")
+    opttol = model.getParamInfo("OptimalityTol")
     if opftype != OpfType.DC:
         if alldata["use_ef"] or alldata["dopolar"]:
             model.params.NonConvex = 2
 
         # Specific settings for better convergence
-        model.Params.MIPGap = 1.0e-3
-        model.Params.OptimalityTol = 1.0e-3
+        # Change only if they are at default values
+        if gap[2] == gap[5]:
+            model.Params.MIPGap = 1.0e-3
+        if opttol[2] == opttol[5]:
+            model.Params.OptimalityTol = 1.0e-3
     else:
-        model.Params.MIPGap = 1.0e-4
-        model.Params.OptimalityTol = 1.0e-4
+        if gap[2] == gap[5]:
+            model.Params.MIPGap = 1.0e-4
+        if opttol[2] == opttol[5]:
+            model.Params.OptimalityTol = 1.0e-4
 
     # Use user specified parameters
     if alldata["gurobiparamfile"] is not None:
