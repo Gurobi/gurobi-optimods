@@ -285,6 +285,9 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     usejabr=True,
                     useactivelossineqs=False,
                     usemipstart=usemipstart,
+                    solver_params={
+                        "MIPGap": 1e-5
+                    },  # force to find a solution with branches turned off
                 )
                 counts = collections.Counter(
                     branch["switching"] for branch in solution["branch"].values()
