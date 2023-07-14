@@ -77,6 +77,27 @@ class TestAPICase9(unittest.TestCase):
     def setUp(self):
         self.case = read_case_from_mat_file(load_caseopfmat("9"))
 
+    def assert_approx_equal(self, value, expected, tol):
+        self.assertLess(abs(value - expected), tol)
+
+    def test_dc(self):
+        solution = solve_opf_model(
+            self.case,
+            opftype="DC",
+            branchswitching=0,
+            usemipstart=False,
+        )
+        # Check whether the solution point looks correct. Differences can
+        # be quite big because we solve only to 0.1% optimality.
+        self.assertIsNotNone(solution)
+        self.assertEqual(solution["success"], 1)
+
+        # DC test values
+        self.assert_approx_equal(solution["f"], 5216.026607, tol=1e1)
+        self.assert_approx_equal(solution["bus"][1]["Va"], 6.177764, tol=1e1)
+        self.assert_approx_equal(solution["gen"][2]["Pg"], 134.377585, tol=1e1)
+        self.assert_approx_equal(solution["branch"][3]["Pt"], -56.2622, tol=1e1)
+
     def test_ac(self):
         solution = solve_opf_model(
             self.case,
@@ -88,56 +109,38 @@ class TestAPICase9(unittest.TestCase):
             branchswitching=0,
             usemipstart=False,
         )
-
-        # Characteristic of the ac solution?
+        # Check whether the solution point looks correct. Differences can
+        # be quite big because we solve only to 0.1% optimality.
         self.assertIsNotNone(solution)
-        self.assertTrue(solution["success"])
-        self.assertEqual(round(solution["f"]), 5297.0)
-        for bus in solution["bus"].values():
-            self.assertGreater(bus["Vm"], 1.0)
+        self.assertEqual(solution["success"], 1)
+        self.assert_approx_equal(solution["f"], 5296.686204, tol=1e1)
+        self.assert_approx_equal(solution["bus"][3]["Vm"], 1.08662, tol=1e1)
+        self.assert_approx_equal(solution["gen"][2]["Qg"], 0.031844, tol=1e1)
+        self.assert_approx_equal(solution["branch"][1]["Qf"], 12.9656, tol=1e1)
 
-    def test_acrelax(self):
+    def test_ac_relax(self):
         solution = solve_opf_model(
             self.case,
             opftype="AC",
             polar=False,
             useef=False,
-            usejabr=False,  # FIXME: should jabr be enabled with ACrelax?
+            usejabr=True,
             useactivelossineqs=False,
             branchswitching=0,
             usemipstart=False,
         )
-
-        # Characteristic of the ac relaxation?
+        # Check whether the solution point looks correct. Differences can
+        # be quite big because we solve only to 0.1% optimality.
         self.assertIsNotNone(solution)
-        self.assertTrue(solution["success"])
-        self.assertEqual(round(solution["f"]), 2299.0)
-        for bus in solution["bus"].values():
-            self.assertEqual(bus["Va"], 0.0)
-            self.assertEqual(bus["Vm"], 1.0)
-
-    def test_dc(self):
-        solution = solve_opf_model(
-            self.case,
-            opftype="DC",
-            branchswitching=0,
-            usemipstart=False,
-        )
-
-        # Characteristic of the dc solution?
-        self.assertIsNotNone(solution)
-        self.assertTrue(solution["success"])
-        self.assertEqual(round(solution["f"]), 5216.0)
-        for bus in solution["bus"].values():
-            self.assertGreaterEqual(abs(bus["Va"]), 0.01)
-            self.assertEqual(bus["Vm"], 1.0)
+        self.assertEqual(solution["success"], 1)
+        self.assert_approx_equal(solution["f"], 5296.66532, tol=1e1)
+        self.assert_approx_equal(solution["gen"][1]["Pg"], 89.803524, tol=1e1)
+        self.assert_approx_equal(solution["branch"][2]["Pt"], -34.1774, tol=1e1)
 
 
 @unittest.skipIf(size_limited_license(), "size-limited-license")
 class TestAPILargeModels(unittest.TestCase):
     # Tests with larger models requiring a full license
-    # TODO split out case9, since it's small enough to run with the pip license.
-    # Can then replace TestAPICase9 with it.
 
     def setUp(self):
         self.numcases = 5
@@ -169,73 +172,70 @@ class TestAPILargeModels(unittest.TestCase):
         self.Pg_acconv = [89.803524, 194.796114, 142.58252, 24.518669, 0.030902]
         self.Pt_acconv = [-34.1774, -71.23414, -29.9637, 23.79936, 56.2152]
 
-    # test DC formulation
     def test_dc(self):
         for i in range(self.numcases):
             with self.subTest(case=self.cases[i]):
-                # load path to case file in .m and .mat format
                 casefile = load_caseopfmat(self.cases[i])
-                # read case file and .mat format and return a case dictionary
                 case = read_case_from_mat_file(casefile)
-                # solve opf models and return a solution
                 solution = solve_opf_model(
                     case,
                     opftype="DC",
                     branchswitching=0,
                     usemipstart=False,
                 )
-                # check whether the solution point looks correct
+                # Check whether the solution point looks correct. Differences can
+                # be quite big because we solve only to 0.1% optimality.
                 self.assertIsNotNone(solution)
                 self.assertEqual(solution["success"], 1)
                 self.assertIsNotNone(solution["f"])
-                # differences can be quite big because we solve only to 0.1% optimality
                 self.assertLess(abs(solution["f"] - self.objvals_dc[i]), 1e1)
                 self.assertLess(abs(solution["bus"][1]["Va"] - self.Va_dc[i]), 1e1)
                 self.assertLess(abs(solution["gen"][2]["Pg"] - self.Pg_dc[i]), 1e1)
                 self.assertLess(abs(solution["branch"][3]["Pt"] - self.Pt_dc[i]), 1e1)
 
-    # test AC formulation
     def test_ac(self):
+        # Exact AC is expensive, so only solve the first two cases.
         for i in range(2):
             with self.subTest(case=self.cases[i]):
-                # load path to case file in .m and .mat format
                 casefile = load_caseopfmat(self.cases[i])
-                # read case file and .mat format and return a case dictionary
                 case = read_case_from_mat_file(casefile)
-                # solve opf models and return a solution
-                solution = solve_opf_model(case, opftype="Ac")
-                # check whether the solution point looks correct
+                solution = solve_opf_model(
+                    case,
+                    opftype="AC",
+                    polar=False,
+                    useef=True,
+                    usejabr=True,
+                    useactivelossineqs=False,
+                    branchswitching=0,
+                    usemipstart=False,
+                )
+                # Check whether the solution point looks correct. Differences can
+                # be quite big because we solve only to 0.1% optimality.
                 self.assertIsNotNone(solution)
                 self.assertEqual(solution["success"], 1)
                 self.assertIsNotNone(solution["f"])
-                # differences can be quite big because we solve only to 0.1% optimality
                 self.assertLess(abs(solution["f"] - self.objvals_ac[i]), 1e1)
                 self.assertLess(abs(solution["bus"][3]["Vm"] - self.Vm_ac[i]), 1e1)
                 self.assertLess(abs(solution["gen"][2]["Qg"] - self.Qg_ac[i]), 1e1)
                 self.assertLess(abs(solution["branch"][1]["Qf"] - self.Qf_ac[i]), 1e1)
 
-    # test AC formulation relaxation
     def test_ac_relax(self):
-        # FIXME: currently testing with jabr inequalities active, is this right?
         for i in range(self.numcases):
             with self.subTest(case=self.cases[i]):
-                # load path to case file in .m and .mat format
                 casefile = load_caseopfmat(self.cases[i])
-                # read case file in .mat format and return a case dictionary
                 case = read_case_from_mat_file(casefile)
-                # solve opf models and return a solution
                 solution = solve_opf_model(
                     case,
                     opftype="AC",
                     polar=False,
                     useef=False,
-                    # usejabr=False,
+                    usejabr=True,
                     useactivelossineqs=False,
                     branchswitching=0,
                     usemipstart=False,
                 )
-                # check whether the solution point looks correct
-                # differences can be quite big because bigger models are often numerically unstable
+                # Check whether the solution point looks correct. Differences can
+                # be quite big because bigger models are often numerically unstable.
                 self.assertIsNotNone(solution)
                 self.assertEqual(solution["success"], 1)
                 self.assertIsNotNone(solution["f"])
