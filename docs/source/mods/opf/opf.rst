@@ -24,7 +24,9 @@ Solving an OPF Problem
 Input
 ~~~~~
 
-This mod has multiple callable API and convenience functions. All of the main API functions take a so-called *case dictionary* as input. The case dictionary holds all essential information about the underlying network, i.e., information about buses, branch connections, and generators. The case dictionary is meant to follow the `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_. In particular the case dictionary for this mod expects a dictionary with keys ``baseMVA``, ``bus``, ``branch``, ``gen``, and ``gencost``. All other entries of the dictionary are ignored in the current version of the mod. The value stored via the ``baseMVA`` key is a numerical float value. The values stored in the case dictionary via keys ``bus``, ``branch``, ``gen``, and ``gencost`` are lists of dictionaries, where each dictionary holds specific data about the particular object. Every single object is defined by a dictionary holding entries following the `MATPOWER Case Format <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_, e.g., every bus has a bus number ``bus_i``, real power demand ``Pd``, etc. In the below example code, we read in a pre-defined case dictionary from our dataset.
+This mod has multiple callable API and convenience functions. All of the main API functions take a so-called *case dictionary* as input. The case dictionary holds all essential information about the underlying network, i.e., information about buses, branch connections, and generators. The case dictionary is meant to follow the `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_. We discuss all details of the case dictionary further down below in the `Case and Result Dictionaries`_ section.
+
+In the below example code, we read in a pre-defined case dictionary from our dataset.
 
 .. doctest:: opf
     :options: +NORMALIZE_WHITESPACE
@@ -32,53 +34,17 @@ This mod has multiple callable API and convenience functions. All of the main AP
     >>> from gurobi_optimods.datasets import load_opfdictcase
     >>> case = load_opfdictcase()
 
-    >>> case['baseMVA']
-    100.0
-
-    >>> buses = case['bus']
-    >>> buses[1]
-    {'bus_i': 1, 'type': 3, 'Pd': 0.0, 'Qd': 0.0, 'Gs': 0.0, 'Bs': 0.0, 'area': 0.0, 'Vm': 1.0, 'Va': 1.0, 'baseKV': 345.0, 'zone': 1.0, 'Vmax': 1.1, 'Vmin': 0.9}
-
-    >>> branches = case['branch']
-    >>> branches[2]
-    {'fbus': 4, 'tbus': 5, 'r': 0.017, 'x': 0.092, 'b': 0.158, 'rateA': 250.0, 'rateB': 250.0, 'rateC': 250.0, 'ratio': 1.0, 'angle': 0.0, 'status': 1, 'angmin': -360.0, 'angmax': 360.0}
-
-    >>> generators = case['gen']
-    >>> generators[3]
-    {'bus': 3, 'Pg': 85.0, 'Qg': 0.0, 'Qmax': 300.0, 'Qmin': -300.0, 'Vg': 1, 'mBase': 100, 'status': 1, 'Pmax': 270.0, 'Pmin': 10.0, 'Pc1': 0, 'Pc2': 0, 'Qc1min': 0, 'Qc1max': 0, 'Qc2min': 0, 'Qc2max': 0, 'ramp_agc': 0, 'ramp_10': 0, 'ramp_30': 0, 'ramp_q': 0, 'apf': 0}
-
-    >>> generatorcosts = case['gencost']
-    >>> generatorcosts[3]
-    {'costtype': 2, 'startup': 3000, 'shutdown': 0, 'n': 3, 'costvector': [0.1225, 1, 335]}
-
-There is also the convenience function :meth:`gurobi_optimods.opf.read_case_from_mat_file` which reads in a standard MATLAB ``.mat`` data file holding the network data. The data stored in the ``.mat`` file has to follow the `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ in order to be accepted by the function. Below, we generate a case dictionary from a ``.mat`` file containing network data for a small 9 bus network.
-
-.. doctest:: opf
-    :options: +NORMALIZE_WHITESPACE
-
-    >>> from gurobi_optimods.datasets import load_caseopfmat
-    >>> from gurobi_optimods.opf import read_case_from_mat_file
-    >>> casefile = load_caseopfmat("9")
-    >>> case = read_case_from_mat_file(casefile)
-
-    >>> case['baseMVA']
-    100
-
-    >>> buses = case['bus']
-    >>> buses[1]  # doctest:+ELLIPSIS
-    {'bus_i': 1, ...}
-
 
 Optimization Process
 ~~~~~~~~~~~~~~~~~~~~
 
 After generating a case dictionary, we can solve an OPF problem defined by the given network data. For this task, we use the :meth:`gurobi_optimods.opf.solve_opf_model` function. We can define the type of the OPF problem that we want to solve by defining the ``opftype`` argument when calling the function. Currently, the available options are ``AC``, ``AC_relax``, and ``DC``.
 
-- The ``AC`` setting solves an ACOPF problem defined by the given network data. The ACOPF problem is formulated as a nonconvex bilinear model as described in the :doc:`acopf`.
+- The ``AC`` setting solves an ACOPF problem defined by the given network data. The ACOPF problem is formulated as a nonconvex bilinear model as described in the :ref:`ACOPF <acopf-label>` section of the :doc:`opf_specification`.
 
-- The ``AC_relax`` setting solves a Second Order Cone (SOC) relaxation of the nonconvex bilinear ACOPF problem formulation defined by the given network data. The relaxation is constructed by dropping nonconvex bilinear terms but simultaneously keeping the convex JABR inequalities, see :doc:`acopf` for more details.
+- The ``AC_relax`` setting solves a Second Order Cone (SOC) relaxation of the nonconvex bilinear ACOPF problem formulation defined by the given network data. The relaxation is constructed by dropping nonconvex bilinear terms but simultaneously keeping the convex JABR inequalities, see :ref:`JABR Relaxation <jabr-label>` for more details.
 
-- The ``DC`` setting solves a DCOPF problem defined by the given network data. The DCOPF problem is a linear approximation of the ACOPF problem, see :doc:`dcopf` for more details.
+- The ``DC`` setting solves a DCOPF problem defined by the given network data. The DCOPF problem is a linear approximation of the ACOPF problem, please refer to the :ref:`DCOPF <dcopf-label>` section of the :doc:`opf_specification` for more details.
 
 The default value of the ``opftype`` argument is to solve an ``AC`` problem.
 
@@ -104,34 +70,9 @@ The default value of the ``opftype`` argument is to solve an ``AC`` problem.
 Result
 ~~~~~~
 
-We successfully solved an ACOPF problem and retrieved a so-called *result dictionary*. The result dictionary follows the same `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ as the case dictionary. However, in the result dictionary the some object entries are modified compared to the input case dictionary. These modified fields hold the solution values of the optimization. In some cases, there are also additional fields to store the solution information.
+We successfully solved an ACOPF problem and retrieved a so-called *result dictionary*. The result dictionary follows the same `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ as the case dictionary. However, in the result dictionary the some object entries are modified compared to the input case dictionary. These modified fields hold the solution values of the optimization. In some cases, there are also additional fields to store the solution information. We discuss all details of the result dictionary in the `Case and Result Dictionaries`_ section below.
 
-The following fields in the result dictionary are altered or added to store solution data.
 
-- The field ``result['et']`` holds the runtime value of the whole solution process in seconds.
-- The field ``result['success']`` defines whether at least one feasible solution has been found (1) or no feasible solution is available (0).
-- The field ``result['f']`` holds the solution objective value (only valid if ``result['success'] == 1``).
-- If a feasible solution has been found, the ``bus`` entries
-
-  * ``result['bus'][i]['Vm']``
-  * ``result['bus'][i]['Va']``
-
-  store the voltage magnitude (Vm) and voltange angle (Va) values in the optimal solution for bus `i`.
-- If we solved a DCOPF problem, additional fields ``result['bus'][i]['mu']`` holf the shadow prices for balance constraints at bus `i`.
-- If a feasible solution has been found, the ``gen`` entries
-
-  * ``result['gen'][i]['Pg']``
-  * ``result['gen'][i]['Qg']``
-
-  hold the real (Pg) and reactive (Qg) power injection values at the optimal solution for generator `i`.
-- If a feasible solution has been found, the additional ``branch`` entries
-
-  * ``result["branch"][i]["Pf"]``
-  * ``result["branch"][i]["Pt"]``
-  * ``result["branch"][i]["Qf"]``
-  * ``result["branch"][i]["Qt"]``
-
-  hold real (P) and reactive (Q) power injection values into the `from` (f) and into the `to` (t) end at the optimal solution point for branch `i`.
 
 .. doctest:: opf
     :options: +NORMALIZE_WHITESPACE
@@ -143,23 +84,6 @@ The following fields in the result dictionary are altered or added to store solu
     >>> result['success']
     1
 
-    >>> result['bus'][1]
-    {... 'Vm': 1.09..., 'Va': 0, ...}
-
-    >>> result['branch'][2]
-    {... 'Pf': 35.2..., 'Pt': -35.0..., 'Qf': -3.8..., 'Qt': -13.8..., ...}
-
-    >>> result['gen'][3]
-    {... 'Pg': 94.1..., 'Qg': -22.6..., ...}
-
-We can see that the respective entries for ``bus`` and ``gen`` changed compared to the case dictionary, because they are different from the input at the optimal solution point. We also see that addtional fields have been created in the ``branch`` dictionary to hold solution information.
-
-It is possible to turn the result dictionary into a MATLAB ``.mat`` data file via the :meth:`turn_result_into_mat_file` function.
-
-.. code-block:: python
-
-    >>> turn_result_into_mat_file(result)
-
 
 Branch Switching
 ----------------
@@ -170,7 +94,15 @@ TODO Waiting for a comprehensable example
 Graphical Representation of Feasible Solutions
 ----------------------------------------------
 
-In addition to solving an OPF problem, this mode also provides the possibility to plot the obtained result as a graphical representation of the network. Since there are already very involved graphical tools to represent OPF solutions, the graphical representation provided by this mod is very basic.  In order to use this functionality, it is necessary to install the ``plotly`` package.
+In addition to solving an OPF problem, this mode also provides the possibility to plot the obtained result as a graphical representation of the network. There are already very involved graphical tools to represent OPF solutions provided by other packages such as
+
+- `MATPOWER <https://matpower.org>`_
+- `PyPSA <https://pypsa.org/>`_
+- `pandapower <http://www.pandapower.org/>`_
+
+
+Thus, the graphical representation provided by this mod is very basic.  In order to use this functionality, it is necessary to install the ``plotly`` package.
+
 
 Coordinate Information
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -330,7 +262,125 @@ Similar to generating a graphical representation of a feasible solution, it is a
 
 In the above image, you can see the power grid generated out of the given network data together with the coordinate and violation information. The red circles depict buses where the voltage magnitude or real or reactive power injections are violated. Red marked branches depict branches with violated limits.
 
+
+Case and Result Dictionaries
+----------------------------
+
+This mod uses so-called *case* and *result* dictionaries for input and output. Both dictionaries are meant to follow the `MATPOWER Case Format <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ and are described in full detail below.
+
+Case Dictionary
+~~~~~~~~~~~~~~~
+
+The case dictionary for this mod expects a dictionary with keys ``baseMVA``, ``bus``, ``branch``, ``gen``, and ``gencost``. All other entries of the dictionary are ignored in the current version of the mod. The value stored via the ``baseMVA`` key is a numerical float value. The values stored in the case dictionary via keys ``bus``, ``branch``, ``gen``, and ``gencost`` are lists of dictionaries, where each dictionary holds specific data about the particular object. Every single object is defined by a dictionary holding entries following the `MATPOWER Case Format <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_, e.g., every bus has a bus number ``bus_i``, real power demand ``Pd``, etc.
+
+.. doctest:: opf
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> from gurobi_optimods.datasets import load_opfdictcase
+    >>> case = load_opfdictcase()
+
+    >>> case['baseMVA']
+    100.0
+
+    >>> buses = case['bus']
+    >>> buses[1]
+    {'bus_i': 1, 'type': 3, 'Pd': 0.0, 'Qd': 0.0, 'Gs': 0.0, 'Bs': 0.0, 'area': 0.0, 'Vm': 1.0, 'Va': 1.0, 'baseKV': 345.0, 'zone': 1.0, 'Vmax': 1.1, 'Vmin': 0.9}
+
+    >>> branches = case['branch']
+    >>> branches[2]
+    {'fbus': 4, 'tbus': 5, 'r': 0.017, 'x': 0.092, 'b': 0.158, 'rateA': 250.0, 'rateB': 250.0, 'rateC': 250.0, 'ratio': 1.0, 'angle': 0.0, 'status': 1, 'angmin': -360.0, 'angmax': 360.0}
+
+    >>> generators = case['gen']
+    >>> generators[3]
+    {'bus': 3, 'Pg': 85.0, 'Qg': 0.0, 'Qmax': 300.0, 'Qmin': -300.0, 'Vg': 1, 'mBase': 100, 'status': 1, 'Pmax': 270.0, 'Pmin': 10.0, 'Pc1': 0, 'Pc2': 0, 'Qc1min': 0, 'Qc1max': 0, 'Qc2min': 0, 'Qc2max': 0, 'ramp_agc': 0, 'ramp_10': 0, 'ramp_30': 0, 'ramp_q': 0, 'apf': 0}
+
+    >>> generatorcosts = case['gencost']
+    >>> generatorcosts[3]
+    {'costtype': 2, 'startup': 3000, 'shutdown': 0, 'n': 3, 'costvector': [0.1225, 1, 335]}
+
+There is also the convenience function :meth:`gurobi_optimods.opf.read_case_from_mat_file` which reads in a standard MATLAB ``.mat`` data file holding the network data. The data stored in the ``.mat`` file has to follow the `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ in order to be accepted by the function. Below, we generate a case dictionary from a ``.mat`` file containing network data for a small 9 bus network.
+
+.. doctest:: opf
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> from gurobi_optimods.datasets import load_caseopfmat
+    >>> from gurobi_optimods.opf import read_case_from_mat_file
+    >>> casefile = load_caseopfmat("9")
+    >>> case = read_case_from_mat_file(casefile)
+
+    >>> case['baseMVA']
+    100
+
+    >>> buses = case['bus']
+    >>> buses[1]  # doctest:+ELLIPSIS
+    {'bus_i': 1, ...}
+
+
+Result Dictionary
+~~~~~~~~~~~~~~~~~
+
+The following fields in the result dictionary are altered or added to store solution data.
+
+- The field ``result['et']`` holds the runtime value of the whole solution process in seconds.
+- The field ``result['success']`` defines whether at least one feasible solution has been found (1) or no feasible solution is available (0).
+- The field ``result['f']`` holds the solution objective value (only valid if ``result['success'] == 1``).
+- If a feasible solution has been found, the ``bus`` entries
+
+  * ``result['bus'][i]['Vm']``
+  * ``result['bus'][i]['Va']``
+
+  store the voltage magnitude (Vm) and voltange angle (Va) values in the optimal solution for bus `i`.
+- If we solved a DCOPF problem, additional fields ``result['bus'][i]['mu']`` holf the shadow prices for balance constraints at bus `i`.
+- If a feasible solution has been found, the ``gen`` entries
+
+  * ``result['gen'][i]['Pg']``
+  * ``result['gen'][i]['Qg']``
+
+  hold the real (Pg) and reactive (Qg) power injection values at the optimal solution for generator `i`.
+- If a feasible solution has been found, the additional ``branch`` entries
+
+  * ``result["branch"][i]["Pf"]``
+  * ``result["branch"][i]["Pt"]``
+  * ``result["branch"][i]["Qf"]``
+  * ``result["branch"][i]["Qt"]``
+
+  hold real (P) and reactive (Q) power injection values into the `from` (f) and into the `to` (t) end at the optimal solution point for branch `i`.
+
+.. doctest:: opf
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> from gurobi_optimods.datasets import load_opfdictcase
+    >>> from gurobi_optimods.opf import solve_opf_model
+    >>> case = load_opfdictcase()
+    >>> result = solve_opf_model(case, opftype="AC")  # doctest:+SKIP
+    >>> result['success']
+    1
+
+    >>> result['bus'][1]
+    {... 'Vm': 1.09..., 'Va': 0, ...}
+
+    >>> result['branch'][2]
+    {... 'Pf': 35.2..., 'Pt': -35.0..., 'Qf': -3.8..., 'Qt': -13.8..., ...}
+
+    >>> result['gen'][3]
+    {... 'Pg': 94.1..., 'Qg': -22.6..., ...}
+
+We can see that the respective entries for ``bus`` and ``gen`` changed compared to the case dictionary, because they are different from the input at the optimal solution point. We also see that addtional fields have been created in the ``branch`` dictionary to hold solution information.
+
+It is possible to turn the result dictionary into a MATLAB ``.mat`` data file via the :meth:`turn_result_into_mat_file` function.
+
+.. doctest:: opf
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> from gurobi_optimods.datasets import load_opfdictcase
+    >>> from gurobi_optimods.opf import solve_opf_model, turn_result_into_mat_file
+    >>> case = load_opfdictcase()
+    >>> result = solve_opf_model(case, opftype="AC")  # doctest:+SKIP
+    >>> turn_result_into_mat_file(result)
+
+
 .. _recommended-label:
+
 Recommended Literature
 ----------------------
 
