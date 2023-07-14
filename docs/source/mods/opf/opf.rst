@@ -311,20 +311,29 @@ The following fields in the violations dictionary are added to store violations 
 - ``violation['bus'][i]['Qviol']`` reactive power injection violation at bus `i`
 - ``violation['branch'][i]['limitviol']`` branch limit violation at branch `i`
 
+.. testcode:: opf
+
+    from gurobi_optimods.datasets import load_filepath, load_caseopfmat
+    from gurobi_optimods.opf import read_voltages_from_csv_file, read_case_from_mat_file, compute_violations_from_given_voltages
+    voltsfile = load_filepath("case9volts.csv")
+    volts_dict = read_voltages_from_csv_file(voltsfile)
+    casefile = load_caseopfmat("9")
+    case = read_case_from_mat_file(casefile)
+    violations = compute_violations_from_given_voltages(case, volts_dict)
+
+.. testoutput:: opf
+    :hide:
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
+
+    ...
+    Checking flow balance constraints.
+    ...
+
 .. doctest:: opf
-    :options: +NORMALIZE_WHITESPACE
 
-    >>> from gurobi_optimods.datasets import load_filepath, load_caseopfmat
-    >>> from gurobi_optimods.opf import read_voltages_from_csv_file, read_case_from_mat_file, compute_violations_from_given_voltages
-    >>> voltsfile = load_filepath("case9volts.csv")
-    >>> volts_dict = read_voltages_from_csv_file(voltsfile)
-    >>> casefile = load_caseopfmat("9")
-    >>> case = read_case_from_mat_file(casefile)
-    >>> violations = compute_violations_from_given_voltages(case, volts_dict)
-    >>> violations['branch'][7]['limitviol']
+    >>> print(violations['branch'][7]['limitviol'])
     66.33435016796234
-
-    >>> violations['bus'][4]['Pviol']
+    >>> print(violations['bus'][4]['Pviol'])
     -318.8997836192236
 
 We can see that among others, the limit at branch 7 and the real power injection at bus 4 are violated.
