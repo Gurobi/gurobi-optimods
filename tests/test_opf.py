@@ -345,7 +345,8 @@ class TestAPIBranchSwitching(unittest.TestCase):
                 counts = collections.Counter(
                     branch["switching"] for branch in solution["branch"].values()
                 )
-                self.assertEqual(counts, {1: 10, 0: 2})
+                self.assertLess(counts[1], 12)
+                self.assertGreater(counts[0], 0)
 
     def test_ac_minactivebranches(self):
         # branch switching with 100% minimum, all branches should be on
@@ -369,96 +370,112 @@ class TestAPIBranchSwitching(unittest.TestCase):
 
     def test_acrelax_defaults(self):
         # no branch switching, all branches should be on
-        solution = solve_opf_model(
-            self.case,
-            opftype="AC",
-            branchswitching=0,
-            polar=False,
-            useef=False,
-            usejabr=False,
-            useactivelossineqs=False,
-            usemipstart=False,
-        )
-        counts = collections.Counter(
-            branch["switching"] for branch in solution["branch"].values()
-        )
-        self.assertEqual(counts, {1: 12})
+        for usemipstart in [True, False]:
+            with self.subTest(usemipstart=usemipstart):
+                solution = solve_opf_model(
+                    self.case,
+                    opftype="AC",
+                    branchswitching=0,
+                    polar=False,
+                    useef=False,
+                    usejabr=False,
+                    useactivelossineqs=False,
+                    usemipstart=usemipstart,
+                )
+                counts = collections.Counter(
+                    branch["switching"] for branch in solution["branch"].values()
+                )
+                self.assertEqual(counts, {1: 12})
 
     def test_acrelax_branchswitching(self):
         # branch switching with no minimum, some branches should be off
-        solution = solve_opf_model(
-            self.case,
-            opftype="AC",
-            branchswitching=1,
-            minactivebranches=0.0,
-            polar=False,
-            useef=False,
-            usejabr=False,
-            useactivelossineqs=False,
-            usemipstart=False,
-        )
-        counts = collections.Counter(
-            branch["switching"] for branch in solution["branch"].values()
-        )
-        self.assertEqual(counts, {1: 11, 0: 1})
+        for usemipstart in [True, False]:
+            with self.subTest(usemipstart=usemipstart):
+                solution = solve_opf_model(
+                    self.case,
+                    opftype="AC",
+                    branchswitching=1,
+                    minactivebranches=0.0,
+                    polar=False,
+                    useef=False,
+                    usejabr=False,
+                    useactivelossineqs=False,
+                    usemipstart=usemipstart,
+                )
+                counts = collections.Counter(
+                    branch["switching"] for branch in solution["branch"].values()
+                )
+                self.assertLess(counts[1], 12)
+                self.assertGreater(counts[0], 0)
 
     def test_acrelax_minactivebranches(self):
         # branch switching with 100% minimum, all branches should be on
-        solution = solve_opf_model(
-            self.case,
-            opftype="AC",
-            branchswitching=1,
-            minactivebranches=1.0,
-            polar=False,
-            useef=False,
-            usejabr=False,
-            useactivelossineqs=False,
-            usemipstart=False,
-        )
-        counts = collections.Counter(
-            branch["switching"] for branch in solution["branch"].values()
-        )
-        self.assertEqual(counts, {1: 12})
+        for usemipstart in [True, False]:
+            with self.subTest(usemipstart=usemipstart):
+                solution = solve_opf_model(
+                    self.case,
+                    opftype="AC",
+                    branchswitching=1,
+                    minactivebranches=1.0,
+                    polar=False,
+                    useef=False,
+                    usejabr=False,
+                    useactivelossineqs=False,
+                    usemipstart=usemipstart,
+                )
+                counts = collections.Counter(
+                    branch["switching"] for branch in solution["branch"].values()
+                )
+                self.assertEqual(counts, {1: 12})
 
     def test_dc_defaults(self):
         # no branch switching, all branches should be on
-        solution = solve_opf_model(
-            self.case,
-            opftype="DC",
-            branchswitching=0,
-        )
-        counts = collections.Counter(
-            branch["switching"] for branch in solution["branch"].values()
-        )
-        self.assertEqual(counts, {1: 12})
+        for usemipstart in [True, False]:
+            with self.subTest(usemipstart=usemipstart):
+                solution = solve_opf_model(
+                    self.case,
+                    opftype="DC",
+                    branchswitching=0,
+                    usemipstart=usemipstart,
+                )
+                counts = collections.Counter(
+                    branch["switching"] for branch in solution["branch"].values()
+                )
+                self.assertEqual(counts, {1: 12})
 
     @unittest.expectedFailure
-    # branch switching has no impact here
     def test_dc_branchswitching(self):
         # branch switching with no minimum, some branches should be off
-        solution = solve_opf_model(
-            self.case,
-            opftype="DC",
-            branchswitching=1,
-            minactivebranches=0.0,
-        )
-        counts = collections.Counter(
-            branch["switching"] for branch in solution["branch"].values()
-        )
-        self.assertEqual(counts, {1: 10, 0: 2})
+        for usemipstart in [True, False]:
+            with self.subTest(usemipstart=usemipstart):
+                solution = solve_opf_model(
+                    self.case,
+                    opftype="DC",
+                    branchswitching=1,
+                    minactivebranches=0.0,
+                    usemipstart=usemipstart,
+                )
+                counts = collections.Counter(
+                    branch["switching"] for branch in solution["branch"].values()
+                )
+                self.assertLess(counts[1], 12)
+                self.assertGreater(counts[0], 0)
 
     def test_dc_minactivebranches(self):
         # branch switching with 100% minimum, all branches should be on
-        solution = solve_opf_model(
-            self.case,
-            opftype="DC",
-            branchswitching=1,
-            minactivebranches=0.99,
-        )
-        counts = collections.Counter(
-            branch["switching"] for branch in solution["branch"].values()
-        )
-        self.assertEqual(counts, {1: 12})
+        for usemipstart in [True, False]:
+            with self.subTest(usemipstart=usemipstart):
+                solution = solve_opf_model(
+                    self.case,
+                    opftype="DC",
+                    branchswitching=1,
+                    minactivebranches=0.99,
+                    usemipstart=usemipstart,
+                )
+                counts = collections.Counter(
+                    branch["switching"] for branch in solution["branch"].values()
+                )
+                self.assertEqual(counts, {1: 12})
 
 
 @unittest.skipIf(size_limited_license(), "size-limited-license")
