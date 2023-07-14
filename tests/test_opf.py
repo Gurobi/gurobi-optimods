@@ -4,6 +4,7 @@ import unittest
 import gurobipy as gp
 
 from gurobi_optimods.datasets import (
+    load_case9branchswitching,
     load_case9solution,
     load_caseNYopf,
     load_caseopfmat,
@@ -247,66 +248,9 @@ class TestAPILargeModels(unittest.TestCase):
 
 
 class TestAPIBranchSwitching(unittest.TestCase):
-    # Modification of case9 where branch switching does something
-
     def setUp(self):
-        self.case = read_case_from_mat_file(load_caseopfmat("9"))
-        self.case["branch"].update(
-            {
-                10: {
-                    "fbus": 1,
-                    "tbus": 2,
-                    "r": 0.0,
-                    "x": 0.0576,
-                    "b": 0.0,
-                    "rateA": 250.0,
-                    "rateB": 250.0,
-                    "rateC": 250.0,
-                    "ratio": 1.0,
-                    "angle": 0.0,
-                    "status": 1,
-                    "angmin": -360.0,
-                    "angmax": 360.0,
-                },
-                11: {
-                    "fbus": 1,
-                    "tbus": 3,
-                    "r": 0.0,
-                    "x": 0.0576,
-                    "b": 0.0,
-                    "rateA": 250.0,
-                    "rateB": 250.0,
-                    "rateC": 250.0,
-                    "ratio": 1.0,
-                    "angle": 0.0,
-                    "status": 1,
-                    "angmin": -360.0,
-                    "angmax": 360.0,
-                },
-                12: {
-                    "fbus": 2,
-                    "tbus": 3,
-                    "r": 0.0,
-                    "x": 0.0576,
-                    "b": 0.0,
-                    "rateA": 250.0,
-                    "rateB": 250.0,
-                    "rateC": 250.0,
-                    "ratio": 1.0,
-                    "angle": 0.0,
-                    "status": 1,
-                    "angmin": -360.0,
-                    "angmax": 360.0,
-                },
-            }
-        )
-        self.case["gencost"][2] = {
-            "costtype": 2,
-            "startup": 2000,
-            "shutdown": 0,
-            "n": 3,
-            "costvector": [0.85, 10.2, 1200],
-        }
+        # Modification of case9 where branch switching does something
+        self.case = load_case9branchswitching()
 
     def test_ac_defaults(self):
         # no branch switching, all branches should be on
@@ -378,7 +322,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     branchswitching=0,
                     polar=False,
                     useef=False,
-                    usejabr=False,
+                    usejabr=True,  # JABR is the SOCP relaxation
                     useactivelossineqs=False,
                     usemipstart=usemipstart,
                 )
@@ -398,9 +342,12 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     minactivebranches=0.0,
                     polar=False,
                     useef=False,
-                    usejabr=False,
+                    usejabr=True,
                     useactivelossineqs=False,
                     usemipstart=usemipstart,
+                    solver_params={
+                        "MIPGap": 0.0
+                    },  # need to make sure that we always find those solutions
                 )
                 counts = collections.Counter(
                     branch["switching"] for branch in solution["branch"].values()
@@ -618,7 +565,7 @@ class TestGraphicsCase9(unittest.TestCase):
         # load case dictionary
         case = load_opfdictcase()
         # solve opf model and return a solution
-        solution = solve_opf_model(case, opftype="AC", branchswitching=1)
+        solution = solve_opf_model(case, opftype="AC")
         # plot the computed solution
         coordsfile = load_filepath("case9coords.csv")
         coords_dict = read_coords_from_csv_file(coordsfile)
@@ -627,6 +574,43 @@ class TestGraphicsCase9(unittest.TestCase):
         for i in range(9):
             self.assertLess(abs(fig.data[1].x[i] - self.graphics_9_x[i]), 1e-9)
             self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
+        if self.plot_graphics:
+            fig.show()
+
+    # test plotting a solution from pre-loaded data
+    def test_graphics(self):
+        # get path to csv file holding the coordinates for case 9
+        coordsfile = load_filepath("case9coords.csv")
+        coords_dict = read_coords_from_csv_file(coordsfile)
+        # load case dictionary
+        case = load_opfdictcase()
+        # load a precomputed solution and objective value
+        solution = load_case9solution()
+        # plot the given solution
+        fig = generate_opf_solution_figure(case, coords_dict, solution)
+        # check whether figure coordinates and scaled input coordinates are the same
+        for i in range(9):
+            self.assertLess(abs(fig.data[1].x[i] - self.graphics_9_x[i]), 1e-9)
+            self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
+        if self.plot_graphics:
+            fig.show()
+
+    # test plotting a solution from pre-loaded data
+    def test_graphics_branchswitching(self):
+        # get path to csv file holding the coordinates for case 9
+        coordsfile = load_filepath("case9coords.csv")
+        coords_dict = read_coords_from_csv_file(coordsfile)
+        # load case dictionary
+        case = load_case9branchswitching()
+        # compute a solution
+        solution = solve_opf_model(case, opftype="AC", branchswitching=1)
+        counts = collections.Counter(
+            branch["switching"] for branch in solution["branch"].values()
+        )
+        self.assertEqual(counts[1], 10)
+        self.assertEqual(counts[0], 2)
+        # plot the given solution
+        fig = generate_opf_solution_figure(case, coords_dict, solution)
         if self.plot_graphics:
             fig.show()
 

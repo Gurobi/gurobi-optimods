@@ -261,6 +261,7 @@ The objective to optimize is the same (usually quadratic convex) cost expression
 .. math::
     \min \sum_{\text{generators} \, i} F_i(P^g_i).
 
+.. _branchswitching-label:
 
 Branch-switching
 ~~~~~~~~~~~~~~~~

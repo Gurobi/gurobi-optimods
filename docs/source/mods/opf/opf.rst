@@ -28,11 +28,10 @@ This mod has multiple callable API and convenience functions. All of the main AP
 
 In the below example code, we read in a pre-defined case dictionary from our dataset.
 
-.. doctest:: opf
-    :options: +NORMALIZE_WHITESPACE
+.. testcode:: opf
 
-    >>> from gurobi_optimods.datasets import load_opfdictcase
-    >>> case = load_opfdictcase()
+    from gurobi_optimods.datasets import load_opfdictcase
+    case = load_opfdictcase()
 
 
 Optimization Process
@@ -48,22 +47,22 @@ After generating a case dictionary, we can solve an OPF problem defined by the g
 
 The default value of the ``opftype`` argument is to solve an ``AC`` problem.
 
-.. doctest:: opf
-    :options: +NORMALIZE_WHITESPACE
+.. testcode:: opf
 
-    >>> from gurobi_optimods.datasets import load_opfdictcase
-    >>> from gurobi_optimods.opf import solve_opf_model
-    >>> case = load_opfdictcase()
-    >>> result = solve_opf_model(case, opftype="AC")  # doctest:+ELLIPSIS
-    All settings:
-    ...
-    Constructed ACOPF model with 107 variables and 73 constraints.
+    from gurobi_optimods.datasets import load_opfdictcase
+    from gurobi_optimods.opf import solve_opf_model
+    case = load_opfdictcase()
+    result = solve_opf_model(case, opftype="AC")
+
+.. testoutput:: opf
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
+
     ...
     Optimize a model with 73 rows, 107 columns and 208 nonzeros
     ...
-    <BLANKLINE>
+
     Model Status: optimal.
-    <BLANKLINE>
+
     Objective value = 5296....
 
 
@@ -72,21 +71,56 @@ Result
 
 We successfully solved an ACOPF problem and retrieved a so-called *result dictionary*. The result dictionary follows the same `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ as the case dictionary. However, in the result dictionary some object entries are modified compared to the input case dictionary. These modified fields hold the solution values of the optimization. In some cases, there are also additional fields to store the solution information. We discuss all details of the result dictionary in the `Case and Result Dictionaries`_ section below.
 
-.. doctest:: opf
-    :options: +NORMALIZE_WHITESPACE
+.. testcode:: opf
 
-    >>> from gurobi_optimods.datasets import load_opfdictcase
-    >>> from gurobi_optimods.opf import solve_opf_model
-    >>> case = load_opfdictcase()
-    >>> result = solve_opf_model(case, opftype="AC")  # doctest:+SKIP
+    from gurobi_optimods.datasets import load_opfdictcase
+    from gurobi_optimods.opf import solve_opf_model
+    case = load_opfdictcase()
+    result = solve_opf_model(case, opftype="AC")
+
+.. testoutput:: opf
+    :hide:
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
+
+    ...
+    Optimize a model with 73 rows, 107 columns and 208 nonzeros
+    ...
+
+.. doctest:: opf
+
     >>> result['success']
     1
 
 
-Branch Switching
+Branch-Switching
 ----------------
 
-TODO Waiting for a comprehensable example
+An important extension of the OPF problem is the so-called Branch-Switching, where we are allowed to turn off branches. Note that already turning off a single branch changes the whole power flow through the network. Thus in practice, it is rare that branches are turned off at all. If any are turned off, then it is usually only a small fraction of the overall power grid. For the mathematical formulation, please refer to the :ref:`Branch-Switching <branchswitching-label>` subsection of the :doc:`opf_specification`. In order to enable branch-switching in a given OPF problem, it is necessary to set the ``branchswitching`` argument to 1 when calling the :meth:`solve_opf_model` function. The default value for the ``branchswitching`` argument is 0 (turned off). This mod additionally offers the possibility to control the number of branches that has to stay turned on via the ``minactivebranches`` argument. In practice, it is expected that only a very small fraction of branches are turned off. Thus, the default value of the ``minactivebranches`` argument is 0.9 (90%). In the following, we solve an artificially altered version of a small 9 bus network to see whether branches could be turned off.
+
+.. testcode:: opf
+
+    from gurobi_optimods.datasets import load_case9branchswitching
+    from gurobi_optimods.opf import solve_opf_model
+    case = load_case9branchswitching()
+    result = solve_opf_model(case, opftype="AC", branchswitching=1, minactivebranches=0.1) # doctest:+ELLIPSIS
+
+.. testoutput:: opf
+    :hide:
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
+
+    ...
+    Optimize a model with 278 rows, 185 columns and 694 nonzeros
+    ...
+
+.. doctest:: opf
+
+    >>> result['branch'][10]['switching']
+    0
+
+    >>> result['branch'][11]['switching']
+    0
+
+We can see in the example code, that indeed 2 branches has been turned off in the optimal solution. Please note, that the used examplary network has been artificially adjusted to achieve this results and this is **not** the usual behavior in a realistic power grid.
 
 
 Graphical Representation of Feasible Solutions
@@ -116,13 +150,23 @@ In order to plot a previously obtained result, an additional input of coordinate
 
 Once a ``.csv`` file holding bus coordinate information is available, we can use the :meth:`read_coords_from_csv_file` function to automatically generate a coordinate dictionary. In the following example we use the ``case9coords.csv`` file to generate a coordinate dictionary
 
+.. testcode:: opf
+
+    from gurobi_optimods.datasets import load_filepath
+    from gurobi_optimods.opf import read_coords_from_csv_file
+    coordsfile = load_filepath("case9coords.csv")
+    coords_dict = read_coords_from_csv_file(coordsfile)
+
+.. testoutput:: opf
+    :hide:
+    :options: +NORMALIZE_WHITESPACE
+
+    ...
+
+
 .. doctest:: opf
     :options: +NORMALIZE_WHITESPACE
 
-    >>> from gurobi_optimods.datasets import load_filepath
-    >>> from gurobi_optimods.opf import read_coords_from_csv_file
-    >>> coordsfile = load_filepath("case9coords.csv")
-    >>> coords_dict = read_coords_from_csv_file(coordsfile)
     >>> coords_dict[1]
     (44.492, -73.208)
 
@@ -137,18 +181,17 @@ After obtaining a result dictionary as discussed in `Solving an OPF Problem`_ an
 
 .. code-block::
 
-    >>> import plotly
-    >>> from gurobi_optimods.datasets import load_caseNYopf, load_filepath
-    >>> from gurobi_optimods.opf import solve_opf_model, read_case_from_mat_file, read_coords_from_csv_file
-    >>> from gurobi_optimods.graphics import generate_opf_solution_figure
-    >>> casefile = load_caseNYopf()
-    >>> case = read_case_from_mat_file(casefile)
-    >>> result = solve_opf_model(case, opftype='DC')
-
-    >>> coordsfile = load_filepath("nybuses.csv")
-    >>> coords_dict = read_coords_from_csv_file(coordsfile)
-    >>> fig = generate_opf_solution_figure(case, coords_dict, solution)
-    >>> fig.show()
+    import plotly
+    from gurobi_optimods.datasets import load_caseNYopf, load_filepath
+    from gurobi_optimods.opf import solve_opf_model, read_case_from_mat_file, read_coords_from_csv_file
+    from gurobi_optimods.graphics import generate_opf_solution_figure
+    casefile = load_caseNYopf()
+    case = read_case_from_mat_file(casefile)
+    result = solve_opf_model(case, opftype='DC')
+    coordsfile = load_filepath("nybuses.csv")
+    coords_dict = read_coords_from_csv_file(coordsfile)
+    fig = generate_opf_solution_figure(case, coords_dict, solution)
+    fig.show()
 
 .. image:: ../figures/opf.png
 
@@ -181,13 +224,23 @@ In order to compute possible violations for given voltage data, an additional in
 
 Once a ``.csv`` file holding voltage information for every bus is available, we can use the :meth:`read_voltages_from_csv_file` function to automatically generate a voltage dictionary. In the following example we use the ``case9volts.csv`` file to generate a voltage dictionary
 
+.. testcode:: opf
+
+    from gurobi_optimods.datasets import load_filepath
+    from gurobi_optimods.opf import read_voltages_from_csv_file
+    voltsfile = load_filepath("case9volts.csv")
+    volts_dict = read_voltages_from_csv_file(voltsfile)
+
+.. testoutput:: opf
+    :hide:
+    :options: +NORMALIZE_WHITESPACE
+
+    ...
+
+
 .. doctest:: opf
     :options: +NORMALIZE_WHITESPACE
 
-    >>> from gurobi_optimods.datasets import load_filepath
-    >>> from gurobi_optimods.opf import read_voltages_from_csv_file
-    >>> voltsfile = load_filepath("case9volts.csv")
-    >>> volts_dict = read_voltages_from_csv_file(voltsfile)
     >>> volts_dict[1]
     (1.089026, 0.0)
 
@@ -242,19 +295,19 @@ Similar to generating a graphical representation of a feasible solution, it is a
 
 .. code-block::
 
-    >>> import plotly
-    >>> from gurobi_optimods.datasets import load_filepath, load_caseopfmat
-    >>> from gurobi_optimods.opf import read_coords_from_csv_file, read_voltages_from_csv_file, read_case_from_mat_file, compute_violations_from_given_voltages
-    >>> from gurobi_optimods.graphics import generate_opf_solution_figure
-    >>> voltsfile = load_filepath("case9volts.csv")
-    >>> volts_dict = read_voltages_from_csv_file(voltsfile)
-    >>> casefile = load_caseopfmat("9")
-    >>> case = read_case_from_mat_file(casefile)
-    >>> coordsfile = load_filepath("case9coords.csv")
-    >>> coords_dict = read_coords_from_csv_file(coordsfile)
-    >>> violations = compute_violations_from_given_voltages(case, volts_dict)
-    >>> fig = generate_opf_violations_figure(case, coords, violations)
-    >>> fig.show()
+    import plotly
+    from gurobi_optimods.datasets import load_filepath, load_caseopfmat
+    from gurobi_optimods.opf import read_coords_from_csv_file, read_voltages_from_csv_file, read_case_from_mat_file, compute_violations_from_given_voltages
+    from gurobi_optimods.graphics import generate_opf_solution_figure
+    voltsfile = load_filepath("case9volts.csv")
+    volts_dict = read_voltages_from_csv_file(voltsfile)
+    casefile = load_caseopfmat("9")
+    case = read_case_from_mat_file(casefile)
+    coordsfile = load_filepath("case9coords.csv")
+    coords_dict = read_coords_from_csv_file(coordsfile)
+    violations = compute_violations_from_given_voltages(case, volts_dict)
+    fig = generate_opf_violations_figure(case, coords, violations)
+    fig.show()
 
 .. image:: ../figures/violations_opf.png
 
@@ -271,11 +324,19 @@ Case Dictionary
 
 The case dictionary for this mod expects a dictionary with keys ``baseMVA``, ``bus``, ``branch``, ``gen``, and ``gencost``. All other entries of the dictionary are ignored in the current version of the mod. The value stored via the ``baseMVA`` key is a numerical float value. The values stored in the case dictionary via keys ``bus``, ``branch``, ``gen``, and ``gencost`` are lists of dictionaries, where each dictionary holds specific data about the particular object. Every single object is defined by a dictionary holding entries following the `MATPOWER Case Format <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_, e.g., every bus has a bus number ``bus_i``, real power demand ``Pd``, etc.
 
-.. doctest:: opf
+.. testcode:: opf
+
+    from gurobi_optimods.datasets import load_opfdictcase
+    case = load_opfdictcase()
+
+.. testoutput:: opf
+    :hide:
     :options: +NORMALIZE_WHITESPACE
 
-    >>> from gurobi_optimods.datasets import load_opfdictcase
-    >>> case = load_opfdictcase()
+    ...
+
+.. doctest:: opf
+    :options: +NORMALIZE_WHITESPACE
 
     >>> case['baseMVA']
     100.0
@@ -298,13 +359,15 @@ The case dictionary for this mod expects a dictionary with keys ``baseMVA``, ``b
 
 There is also the convenience function :meth:`gurobi_optimods.opf.read_case_from_mat_file` which reads in a standard MATLAB ``.mat`` data file holding the network data. The data stored in the ``.mat`` file has to follow the `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ in order to be accepted by the function. Below, we generate a case dictionary from a ``.mat`` file containing network data for a small 9 bus network.
 
+.. testcode:: opf
+
+    from gurobi_optimods.datasets import load_caseopfmat
+    from gurobi_optimods.opf import read_case_from_mat_file
+    casefile = load_caseopfmat("9")
+    case = read_case_from_mat_file(casefile)
+
 .. doctest:: opf
     :options: +NORMALIZE_WHITESPACE
-
-    >>> from gurobi_optimods.datasets import load_caseopfmat
-    >>> from gurobi_optimods.opf import read_case_from_mat_file
-    >>> casefile = load_caseopfmat("9")
-    >>> case = read_case_from_mat_file(casefile)
 
     >>> case['baseMVA']
     100
@@ -341,16 +404,29 @@ The following fields in the result dictionary are altered or added to store solu
   * ``result["branch"][i]["Pt"]``
   * ``result["branch"][i]["Qf"]``
   * ``result["branch"][i]["Qt"]``
+  * ``result["branch"][i]["switching"]``
 
-  hold real (P) and reactive (Q) power injection values into the `from` (f) and into the `to` (t) end at the optimal solution point for branch `i`.
+  hold real (P) and reactive (Q) power injection values into the `from` (f) and into the `to` (t) end at the optimal solution point for branch `i`. The ``switchting`` field holds the information whether a branch is turned on or off in the given result.
+
+
+.. testcode:: opf
+
+    from gurobi_optimods.datasets import load_opfdictcase
+    from gurobi_optimods.opf import solve_opf_model
+    case = load_opfdictcase()
+    result = solve_opf_model(case, opftype="AC")
+
+.. testoutput:: opf
+    :hide:
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
+
+    ...
+    Optimize a model with 73 rows, 107 columns and 208 nonzeros
+    ...
 
 .. doctest:: opf
     :options: +NORMALIZE_WHITESPACE
 
-    >>> from gurobi_optimods.datasets import load_opfdictcase
-    >>> from gurobi_optimods.opf import solve_opf_model
-    >>> case = load_opfdictcase()
-    >>> result = solve_opf_model(case, opftype="AC")  # doctest:+SKIP
     >>> result['success']
     1
 
@@ -367,15 +443,21 @@ We can see that the respective entries for ``bus`` and ``gen`` changed compared 
 
 It is possible to turn the result dictionary into a MATLAB ``.mat`` data file via the :meth:`turn_result_into_mat_file` function.
 
-.. doctest:: opf
-    :options: +NORMALIZE_WHITESPACE
+.. testcode:: opf
 
-    >>> from gurobi_optimods.datasets import load_opfdictcase
-    >>> from gurobi_optimods.opf import solve_opf_model, turn_result_into_mat_file
-    >>> case = load_opfdictcase()
-    >>> result = solve_opf_model(case, opftype="AC")  # doctest:+SKIP
-    >>> turn_result_into_mat_file(result)
+    from gurobi_optimods.datasets import load_opfdictcase
+    from gurobi_optimods.opf import solve_opf_model, turn_result_into_mat_file
+    case = load_opfdictcase()
+    result = solve_opf_model(case, opftype="AC")
+    turn_result_into_mat_file(result)
 
+.. testoutput:: opf
+    :hide:
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
+
+    ...
+    Optimize a model with 73 rows, 107 columns and 208 nonzeros
+    ...
 
 .. _recommended-label:
 
