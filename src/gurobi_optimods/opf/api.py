@@ -37,54 +37,59 @@ def solve_opf_model(
     create_env,
 ):
     """
-    Constructs an OPF model from given data and solves it with Gurobi.
-    Returns a result dictionary following MATPOWER notation.
-    The additional and possibly altered fields are
+    Constructs an OPF model from given data and solves it with Gurobi. Returns a
+    result dictionary following MATPOWER notation. The additional and possibly
+    altered fields are
 
-    - ``result["success"]`` 1 if at least one feasible solution has been found, 0 otherwise
+    - ``result["success"]`` 1 if at least one feasible solution has been found,
+      0 otherwise
     - ``result["et"]`` time spent for optimization
     - ``result["f"]`` solution objective value
     - ``result["bus"][i]["Vm"]`` for voltage magnitude value at bus `i`
     - ``result["bus"][i]["Va"]`` for voltage angle value at bus `i`
-    - ``result["bus"][i]["mu"]`` for shadow prices of balance constraints at bus `i` (only available for DC without branchswitching)
+    - ``result["bus"][i]["mu"]`` for shadow prices of balance constraints at bus
+      `i` (only available for DC without branchswitching)
     - ``result["gen"][i]["Pg"]`` for real power injection at generator `i`
     - ``result["gen"][i]["Qg"]`` for reactive power injection at generator `i`
-    - ``result["branch"][i]["Pf"]`` for real power injected into "from" end of branch at branch `i`
-    - ``result["branch"][i]["Pt"]`` for real power injected into "to" end of branch at branch `i`
-    - ``result["branch"][i]["Qf"]`` for reactive power injected into "from" end of branch at branch `i` (AC only)
-    - ``result["branch"][i]["Qt"]`` for reactive power injected into "from" end of branch at branch `i` (AC only)
-    - ``result["branch"][i]["switching"]`` states whether a branch `i` is turned on or off in the final solution
-
-    Plan to re-jig the arguments a bit. Notes (to remove):
-        - polar=False always (for now, polar=True does not work well)
-        - (opftype="AC_Relax") === (opftype="AC", polar=False, useef=False)
-        - usemipstart=True always
+    - ``result["branch"][i]["Pf"]`` for real power injected into "from" end of
+      branch at branch `i`
+    - ``result["branch"][i]["Pt"]`` for real power injected into "to" end of
+      branch at branch `i`
+    - ``result["branch"][i]["Qf"]`` for reactive power injected into "from" end
+      of branch at branch `i` (AC only)
+    - ``result["branch"][i]["Qt"]`` for reactive power injected into "from" end
+      of branch at branch `i` (AC only)
+    - ``result["branch"][i]["switching"]`` states whether a branch `i` is turned
+      on or off in the final solution
 
     Parameters
     ----------
     case : dict
         Dictionary holding case data
-    opf_type : str
-        Desired OPF model type. One of ``AC``, ``AC_Relax``, ``DC``, or
-        ``IV``.
-    min_active_branches : float, optional
-        If provided, enables branch switching (by default, all branches are
-        active). Defines the minimum number of branches that must be turned on
-        when branch switching is active, i.e. the minimum number of turned on
-        branches is equal to ``numbranches * min_active_branches``.
-    iv_type : str, optional
-        What type of IV formulation should be used. Available types are
-        ``aggressive`` and ``plain``. Defaults to ``aggressive``.
+    opftype : str
+        Desired OPF model type. One of ``AC``, ``AC_Relax``, ``DC``, or ``IV``.
+    branchswitching : bool, optional
+        If set to True, enables branch switching.
+    minactivebranches : float, optional
+        Defines the minimum number of branches that must be turned on when
+        branch switching is active, i.e. the minimum number of turned on
+        branches is equal to ``numbranches * min_active_branches``. Has no
+        effect if ``branchswitching`` is set to False.
+    usemipstart : bool, optional
+        If set to True, try various MIP starts for branch switching models. Has
+        no effect if ``branchswitching`` is set to False.
     valid_inequalities : str, optional
         Whether to include outer approximations for the AC formulation. Options
         are ``activeloss`` (the default), ``jabr``, or ``disable``. `jabr` uses
         SOCP constraints, ``activeloss`` uses linear outer approximations to the
-        jabr inequalities, while ``disable`` does not generate valid inequalities.
+        jabr inequalities, while ``disable`` does not generate valid
+        inequalities.
 
     Returns
     -------
     dict
-        Case dictionary following MATPOWER notation with additional result fields
+        Case dictionary following MATPOWER notation with additional result
+        fields
     """
 
     # Exact cartesian AC
