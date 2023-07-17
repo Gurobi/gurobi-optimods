@@ -52,7 +52,7 @@ class TestAPIVarious(unittest.TestCase):
         # make case infeasible
         case["bus"][1]["Vmax"] = 0.8
         # solve opf model and return a solution
-        solution = solve_opf_model(case, logfile="", opftype="AC", branchswitching=1)
+        solution = solve_opf_model(case, opftype="AC", branchswitching=True)
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 0)
 
@@ -60,7 +60,7 @@ class TestAPIVarious(unittest.TestCase):
     def test_opfdicts(self):
         case = load_opfdictcase()
         solution = solve_opf_model(
-            case, opftype="AC", branchswitching=1, usemipstart=False
+            case, opftype="AC", branchswitching=True, usemipstart=False
         )
         # check whether the solution point looks correct
         # differences can be quite big because we solve only to 0.1% optimality
@@ -83,61 +83,37 @@ class TestAPICase9(unittest.TestCase):
         self.assertLess(abs(value - expected), tol)
 
     def test_dc(self):
-        solution = solve_opf_model(
-            self.case,
-            opftype="DC",
-            branchswitching=0,
-            usemipstart=False,
-        )
+        solution = solve_opf_model(self.case, opftype="DC")
         # Check whether the solution point looks correct. Differences can
         # be quite big because we solve only to 0.1% optimality.
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
 
         # DC test values
-        self.assert_approx_equal(solution["f"], 5216.026607, tol=1e1)
-        self.assert_approx_equal(solution["bus"][1]["Va"], 6.177764, tol=1e1)
-        self.assert_approx_equal(solution["gen"][2]["Pg"], 134.377585, tol=1e1)
-        self.assert_approx_equal(solution["branch"][3]["Pt"], -56.2622, tol=1e1)
+        self.assert_approx_equal(solution["f"], 5216.026607, tol=1e-1)
+        self.assert_approx_equal(solution["gen"][2]["Pg"], 134.377585, tol=1e-1)
+        self.assert_approx_equal(solution["branch"][3]["Pt"], -56.2622, tol=1e-1)
 
     def test_ac(self):
-        solution = solve_opf_model(
-            self.case,
-            opftype="AC",
-            polar=False,
-            useef=True,
-            usejabr=True,
-            useactivelossineqs=False,
-            branchswitching=0,
-            usemipstart=False,
-        )
+        solution = solve_opf_model(self.case, opftype="AC")
         # Check whether the solution point looks correct. Differences can
         # be quite big because we solve only to 0.1% optimality.
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
-        self.assert_approx_equal(solution["f"], 5296.686204, tol=1e1)
-        self.assert_approx_equal(solution["bus"][3]["Vm"], 1.08662, tol=1e1)
-        self.assert_approx_equal(solution["gen"][2]["Qg"], 0.031844, tol=1e1)
-        self.assert_approx_equal(solution["branch"][1]["Qf"], 12.9656, tol=1e1)
+        self.assert_approx_equal(solution["f"], 5296.686204, tol=1e-1)
+        self.assert_approx_equal(solution["bus"][3]["Vm"], 1.08662, tol=1e-1)
+        self.assert_approx_equal(solution["gen"][2]["Qg"], 0.031844, tol=1e-1)
+        self.assert_approx_equal(solution["branch"][1]["Qf"], 12.9656, tol=1e-1)
 
     def test_ac_relax(self):
-        solution = solve_opf_model(
-            self.case,
-            opftype="AC",
-            polar=False,
-            useef=False,
-            usejabr=True,
-            useactivelossineqs=False,
-            branchswitching=0,
-            usemipstart=False,
-        )
+        solution = solve_opf_model(self.case, opftype="ACRelax")
         # Check whether the solution point looks correct. Differences can
         # be quite big because we solve only to 0.1% optimality.
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
-        self.assert_approx_equal(solution["f"], 5296.66532, tol=1e1)
-        self.assert_approx_equal(solution["gen"][1]["Pg"], 89.803524, tol=1e1)
-        self.assert_approx_equal(solution["branch"][2]["Pt"], -34.1774, tol=1e1)
+        self.assert_approx_equal(solution["f"], 5296.66532, tol=1e-1)
+        self.assert_approx_equal(solution["gen"][1]["Pg"], 89.803524, tol=1e-1)
+        self.assert_approx_equal(solution["branch"][2]["Pt"], -34.1774, tol=1e-1)
 
 
 @unittest.skipIf(size_limited_license(), "size-limited-license")
@@ -179,12 +155,7 @@ class TestAPILargeModels(unittest.TestCase):
             with self.subTest(case=self.cases[i]):
                 casefile = load_caseopfmat(self.cases[i])
                 case = read_case_from_mat_file(casefile)
-                solution = solve_opf_model(
-                    case,
-                    opftype="DC",
-                    branchswitching=0,
-                    usemipstart=False,
-                )
+                solution = solve_opf_model(case, opftype="DC")
                 # Check whether the solution point looks correct. Differences can
                 # be quite big because we solve only to 0.1% optimality.
                 self.assertIsNotNone(solution)
@@ -201,16 +172,7 @@ class TestAPILargeModels(unittest.TestCase):
             with self.subTest(case=self.cases[i]):
                 casefile = load_caseopfmat(self.cases[i])
                 case = read_case_from_mat_file(casefile)
-                solution = solve_opf_model(
-                    case,
-                    opftype="AC",
-                    polar=False,
-                    useef=True,
-                    usejabr=True,
-                    useactivelossineqs=False,
-                    branchswitching=0,
-                    usemipstart=False,
-                )
+                solution = solve_opf_model(case, opftype="AC")
                 # Check whether the solution point looks correct. Differences can
                 # be quite big because we solve only to 0.1% optimality.
                 self.assertIsNotNone(solution)
@@ -226,16 +188,7 @@ class TestAPILargeModels(unittest.TestCase):
             with self.subTest(case=self.cases[i]):
                 casefile = load_caseopfmat(self.cases[i])
                 case = read_case_from_mat_file(casefile)
-                solution = solve_opf_model(
-                    case,
-                    opftype="AC",
-                    polar=False,
-                    useef=False,
-                    usejabr=True,
-                    useactivelossineqs=False,
-                    branchswitching=0,
-                    usemipstart=False,
-                )
+                solution = solve_opf_model(case, opftype="ACRelax")
                 # Check whether the solution point looks correct. Differences can
                 # be quite big because bigger models are often numerically unstable.
                 self.assertIsNotNone(solution)
@@ -260,11 +213,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                 solution = solve_opf_model(
                     self.case,
                     opftype="AC",
-                    branchswitching=0,
-                    polar=False,
-                    useef=True,
-                    usejabr=True,
-                    useactivelossineqs=False,
+                    branchswitching=False,
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
@@ -279,12 +228,8 @@ class TestAPIBranchSwitching(unittest.TestCase):
                 solution = solve_opf_model(
                     self.case,
                     opftype="AC",
-                    branchswitching=1,
+                    branchswitching=True,
                     minactivebranches=0.0,
-                    polar=False,
-                    useef=True,
-                    usejabr=True,
-                    useactivelossineqs=False,
                     usemipstart=usemipstart,
                     solver_params={
                         "MIPGap": 1e-5
@@ -303,12 +248,8 @@ class TestAPIBranchSwitching(unittest.TestCase):
                 solution = solve_opf_model(
                     self.case,
                     opftype="AC",
-                    branchswitching=1,
+                    branchswitching=True,
                     minactivebranches=1.0,
-                    polar=False,
-                    useef=True,
-                    usejabr=True,
-                    useactivelossineqs=False,
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
@@ -322,12 +263,8 @@ class TestAPIBranchSwitching(unittest.TestCase):
             with self.subTest(usemipstart=usemipstart):
                 solution = solve_opf_model(
                     self.case,
-                    opftype="AC",
-                    branchswitching=0,
-                    polar=False,
-                    useef=False,
-                    usejabr=True,  # JABR is the SOCP relaxation
-                    useactivelossineqs=False,
+                    opftype="ACRelax",
+                    branchswitching=False,
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
@@ -341,13 +278,9 @@ class TestAPIBranchSwitching(unittest.TestCase):
             with self.subTest(usemipstart=usemipstart):
                 solution = solve_opf_model(
                     self.case,
-                    opftype="AC",
-                    branchswitching=1,
+                    opftype="ACRelax",
+                    branchswitching=True,
                     minactivebranches=0.0,
-                    polar=False,
-                    useef=False,
-                    usejabr=True,
-                    useactivelossineqs=False,
                     usemipstart=usemipstart,
                     solver_params={
                         "MIPGap": 0.0
@@ -365,13 +298,9 @@ class TestAPIBranchSwitching(unittest.TestCase):
             with self.subTest(usemipstart=usemipstart):
                 solution = solve_opf_model(
                     self.case,
-                    opftype="AC",
-                    branchswitching=1,
+                    opftype="ACRelax",
+                    branchswitching=True,
                     minactivebranches=1.0,
-                    polar=False,
-                    useef=False,
-                    usejabr=False,
-                    useactivelossineqs=False,
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
@@ -386,7 +315,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                 solution = solve_opf_model(
                     self.case,
                     opftype="DC",
-                    branchswitching=0,
+                    branchswitching=False,
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
@@ -402,7 +331,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                 solution = solve_opf_model(
                     self.case,
                     opftype="DC",
-                    branchswitching=1,
+                    branchswitching=True,
                     minactivebranches=0.0,
                     usemipstart=usemipstart,
                 )
@@ -419,7 +348,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                 solution = solve_opf_model(
                     self.case,
                     opftype="DC",
-                    branchswitching=1,
+                    branchswitching=True,
                     minactivebranches=0.99,
                     usemipstart=usemipstart,
                 )

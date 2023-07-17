@@ -30,14 +30,9 @@ logger = logging.getLogger(__name__)
 def solve_opf_model(
     case,
     opftype="AC",
-    polar=False,
-    useef=True,
-    usejabr=True,
-    ivtype="aggressive",
-    branchswitching=0,
-    usemipstart=True,
+    branchswitching=False,
     minactivebranches=0.9,
-    useactivelossineqs=False,
+    usemipstart=False,
     *,
     create_env,
 ):
@@ -91,19 +86,38 @@ def solve_opf_model(
     dict
         Case dictionary following MATPOWER notation with additional result fields
     """
+
+    # Exact cartesian AC
+    if opftype.lower() == "ac":
+        opftype = "ac"
+        useef = True
+        usejabr = True
+    # AC relaxation using the JABR inequality
+    elif opftype.lower() == "acrelax":
+        opftype = "ac"
+        useef = False
+        usejabr = True
+    # DC linear approximation
+    elif opftype.lower() == "dc":
+        opftype = "dc"
+        useef = False
+        usejabr = False
+    else:
+        raise ValueError(f"Unknown opftype '{opftype}'")
+
     with create_env() as env:
         return _solve_opf_model_internal(
             env,
             case,
             opftype=opftype,
-            polar=polar,
             useef=useef,
             usejabr=usejabr,
-            ivtype=ivtype,
             branchswitching=branchswitching,
             usemipstart=usemipstart,
             minactivebranches=minactivebranches,
-            useactivelossineqs=useactivelossineqs,
+            polar=False,
+            ivtype="aggressive",
+            useactivelossineqs=False,
         )
 
 
