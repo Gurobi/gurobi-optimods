@@ -91,7 +91,35 @@ def solve_opf_model(
     dict
         Case dictionary following MATPOWER notation with additional result fields
     """
+    with create_env() as env:
+        return _solve_opf_model_internal(
+            env,
+            case,
+            opftype=opftype,
+            polar=polar,
+            useef=useef,
+            usejabr=usejabr,
+            ivtype=ivtype,
+            branchswitching=branchswitching,
+            usemipstart=usemipstart,
+            minactivebranches=minactivebranches,
+            useactivelossineqs=useactivelossineqs,
+        )
 
+
+def _solve_opf_model_internal(
+    env,
+    case,
+    opftype,
+    polar,
+    useef,
+    usejabr,
+    ivtype,
+    branchswitching,
+    usemipstart,
+    minactivebranches,
+    useactivelossineqs,
+):
     # Initialize settings dictionary
     settings = construct_settings_dict(
         opftype,
@@ -103,7 +131,6 @@ def solve_opf_model(
         usemipstart,
         minactivebranches,
         useactivelossineqs,
-        dict(),
     )
 
     # Initilize data dictionary
@@ -116,7 +143,7 @@ def solve_opf_model(
     read_case(alldata, case)
 
     # Construct and solve model using given case data and user settings
-    solution = construct_and_solve_model(create_env, alldata)
+    solution = construct_and_solve_model(env, alldata)
 
     return solution
 
@@ -171,7 +198,6 @@ def compute_violations_from_given_voltages(case, voltages, polar=False, *, creat
         usemipstart=False,
         useactivelossineqs=False,
         minactivebranches=0.95,
-        additional_settings={},
     )
 
     # Initilize data dictionary

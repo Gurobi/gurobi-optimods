@@ -18,6 +18,7 @@ from gurobi_optimods.opf import (
     read_voltages_from_csv_file,
     solve_opf_model,
 )
+from gurobi_optimods.opf.api import _solve_opf_model_internal
 
 # If plotly is not installed, some tests will be skipped
 try:
@@ -657,20 +658,34 @@ class TestGraphicsNewYork(unittest.TestCase):
             fig.show()
 
 
-@unittest.skip("Tests internal options; not needed in CI")
+# @unittest.skip("Tests internal options; not needed in CI")
 class TestInternal(unittest.TestCase):
     # Test internal options we haven't exposed on the public API yet
+
+    def setUp(self):
+        self.env = gp.Env()
+
+    def tearDown(self):
+        self.env.close()
 
     def test_ac_polar(self):
         # Test polar formulation. It's expensive to test all combinations,
         # so for now just test the defaults.
+        self.env.setParam("SolutionLimit", 1)
         casefile = load_caseopfmat("9")
         case = read_case_from_mat_file(casefile)
-        solution = solve_opf_model(
+        solution = _solve_opf_model_internal(
+            self.env,
             case,
             opftype="AC",
             polar=True,
-            solver_params={"SolutionLimit": 1},
+            useef=True,
+            usejabr=True,
+            ivtype="aggressive",
+            branchswitching=0,
+            usemipstart=True,
+            minactivebranches=0.9,
+            useactivelossineqs=False,
         )
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
@@ -687,6 +702,7 @@ class TestInternal(unittest.TestCase):
                 usemipstart=usemipstart,
                 useactivelossineqs=useactivelossineqs,
                 minactivebranches=minactivebranches,
+                ivtype="aggressive",
             )
             for useef in [False, True]
             for usejabr in [False, True]
@@ -698,13 +714,14 @@ class TestInternal(unittest.TestCase):
 
         # Solve opf model for the same case and return a solution.
         # The model has to be feasible for every setting combination.
+        self.env.setParam("SolutionLimit", 1)
         casefile = load_caseopfmat("9")
         case = read_case_from_mat_file(casefile)
         for acopf_settings in settingslist:
             with self.subTest(acopf_settings):
-                solution = solve_opf_model(
+                solution = _solve_opf_model_internal(
+                    self.env,
                     case,
-                    solver_params={"SolutionLimit": 1},
                     **acopf_settings,
                 )
                 self.assertIsNotNone(solution)
@@ -720,6 +737,10 @@ class TestInternal(unittest.TestCase):
                 usemipstart=usemipstart,
                 useactivelossineqs=useactivelossineqs,
                 minactivebranches=minactivebranches,
+                polar=False,
+                useef=True,
+                usejabr=True,
+                ivtype="aggressive",
             )
             for branchswitching in [0, 1]
             for usemipstart in [False, True]
@@ -729,13 +750,14 @@ class TestInternal(unittest.TestCase):
 
         # Solve opf model for the same case and return a solution.
         # The model has to be feasible for every setting combination.
+        self.env.setParam("SolutionLimit", 1)
         casefile = load_caseopfmat("9")
         case = read_case_from_mat_file(casefile)
         for acopf_settings in settingslist:
             with self.subTest(acopf_settings):
-                solution = solve_opf_model(
+                solution = _solve_opf_model_internal(
+                    self.env,
                     case,
-                    solver_params={"SolutionLimit": 1},
                     **acopf_settings,
                 )
                 self.assertIsNotNone(solution)
@@ -750,6 +772,11 @@ class TestInternal(unittest.TestCase):
                 ivtype=ivtype,
                 useactivelossineqs=useactivelossineqs,
                 minactivebranches=minactivebranches,
+                polar=False,
+                useef=True,
+                usejabr=True,
+                branchswitching=0,
+                usemipstart=True,
             )
             for ivtype in ["plain", "aggressive"]
             for useactivelossineqs in [False, True]
@@ -758,13 +785,14 @@ class TestInternal(unittest.TestCase):
 
         # Solve opf model for the same case and return a solution.
         # The model has to be feasible for every setting combination.
+        self.env.setParam("SolutionLimit", 1)
         casefile = load_caseopfmat("9")
         case = read_case_from_mat_file(casefile)
         for acopf_settings in settingslist:
             with self.subTest(acopf_settings):
-                solution = solve_opf_model(
+                solution = _solve_opf_model_internal(
+                    self.env,
                     case,
-                    solver_params={"SolutionLimit": 1},
                     **acopf_settings,
                 )
                 self.assertIsNotNone(solution)
@@ -777,7 +805,19 @@ class TestInternal(unittest.TestCase):
         # read case file and return a case dictionary
         case = read_case_from_mat_file(casefile)
         # solve opf model and return a solution
-        solution = solve_opf_model(case, opftype="IV", ivtype="aggressive")
+        solution = _solve_opf_model_internal(
+            self.env,
+            case,
+            opftype="IV",
+            ivtype="aggressive",
+            polar=False,
+            useef=True,
+            usejabr=True,
+            branchswitching=0,
+            usemipstart=True,
+            minactivebranches=0.9,
+            useactivelossineqs=False,
+        )
         # check whether the solution points looks correct
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)

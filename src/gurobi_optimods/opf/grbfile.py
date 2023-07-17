@@ -38,61 +38,31 @@ def construct_settings_dict(
     usemipstart,
     minactivebranches,
     useactivelossineqs,
-    additional_settings,
 ):
-    """
-    Initializes a dictionary holding all necessary data
+    settings = dict(
+        dopolar=bool(polar),
+        use_ef=bool(useef),
+        skipjabr=not bool(usejabr),
+        usemipstart=bool(usemipstart),
+        minactivebranches=float(minactivebranches),
+        useactivelossineqs=bool(useactivelossineqs),
+    )
 
-    :param logfile: Name of log file, defaults to ""
-    :type logfile: str, optional
-    :param opftype: String telling the desired OPF model type. Available are `AC`, `DC`, `IV`, defaults to `AC`
-    :type opftype: str, optional
-    :param polar: Controls whether polar formulation should be used, defaults to `False`
-    :type polar: bool, optional
-    :param useef: Controls whether bilinear variables e, f and corresponding constraints should be used, defaults to `True`.
-                  Has only an effect if ``opftype`` equals `AC`
-    :type useef: bool, optional
-    :param usejabr: Controls whether JABR inequalities should be added, defaults to `True`.
-                    Has only an effect if ``opftype`` equals `AC`
-    :type usejabr: bool, optional
-    :param ivtype: States what type of IV formulation should be used. Availale are `aggressive` and `plain`,
-                   defaults to `aggressive`
-    :type ivtype: str, optional
-    :param branchswitching: Controls whether discrete variable for turning on/off branches should be used.
-                            0 = don't use discrete variables (all branches are on)
-                            1 = use binary variables to constrain bounds of (re)active power injections
-                            2 = use binary variables and multiply them with the (re)active power injections
-                            Usually, setting 1 works better than 2. Defaults to 0
-    :type branchswitching: int, optional
-    :param usemipstart: Controls whether a pre-defined MIPStart should be used. Has only an effect if
-                        branchswitching > 0. Deftault to `True`
-    :type usemipstart: bool, optional
-    :param additional_settings: Dictionary holding additional settings. For more details, please refer to
-                                the documentation. Defaults to an empty dictionary
-    :type additional_settings: dict, optional
+    opftype = opftype.lower()
+    if opftype in ["ac", "dc", "iv"]:
+        settings["do" + opftype] = True
+    else:
+        raise ValueError(f"Unknown OPF type {opftype}")
 
-    :return: Returns a dictionary with a few initialized default fields
-    :rtype: dict
-    """
+    ivtype = ivtype.lower()
+    if ivtype in ["plain", "aggressive"]:
+        settings["ivtype"] = ivtype
+    else:
+        raise ValueError(f"Unknown ivtype {ivtype}")
 
-    settings = {}
-
-    opftypeL = opftype.lower()
-    if opftypeL not in ["ac", "dc", "iv"]:
-        raise ValueError(f"Unknown OPF type {opftype}.")
-
-    settings["do" + opftypeL] = True
-    settings["dopolar"] = polar
-    settings["use_ef"] = useef
-    settings["skipjabr"] = not usejabr
-
-    ivtypeL = ivtype.lower()
-    if ivtypeL not in ["plain", "aggressive"]:
-        raise ValueError(f"Unknown ivtype {ivtype}.")
-
-    settings["ivtype"] = ivtypeL
     if branchswitching == 0:
-        settings["branchswitching_mip"] = settings["branchswitching_comp"] = False
+        settings["branchswitching_mip"] = False
+        settings["branchswitching_comp"] = False
     elif branchswitching == 1:
         settings["branchswitching_mip"] = True
         settings["branchswitching_comp"] = False
@@ -101,14 +71,6 @@ def construct_settings_dict(
         settings["branchswitching_comp"] = True
     else:
         raise ValueError(f"Unknown branchswitching setting {branchswitching}.")
-
-    settings["usemipstart"] = usemipstart
-    settings["minactivebranches"] = minactivebranches
-
-    settings["useactivelossineqs"] = useactivelossineqs
-
-    for s in additional_settings:
-        settings[s] = additional_settings[s]
 
     return settings
 

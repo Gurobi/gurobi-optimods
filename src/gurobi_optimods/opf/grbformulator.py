@@ -16,7 +16,7 @@ from gurobi_optimods.opf.utils import OpfType
 logger = logging.getLogger(__name__)
 
 
-def construct_and_solve_model(create_env, alldata):
+def construct_and_solve_model(env, alldata):
     """
     Construct OPF model for given data and solve it
 
@@ -54,7 +54,7 @@ def construct_and_solve_model(create_env, alldata):
     lpformulator_setup(alldata, opftype)
 
     # Create model
-    with create_env() as env, gp.Model(modelname, env=env) as model:
+    with gp.Model(modelname, env=env) as model:
         # Add model variables and constraints
         lpformulator_body(alldata, model, opftype)
 
