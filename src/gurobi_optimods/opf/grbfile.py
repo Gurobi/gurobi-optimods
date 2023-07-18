@@ -2,33 +2,10 @@ import csv
 import logging
 import math
 
-from gurobi_optimods.opf.utils import (
-    check_settings_for_correct_type,
-    get_default_optimization_settings,
-)
-
 logger = logging.getLogger(__name__)
 
 
-def initialize_data_dict(logfile=""):
-    """
-    Initializes a dictionary holding all necessary data
-
-    :param logfile: Name of log file, defaults to ""
-    :type logfile: str, optional
-
-    :return: Returns a dictionary with a few initialized default fields
-    :rtype: dict
-    """
-    alldata = {}
-    alldata["LP"] = {}  # continuous variables
-    alldata["MIP"] = {}  # discrete variables
-    alldata["logfile"] = logfile
-
-    return alldata
-
-
-def construct_settings_dict(
+def build_internal_settings(
     opftype,
     polar,
     useef,
@@ -39,27 +16,52 @@ def construct_settings_dict(
     minactivebranches,
     useactivelossineqs,
 ):
-    settings = dict(
-        dopolar=bool(polar),
-        use_ef=bool(useef),
-        skipjabr=not bool(usejabr),
-        usemipstart=bool(usemipstart),
-        minactivebranches=float(minactivebranches),
-        useactivelossineqs=bool(useactivelossineqs),
-    )
+    # Ensure various defaults are populated.
+    settings = {
+        "doac": False,
+        "dodc": False,
+        "doiv": False,
+        "dopolar": bool(polar),
+        "use_ef": bool(useef),
+        "skipjabr": not bool(usejabr),
+        "ivtype": "aggressive",
+        "branchswitching_mip": False,
+        # Formulation for branch-switching where the binary variables simply multiply the continuous variables.
+        # Sometimes it works better than branchswitching_mip. Only applicable for AC
+        "branchswitching_comp": False,
+        "usemipstart": bool(usemipstart),
+        "minactivebranches": float(minactivebranches),
+        # New linear inequalities developed and implemented by Dan.
+        # They are outer approximations of the JABR inequalities
+        "useactivelossineqs": bool(useactivelossineqs),
+        #############################
+        # The following settings should currently not be disclosed
+        # For now keep for us, mainly used for debugging and experimenting with heuristics
+        "fixcs": False,  # (approximately) fix c, s variables if a voltage solution was read in
+        "fixtolerance": 1.0e-5,
+        # Heuristics to help NL solver find a good solution
+        "usemaxdispersion": False,  # difference between all bus angles is small
+        "usemaxphasediff": False,  # difference between 2 adjacent branches is small
+        "maxdispersion_deg": 0.0,
+        "maxphasediff_deg": 360.0,
+        "usequadcostvar": False,
+    }
 
+    # Set the AC/DC/IV model type
     opftype = opftype.lower()
     if opftype in ["ac", "dc", "iv"]:
         settings["do" + opftype] = True
     else:
         raise ValueError(f"Unknown OPF type {opftype}")
 
+    # Sub-type for IV models
     ivtype = ivtype.lower()
     if ivtype in ["plain", "aggressive"]:
         settings["ivtype"] = ivtype
     else:
         raise ValueError(f"Unknown ivtype {ivtype}")
 
+    # Branch switching configurations
     if branchswitching == 0:
         settings["branchswitching_mip"] = False
         settings["branchswitching_comp"] = False
@@ -73,75 +75,6 @@ def construct_settings_dict(
         raise ValueError(f"Unknown branchswitching setting {branchswitching}.")
 
     return settings
-
-
-def read_optimization_settings(alldata, settings):
-    """
-    Reads settings dictionary for an optimization call
-    and saves all settings to alldata dictionary.
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param settings: Dictionary holding settings used for an optimization call provided by the user
-    :type settings: dict
-
-    :raise ValueError: Incompatible settings
-    """
-
-    # Currently Hard-coded
-    # We leave it like this for now, it needs further experimentation in a future release
-    alldata["usequadcostvar"] = False
-
-    defaults = get_default_optimization_settings()
-    read_settings_dict(alldata, settings, defaults)
-
-    if int(alldata["doac"]) + int(alldata["dodc"]) + int(alldata["doiv"]) != 1:
-        raise ValueError(
-            "Illegal option combination. Have to use exactly 1 of options [doac, dodc, doiv]."
-        )
-
-    logger.info("All settings:")
-    for s in defaults.keys():
-        if s == "skipjabr":
-            logger.info(f"  usejabr {not alldata[s]}")
-        # Don't print hidden settings
-        elif s not in [
-            "fixcs",
-            "fixtolerance",
-            "usemaxdispersion",
-            "usemaxphasediff",
-            "maxdispersion_deg",
-            "maxphasediff_deg",
-        ]:
-            logger.info(f"  {s} {alldata[s]}")
-
-    logger.info("")
-
-
-def read_settings_dict(alldata, inputsettings, defaults):
-    """
-    Sets input settings in alldata from a settings dict.
-    Also checks for correct data types of settings
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param inputsettings: Dictionary holding settings provided by the user
-    :type inputsettings: dict
-    :param defaults: Dictionary holding optimization or graphics default settings
-    :type defaults: dict
-
-    :raises ValueError: Unknown option string
-    """
-
-    for s in inputsettings.keys():
-        if s not in defaults.keys():
-            raise ValueError(f"Unknown option string {s}.")
-        defaults[s] = inputsettings[s]
-
-    check_settings_for_correct_type(defaults)
-
-    for s in defaults.keys():
-        alldata[s] = defaults[s]
 
 
 def read_file_csv(filename, data):

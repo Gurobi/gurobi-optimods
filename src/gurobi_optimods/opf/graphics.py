@@ -1,5 +1,5 @@
-from gurobi_optimods.opf.grbcasereader import read_case
-from gurobi_optimods.opf.grbfile import grbmap_coords_from_dict, initialize_data_dict
+from gurobi_optimods.opf.grbcasereader import convert_case_to_internal_format
+from gurobi_optimods.opf.grbfile import grbmap_coords_from_dict
 from gurobi_optimods.opf.grbgraphical import (
     generate_solution_figure,
     generate_violations_figure,
@@ -24,11 +24,8 @@ def generate_opf_solution_figure(case, coords, solution):
     :rtype: :class:`plotly.graph_objects.Figure`
     """
 
-    # Initilize data dictionary
-    alldata = initialize_data_dict()
-
-    # Read case file/dict and populate the alldata dictionary
-    read_case(alldata, case)
+    # Populate the alldata dictionary with case data
+    alldata = convert_case_to_internal_format(case)
 
     # Special settings for graphics
     alldata["graphical"] = {}
@@ -61,11 +58,8 @@ def generate_opf_violations_figure(case, coords, violations):
     :rtype: :class:`plotly.graph_objects.Figure`
     """
 
-    # Initilize data dictionary
-    alldata = initialize_data_dict()
-
-    # Read case file/dict and populate the alldata dictionary
-    read_case(alldata, case)
+    # Populate the alldata dictionary with case data
+    alldata = convert_case_to_internal_format(case)
 
     # Special settings for graphics
     alldata["graphical"] = {}

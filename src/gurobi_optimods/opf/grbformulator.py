@@ -1,6 +1,7 @@
 import logging
 import math
 import time
+from enum import Enum
 
 import gurobipy as gp
 from gurobipy import GRB
@@ -11,9 +12,18 @@ from gurobi_optimods.opf.grbformulator_ac import (
 )
 from gurobi_optimods.opf.grbformulator_dc import lpformulator_dc_body
 from gurobi_optimods.opf.grbformulator_iv import lpformulator_iv_body
-from gurobi_optimods.opf.utils import OpfType
 
 logger = logging.getLogger(__name__)
+
+
+class OpfType(Enum):
+    """
+    Defines possible OPF formulation types
+    """
+
+    AC = "AC"
+    DC = "DC"
+    IV = "IV"
 
 
 def construct_and_solve_model(env, alldata):
@@ -63,11 +73,6 @@ def construct_and_solve_model(env, alldata):
         logger.info(
             f"Constructed {opftype.value}OPF model with {model.NumVars} variables and {model.NumConstrs} constraints.\n"
         )
-
-        # Write model to file if requested by user
-        if alldata["lpfilename"] is not None:
-            model.write(alldata["lpfilename"])
-            logger.info(f"Wrote LP to {alldata['lpfilename']}.")
 
         # Solve the OPF model
         sol_count = lpformulator_optimize(alldata, model, opftype)
@@ -189,10 +194,6 @@ def lpformulator_optimize(alldata, model, opftype):
             model.Params.MIPGap = 1.0e-4
         if opttol[2] == opttol[5]:
             model.Params.OptimalityTol = 1.0e-4
-
-    # Use user specified parameters
-    if alldata["gurobiparamfile"] is not None:
-        model.read(alldata["gurobiparamfile"])
 
     # Always use a pre-defined MIPStart for DC if we have binary variables
     # For AC only use it if it is requested

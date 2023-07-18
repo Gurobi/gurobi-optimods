@@ -404,18 +404,14 @@ class Gen:
             logger.info(i, self.costvector[i], " ", end="")
 
 
-def read_case(alldata, case_dict):
+def convert_case_to_internal_format(case_dict):
     """
-    Fills alldata dictionary out of a user-given case dictionary
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param case_dict: Dictionary holding all case relevant data
-    :type case_dict: dict
-
-    :raises ValueError: Bus type not allowed, illegal angle for branch,
-                        non-existent generator
+    Converts case format to internal data format, returning a new dictionary.
+    Raises ValueError if there is any invalid data, e.g. bus type not allowed,
+    illegal angle for branch, non-existent generator
     """
+
+    alldata = {"LP": {}, "MIP": {}, "logfile": ""}
 
     logger.info("Building case data structures from dictionary.")
     baseMVA = alldata["baseMVA"] = case_dict["baseMVA"]
@@ -622,6 +618,8 @@ def read_case(alldata, case_dict):
             gencoststruct[count]["shutdown"],
             baseMVA,
         )
+
+    return alldata
 
 
 def read_case_file_mat(casefile):

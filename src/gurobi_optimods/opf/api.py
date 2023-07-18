@@ -6,16 +6,14 @@ Optimal Power Flow
 import logging
 
 from gurobi_optimods.opf.grbcasereader import (
-    read_case,
+    convert_case_to_internal_format,
     read_case_file_mat,
     turn_opf_dict_into_mat_file,
 )
 from gurobi_optimods.opf.grbfile import (
-    construct_settings_dict,
+    build_internal_settings,
     grbmap_volts_from_dict,
-    initialize_data_dict,
     read_file_csv,
-    read_optimization_settings,
 )
 from gurobi_optimods.opf.grbformulator import (
     compute_violations_from_voltages,
@@ -77,7 +75,8 @@ def solve_opf_model(
         effect if ``branchswitching`` is set to False.
     usemipstart : bool, optional
         If set to True, try various MIP starts for branch switching models. Has
-        no effect if ``branchswitching`` is set to False.
+        no effect if ``branchswitching`` is set to False. For DC models, this
+        setting is ignored, and the mip start is always used.
     valid_inequalities : str, optional
         Whether to include outer approximations for the AC formulation. Options
         are ``activeloss`` (the default), ``jabr``, or ``disable``. `jabr` uses
@@ -140,7 +139,7 @@ def _solve_opf_model_internal(
     useactivelossineqs,
 ):
     # Initialize settings dictionary
-    settings = construct_settings_dict(
+    settings = build_internal_settings(
         opftype,
         polar,
         useef,
@@ -152,14 +151,9 @@ def _solve_opf_model_internal(
         useactivelossineqs,
     )
 
-    # Initilize data dictionary
-    alldata = initialize_data_dict()
-
-    # Read settings file/dict and save them into the alldata dict
-    read_optimization_settings(alldata, settings)
-
-    # Read case file/dict and populate the alldata dictionary
-    read_case(alldata, case)
+    # Populate the alldata dictionary with case data and settings
+    alldata = convert_case_to_internal_format(case)
+    alldata.update(settings)
 
     # Construct and solve model using given case data and user settings
     solution = construct_and_solve_model(env, alldata)
@@ -207,7 +201,7 @@ def compute_violations_from_given_voltages(case, voltages, polar=False, *, creat
 
     # Initialize fixed settings dictionary
     # We need the settings to construct a correct model
-    settings = construct_settings_dict(
+    settings = build_internal_settings(
         opftype="AC",
         polar=polar,
         useef=True,
@@ -219,14 +213,9 @@ def compute_violations_from_given_voltages(case, voltages, polar=False, *, creat
         minactivebranches=0.95,
     )
 
-    # Initilize data dictionary
-    alldata = initialize_data_dict("")
-
-    # Read settings file/dict and save them into the alldata dict
-    read_optimization_settings(alldata, settings)
-
-    # Read case file/dict and populate the alldata dictionary
-    read_case(alldata, case)
+    # Populate the alldata dictionary with case data and settings
+    alldata = convert_case_to_internal_format(case)
+    alldata.update(settings)
 
     # Map given voltage data to network data
     grbmap_volts_from_dict(alldata, voltages)
