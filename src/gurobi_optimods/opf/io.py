@@ -108,10 +108,10 @@ def write_case_matfile(case, file_path):
     branch = pd.DataFrame(case["branch"])
     gencost = pd.DataFrame(case["gencost"])
 
-    assert list(bus.columns) == bus_field_names
-    assert list(gen.columns) == gen_field_names
-    assert list(branch.columns) == branch_field_names
-    assert list(gencost.columns) == gencost_field_names
+    assert set(bus.columns) == set(bus_field_names)
+    assert set(gen.columns) == set(gen_field_names)
+    assert set(branch.columns) == set(branch_field_names)
+    assert set(gencost.columns) == set(gencost_field_names)
 
     # Expand costvector list of lists to array
     part1 = gencost[gencost_field_names[:-1]].values
@@ -124,9 +124,9 @@ def write_case_matfile(case, file_path):
             "mpc": {
                 "version": 2,
                 "baseMVA": case["baseMVA"],
-                "bus": bus.values,
-                "gen": gen.values,
-                "branch": branch.values,
+                "bus": bus[bus_field_names].values,
+                "gen": gen[gen_field_names].values,
+                "branch": branch[branch_field_names].values,
                 "gencost": gencost_values,
             }
         },
