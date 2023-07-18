@@ -3,7 +3,6 @@ import math
 
 import numpy as np
 
-from gurobi_optimods.opf.grbgraph import Grbgraph
 from gurobi_optimods.opf.plotlyhandler import Plotlyhandler
 
 logger = logging.getLogger(__name__)
@@ -441,10 +440,8 @@ def graphplot(
         pos[j] = [vertexx[j], vertexy[j]]
 
     # Construct network graph
-    gG = Grbgraph()
-
-    for j in range(n):
-        gG.addvertex(j)
+    graph_vertices = set(range(n))
+    graph_edges = []
 
     newdeg = {}
     for j in range(scanned_num_unique):
@@ -459,12 +456,8 @@ def graphplot(
     for j in range(m):
         small = min(adj[j][0], adj[j][1])
         large = max(adj[j][0], adj[j][1])
-        # G.add_edge(small, large)
-        error = gG.addedge(small, large)
-        if error:
-            raise ValueError(
-                f"Could not add edge ({small}, {large}) to graph object.\n"
-            )
+        assert small in graph_vertices and large in graph_vertices
+        graph_edges.append((small, large))
         fbus = small + 1
         tbus = large + 1
         pair = (fbus, tbus)
@@ -477,11 +470,12 @@ def graphplot(
         reordered_text[j] = local_reordered_text[pair][deg]
         reordered_position[(fbus, tbus, deg)] = j
 
-    gG.getmetrics()
+    logger.info(f"Graph has {len(graph_vertices)} vertices {len(graph_edges)} edges.")
     logger.info("Creating visualization object.\n")
 
     PH = Plotlyhandler(
-        gG,
+        list(graph_vertices),
+        graph_edges,
         pos,
         annotation_list=textlist,
         vertex_size=myvertex_size,

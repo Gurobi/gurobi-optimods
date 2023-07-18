@@ -6,51 +6,37 @@ from typing import Union
 
 import plotly.graph_objects as go
 
-from gurobi_optimods.opf.grbgraph import Grbgraph
-
 logger = logging.getLogger(__name__)
 
 
 class Plotlyhandler:
     """
-    Creates a plotly figure to be rendered
-    Input is a graph given by coordinates
+    Creates a plotly figure to be rendered Input is a graph given by coordinates
 
-    :param gG: Graph to be plotted
-    :type gG: :class: `Grbgraph`
-    :param pos: Node coordinates given as list of tuples
-    :type pos: list
-    :param annotation_list: List of annotations
-    :type annotation_list: list
-    :param vertex_size: List of vertex sizes, defaults to None
-    :type vertex_size: list, optional
-    :param vertex_color: List of vertex colors, defaults to None
-    :type vertex_color: list, optional
-    :param edge_width: List of edge widths, defaults to None
-    :type edge_width: list, optional
-    :param edge_color: List of edge colors, defaults to None
-    :type edge_color: list, optional
-    :param edge_position: List of edge positions accessed by tuples of vertices and degree, defaults to None
-    :type edge_position: list, optional
-    :param vertex_text: text list for each node
-    :type vertex_text: list, optional
-    :param vertex_text_position: Position of text shown for each vertex, defaults to None
-    :type vertex_text_position: str, optional
-    :param vertex_text_font_color: Color of vertex text
-    :type vertex_text_font_color: str
-    :param vertex_text_font_family: Font name of vertext text, defaults to None
-    :type vertex_text_font_family: str, optional
-    :param vertex_text_font_size: Font size of vertex text, defaults to None
-    :type vertex_text_font_size: int, optional
-    :param vertex_border_width: Width of vertex border, defaults to None
-    :type vertex_border_width: float, optional
-    :param vertex_border_color: Color of vertex border, defaults to None
-    :type vertex_border_color: str
+    - vertices: vertices of graph to be plotted (list of ints)
+    - edges: edges of graph to be plotted (list of tuples)
+    - pos Node coordinates given as list of (x, y) tuples
+    - annotation_list List of annotations
+    - vertex_size: List of vertex sizes, defaults to None
+    - vertex_color: List of vertex colors, defaults to None
+    - edge_width: List of edge widths, defaults to None
+    - edge_color: List of edge colors, defaults to None
+    - edge_position: List of edge positions accessed by tuples of vertices and
+      degree, defaults to None
+    - vertex_text: text list for each node
+    - vertex_text_position: Position of text shown for each vertex, defaults to
+      None
+    - vertex_text_font_color: Color of vertex text
+    - vertex_text_font_family: Font name of vertext text, defaults to None
+    - vertex_text_font_size: Font size of vertex text, defaults to None
+    - vertex_border_width: Width of vertex border, defaults to None
+    - vertex_border_color: Color of vertex border, defaults to None
     """
 
     def __init__(
         self,
-        gG: Grbgraph,
+        vertices,
+        edges,
         pos,
         annotation_list,
         vertex_size=None,
@@ -69,7 +55,8 @@ class Plotlyhandler:
         vertex_text_font_family = "Arial"
         vertex_text_font_size = 14
 
-        self.gG = gG
+        self.vertices = vertices
+        self.edges = edges
         self.pos = pos
         self.annotation_list = annotation_list
         self.vertex_text_position = vertex_text_position
@@ -103,16 +90,12 @@ class Plotlyhandler:
 
         count = 1
         localdeg = {}
-        # for edge in self.G.edges():
-        for edgecnt in range(self.gG.m):
-            edge = self.gG.edges[edgecnt]
+        for edge in self.edges:
             small = min(edge[0] + 1, edge[1] + 1)
             large = max(edge[0] + 1, edge[1] + 1)
             localdeg[small, large] = 0
 
-        # for edge in self.G.edges():
-        for edgecnt in range(self.gG.m):
-            edge = self.gG.edges[edgecnt]
+        for edge in self.edges:
             small = min(edge[0] + 1, edge[1] + 1)
             large = max(edge[0] + 1, edge[1] + 1)
             thedeg = localdeg[small, large]
@@ -168,7 +151,7 @@ class Plotlyhandler:
         """
 
         x, y = [], []
-        for v in self.gG.vertices.values():
+        for v in self.vertices:
             x += [self.pos[v][0]]
             y += [self.pos[v][1]]
 
@@ -210,28 +193,28 @@ class Plotlyhandler:
         :return: Returns a list of colors for each vertex
         :rtype: list
         """
-        return [self.vertex_color[v] for v in self.gG.vertices.values()]
+        return [self.vertex_color[v] for v in self.vertices]
 
     def vertex_size_list(self):
         """
         :return: Returns a list of sizes for each vertex
         :rtype: list
         """
-        return [self.vertex_size[v] for v in self.gG.vertices.values()]
+        return [self.vertex_size[v] for v in self.vertices]
 
     def vertex_border_width_list(self):
         """
         :return: Returns a list of widths for each vertex
         :rtype: list
         """
-        return [self.vertex_border_width[v] for v in self.gG.vertices.values()]
+        return [self.vertex_border_width[v] for v in self.vertices]
 
     def vertex_text_list(self):
         """
         :return: Returns a list of texts for each vertex
         :rtype: list
         """
-        return [self.vertex_text[v] for v in self.gG.vertices.values()]  #
+        return [self.vertex_text[v] for v in self.vertices]
 
     def create_figure(
         self,
