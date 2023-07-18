@@ -1,4 +1,5 @@
 import collections
+import os
 import pathlib
 import tempfile
 import unittest
@@ -605,7 +606,10 @@ class TestIO(unittest.TestCase):
             self.assertIsInstance(branch["tbus"], int)
 
 
-# @unittest.skip("Tests internal options; not needed in CI")
+@unittest.skipIf(
+    os.environ.get("CI", "false") == "true",
+    "Tests expensive internal options; skipped for CI",
+)
 class TestInternal(unittest.TestCase):
     # Test internal options we haven't exposed on the public API yet
 
