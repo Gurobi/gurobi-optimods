@@ -702,7 +702,7 @@ def read_case_file_mat(casefile):
         gens[numgens]["Qmin"] = g[4]
         gens[numgens]["Vg"] = g[5]
         gens[numgens]["mBase"] = g[6]
-        gens[numgens]["status"] = 0 if g[7] <= 0 else 1
+        gens[numgens]["status"] = 0 if g[7] <= 0 else 1  # TODO handle internally
         gens[numgens]["Pmax"] = g[8]
         gens[numgens]["Pmin"] = g[9]
         gens[numgens]["Pc1"] = g[10]
@@ -735,7 +735,9 @@ def read_case_file_mat(casefile):
         branches[numbranches]["rateA"] = b[5]
         branches[numbranches]["rateB"] = b[6]
         branches[numbranches]["rateC"] = b[7]
-        branches[numbranches]["ratio"] = 1.0 if b[8] == 0.0 else b[8]
+        branches[numbranches]["ratio"] = (
+            1.0 if b[8] == 0.0 else b[8]
+        )  # TODO: handle internally
         branches[numbranches]["angle"] = b[9]
         branches[numbranches]["status"] = b[10]
         branches[numbranches]["angmin"] = b[11]
@@ -760,6 +762,8 @@ def read_case_file_mat(casefile):
         gencosts[numgencosts]["costvector"] = costvector
 
     if numgencosts > numgens:
+        # FIXME: spec says we can have twice as many entries, representing reactive power.
+        # Do we not handle this case?
         raise ValueError(f"Read {numgencosts} gen costs but only {numgens} generators.")
 
     case_dict["gencost"] = gencosts

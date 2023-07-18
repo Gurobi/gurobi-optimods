@@ -1,11 +1,12 @@
 import collections
+import pathlib
+import tempfile
 import unittest
 
 import gurobipy as gp
 
 from gurobi_optimods.datasets import (
     load_case9branchswitching,
-    load_case9solution,
     load_caseNYopf,
     load_caseopfmat,
     load_filepath,
@@ -19,6 +20,7 @@ from gurobi_optimods.opf import (
     solve_opf_model,
 )
 from gurobi_optimods.opf.api import _solve_opf_model_internal
+from gurobi_optimods.opf.io import read_case_matfile, write_case_matfile
 
 # If plotly is not installed, some tests will be skipped
 try:
@@ -568,6 +570,39 @@ class TestGraphicsNewYork(unittest.TestCase):
         fig = generate_opf_solution_figure(case, coords_dict, solution)
         if self.plot_graphics:
             fig.show()
+
+
+class TestIO(unittest.TestCase):
+    def test_roundtrip(self):
+        # round trip test of dictionary format
+        source = load_opfdictcase()
+        original = {
+            "baseMVA": float(source["baseMVA"]),
+            "bus": list(source["bus"].values()),
+            "gen": list(source["gen"].values()),
+            "branch": list(source["branch"].values()),
+            "gencost": list(source["gencost"].values()),
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpfile = pathlib.Path(tmpdir) / "testcase.mat"
+            write_case_matfile(original, tmpfile)
+            reread = read_case_matfile(tmpfile)
+
+        self.assertEqual(set(reread.keys()), set(original.keys()))
+
+        for field, data in reread.items():
+            self.assertEqual(data, original[field])
+
+        # Check types for some special cases
+        for bus in reread["bus"]:
+            self.assertIsInstance(bus["bus_i"], int)
+            self.assertIsInstance(bus["type"], int)
+        for gen in reread["gen"]:
+            self.assertIsInstance(gen["bus"], int)
+        for branch in reread["branch"]:
+            self.assertIsInstance(branch["fbus"], int)
+            self.assertIsInstance(branch["tbus"], int)
 
 
 # @unittest.skip("Tests internal options; not needed in CI")
