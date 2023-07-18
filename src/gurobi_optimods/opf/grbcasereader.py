@@ -411,6 +411,21 @@ def convert_case_to_internal_format(case_dict):
     illegal angle for branch, non-existent generator
     """
 
+    # Pre-conversion needed for hacky approach to indexing
+    # import copy
+    # case_dict = copy.deepcopy(case_dict)
+
+    # def matlabify(values):
+    #     # 0..n-1 list -> 1..n dict
+    #     return dict(zip(range(1, len(values) + 1), values))
+
+    # for branch in case_dict['branch']:
+    #     if branch['ratio'] == 0.0:
+    #         branch['ratio'] = 1.0
+    # for field in ["bus", "gen", "branch", "gencost"]:
+    #     case_dict[field] = matlabify(case_dict[field])
+    # case_dict is now matlab-like
+
     alldata = {"LP": {}, "MIP": {}}
 
     logger.info("Building case data structures from dictionary.")
