@@ -411,7 +411,7 @@ def convert_case_to_internal_format(case_dict):
     illegal angle for branch, non-existent generator
     """
 
-    alldata = {"LP": {}, "MIP": {}, "logfile": ""}
+    alldata = {"LP": {}, "MIP": {}}
 
     logger.info("Building case data structures from dictionary.")
     baseMVA = alldata["baseMVA"] = case_dict["baseMVA"]

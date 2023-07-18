@@ -170,9 +170,6 @@ def lpformulator_optimize(alldata, model, opftype):
     :rtype: int
     """
 
-    # Disable logging handler to get Gurobi output
-    logging.disable(logging.INFO)
-    model.params.LogFile = alldata["logfile"]
     # Nonlinear functions are only supported starting with version 11
     if GRB.VERSION_MAJOR >= 11:
         model.setParam("FuncNonlinear", 1)
@@ -214,26 +211,19 @@ def lpformulator_optimize(alldata, model, opftype):
 
     model.optimize()
 
-    # Activate logging handlers
-    logging.disable(logging.NOTSET)
-
     # Check model status and re-optimize or try computing an IIS if necessary
     if model.status == GRB.INF_OR_UNBD:
         logger.info("\nModel Status: infeasible or unbounded.\n")
         logger.info("Re-optimizing with DualReductions turned off.\n")
-        logging.disable(logging.INFO)
         model.Params.DualReductions = 0
         model.optimize()
-        logging.disable(logging.NOTSET)
 
     if model.status == GRB.INFEASIBLE:
         logger.info("\nModel Status: infeasible.\n")
         logger.info("Computing IIS...")
         iisname = opftype.value + "opfmodel.ilp"
-        logging.disable(logging.INFO)
         model.computeIIS()
         model.write(iisname)
-        logging.disable(logging.NOTSET)
         logger.info(f"\nIIS computed, written IIS to file {iisname}.")
         logger.info("For more information on how to deal with infeasible models.")
         logger.info(
@@ -245,12 +235,10 @@ def lpformulator_optimize(alldata, model, opftype):
         logger.info(
             "Re-optimizing with settings focused on improving numerical stability.\n"
         )
-        logging.disable(logging.INFO)
         model.Params.NumericFocus = 2
         model.Params.BarHomogeneous = 1
         model.reset()
         model.optimize()
-        logging.disable(logging.NOTSET)
 
     elif model.status == GRB.UNBOUNDED:
         logger.info("\nModel Status: unbounded.\n")
@@ -265,9 +253,7 @@ def lpformulator_optimize(alldata, model, opftype):
     # one feasible point is available
     if model.SolCount > 0:
         logger.info(f"Objective value = {model.objVal}.")
-        logging.disable(logging.INFO)
         model.printQuality()
-        logging.disable(logging.NOTSET)
 
     return model.SolCount
 
