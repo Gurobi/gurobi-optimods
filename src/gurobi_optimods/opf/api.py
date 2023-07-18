@@ -96,20 +96,23 @@ def solve_opf_model(
         opftype = "ac"
         useef = True
         usejabr = True
+        default_solver_params = {"MIPGap": 1e-4, "OptimalityTol": 1e-4}
     # AC relaxation using the JABR inequality
     elif opftype.lower() == "acrelax":
         opftype = "ac"
         useef = False
         usejabr = True
+        default_solver_params = {"MIPGap": 1e-4, "OptimalityTol": 1e-4}
     # DC linear approximation
     elif opftype.lower() == "dc":
         opftype = "dc"
         useef = False
         usejabr = False
+        default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
     else:
         raise ValueError(f"Unknown opftype '{opftype}'")
 
-    with create_env() as env:
+    with create_env(params=default_solver_params) as env:
         return _solve_opf_model_internal(
             env,
             case,

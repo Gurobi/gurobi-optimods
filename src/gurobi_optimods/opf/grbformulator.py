@@ -170,27 +170,9 @@ def lpformulator_optimize(alldata, model, opftype):
     :rtype: int
     """
 
-    # Nonlinear functions are only supported starting with version 11
-    if GRB.VERSION_MAJOR >= 11:
-        model.setParam("FuncNonlinear", 1)
-    # Specific settings for better convergence
-    gap = model.getParamInfo("MIPGap")
-    opttol = model.getParamInfo("OptimalityTol")
-    if opftype != OpfType.DC:
-        if alldata["use_ef"] or alldata["dopolar"]:
-            model.params.NonConvex = 2
-
-        # Specific settings for better convergence
-        # Change only if they are at default values
-        if gap[2] == gap[5]:
-            model.Params.MIPGap = 1.0e-3
-        if opttol[2] == opttol[5]:
-            model.Params.OptimalityTol = 1.0e-3
-    else:
-        if gap[2] == gap[5]:
-            model.Params.MIPGap = 1.0e-4
-        if opttol[2] == opttol[5]:
-            model.Params.OptimalityTol = 1.0e-4
+    # NonConvex solver needed for normal AC models
+    if opftype != OpfType.DC and (alldata["use_ef"] or alldata["dopolar"]):
+        model.params.NonConvex = 2
 
     # Always use a pre-defined MIPStart for DC if we have binary variables
     # For AC only use it if it is requested
