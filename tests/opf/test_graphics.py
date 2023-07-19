@@ -1,16 +1,10 @@
 # Tests of plotting functions
 
-import collections
 import unittest
 
 import gurobipy as gp
 
-from gurobi_optimods.datasets import (
-    load_case9branchswitching,
-    load_caseNYopf,
-    load_filepath,
-    load_opfdictcase,
-)
+from gurobi_optimods.datasets import load_caseNYopf, load_filepath
 from gurobi_optimods.opf import (
     compute_violations_from_given_voltages,
     read_case_from_mat_file,
@@ -45,9 +39,6 @@ def size_limited_license():
 
 @unittest.skipIf(plotly is None, "plotly is not installed")
 class TestGraphicsCase9(unittest.TestCase):
-    # Currently, this is just a convenience setting while working on OptiMod
-    plot_graphics = False
-
     def setUp(self):
         # graphics test values
         self.graphics_9_x = [
@@ -73,57 +64,62 @@ class TestGraphicsCase9(unittest.TestCase):
             647.86,
         ]
 
-    # test plotting a solution after optimization is performed
-    def test_graphics(self):
-        # load case dictionary
-        case = load_opfdictcase()
-        # solve opf model and return a solution
-        solution = solve_opf_model(case, opftype="AC")
-        # plot the computed solution
-        coordsfile = load_filepath("case9coords.csv")
-        coords_dict = read_coords_from_csv_file(coordsfile)
-        fig = generate_opf_solution_figure(case, coords_dict, solution)
-        # check whether figure coordinates and scaled input coordinates are the same
+        from tests.opf import read_case
+
+        # Info related to case9
+        self.case9 = read_case("9")
+        self.case9_solution = solve_opf_model(self.case9, opftype="AC", verbose=False)
+        self.case9_coords = read_coords_from_csv_file(load_filepath("case9coords.csv"))
+        volts_data = read_voltages_from_csv_file(load_filepath("case9volts.csv"))
+        self.case9_violations = compute_violations_from_given_voltages(
+            self.case9, volts_data, polar=True, verbose=False
+        )
+
+        # Manually create a solution with some branches switched off
+        from copy import deepcopy
+
+        self.switching_solution = deepcopy(self.case9_solution)
+        self.switching_solution["branch"][3]["switching"] = 0
+        self.switching_solution["branch"][6]["switching"] = 0
+
+    def test_plot_solution(self):
+        # Plot figure using case, coordinates, solution
+        fig = generate_opf_solution_figure(
+            self.case9, self.case9_coords, self.case9_solution
+        )
+
+        # Check whether figure coordinates and scaled input coordinates are the same
         for i in range(9):
             self.assertLess(abs(fig.data[1].x[i] - self.graphics_9_x[i]), 1e-9)
             self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
-        if self.plot_graphics:
+
+        # If set to true, plot opens in browser for manual checking
+        if False:
             fig.show()
 
-    # test plotting a solution from pre-loaded data
-    def test_graphics_volts(self):
-        # get path to csv file holding the voltage information for case 9
-        voltsfile = load_filepath("case9volts.csv")
-        volts_dict = read_voltages_from_csv_file(voltsfile)
-        # load case dictionary
-        case = load_opfdictcase()
-        # compute violations
-        violations = compute_violations_from_given_voltages(case, volts_dict, True)
-        self.assertTrue(violations is not None)
-
-        coordsfile = load_filepath("case9coords.csv")
-        coords_dict = read_coords_from_csv_file(coordsfile)
-        fig = generate_opf_violations_figure(case, coords_dict, violations)
-        if self.plot_graphics:
-            fig.show()
-
-    # test plotting a solution from pre-loaded data
-    def test_graphics_branchswitching(self):
-        # get path to csv file holding the coordinates for case 9
-        coordsfile = load_filepath("case9coords.csv")
-        coords_dict = read_coords_from_csv_file(coordsfile)
-        # load case dictionary
-        case = load_case9branchswitching()
-        # compute a solution
-        solution = solve_opf_model(case, opftype="AC", branchswitching=1)
-        counts = collections.Counter(
-            branch["switching"] for branch in solution["branch"].values()
+    def test_plot_branchswitching(self):
+        # Plot figure using case, coordinates, switching solution
+        fig = generate_opf_solution_figure(
+            self.case9, self.case9_coords, self.switching_solution
         )
-        self.assertEqual(counts[1], 10)
-        self.assertEqual(counts[0], 2)
-        # plot the given solution
-        fig = generate_opf_solution_figure(case, coords_dict, solution)
-        if self.plot_graphics:
+
+        # If set to true, plot opens in browser for manual checking
+        if False:
+            fig.show()
+
+    def test_plot_violations(self):
+        # Plot violations figure using case, coordinates, voltage solution
+        fig = generate_opf_violations_figure(
+            self.case9, self.case9_coords, self.case9_violations
+        )
+
+        # Check whether figure coordinates and scaled input coordinates are the same
+        for i in range(9):
+            self.assertLess(abs(fig.data[1].x[i] - self.graphics_9_x[i]), 1e-9)
+            self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
+
+        # If set to true, plot opens in browser for manual checking
+        if False:
             fig.show()
 
 
