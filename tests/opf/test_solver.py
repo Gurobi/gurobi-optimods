@@ -66,8 +66,8 @@ class TestAPICase9(unittest.TestCase):
         self.assert_solution_valid(solution)
 
         self.assert_approx_equal(solution["f"], 5216.026607, tol=1e-1)
-        self.assert_approx_equal(solution["gen"][2]["Pg"], 134.377585, tol=1e-1)
-        self.assert_approx_equal(solution["branch"][3]["Pt"], -56.2622, tol=1e-1)
+        self.assert_approx_equal(solution["gen"][1]["Pg"], 134.377585, tol=1e-1)
+        self.assert_approx_equal(solution["branch"][2]["Pt"], -56.2622, tol=1e-1)
 
     def test_ac(self):
         solution = solve_opf_model(self.case, opftype="AC")
@@ -75,9 +75,9 @@ class TestAPICase9(unittest.TestCase):
         self.assert_solution_valid(solution)
 
         self.assert_approx_equal(solution["f"], 5296.686204, tol=1e-1)
-        self.assert_approx_equal(solution["bus"][3]["Vm"], 1.08662, tol=1e-1)
-        self.assert_approx_equal(solution["gen"][2]["Qg"], 0.031844, tol=1e-1)
-        self.assert_approx_equal(solution["branch"][1]["Qf"], 12.9656, tol=1e-1)
+        self.assert_approx_equal(solution["bus"][2]["Vm"], 1.08662, tol=1e-1)
+        self.assert_approx_equal(solution["gen"][1]["Qg"], 0.031844, tol=1e-1)
+        self.assert_approx_equal(solution["branch"][0]["Qf"], 12.9656, tol=1e-1)
 
     def test_ac_branchswitching(self):
         solution = solve_opf_model(
@@ -88,10 +88,10 @@ class TestAPICase9(unittest.TestCase):
 
         self.assertIsNotNone(solution["f"])
         self.assert_approx_equal(solution["f"], 5296.6862, tol=1e-1)
-        self.assert_approx_equal(solution["bus"][1]["Va"], 0.0, tol=1e-1)
-        self.assert_approx_equal(solution["gen"][2]["Qg"], 0.0318441, tol=1e-1)
+        self.assert_approx_equal(solution["bus"][0]["Va"], 0.0, tol=1e-1)
+        self.assert_approx_equal(solution["gen"][1]["Qg"], 0.0318441, tol=1e-1)
         self.assert_approx_equal(
-            solution["branch"][3]["Pt"], 55.96906046691643, tol=1e-1
+            solution["branch"][2]["Pt"], 55.96906046691643, tol=1e-1
         )
 
     def test_ac_relax(self):
@@ -100,8 +100,8 @@ class TestAPICase9(unittest.TestCase):
         self.assert_solution_valid(solution)
 
         self.assert_approx_equal(solution["f"], 5296.66532, tol=1e-1)
-        self.assert_approx_equal(solution["gen"][1]["Pg"], 89.803524, tol=1e-1)
-        self.assert_approx_equal(solution["branch"][2]["Pt"], -34.1774, tol=1e-1)
+        self.assert_approx_equal(solution["gen"][0]["Pg"], 89.803524, tol=1e-1)
+        self.assert_approx_equal(solution["branch"][1]["Pt"], -34.1774, tol=1e-1)
 
     def test_ac_branchswitching_infeasible(self):
         # Modify the case to make it infeasible
@@ -158,9 +158,9 @@ class TestAPILargeModels(unittest.TestCase):
                 self.assertEqual(solution["success"], 1)
                 self.assertIsNotNone(solution["f"])
                 self.assertLess(abs(solution["f"] - self.objvals_dc[i]), 1e1)
-                self.assertLess(abs(solution["bus"][1]["Va"] - self.Va_dc[i]), 1e1)
-                self.assertLess(abs(solution["gen"][2]["Pg"] - self.Pg_dc[i]), 1e1)
-                self.assertLess(abs(solution["branch"][3]["Pt"] - self.Pt_dc[i]), 1e1)
+                self.assertLess(abs(solution["bus"][0]["Va"] - self.Va_dc[i]), 1e1)
+                self.assertLess(abs(solution["gen"][1]["Pg"] - self.Pg_dc[i]), 1e1)
+                self.assertLess(abs(solution["branch"][2]["Pt"] - self.Pt_dc[i]), 1e1)
 
     def test_ac(self):
         # Exact AC is expensive, so only solve the first two cases.
@@ -174,9 +174,9 @@ class TestAPILargeModels(unittest.TestCase):
                 self.assertEqual(solution["success"], 1)
                 self.assertIsNotNone(solution["f"])
                 self.assertLess(abs(solution["f"] - self.objvals_ac[i]), 1e1)
-                self.assertLess(abs(solution["bus"][3]["Vm"] - self.Vm_ac[i]), 1e1)
-                self.assertLess(abs(solution["gen"][2]["Qg"] - self.Qg_ac[i]), 1e1)
-                self.assertLess(abs(solution["branch"][1]["Qf"] - self.Qf_ac[i]), 1e1)
+                self.assertLess(abs(solution["bus"][2]["Vm"] - self.Vm_ac[i]), 1e1)
+                self.assertLess(abs(solution["gen"][1]["Qg"] - self.Qg_ac[i]), 1e1)
+                self.assertLess(abs(solution["branch"][0]["Qf"] - self.Qf_ac[i]), 1e1)
 
     def test_ac_relax(self):
         # Case 5 is numerically unstable
@@ -190,9 +190,9 @@ class TestAPILargeModels(unittest.TestCase):
                 self.assertEqual(solution["success"], 1)
                 self.assertIsNotNone(solution["f"])
                 self.assertLess(abs(solution["f"] - self.objvals_acconv[i]), 10)
-                self.assertLess(abs(solution["gen"][1]["Pg"] - self.Pg_acconv[i]), 10)
+                self.assertLess(abs(solution["gen"][0]["Pg"] - self.Pg_acconv[i]), 10)
                 self.assertLess(
-                    abs(solution["branch"][2]["Pt"] - self.Pt_acconv[i]), 10
+                    abs(solution["branch"][1]["Pt"] - self.Pt_acconv[i]), 10
                 )
 
 
