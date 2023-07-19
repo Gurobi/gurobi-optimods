@@ -1,24 +1,20 @@
 """
 Contains the actual mods / public API.
 
-- solve_opf_model: OPF solver
-- compute_violations_from_given_voltages: voltage solution checker
+- solve_opf: OPF solver
+- compute_violations: voltage solution checker
 """
 
 import logging
 
-from gurobi_optimods.opf import converters
-from gurobi_optimods.opf.grbformulator import (
-    compute_violations_from_voltages,
-    construct_and_solve_model,
-)
+from gurobi_optimods.opf import converters, grbformulator
 from gurobi_optimods.utils import optimod
 
 logger = logging.getLogger(__name__)
 
 
 @optimod()
-def solve_opf_model(
+def solve_opf(
     case,
     opftype="AC",
     branchswitching=False,
@@ -152,7 +148,7 @@ def _solve_opf_model_internal(
     alldata.update(settings)
 
     # Construct and solve model using given case data and user settings
-    solution = construct_and_solve_model(env, alldata)
+    solution = grbformulator.construct_and_solve_model(env, alldata)
 
     # TODO solution data is populated into 'alldata' then extracted by another
     # function. It may make more sense to have construct_and_solve_model return
@@ -164,7 +160,7 @@ def _solve_opf_model_internal(
 
 
 @optimod()
-def compute_violations_from_given_voltages(case, voltages, polar=False, *, create_env):
+def compute_violations(case, voltages, polar=False, *, create_env):
     """
     Constructs an OPF model from given case data and computes a violation dictionary
     out of given voltage values.
@@ -224,6 +220,6 @@ def compute_violations_from_given_voltages(case, voltages, polar=False, *, creat
 
     # Compute model violations based on user input voltages
     with create_env() as env:
-        violations = compute_violations_from_voltages(env, alldata)
+        violations = grbformulator.compute_violations_from_voltages(env, alldata)
 
     return violations

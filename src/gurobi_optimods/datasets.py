@@ -142,10 +142,10 @@ def load_sharpe_ratio():
 
 
 def load_opf_example(case):
-    from gurobi_optimods.opf.io import read_case_matfile
+    from gurobi_optimods.opf.io import read_case_matpower
 
     file_path = DATA_FILE_DIR / f"opf/{case}.mat"
-    return read_case_matfile(file_path)
+    return read_case_matpower(file_path)
 
 
 def load_filepath(filename):

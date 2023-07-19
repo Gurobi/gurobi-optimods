@@ -3,7 +3,7 @@
 import unittest
 
 from gurobi_optimods.datasets import load_opf_example
-from gurobi_optimods.opf import compute_violations_from_given_voltages
+from gurobi_optimods.opf import compute_violations
 
 
 class TestComputeVoltages(unittest.TestCase):
@@ -11,10 +11,10 @@ class TestComputeVoltages(unittest.TestCase):
 
     def setUp(self):
         from gurobi_optimods.datasets import load_filepath
-        from gurobi_optimods.opf.io import read_voltages_from_csv_file
+        from gurobi_optimods.opf.io import read_voltages_csv
 
         self.case = load_opf_example("case9")
-        self.volts_data = read_voltages_from_csv_file(load_filepath("case9volts.csv"))
+        self.volts_data = read_voltages_csv(load_filepath("case9volts.csv"))
 
     def assert_approx_equal(self, value, expected, tol):
         self.assertLess(abs(value - expected), tol)
@@ -49,9 +49,7 @@ class TestComputeVoltages(unittest.TestCase):
             self.assertEqual(sol_gencost["n"], case_gencost["n"])
 
     def test_volts(self):
-        violations = compute_violations_from_given_voltages(
-            self.case, self.volts_data, polar=True
-        )
+        violations = compute_violations(self.case, self.volts_data, polar=True)
         self.assert_solution_valid(violations)
 
         # Known values, should be stable

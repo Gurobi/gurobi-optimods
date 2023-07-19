@@ -6,7 +6,7 @@ import unittest
 import gurobipy as gp
 
 from gurobi_optimods.datasets import load_opf_example
-from gurobi_optimods.opf import solve_opf_model
+from gurobi_optimods.opf import solve_opf
 
 
 def size_limited_license():
@@ -61,7 +61,7 @@ class TestAPICase9(unittest.TestCase):
             self.assertEqual(sol_gencost["n"], case_gencost["n"])
 
     def test_dc(self):
-        solution = solve_opf_model(self.case, opftype="DC")
+        solution = solve_opf(self.case, opftype="DC")
         self.assertEqual(solution["success"], 1)
         self.assert_solution_valid(solution)
 
@@ -70,7 +70,7 @@ class TestAPICase9(unittest.TestCase):
         self.assert_approx_equal(solution["branch"][2]["Pt"], -56.2622, tol=1e-1)
 
     def test_ac(self):
-        solution = solve_opf_model(self.case, opftype="AC")
+        solution = solve_opf(self.case, opftype="AC")
         self.assertEqual(solution["success"], 1)
         self.assert_solution_valid(solution)
 
@@ -80,7 +80,7 @@ class TestAPICase9(unittest.TestCase):
         self.assert_approx_equal(solution["branch"][0]["Qf"], 12.9656, tol=1e-1)
 
     def test_ac_branchswitching(self):
-        solution = solve_opf_model(
+        solution = solve_opf(
             self.case,
             opftype="AC",
             branchswitching=True,
@@ -99,7 +99,7 @@ class TestAPICase9(unittest.TestCase):
         )
 
     def test_ac_relax(self):
-        solution = solve_opf_model(self.case, opftype="ACRelax")
+        solution = solve_opf(self.case, opftype="ACRelax")
         self.assertEqual(solution["success"], 1)
         self.assert_solution_valid(solution)
 
@@ -112,7 +112,7 @@ class TestAPICase9(unittest.TestCase):
         self.case["bus"][1]["Vmax"] = 0.8
 
         # Solve model, expect failure
-        solution = solve_opf_model(self.case, opftype="AC", branchswitching=True)
+        solution = solve_opf(self.case, opftype="AC", branchswitching=True)
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 0)
 
@@ -155,7 +155,7 @@ class TestAPILargeModels(unittest.TestCase):
         for i in range(5):
             with self.subTest(case=self.cases[i]):
                 case = self.casedata[i]
-                solution = solve_opf_model(case, opftype="DC")
+                solution = solve_opf(case, opftype="DC")
                 # Check whether the solution point looks correct. Differences can
                 # be quite big because we solve only to 0.1% optimality.
                 self.assertIsNotNone(solution)
@@ -171,7 +171,7 @@ class TestAPILargeModels(unittest.TestCase):
         for i in range(2):
             with self.subTest(case=self.cases[i]):
                 case = self.casedata[i]
-                solution = solve_opf_model(case, opftype="AC")
+                solution = solve_opf(case, opftype="AC")
                 # Check whether the solution point looks correct. Differences can
                 # be quite big because we solve only to 0.1% optimality.
                 self.assertIsNotNone(solution)
@@ -187,7 +187,7 @@ class TestAPILargeModels(unittest.TestCase):
         for i in range(4):
             with self.subTest(case=self.cases[i]):
                 case = self.casedata[i]
-                solution = solve_opf_model(case, opftype="ACRelax")
+                solution = solve_opf(case, opftype="ACRelax")
                 # Check whether the solution point looks correct. Differences can
                 # be quite big because bigger models are often numerically unstable.
                 self.assertIsNotNone(solution)
@@ -209,7 +209,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
         # no branch switching, all branches should be on
         for usemipstart in [True, False]:
             with self.subTest(usemipstart=usemipstart):
-                solution = solve_opf_model(
+                solution = solve_opf(
                     self.case,
                     opftype="AC",
                     branchswitching=False,
@@ -224,7 +224,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
         # branch switching with no minimum, some branches should be off
         for usemipstart in [True, False]:
             with self.subTest(usemipstart=usemipstart):
-                solution = solve_opf_model(
+                solution = solve_opf(
                     self.case,
                     opftype="AC",
                     branchswitching=True,
@@ -244,7 +244,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
         # branch switching with 100% minimum, all branches should be on
         for usemipstart in [True, False]:
             with self.subTest(usemipstart=usemipstart):
-                solution = solve_opf_model(
+                solution = solve_opf(
                     self.case,
                     opftype="AC",
                     branchswitching=True,
@@ -260,7 +260,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
         # no branch switching, all branches should be on
         for usemipstart in [True, False]:
             with self.subTest(usemipstart=usemipstart):
-                solution = solve_opf_model(
+                solution = solve_opf(
                     self.case,
                     opftype="ACRelax",
                     branchswitching=False,
@@ -275,7 +275,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
         # branch switching with no minimum, some branches should be off
         for usemipstart in [True, False]:
             with self.subTest(usemipstart=usemipstart):
-                solution = solve_opf_model(
+                solution = solve_opf(
                     self.case,
                     opftype="ACRelax",
                     branchswitching=True,
@@ -295,7 +295,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
         # branch switching with 100% minimum, all branches should be on
         for usemipstart in [True, False]:
             with self.subTest(usemipstart=usemipstart):
-                solution = solve_opf_model(
+                solution = solve_opf(
                     self.case,
                     opftype="ACRelax",
                     branchswitching=True,
@@ -311,7 +311,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
         # no branch switching, all branches should be on
         for usemipstart in [True, False]:
             with self.subTest(usemipstart=usemipstart):
-                solution = solve_opf_model(
+                solution = solve_opf(
                     self.case,
                     opftype="DC",
                     branchswitching=False,
@@ -327,7 +327,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
         # branch switching with no minimum, some branches should be off
         for usemipstart in [True, False]:
             with self.subTest(usemipstart=usemipstart):
-                solution = solve_opf_model(
+                solution = solve_opf(
                     self.case,
                     opftype="DC",
                     branchswitching=True,
@@ -344,7 +344,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
         # branch switching with 100% minimum, all branches should be on
         for usemipstart in [True, False]:
             with self.subTest(usemipstart=usemipstart):
-                solution = solve_opf_model(
+                solution = solve_opf(
                     self.case,
                     opftype="DC",
                     branchswitching=True,
@@ -393,7 +393,7 @@ class TestAPINewYork(unittest.TestCase):
 
     def test_dc(self):
         # solve opf model and return a solution
-        solution = solve_opf_model(self.case, opftype="DC")
+        solution = solve_opf(self.case, opftype="DC")
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
         self.assertIsNotNone(solution["f"])

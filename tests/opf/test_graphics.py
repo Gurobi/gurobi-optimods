@@ -8,21 +8,19 @@ import unittest
 import gurobipy as gp
 
 from gurobi_optimods.datasets import load_filepath, load_opf_example
-from gurobi_optimods.opf import compute_violations_from_given_voltages, solve_opf_model
-from gurobi_optimods.opf.io import (
-    read_coords_from_csv_file,
-    read_voltages_from_csv_file,
+from gurobi_optimods.opf import (
+    compute_violations,
+    solution_plot,
+    solve_opf,
+    violation_plot,
 )
+from gurobi_optimods.opf.io import read_coords_csv, read_voltages_csv
 
-# If plotly is not installed, some tests will be skipped
+# If plotly is not installed, tests will be skipped
 try:
     import plotly
 except ImportError:
     plotly = None
-
-# If plotly is installed, the opfgraphics module should import ok
-if plotly:
-    from gurobi_optimods.opf.graphics import plot_solution, plot_violations
 
 
 def size_limited_license():
@@ -64,10 +62,10 @@ class TestGraphicsCase9(unittest.TestCase):
 
         # Info related to case9
         self.case9 = load_opf_example("case9")
-        self.case9_solution = solve_opf_model(self.case9, opftype="AC", verbose=False)
-        self.case9_coords = read_coords_from_csv_file(load_filepath("case9coords.csv"))
-        volts_data = read_voltages_from_csv_file(load_filepath("case9volts.csv"))
-        self.case9_violations = compute_violations_from_given_voltages(
+        self.case9_solution = solve_opf(self.case9, opftype="AC", verbose=False)
+        self.case9_coords = read_coords_csv(load_filepath("case9coords.csv"))
+        volts_data = read_voltages_csv(load_filepath("case9volts.csv"))
+        self.case9_violations = compute_violations(
             self.case9, volts_data, polar=True, verbose=False
         )
 
@@ -78,9 +76,9 @@ class TestGraphicsCase9(unittest.TestCase):
             .read_text()
         )
 
-    def test_plot_solution(self):
+    def test_solution_plot(self):
         # Plot figure using case, coordinates, solution
-        fig = plot_solution(self.case9, self.case9_coords, self.case9_solution)
+        fig = solution_plot(self.case9, self.case9_coords, self.case9_solution)
 
         # Check whether figure coordinates and scaled input coordinates are the same
         for i in range(9):
@@ -93,15 +91,15 @@ class TestGraphicsCase9(unittest.TestCase):
 
     def test_plot_branchswitching(self):
         # Plot figure using case, coordinates, switching solution
-        fig = plot_solution(self.case9, self.case9_coords, self.switching_solution)
+        fig = solution_plot(self.case9, self.case9_coords, self.switching_solution)
 
         # If set to true, plot opens in browser for manual checking
         if False:
             fig.show()
 
-    def test_plot_violations(self):
+    def test_violation_plot(self):
         # Plot violations figure using case, coordinates, voltage solution
-        fig = plot_violations(self.case9, self.case9_coords, self.case9_violations)
+        fig = violation_plot(self.case9, self.case9_coords, self.case9_violations)
 
         # If set to true, plot opens in browser for manual checking
         if False:
@@ -116,7 +114,7 @@ class TestGraphicsNewYork(unittest.TestCase):
     def setUp(self):
         self.case = load_opf_example("caseNY")
         coordsfile = load_filepath("nybuses.csv")
-        self.coords = read_coords_from_csv_file(coordsfile)
+        self.coords = read_coords_csv(coordsfile)
         self.switching_solution = json.loads(
             pathlib.Path(__file__)
             .parent.joinpath("data/ny_dc_switching_solution.json")
@@ -125,8 +123,8 @@ class TestGraphicsNewYork(unittest.TestCase):
 
     def test_dc_solution(self):
         # Solve and plot DC solution
-        solution = solve_opf_model(self.case, opftype="DC")
-        fig = plot_solution(self.case, self.coords, solution)
+        solution = solve_opf(self.case, opftype="DC")
+        fig = solution_plot(self.case, self.coords, solution)
 
         # Test a few coordinates
         self.assertLess(abs(fig.data[1].x[0] - 1381.2), 1e-9)
@@ -140,7 +138,7 @@ class TestGraphicsNewYork(unittest.TestCase):
 
     def test_branchswitching(self):
         # Plot a pre-loaded DC branch switching solution
-        fig = plot_solution(self.case, self.coords, self.switching_solution)
+        fig = solution_plot(self.case, self.coords, self.switching_solution)
 
         # If set to true, plot opens in browser for manual checking
         if False:

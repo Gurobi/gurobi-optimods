@@ -1,10 +1,10 @@
 """
 Contains file I/O methods for reading and writing known data formats.
 
-- read_case_matfile: read case from MATPOWER format .mat file
-- write_case_matfile: write case (or solution) to MATPOWER format .mat file
-- read_coords_from_csv_file: read coordinate data
-- read_voltages_from_csv_file: read voltage data
+- read_case_matpower: read case from MATPOWER format .mat file
+- write_case_matpower: write case (or solution) to MATPOWER format .mat file
+- read_coords_csv: read coordinate data from csv
+- read_voltages_csv: read voltage data from csv
 """
 
 import csv
@@ -92,7 +92,7 @@ Some errors thrown by the old reader (TODO add tests):
 """
 
 
-def read_case_matfile(file_path):
+def read_case_matpower(file_path):
     """Read a .mat file containing a MATPOWER version 2 'mpc' struct. Returns
     the dictionary-based format we use for the solver APIs."""
     mat = scipy.io.loadmat(
@@ -143,7 +143,7 @@ def read_case_matfile(file_path):
     }
 
 
-def write_case_matfile(case, file_path):
+def write_case_matpower(case, file_path):
     """Write a .mat file containing a single struct (named 'mpc') in MATPOWER
     format. 'case' follows the dictionary-based format we use for the solver API.
     """
@@ -272,10 +272,10 @@ def turn_opf_dict_into_mat_file(solution, filename):
     scipy.io.savemat(filename, {"result": solution})
 
 
-def read_coords_from_csv_file(coordsfile):
+def read_coords_csv(coordsfile):
     """
     Helper function for users. Constructs a coordinate dictionary which can be
-    used as input for the ``plot_solution`` function.
+    used as input for the ``solution_plot`` function.
 
     :param coordsfile: Name of and possibly full path to bus coordinates file
         given as `.csv` file. The `.csv` file has to consist of the following
@@ -284,7 +284,7 @@ def read_coords_from_csv_file(coordsfile):
     :type coordsfile: str
 
     :return: Dictionary of the given coordinates which can be used in the
-             ``plot_solution`` function
+             ``solution_plot`` function
     :rtype: dict
 
     .. note::
@@ -296,7 +296,7 @@ def read_coords_from_csv_file(coordsfile):
     return coord_dict
 
 
-def read_voltages_from_csv_file(voltsfile):
+def read_voltages_csv(voltsfile):
     """
     Helper function for users. Constructs a bus input voltage dictionary which
     can be used as input for the ``check_voltage_solution_violations`` function

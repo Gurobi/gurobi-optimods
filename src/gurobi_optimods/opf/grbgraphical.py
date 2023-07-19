@@ -3,8 +3,6 @@ import math
 
 import numpy as np
 
-from gurobi_optimods.opf.plotlyhandler import Plotlyhandler
-
 logger = logging.getLogger(__name__)
 
 
@@ -347,6 +345,9 @@ def graphplot(
              see https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
     :rtype: :class: `plotly.graph_objects.Figure`
     """
+
+    # Only import at time of use, so plotly is not a required dependency
+    from gurobi_optimods.opf.plotlyhandler import Plotlyhandler
 
     n = graph_dict["N"]
     m = graph_dict["M"]

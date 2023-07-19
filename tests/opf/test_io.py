@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 from gurobi_optimods.datasets import load_opf_example
-from gurobi_optimods.opf.io import read_case_matfile, write_case_matfile
+from gurobi_optimods.opf import read_case_matpower, write_case_matpower
 
 
 class TestDatasets(unittest.TestCase):
@@ -34,8 +34,8 @@ class TestIO(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpfile = pathlib.Path(tmpdir) / "testcase.mat"
-            write_case_matfile(original, tmpfile)
-            reread = read_case_matfile(tmpfile)
+            write_case_matpower(original, tmpfile)
+            reread = read_case_matpower(tmpfile)
 
         self.assertEqual(set(reread.keys()), set(original.keys()))
 
@@ -52,7 +52,7 @@ class TestIO(unittest.TestCase):
             self.assertIsInstance(branch["fbus"], int)
             self.assertIsInstance(branch["tbus"], int)
 
-    def test_read_case_matfile(self):
+    def test_read_case_matpower(self):
         # Check that all example cases are read without errors
 
         case_mat_files = [
@@ -63,13 +63,13 @@ class TestIO(unittest.TestCase):
         for file_path in case_mat_files:
             with self.subTest(file_path=file_path):
                 # Should read without errors
-                original = read_case_matfile(file_path)
+                original = read_case_matpower(file_path)
 
                 # Test write and read back
                 with tempfile.TemporaryDirectory() as tmpdir:
                     tmpfile = pathlib.Path(tmpdir) / "testcase.mat"
-                    write_case_matfile(original, tmpfile)
-                    reread = read_case_matfile(tmpfile)
+                    write_case_matpower(original, tmpfile)
+                    reread = read_case_matpower(tmpfile)
 
                 # The first read and the round-trip should match exactly
                 self.assertEqual(set(reread.keys()), set(original.keys()))
