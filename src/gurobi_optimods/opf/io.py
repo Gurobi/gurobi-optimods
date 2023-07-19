@@ -66,19 +66,29 @@ def read_case_matfile(file_path):
     )
     mpc = mat["mpc"]
     assert int(mpc["version"]) == 2
-    bus = pd.DataFrame(data=mpc["bus"].item(), columns=bus_field_names).assign(
+
+    # We assume column ordering matches the field name order, and discard any
+    # additional columns.
+    bus_array = mpc["bus"].item()
+    bus_array = bus_array[:, : len(bus_field_names)]
+    bus = pd.DataFrame(data=bus_array, columns=bus_field_names).assign(
         bus_i=lambda df: df["bus_i"].astype(int),
         type=lambda df: df["type"].astype(int),
     )
-    gen = pd.DataFrame(data=mpc["gen"].item(), columns=gen_field_names).assign(
+    gen_array = mpc["gen"].item()
+    gen_array = gen_array[:, : len(gen_field_names)]
+    gen = pd.DataFrame(data=gen_array, columns=gen_field_names).assign(
         bus=lambda df: df["bus"].astype(int)
     )
-    branch = pd.DataFrame(data=mpc["branch"].item(), columns=branch_field_names).assign(
+    branch_array = mpc["branch"].item()
+    branch_array = branch_array[:, : len(branch_field_names)]
+    branch = pd.DataFrame(data=branch_array, columns=branch_field_names).assign(
         fbus=lambda df: df["fbus"].astype(int), tbus=lambda df: df["tbus"].astype(int)
     )
 
     # gencost has variable number of columns, we contract the extra columns
-    # to a sub-list for costvector data
+    # to a sub-list for costvector data. The length of this list should match
+    # the 'n' field.
     gencost_main = pd.DataFrame(
         data=mpc["gencost"].item()[:, :4], columns=gencost_field_names[:4]
     )
