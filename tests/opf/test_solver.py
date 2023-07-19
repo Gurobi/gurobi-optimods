@@ -203,9 +203,7 @@ class TestAPILargeModels(unittest.TestCase):
 class TestAPIBranchSwitching(unittest.TestCase):
     def setUp(self):
         # Modification of case9 where branch switching has an effect
-        from tests.opf import load_case9branchswitching
-
-        self.case = load_case9branchswitching()
+        self.case = load_opf_example("case9-switching")
 
     def test_ac_defaults(self):
         # no branch switching, all branches should be on
