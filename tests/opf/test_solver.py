@@ -212,7 +212,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
-                    branch["switching"] for branch in solution["branch"].values()
+                    branch["switching"] for branch in solution["branch"]
                 )
                 self.assertEqual(counts, {1: 12})
 
@@ -231,7 +231,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     },  # force to find a solution with branches turned off
                 )
                 counts = collections.Counter(
-                    branch["switching"] for branch in solution["branch"].values()
+                    branch["switching"] for branch in solution["branch"]
                 )
                 self.assertLess(counts[1], 12)
                 self.assertGreater(counts[0], 0)
@@ -248,7 +248,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
-                    branch["switching"] for branch in solution["branch"].values()
+                    branch["switching"] for branch in solution["branch"]
                 )
                 self.assertEqual(counts, {1: 12})
 
@@ -263,7 +263,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
-                    branch["switching"] for branch in solution["branch"].values()
+                    branch["switching"] for branch in solution["branch"]
                 )
                 self.assertEqual(counts, {1: 12})
 
@@ -282,7 +282,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     },  # need to make sure that we always find those solutions
                 )
                 counts = collections.Counter(
-                    branch["switching"] for branch in solution["branch"].values()
+                    branch["switching"] for branch in solution["branch"]
                 )
                 self.assertLess(counts[1], 12)
                 self.assertGreater(counts[0], 0)
@@ -299,7 +299,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
-                    branch["switching"] for branch in solution["branch"].values()
+                    branch["switching"] for branch in solution["branch"]
                 )
                 self.assertEqual(counts, {1: 12})
 
@@ -314,7 +314,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
-                    branch["switching"] for branch in solution["branch"].values()
+                    branch["switching"] for branch in solution["branch"]
                 )
                 self.assertEqual(counts, {1: 12})
 
@@ -331,7 +331,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
-                    branch["switching"] for branch in solution["branch"].values()
+                    branch["switching"] for branch in solution["branch"]
                 )
                 self.assertLess(counts[1], 12)
                 self.assertGreater(counts[0], 0)
@@ -348,7 +348,7 @@ class TestAPIBranchSwitching(unittest.TestCase):
                     usemipstart=usemipstart,
                 )
                 counts = collections.Counter(
-                    branch["switching"] for branch in solution["branch"].values()
+                    branch["switching"] for branch in solution["branch"]
                 )
                 self.assertEqual(counts, {1: 12})
 
