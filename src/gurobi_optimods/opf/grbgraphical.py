@@ -27,28 +27,17 @@ def generate_solution_figure(alldata, solution):
     logger.info(
         f"Generating solution figure with objective value {solution['f']:.3f}. Coordinates given."
     )
-    numbranches = alldata["numbranches"]
-    numgens = alldata["numgens"]
 
-    # Save branch and generator values
-    zholder = np.zeros(numbranches)
+    # Store branchswitching values as a numpy array in the alldata struct
+    zholder = np.array([branch["switching"] for branch in solution["branch"]])
+    assert set(np.unique(zholder)).issubset({0, 1})
+    numzeros = int((zholder == 0).sum())
     alldata["MIP"]["zholder"] = zholder
-    gholder = np.zeros(alldata["numgens"])
-    alldata["MIP"]["gholder"] = gholder
-    zholder = alldata["MIP"]["zholder"]
-    gholder = alldata["MIP"]["gholder"]
 
-    numzeros = 0
-    for j in range(1, 1 + numbranches):
-        branch = solution["branch"][j]
-        zholder[j - 1] = branch["switching"]
-        if branch["switching"] < 0.5:
-            numzeros += 1
+    # Store generator values as a numpy array in the alldata struct
+    alldata["MIP"]["gholder"] = np.array([gen["Pg"] for gen in solution["gen"]])
 
-    for j in range(1, 1 + numgens):
-        gen = solution["gen"][j]
-        gholder[j - 1] = gen["Pg"]
-
+    # Legend info
     textlist = []
     textlist.append([f"OBJ: {solution['f']:10.2f}", "black"])
     if numzeros > 0:
