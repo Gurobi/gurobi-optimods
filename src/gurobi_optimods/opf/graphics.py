@@ -1,8 +1,8 @@
 """
-Contains the graphics API for
+Contains the plotting API for OPF.
 
-- generate_opf_solution_figure: plot case solution
-- generate_opf_violations_figure: plot case violations
+- plot_solution: plot case solution using plotly, highlighting switched off branches
+- plot_violations: plot case solution, highlighting violations
 
 TODO: aren't these two basically the same? 'violations' is just a solution with
 some extra fields. plot_solution(show_violations=True) might be better?
@@ -15,7 +15,7 @@ plot_violations
 from gurobi_optimods.opf import converters, grbgraphical
 
 
-def generate_opf_solution_figure(case, coords, solution):
+def plot_solution(case, coords, solution):
     """
     Reads the given case and returns a plotly figure object.
     Ideally the solution has been computed by the ``solve_opf_model`` function
@@ -49,7 +49,7 @@ def generate_opf_solution_figure(case, coords, solution):
     return fig
 
 
-def generate_opf_violations_figure(case, coords, violations):
+def plot_violations(case, coords, violations):
     """
     Reads the given case and returns a plotly figure object of provided violations.
     Ideally the violations have been computed by the ``compute_violations_from_given_voltages`` function

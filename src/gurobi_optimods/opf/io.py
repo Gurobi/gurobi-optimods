@@ -275,7 +275,7 @@ def turn_opf_dict_into_mat_file(solution, filename):
 def read_coords_from_csv_file(coordsfile):
     """
     Helper function for users. Constructs a coordinate dictionary which can be
-    used as input for the ``generate_opf_solution_figure`` function.
+    used as input for the ``plot_solution`` function.
 
     :param coordsfile: Name of and possibly full path to bus coordinates file
         given as `.csv` file. The `.csv` file has to consist of the following
@@ -284,7 +284,7 @@ def read_coords_from_csv_file(coordsfile):
     :type coordsfile: str
 
     :return: Dictionary of the given coordinates which can be used in the
-             ``generate_opf_solution_figure`` function
+             ``plot_solution`` function
     :rtype: dict
 
     .. note::

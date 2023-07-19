@@ -22,10 +22,7 @@ except ImportError:
 
 # If plotly is installed, the opfgraphics module should import ok
 if plotly:
-    from gurobi_optimods.opf.graphics import (
-        generate_opf_solution_figure,
-        generate_opf_violations_figure,
-    )
+    from gurobi_optimods.opf.graphics import plot_solution, plot_violations
 
 
 def size_limited_license():
@@ -83,9 +80,7 @@ class TestGraphicsCase9(unittest.TestCase):
 
     def test_plot_solution(self):
         # Plot figure using case, coordinates, solution
-        fig = generate_opf_solution_figure(
-            self.case9, self.case9_coords, self.case9_solution
-        )
+        fig = plot_solution(self.case9, self.case9_coords, self.case9_solution)
 
         # Check whether figure coordinates and scaled input coordinates are the same
         for i in range(9):
@@ -98,9 +93,7 @@ class TestGraphicsCase9(unittest.TestCase):
 
     def test_plot_branchswitching(self):
         # Plot figure using case, coordinates, switching solution
-        fig = generate_opf_solution_figure(
-            self.case9, self.case9_coords, self.switching_solution
-        )
+        fig = plot_solution(self.case9, self.case9_coords, self.switching_solution)
 
         # If set to true, plot opens in browser for manual checking
         if False:
@@ -108,9 +101,7 @@ class TestGraphicsCase9(unittest.TestCase):
 
     def test_plot_violations(self):
         # Plot violations figure using case, coordinates, voltage solution
-        fig = generate_opf_violations_figure(
-            self.case9, self.case9_coords, self.case9_violations
-        )
+        fig = plot_violations(self.case9, self.case9_coords, self.case9_violations)
 
         # If set to true, plot opens in browser for manual checking
         if False:
@@ -135,7 +126,7 @@ class TestGraphicsNewYork(unittest.TestCase):
     def test_dc_solution(self):
         # Solve and plot DC solution
         solution = solve_opf_model(self.case, opftype="DC")
-        fig = generate_opf_solution_figure(self.case, self.coords, solution)
+        fig = plot_solution(self.case, self.coords, solution)
 
         # Test a few coordinates
         self.assertLess(abs(fig.data[1].x[0] - 1381.2), 1e-9)
@@ -149,9 +140,7 @@ class TestGraphicsNewYork(unittest.TestCase):
 
     def test_branchswitching(self):
         # Plot a pre-loaded DC branch switching solution
-        fig = generate_opf_solution_figure(
-            self.case, self.coords, self.switching_solution
-        )
+        fig = plot_solution(self.case, self.coords, self.switching_solution)
 
         # If set to true, plot opens in browser for manual checking
         if False:
