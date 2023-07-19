@@ -1,13 +1,15 @@
 # Tests of plotting functions
+# FIXME: "unclosed socket" warnings when showing the plot
 
+import json
+import pathlib
 import unittest
 
 import gurobipy as gp
 
-from gurobi_optimods.datasets import load_caseNYopf, load_filepath
+from gurobi_optimods.datasets import load_filepath
 from gurobi_optimods.opf import (
     compute_violations_from_given_voltages,
-    read_case_from_mat_file,
     read_coords_from_csv_file,
     read_voltages_from_csv_file,
     solve_opf_model,
@@ -75,12 +77,12 @@ class TestGraphicsCase9(unittest.TestCase):
             self.case9, volts_data, polar=True, verbose=False
         )
 
-        # Manually create a solution with some branches switched off
-        from copy import deepcopy
-
-        self.switching_solution = deepcopy(self.case9_solution)
-        self.switching_solution["branch"][3]["switching"] = 0
-        self.switching_solution["branch"][6]["switching"] = 0
+        # Load manually created solution with some branches switched off
+        self.switching_solution = json.loads(
+            pathlib.Path(__file__)
+            .parent.joinpath("data/case9_switching.json")
+            .read_text()
+        )
 
     def test_plot_solution(self):
         # Plot figure using case, coordinates, solution
@@ -121,56 +123,41 @@ class TestGraphicsCase9(unittest.TestCase):
 @unittest.skipIf(plotly is None, "plotly is not installed")
 @unittest.skipIf(size_limited_license(), "size-limited-license")
 class TestGraphicsNewYork(unittest.TestCase):
-    # Currently, this is just a convenience setting while working on OptiMod
-    plot_graphics = False
-
     # test a real data set for New York
-    def test_NY_graphics(self):
-        # load path to case file
-        casefile = load_caseNYopf()
-        # read case file and return a case dictionary
-        case = read_case_from_mat_file(casefile)
-        # solve opf model and return a solution
-        solution = solve_opf_model(case, opftype="DC")
-        self.assertIsNotNone(solution)
-        self.assertEqual(solution["success"], 1)
-        self.assertIsNotNone(solution["f"])
 
-        # get path to csv file holding the coordinates for NY
+    def setUp(self):
+        from tests.opf import read_case
+
+        self.case = read_case("NY")
         coordsfile = load_filepath("nybuses.csv")
-        coords_dict = read_coords_from_csv_file(coordsfile)
-        # plot the given solution
-        fig = generate_opf_solution_figure(case, coords_dict, solution)
-        # test a few coordinates
+        self.coords = read_coords_from_csv_file(coordsfile)
+        self.switching_solution = json.loads(
+            pathlib.Path(__file__)
+            .parent.joinpath("data/ny_dc_switching.json")
+            .read_text()
+        )
+
+    def test_dc_solution(self):
+        # Solve and plot DC solution
+        solution = solve_opf_model(self.case, opftype="DC")
+        fig = generate_opf_solution_figure(self.case, self.coords, solution)
+
+        # Test a few coordinates
         self.assertLess(abs(fig.data[1].x[0] - 1381.2), 1e-9)
         self.assertLess(abs(fig.data[1].y[0] - 1203.5), 1e-9)
         self.assertLess(abs(fig.data[1].x[-1] - 837.2), 1e-9)
         self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
 
-        if self.plot_graphics:
+        # If set to true, plot opens in browser for manual checking
+        if False:
             fig.show()
 
-    def test_NY_branchswitching(self):
-        # load path to case file
-        casefile = load_caseNYopf()
-        # read case file and return a case dictionary
-        case = read_case_from_mat_file(casefile)
-
-        # solve opf model and return a solution
-        solution = solve_opf_model(
-            case,
-            opftype="DC",
-            branchswitching=True,
-            minactivebranches=0.999,
-            solver_params={"TimeLimit": 1},
+    def test_branchswitching(self):
+        # Plot a pre-loaded DC branch switching solution
+        fig = generate_opf_solution_figure(
+            self.case, self.coords, self.switching_solution
         )
-        self.assertIsNotNone(solution)
-        self.assertEqual(solution["success"], 1)
-        self.assertIsNotNone(solution["f"])
 
-        # get path to csv file holding the coordinates for NY
-        coordsfile = load_filepath("nybuses.csv")
-        coords_dict = read_coords_from_csv_file(coordsfile)
-        fig = generate_opf_solution_figure(case, coords_dict, solution)
-        if self.plot_graphics:
+        # If set to true, plot opens in browser for manual checking
+        if False:
             fig.show()
