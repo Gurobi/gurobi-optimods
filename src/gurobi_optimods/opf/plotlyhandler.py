@@ -1,4 +1,5 @@
-# Please refer to plotly documentation and the networkx documentation for basic exmaples of plotly use, and of network data structures
+# Please refer to plotly documentation and the networkx documentation for basic
+# exmaples of plotly use, and of network data structures
 
 import logging
 from collections import defaultdict

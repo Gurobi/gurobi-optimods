@@ -1,12 +1,13 @@
 """
-Optimal Power Flow
-------------------
+Contains the actual mods / public API.
+
+- solve_opf_model: OPF solver
+- compute_violations_from_given_voltages: voltage solution checker
 """
 
 import logging
 
-from gurobi_optimods.opf.grbcasereader import convert_case_to_internal_format
-from gurobi_optimods.opf.grbfile import build_internal_settings, grbmap_volts_from_dict
+from gurobi_optimods.opf import converters
 from gurobi_optimods.opf.grbformulator import (
     compute_violations_from_voltages,
     construct_and_solve_model,
@@ -134,7 +135,7 @@ def _solve_opf_model_internal(
     useactivelossineqs,
 ):
     # Initialize settings dictionary
-    settings = build_internal_settings(
+    settings = converters.build_internal_settings(
         opftype,
         polar,
         useef,
@@ -147,11 +148,17 @@ def _solve_opf_model_internal(
     )
 
     # Populate the alldata dictionary with case data and settings
-    alldata = convert_case_to_internal_format(case)
+    alldata = converters.convert_case_to_internal_format(case)
     alldata.update(settings)
 
     # Construct and solve model using given case data and user settings
     solution = construct_and_solve_model(env, alldata)
+
+    # TODO solution data is populated into 'alldata' then extracted by another
+    # function. It may make more sense to have construct_and_solve_model return
+    # nothing, then extract the solution as a separate process. This is more
+    # consistent with the way the rest of the code works (essentially dumping
+    # everything into 'alldata').
 
     return solution
 
@@ -196,7 +203,7 @@ def compute_violations_from_given_voltages(case, voltages, polar=False, *, creat
 
     # Initialize fixed settings dictionary
     # We need the settings to construct a correct model
-    settings = build_internal_settings(
+    settings = converters.build_internal_settings(
         opftype="AC",
         polar=polar,
         useef=True,
@@ -209,11 +216,11 @@ def compute_violations_from_given_voltages(case, voltages, polar=False, *, creat
     )
 
     # Populate the alldata dictionary with case data and settings
-    alldata = convert_case_to_internal_format(case)
+    alldata = converters.convert_case_to_internal_format(case)
     alldata.update(settings)
 
     # Map given voltage data to network data
-    grbmap_volts_from_dict(alldata, voltages)
+    converters.grbmap_volts_from_dict(alldata, voltages)
 
     # Compute model violations based on user input voltages
     with create_env() as env:

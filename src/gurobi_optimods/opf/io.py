@@ -1,3 +1,12 @@
+"""
+Contains file I/O methods for reading and writing known data formats.
+
+- read_case_matfile: read case from MATPOWER format .mat file
+- write_case_matfile: write case (or solution) to MATPOWER format .mat file
+- read_coords_from_csv_file: read coordinate data
+- read_voltages_from_csv_file: read voltage data
+"""
+
 import csv
 
 import numpy as np
@@ -70,14 +79,16 @@ Some errors thrown by the old reader (TODO add tests):
         if x not in mpc.keys():
             raise ValueError(f"Provided .mat file does not have a {x} field")
 
-    # TODO this case should be handled? Also still need to handle 1gen, 1branch, etc
-    if mpcbuses.ndim == 1:
+    # TODO this case should be handled? Also still need to handle 1gen, 1branch,
+    etc if mpcbuses.ndim == 1:
         raise ValueError("Provided .mat files has only 1 bus")
 
     if numgencosts > numgens:
-        # FIXME: spec says we can have twice as many entries, representing reactive power.
-        # Do we not handle this case?
-        raise ValueError(f"Read {numgencosts} gen costs but only {numgens} generators.")
+        # FIXME: spec says we can have twice as many entries, representing
+        reactive power. Do we not handle this case?
+
+        raise ValueError(f"Read {numgencosts} gen costs but only {numgens}
+        generators.")
 """
 
 
@@ -191,6 +202,7 @@ def read_file_csv(filename, data):
                 continue
 
             if len(rows) != 5:
+                # TODO ... what???
                 raise ValueError(
                     f"Incorrect input in {data} .csv file {filename}. Number of columns does not equal 5."
                 )
@@ -262,17 +274,17 @@ def turn_opf_dict_into_mat_file(solution, filename):
 
 def read_coords_from_csv_file(coordsfile):
     """
-    Helper function for users.
-    Constructs a coordinate dictionary which can be used as input
-    for the ``generate_opf_solution_figure`` function.
+    Helper function for users. Constructs a coordinate dictionary which can be
+    used as input for the ``generate_opf_solution_figure`` function.
 
-    :param coordsfile: Name of and possibly full path to bus coordinates file given as `.csv` file.
-                       The `.csv` file has to consist of the following columns in the given order:
-                       ``index(starting with 0), busID, busname, latitude, longitude``
+    :param coordsfile: Name of and possibly full path to bus coordinates file
+        given as `.csv` file. The `.csv` file has to consist of the following
+        columns in the given order: ``index(starting with 0), busID, busname,
+        latitude, longitude``
     :type coordsfile: str
 
-    :return: Dictionary of the given coordinates which can be used in
-             the ``generate_opf_solution_figure`` function
+    :return: Dictionary of the given coordinates which can be used in the
+             ``generate_opf_solution_figure`` function
     :rtype: dict
 
     .. note::
@@ -286,17 +298,17 @@ def read_coords_from_csv_file(coordsfile):
 
 def read_voltages_from_csv_file(voltsfile):
     """
-    Helper function for users.
-    Constructs a bus input voltage dictionary which can be used as input
-    for the ``check_voltage_solution_violations`` function
+    Helper function for users. Constructs a bus input voltage dictionary which
+    can be used as input for the ``check_voltage_solution_violations`` function
 
-    :param voltsfile: Name of and possibly full path to voltage input file given as `.csv` file.
-                       The `.csv` file has to consist of the following columns in the given order:
-                       ``index(starting with 0), busID, busname, latitude, longitude``
+    :param voltsfile: Name of and possibly full path to voltage input file given
+        as `.csv` file. The `.csv` file has to consist of the following columns
+        in the given order: ``index(starting with 0), busID, busname, latitude,
+        longitude``
     :type voltsfile: str
 
-    :return: Dictionary of the given coordinates which can be used in
-             the ``check_voltage_solution_violations`` function
+    :return: Dictionary of the given coordinates which can be used in the
+             ``check_voltage_solution_violations`` function
     :rtype: dict
 
     .. note::

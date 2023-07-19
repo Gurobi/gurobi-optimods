@@ -1,9 +1,18 @@
-from gurobi_optimods.opf.grbcasereader import convert_case_to_internal_format
-from gurobi_optimods.opf.grbfile import grbmap_coords_from_dict
-from gurobi_optimods.opf.grbgraphical import (
-    generate_solution_figure,
-    generate_violations_figure,
-)
+"""
+Contains the graphics API for
+
+- generate_opf_solution_figure: plot case solution
+- generate_opf_violations_figure: plot case violations
+
+TODO: aren't these two basically the same? 'violations' is just a solution with
+some extra fields. plot_solution(show_violations=True) might be better?
+
+TODO: python users expect functions called plot_ e.g. plot_solution,
+plot_violations
+"""
+
+
+from gurobi_optimods.opf import converters, grbgraphical
 
 
 def generate_opf_solution_figure(case, coords, solution):
@@ -25,17 +34,17 @@ def generate_opf_solution_figure(case, coords, solution):
     """
 
     # Populate the alldata dictionary with case data
-    alldata = convert_case_to_internal_format(case)
+    alldata = converters.convert_case_to_internal_format(case)
 
     # Special settings for graphics
     alldata["graphical"] = {}
     alldata["graphical"]["numfeatures"] = 0
 
     # Map given coordinate data to network data
-    grbmap_coords_from_dict(alldata, coords)
+    converters.grbmap_coords_from_dict(alldata, coords)
 
     # Generate a plotly figure object representing the given solution for the network
-    fig = generate_solution_figure(alldata, solution)
+    fig = grbgraphical.generate_solution_figure(alldata, solution)
 
     return fig
 
@@ -59,16 +68,16 @@ def generate_opf_violations_figure(case, coords, violations):
     """
 
     # Populate the alldata dictionary with case data
-    alldata = convert_case_to_internal_format(case)
+    alldata = converters.convert_case_to_internal_format(case)
 
     # Special settings for graphics
     alldata["graphical"] = {}
     alldata["graphical"]["numfeatures"] = 0
 
     # Map given coordinate data to network data
-    grbmap_coords_from_dict(alldata, coords)
+    converters.grbmap_coords_from_dict(alldata, coords)
 
     # Generate a plotly figure object representing the given violations for the network
-    fig = generate_violations_figure(alldata, violations)
+    fig = grbgraphical.generate_violations_figure(alldata, violations)
 
     return fig
