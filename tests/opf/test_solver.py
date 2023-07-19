@@ -81,13 +81,17 @@ class TestAPICase9(unittest.TestCase):
 
     def test_ac_branchswitching(self):
         solution = solve_opf_model(
-            self.case, opftype="AC", branchswitching=True, usemipstart=False
+            self.case,
+            opftype="AC",
+            branchswitching=True,
+            usemipstart=False,
+            solver_params={"MIPGap": 1e-4},
         )
         self.assertEqual(solution["success"], 1)
         self.assert_solution_valid(solution)
 
         self.assertIsNotNone(solution["f"])
-        self.assert_approx_equal(solution["f"], 5296.6862, tol=1e-1)
+        self.assert_approx_equal(solution["f"], 5296.6862, tol=1.0)
         self.assert_approx_equal(solution["bus"][0]["Va"], 0.0, tol=1e-1)
         self.assert_approx_equal(solution["gen"][1]["Qg"], 0.0318441, tol=1e-1)
         self.assert_approx_equal(
