@@ -29,18 +29,51 @@ class TestAPICase9(unittest.TestCase):
     def assert_approx_equal(self, value, expected, tol):
         self.assertLess(abs(value - expected), tol)
 
+    def assert_solution_valid(self, solution):
+        # The solution carries over the same structure as the case input data,
+        # and some values (e.g. bus refs) must match exactly in the ordering.
+
+        self.assertEqual(
+            set(solution.keys()), set(self.case.keys()) | {"et", "success", "f"}
+        )
+        self.assertEqual(solution["baseMVA"], self.case["baseMVA"])
+
+        for sol_bus, case_bus in zip(solution["bus"], self.case["bus"]):
+            self.assertTrue(set(sol_bus.keys()).issuperset((set(case_bus.keys()))))
+            self.assertEqual(sol_bus["bus_i"], case_bus["bus_i"])
+
+        for sol_branch, case_branch in zip(solution["branch"], self.case["branch"]):
+            self.assertTrue(
+                set(sol_branch.keys()).issuperset((set(case_branch.keys())))
+            )
+            self.assertEqual(sol_branch["fbus"], case_branch["fbus"])
+            self.assertEqual(sol_branch["tbus"], case_branch["tbus"])
+
+        for sol_gen, case_gen in zip(solution["gen"], self.case["gen"]):
+            self.assertTrue(set(sol_gen.keys()).issuperset((set(case_gen.keys()))))
+            self.assertEqual(sol_gen["bus"], case_gen["bus"])
+
+        for sol_gencost, case_gencost in zip(solution["gencost"], self.case["gencost"]):
+            self.assertTrue(
+                set(sol_gencost.keys()).issuperset((set(case_gencost.keys())))
+            )
+            self.assertEqual(sol_gencost["costtype"], case_gencost["costtype"])
+            self.assertEqual(sol_gencost["n"], case_gencost["n"])
+
     def test_dc(self):
         solution = solve_opf_model(self.case, opftype="DC")
-        self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
+        self.assert_solution_valid(solution)
+
         self.assert_approx_equal(solution["f"], 5216.026607, tol=1e-1)
         self.assert_approx_equal(solution["gen"][2]["Pg"], 134.377585, tol=1e-1)
         self.assert_approx_equal(solution["branch"][3]["Pt"], -56.2622, tol=1e-1)
 
     def test_ac(self):
         solution = solve_opf_model(self.case, opftype="AC")
-        self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
+        self.assert_solution_valid(solution)
+
         self.assert_approx_equal(solution["f"], 5296.686204, tol=1e-1)
         self.assert_approx_equal(solution["bus"][3]["Vm"], 1.08662, tol=1e-1)
         self.assert_approx_equal(solution["gen"][2]["Qg"], 0.031844, tol=1e-1)
@@ -50,8 +83,9 @@ class TestAPICase9(unittest.TestCase):
         solution = solve_opf_model(
             self.case, opftype="AC", branchswitching=True, usemipstart=False
         )
-        self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
+        self.assert_solution_valid(solution)
+
         self.assertIsNotNone(solution["f"])
         self.assert_approx_equal(solution["f"], 5296.6862, tol=1e-1)
         self.assert_approx_equal(solution["bus"][1]["Va"], 0.0, tol=1e-1)
@@ -62,8 +96,9 @@ class TestAPICase9(unittest.TestCase):
 
     def test_ac_relax(self):
         solution = solve_opf_model(self.case, opftype="ACRelax")
-        self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
+        self.assert_solution_valid(solution)
+
         self.assert_approx_equal(solution["f"], 5296.66532, tol=1e-1)
         self.assert_approx_equal(solution["gen"][1]["Pg"], 89.803524, tol=1e-1)
         self.assert_approx_equal(solution["branch"][2]["Pt"], -34.1774, tol=1e-1)

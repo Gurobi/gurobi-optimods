@@ -443,6 +443,11 @@ def turn_solution_into_result_dict(alldata, model, opftype, type):
     else:
         raise ValueError("Unknown result type.")
 
+    # Post-conversion to sane python structure
+    for field in ["bus", "branch", "gen", "gencost"]:
+        entry = result[field]
+        result[field] = [entry[i + 1] for i in range(len(entry))]
+
     return result
 
 
