@@ -168,8 +168,8 @@ class TestInternal(unittest.TestCase):
         self.assertIsNotNone(solution["f"])
         # differences can be quite big because we solve only to 0.1% optimality
         self.assertLess(abs(solution["f"] - 5297.0142014), 1e1)
-        self.assertLess(abs(solution["bus"][1]["Vm"] - 1.0986917), 1e-1)
-        self.assertLess(abs(solution["gen"][2]["Pg"] - 132.87813), 1e1)
-        self.assertLess(abs(solution["gen"][3]["Qg"] + 22.802347), 1e1)
-        self.assertLess(abs(solution["branch"][4]["Pf"] - 95.113306), 1e1)
-        self.assertLess(abs(solution["branch"][5]["Qt"] + 18.431373), 1e1)
+        self.assertLess(abs(solution["bus"][0]["Vm"] - 1.0986917), 1e-1)
+        self.assertLess(abs(solution["gen"][1]["Pg"] - 132.87813), 1e1)
+        self.assertLess(abs(solution["gen"][2]["Qg"] + 22.802347), 1e1)
+        self.assertLess(abs(solution["branch"][3]["Pf"] - 95.113306), 1e1)
+        self.assertLess(abs(solution["branch"][4]["Qt"] + 18.431373), 1e1)
