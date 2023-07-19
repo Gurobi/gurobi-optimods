@@ -396,6 +396,6 @@ class TestAPINewYork(unittest.TestCase):
         # differences can be quite big because we solve only to 0.1% optimality
         self.assertLess(abs(solution["f"] - 681590.8014), 1e2)
         for i in range(0, 10):
-            self.assertLess(abs(solution["bus"][i + 1]["Va"] - self.Va_NY[i]), 1e1)
-            self.assertLess(abs(solution["gen"][i + 1]["Pg"] - self.Pg_NY[i]), 1e1)
-            self.assertLess(abs(solution["branch"][i + 1]["Pf"] - self.Pf_NY[i]), 1e1)
+            self.assertLess(abs(solution["bus"][i]["Va"] - self.Va_NY[i]), 1e1)
+            self.assertLess(abs(solution["gen"][i]["Pg"] - self.Pg_NY[i]), 1e1)
+            self.assertLess(abs(solution["branch"][i]["Pf"] - self.Pf_NY[i]), 1e1)
