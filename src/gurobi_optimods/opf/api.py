@@ -5,16 +5,8 @@ Optimal Power Flow
 
 import logging
 
-from gurobi_optimods.opf.grbcasereader import (
-    convert_case_to_internal_format,
-    read_case_file_mat,
-    turn_opf_dict_into_mat_file,
-)
-from gurobi_optimods.opf.grbfile import (
-    build_internal_settings,
-    grbmap_volts_from_dict,
-    read_file_csv,
-)
+from gurobi_optimods.opf.grbcasereader import convert_case_to_internal_format
+from gurobi_optimods.opf.grbfile import build_internal_settings, grbmap_volts_from_dict
 from gurobi_optimods.opf.grbformulator import (
     compute_violations_from_voltages,
     construct_and_solve_model,
@@ -228,99 +220,3 @@ def compute_violations_from_given_voltages(case, voltages, polar=False, *, creat
         violations = compute_violations_from_voltages(env, alldata)
 
     return violations
-
-
-def read_case_from_mat_file(casefile):
-    """
-    Helper function for users.
-    Reads a `.mat` data file and constructs a case dictionary,
-    which can be used as input for other OPF API functions
-
-    :param casefile: Name of and possibly full path to case file given as `.mat` file
-                     The `.mat` file should be in standard MATPOWER notation
-    :type casefile: str
-
-    :return: Dictionary object of the given case which can be used in
-             other OPF API functions
-    :rtype: dict
-    """
-
-    case_dict = read_case_file_mat(casefile)
-
-    return case_dict
-
-
-def turn_result_into_mat_file(result, matfilename=""):
-    """
-    Writes a `.mat` data file in MATPOWER notation out of an OPF result dictionary.
-    It accepts dictionaries in the format returned by the ``solve_opf_model`` and
-    ``compute_violations_from_given_voltages`` functions
-
-    :param result: OPF result dictionary
-    :type result: dict
-    :param matfilename: Name of `.mat` file where to write the result data,
-                        defaults to `result.mat`
-    :type matfilename: str, optional
-    """
-
-    # Set a default output file name
-    if matfilename == "":
-        matfilename = "result.mat"
-
-    # Check for .mat suffix
-    if not matfilename[-4:] == ".mat":
-        matfilename += ".mat"
-    logger.info(
-        f"Generating .mat file {matfilename} out of given OPF result dictionary."
-    )
-
-    # Generate .mat file out of result
-    turn_opf_dict_into_mat_file(result, matfilename)
-
-
-def read_coords_from_csv_file(coordsfile):
-    """
-    Helper function for users.
-    Constructs a coordinate dictionary which can be used as input
-    for the ``generate_opf_solution_figure`` function.
-
-    :param coordsfile: Name of and possibly full path to bus coordinates file given as `.csv` file.
-                       The `.csv` file has to consist of the following columns in the given order:
-                       ``index(starting with 0), busID, busname, latitude, longitude``
-    :type coordsfile: str
-
-    :return: Dictionary of the given coordinates which can be used in
-             the ``generate_opf_solution_figure`` function
-    :rtype: dict
-
-    .. note::
-        The first row of the csv file is ignored.
-    """
-
-    coord_dict = read_file_csv(coordsfile, "coordinates")
-
-    return coord_dict
-
-
-def read_voltages_from_csv_file(voltsfile):
-    """
-    Helper function for users.
-    Constructs a bus input voltage dictionary which can be used as input
-    for the ``check_voltage_solution_violations`` function
-
-    :param voltsfile: Name of and possibly full path to voltage input file given as `.csv` file.
-                       The `.csv` file has to consist of the following columns in the given order:
-                       ``index(starting with 0), busID, busname, latitude, longitude``
-    :type voltsfile: str
-
-    :return: Dictionary of the given coordinates which can be used in
-             the ``check_voltage_solution_violations`` function
-    :rtype: dict
-
-    .. note::
-        The first row of the csv file is ignored.
-    """
-
-    volts_dict = read_file_csv(voltsfile, "voltages")
-
-    return volts_dict

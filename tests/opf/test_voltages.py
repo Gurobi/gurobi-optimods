@@ -11,7 +11,7 @@ class TestComputeVoltages(unittest.TestCase):
 
     def setUp(self):
         from gurobi_optimods.datasets import load_filepath
-        from gurobi_optimods.opf import read_voltages_from_csv_file
+        from gurobi_optimods.opf.io import read_voltages_from_csv_file
 
         self.case = load_opf_example("case9")
         self.volts_data = read_voltages_from_csv_file(load_filepath("case9volts.csv"))

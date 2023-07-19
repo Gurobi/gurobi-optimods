@@ -8,11 +8,10 @@ import unittest
 import gurobipy as gp
 
 from gurobi_optimods.datasets import load_filepath, load_opf_example
-from gurobi_optimods.opf import (
-    compute_violations_from_given_voltages,
+from gurobi_optimods.opf import compute_violations_from_given_voltages, solve_opf_model
+from gurobi_optimods.opf.io import (
     read_coords_from_csv_file,
     read_voltages_from_csv_file,
-    solve_opf_model,
 )
 
 # If plotly is not installed, some tests will be skipped

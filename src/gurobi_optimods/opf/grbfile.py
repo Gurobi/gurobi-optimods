@@ -1,8 +1,4 @@
-import csv
-import logging
 import math
-
-logger = logging.getLogger(__name__)
 
 
 def build_internal_settings(
@@ -36,6 +32,7 @@ def build_internal_settings(
         "useactivelossineqs": bool(useactivelossineqs),
         #############################
         # The following settings should currently not be disclosed
+        # (TODO: we can't exactly hide these ... what do we mean "not be disclosed")
         # For now keep for us, mainly used for debugging and experimenting with heuristics
         "fixcs": False,  # (approximately) fix c, s variables if a voltage solution was read in
         "fixtolerance": 1.0e-5,
@@ -77,47 +74,6 @@ def build_internal_settings(
     return settings
 
 
-def read_file_csv(filename, data):
-    """
-    Reads bus data from a `.csv` file
-
-    :param filename: Path to text based file holding bus data
-    :type filename: str
-    :param data: Name of data to be read in
-    :type data: str
-
-    :return: Dictionary holding the respective data of the form busID : (data1, data2)
-    :rtype: dict
-    """
-
-    logger.info(f"Reading csv {data} file {filename} and building dictionary.")
-
-    with open(filename, mode="r") as infile:
-        reader = csv.reader(infile)
-        # Sanity check
-        data_dict = {}
-        first = True
-        for rows in reader:
-            # Skip first row of the .csv file
-            if first:
-                first = False
-                continue
-
-            if len(rows) != 5:
-                raise ValueError(
-                    f"Incorrect input in {data} .csv file {filename}. Number of columns does not equal 5."
-                )
-
-            data_dict[int(rows[1])] = (
-                float(rows[3]),
-                float(rows[4]),
-            )
-
-    logger.info(f"Done reading {data}.\n")
-
-    return data_dict
-
-
 def grbmap_coords_from_dict(alldata, coords_dict):
     """
     Maps given case data with given bus coordinates
@@ -147,6 +103,7 @@ def grbmap_volts_from_dict(alldata, volts_dict):
     :type volts_dict: dict
     """
 
+    # TODO why not use the same pattern as the coordinate mapper?
     buses = alldata["buses"]
     IDtoCountmap = alldata["IDtoCountmap"]
 
