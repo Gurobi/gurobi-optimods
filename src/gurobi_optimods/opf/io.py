@@ -215,63 +215,6 @@ def read_file_csv(filename, data):
     return data_dict
 
 
-def turn_opf_dict_into_mat_file(solution, filename):
-    """
-    Writes a `.mat` file out of an OPF solution dictionary
-
-    :param solution: OPF solution dictionary
-    :type solution: dict
-    :param filename: Name of `.mat` file where to write the solution data
-    :type filename: str
-
-    FIXME this is not used anywhere, and cannot possibly work. It just turns
-    a dict of dicts into an array with no care for the keys (the order cannot
-    be assumed in general).
-
-    write_case_matfile can do this, but there are additional fields we add not
-    specified in matpower, so its not clear what order they should be written in
-    """
-
-    # Buses
-    buses = solution["bus"]
-    matrix = []
-    for bus in buses.values():
-        matrix.append(list(bus.values()))
-
-    solution["bus"] = np.array(matrix)
-    # Generators
-    gens = solution["gen"]
-    matrix = []
-    for gen in gens.values():
-        matrix.append(list(gen.values()))
-
-    solution["gen"] = np.array(matrix)
-    # Branches
-    branches = solution["branch"]
-    matrix = []
-    for branch in branches.values():
-        matrix.append(list(branch.values()))
-
-    solution["branch"] = np.array(matrix)
-    # Generator costs
-    gencosts = solution["gencost"]
-    matrix = []
-    # For generator costs, the last dictionary entry is a list of values
-    # TODO NOT SAFE TO RELY ON ORDER
-    for genc in gencosts.values():
-        l = list(genc.values())
-        costvector = l[-1]
-        l.pop()
-        for item in costvector:
-            l.append(item)
-
-        matrix.append(l)
-
-    solution["gencost"] = np.array(matrix)
-    # Write mat file
-    scipy.io.savemat(filename, {"result": solution})
-
-
 def read_coords_csv(coordsfile):
     """
     Helper function for users. Constructs a coordinate dictionary which can be
