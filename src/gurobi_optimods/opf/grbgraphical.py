@@ -79,12 +79,14 @@ def generate_violations_figure(alldata, violations):
     numbuses = alldata["numbuses"]
     numbranches = alldata["numbranches"]
 
+    # There is some off-by-one indexing here; alldata is MATLAB-like (internal
+    # data structures), violations use standard indexing
     maxvmviol = 0
     maxPviol = 0
     maxQviol = 0
-    for i in range(1, numbuses + 1):
+    for i in range(numbuses):
         busvmviol = violations["bus"][i]["Vmviol"]
-        databus = alldata["buses"][i]
+        databus = alldata["buses"][i + 1]
         alldata["violation"]["Vmagviol"][databus] = busvmviol
         maxvmviol = max(busvmviol, maxvmviol)
 
@@ -97,9 +99,9 @@ def generate_violations_figure(alldata, violations):
         maxQviol = max(busPviol, maxQviol)
 
     maxlimiviol = 0
-    for i in range(1, numbranches + 1):
+    for i in range(numbranches):
         branchlimitviol = violations["branch"][i]["limitviol"]
-        databranch = alldata["branches"][i]
+        databranch = alldata["branches"][i + 1]
         alldata["violation"]["branchlimit"][databranch] = branchlimitviol
         maxlimiviol = max(branchlimitviol, maxlimiviol)
 

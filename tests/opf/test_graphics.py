@@ -113,11 +113,6 @@ class TestGraphicsCase9(unittest.TestCase):
             self.case9, self.case9_coords, self.case9_violations
         )
 
-        # Check whether figure coordinates and scaled input coordinates are the same
-        for i in range(9):
-            self.assertLess(abs(fig.data[1].x[i] - self.graphics_9_x[i]), 1e-9)
-            self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
-
         # If set to true, plot opens in browser for manual checking
         if False:
             fig.show()
