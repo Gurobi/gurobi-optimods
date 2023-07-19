@@ -406,9 +406,9 @@ class Gen:
 
 def convert_case_to_internal_format(case_dict):
     """
-    Converts case format to internal data format, returning a new dictionary.
-    Raises ValueError if there is any invalid data, e.g. bus type not allowed,
-    illegal angle for branch, non-existent generator
+    Converts case format to internal data format, returning an initialised
+    'alldata' dictionary. Raises ValueError if there is any invalid data,
+    e.g. bus type not allowed, illegal angle for branch, bad bus references.
     """
 
     # Pre-conversion needed for hacky approach to indexing
@@ -524,6 +524,7 @@ def convert_case_to_internal_format(case_dict):
         count_f = IDtoCountmap[f]
         count_t = IDtoCountmap[t]
 
+        # TODO why do we adjust this manually? Is this invalid input data?
         if ratio == 0:
             ratio = 1.0  # to be sure
 
@@ -580,6 +581,14 @@ def convert_case_to_internal_format(case_dict):
         if buses[idgencount1].nodetype in [2, 3]:  # But not 4
             summaxgenP += Pmax
             summaxgenQ += Qmax
+
+        # TODO status > 0 generator in service, <= 0 out of service
+        # Is this how the spec works? The old reader code did this:
+        #
+        # gens[numgens]["status"] = 0 if g[7] <= 0 else 1
+        #
+        # but we don't have any tests that hit it.
+        assert dgen["status"] in (0, 1)
 
         gens[gencount1] = Gen(
             gencount1,
@@ -718,7 +727,7 @@ def read_case_file_mat(casefile):
         gens[numgens]["Qmin"] = g[4]
         gens[numgens]["Vg"] = g[5]
         gens[numgens]["mBase"] = g[6]
-        gens[numgens]["status"] = 0 if g[7] <= 0 else 1  # TODO handle internally
+        gens[numgens]["status"] = 0 if g[7] <= 0 else 1
         gens[numgens]["Pmax"] = g[8]
         gens[numgens]["Pmin"] = g[9]
         gens[numgens]["Pc1"] = g[10]
@@ -751,9 +760,7 @@ def read_case_file_mat(casefile):
         branches[numbranches]["rateA"] = b[5]
         branches[numbranches]["rateB"] = b[6]
         branches[numbranches]["rateC"] = b[7]
-        branches[numbranches]["ratio"] = (
-            1.0 if b[8] == 0.0 else b[8]
-        )  # TODO: handle internally
+        branches[numbranches]["ratio"] = 1.0 if b[8] == 0.0 else b[8]
         branches[numbranches]["angle"] = b[9]
         branches[numbranches]["status"] = b[10]
         branches[numbranches]["angmin"] = b[11]
