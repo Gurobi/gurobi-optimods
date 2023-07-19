@@ -2,6 +2,7 @@
 
 import unittest
 
+from gurobi_optimods.datasets import load_opf_example
 from gurobi_optimods.opf import compute_violations_from_given_voltages
 
 
@@ -11,9 +12,8 @@ class TestComputeVoltages(unittest.TestCase):
     def setUp(self):
         from gurobi_optimods.datasets import load_filepath
         from gurobi_optimods.opf import read_voltages_from_csv_file
-        from tests.opf import read_case
 
-        self.case = read_case("9")
+        self.case = load_opf_example("case9")
         self.volts_data = read_voltages_from_csv_file(load_filepath("case9volts.csv"))
 
     def assert_approx_equal(self, value, expected, tol):

@@ -5,8 +5,8 @@ import unittest
 
 import gurobipy as gp
 
+from gurobi_optimods.datasets import load_opf_example
 from gurobi_optimods.opf import solve_opf_model
-from tests.opf import load_case9branchswitching, read_case
 
 
 def size_limited_license():
@@ -24,7 +24,7 @@ class TestAPICase9(unittest.TestCase):
     # get reasonable reproducibility on this small case.
 
     def setUp(self):
-        self.case = read_case("9")
+        self.case = load_opf_example("case9")
 
     def assert_approx_equal(self, value, expected, tol):
         self.assertLess(abs(value - expected), tol)
@@ -118,8 +118,8 @@ class TestAPILargeModels(unittest.TestCase):
     # Tests with larger models requiring a full license
 
     def setUp(self):
-        self.cases = ["9", "14", "57", "118", "300"]
-        self.casedata = [read_case(case) for case in self.cases]
+        self.cases = ["case9", "case14", "case57", "case118", "case300"]
+        self.casedata = [load_opf_example(case) for case in self.cases]
         # DC test values
         self.objvals_dc = [
             5216.026607,
@@ -199,6 +199,8 @@ class TestAPILargeModels(unittest.TestCase):
 class TestAPIBranchSwitching(unittest.TestCase):
     def setUp(self):
         # Modification of case9 where branch switching has an effect
+        from tests.opf import load_case9branchswitching
+
         self.case = load_case9branchswitching()
 
     def test_ac_defaults(self):
@@ -358,7 +360,7 @@ class TestAPINewYork(unittest.TestCase):
     # test a real data set for New York
 
     def setUp(self):
-        self.case = read_case("NY")
+        self.case = load_opf_example("caseNY")
 
         # New York test values
         self.Va_NY = [

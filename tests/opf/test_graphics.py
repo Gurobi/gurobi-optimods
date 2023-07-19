@@ -7,7 +7,7 @@ import unittest
 
 import gurobipy as gp
 
-from gurobi_optimods.datasets import load_filepath
+from gurobi_optimods.datasets import load_filepath, load_opf_example
 from gurobi_optimods.opf import (
     compute_violations_from_given_voltages,
     read_coords_from_csv_file,
@@ -66,10 +66,8 @@ class TestGraphicsCase9(unittest.TestCase):
             647.86,
         ]
 
-        from tests.opf import read_case
-
         # Info related to case9
-        self.case9 = read_case("9")
+        self.case9 = load_opf_example("case9")
         self.case9_solution = solve_opf_model(self.case9, opftype="AC", verbose=False)
         self.case9_coords = read_coords_from_csv_file(load_filepath("case9coords.csv"))
         volts_data = read_voltages_from_csv_file(load_filepath("case9volts.csv"))
@@ -80,7 +78,7 @@ class TestGraphicsCase9(unittest.TestCase):
         # Load manually created solution with some branches switched off
         self.switching_solution = json.loads(
             pathlib.Path(__file__)
-            .parent.joinpath("data/case9_switching.json")
+            .parent.joinpath("data/case9_switching_solution.json")
             .read_text()
         )
 
@@ -126,14 +124,12 @@ class TestGraphicsNewYork(unittest.TestCase):
     # test a real data set for New York
 
     def setUp(self):
-        from tests.opf import read_case
-
-        self.case = read_case("NY")
+        self.case = load_opf_example("caseNY")
         coordsfile = load_filepath("nybuses.csv")
         self.coords = read_coords_from_csv_file(coordsfile)
         self.switching_solution = json.loads(
             pathlib.Path(__file__)
-            .parent.joinpath("data/ny_dc_switching.json")
+            .parent.joinpath("data/ny_dc_switching_solution.json")
             .read_text()
         )
 

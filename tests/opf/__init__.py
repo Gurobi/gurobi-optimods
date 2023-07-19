@@ -1,17 +1,10 @@
-def read_case(case):
-    from gurobi_optimods.datasets import load_caseopfmat
-    from gurobi_optimods.opf.io import read_case_matfile
-
-    file_path = load_caseopfmat(case)
-    case_data = read_case_matfile(file_path)
-    return case_data
-
-
 def load_case9branchswitching():
     # we alter the original case dictionary in order to
     # create an artifical case, where turning off 2 branches
     # produces a better solution
-    casefile_dict = read_case("9")
+    from gurobi_optimods.datasets import load_opf_example
+
+    casefile_dict = load_opf_example("case9")
     casefile_dict["branch"].extend(
         [
             {

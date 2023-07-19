@@ -5,8 +5,8 @@ import unittest
 
 import gurobipy as gp
 
+from gurobi_optimods.datasets import load_opf_example
 from gurobi_optimods.opf.api import _solve_opf_model_internal
-from tests.opf import read_case
 
 
 @unittest.skipIf(
@@ -18,7 +18,7 @@ class TestInternal(unittest.TestCase):
 
     def setUp(self):
         self.env = gp.Env()
-        self.case = read_case("9")
+        self.case = load_opf_example("case9")
 
     def tearDown(self):
         self.env.close()

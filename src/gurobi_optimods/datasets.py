@@ -146,3 +146,8 @@ def load_opf_example(case):
 
     file_path = DATA_FILE_DIR / f"opf/{case}.mat"
     return read_case_matfile(file_path)
+
+
+def load_filepath(filename):
+    file = str(DATA_FILE_DIR) + "/opf/" + filename
+    return file
