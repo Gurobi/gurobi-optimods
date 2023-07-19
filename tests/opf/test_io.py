@@ -13,7 +13,9 @@ class TestIO(unittest.TestCase):
         # round trip test of dictionary format
 
         original = json.loads(
-            pathlib.Path(__file__).parent.joinpath("casedata.json").read_text()
+            pathlib.Path(__file__)
+            .parent.joinpath("data/bus2-branch2-gen2.json")
+            .read_text()
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
