@@ -43,9 +43,9 @@ class TestInternal(unittest.TestCase):
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
 
-    # math domain error, bad solution processing?
-    @unittest.expectedFailure
     def test_ac_failed(self):
+        # This test sometimes failed before with a math domain error
+        # This should not be the case anymore
         settings = {
             "opftype": "AC",
             "polar": False,

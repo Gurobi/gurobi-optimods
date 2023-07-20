@@ -642,10 +642,13 @@ def compute_voltage_angles(alldata, result):
             cvarval = cvar[branches[nextb[2]]]
         else:
             cvarval = cvar[branches[nextb[2]]].X
-        res = math.acos(
-            cvarval
-            / (result["bus"][nextbusindex]["Vm"] * result["bus"][knownbusindex]["Vm"])
+
+        tmp = cvarval / (
+            result["bus"][nextbusindex]["Vm"] * result["bus"][knownbusindex]["Vm"]
         )
+        # Safe guard to avoid slightly being out of [-1,1] for numerical reasons
+        tmp = max(-1, min(1, tmp))
+        res = math.acos(tmp)
         if nextb[3] == "f":
             res -= result["bus"][knownbusindex]["Va"]
             res *= -1

@@ -86,7 +86,7 @@ class TestGraphicsCase9(unittest.TestCase):
             self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
 
         # If set to true, plot opens in browser for manual checking
-        if True:
+        if False:
             fig.show()
 
     def test_plot_branchswitching(self):
@@ -94,7 +94,7 @@ class TestGraphicsCase9(unittest.TestCase):
         fig = solution_plot(self.case9, self.case9_coords, self.switching_solution)
 
         # If set to true, plot opens in browser for manual checking
-        if True:
+        if False:
             fig.show()
 
     def test_violation_plot(self):
@@ -102,7 +102,7 @@ class TestGraphicsCase9(unittest.TestCase):
         fig = violation_plot(self.case9, self.case9_coords, self.case9_violations)
 
         # If set to true, plot opens in browser for manual checking
-        if True:
+        if False:
             fig.show()
 
 
@@ -133,7 +133,7 @@ class TestGraphicsNewYork(unittest.TestCase):
         self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
 
         # If set to true, plot opens in browser for manual checking
-        if True:
+        if False:
             fig.show()
 
     def test_branchswitching(self):
@@ -141,5 +141,5 @@ class TestGraphicsNewYork(unittest.TestCase):
         fig = solution_plot(self.case, self.coords, self.switching_solution)
 
         # If set to true, plot opens in browser for manual checking
-        if True:
+        if False:
             fig.show()
