@@ -83,8 +83,8 @@ class TestAPICase9(unittest.TestCase):
         solution = solve_opf(
             self.case,
             opftype="AC",
-            branchswitching=True,
-            usemipstart=False,
+            branch_switching=True,
+            use_mip_start=False,
             solver_params={"MIPGap": 1e-4},
         )
         self.assertEqual(solution["success"], 1)
@@ -112,7 +112,7 @@ class TestAPICase9(unittest.TestCase):
         self.case["bus"][1]["Vmax"] = 0.8
 
         # Solve model, expect failure
-        solution = solve_opf(self.case, opftype="AC", branchswitching=True)
+        solution = solve_opf(self.case, opftype="AC", branch_switching=True)
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 0)
 
@@ -207,13 +207,13 @@ class TestAPIBranchSwitching(unittest.TestCase):
 
     def test_ac_defaults(self):
         # no branch switching, all branches should be on
-        for usemipstart in [True, False]:
-            with self.subTest(usemipstart=usemipstart):
+        for use_mip_start in [True, False]:
+            with self.subTest(use_mip_start=use_mip_start):
                 solution = solve_opf(
                     self.case,
                     opftype="AC",
-                    branchswitching=False,
-                    usemipstart=usemipstart,
+                    branch_switching=False,
+                    use_mip_start=use_mip_start,
                 )
                 counts = collections.Counter(
                     branch["switching"] for branch in solution["branch"]
@@ -222,14 +222,14 @@ class TestAPIBranchSwitching(unittest.TestCase):
 
     def test_ac_branchswitching(self):
         # branch switching with no minimum, some branches should be off
-        for usemipstart in [True, False]:
-            with self.subTest(usemipstart=usemipstart):
+        for use_mip_start in [True, False]:
+            with self.subTest(use_mip_start=use_mip_start):
                 solution = solve_opf(
                     self.case,
                     opftype="AC",
-                    branchswitching=True,
-                    minactivebranches=0.0,
-                    usemipstart=usemipstart,
+                    branch_switching=True,
+                    min_active_branches=0.0,
+                    use_mip_start=use_mip_start,
                     solver_params={
                         "MIPGap": 1e-5
                     },  # force to find a solution with branches turned off
@@ -242,14 +242,14 @@ class TestAPIBranchSwitching(unittest.TestCase):
 
     def test_ac_minactivebranches(self):
         # branch switching with 100% minimum, all branches should be on
-        for usemipstart in [True, False]:
-            with self.subTest(usemipstart=usemipstart):
+        for use_mip_start in [True, False]:
+            with self.subTest(use_mip_start=use_mip_start):
                 solution = solve_opf(
                     self.case,
                     opftype="AC",
-                    branchswitching=True,
-                    minactivebranches=1.0,
-                    usemipstart=usemipstart,
+                    branch_switching=True,
+                    min_active_branches=1.0,
+                    use_mip_start=use_mip_start,
                 )
                 counts = collections.Counter(
                     branch["switching"] for branch in solution["branch"]
@@ -258,13 +258,13 @@ class TestAPIBranchSwitching(unittest.TestCase):
 
     def test_acrelax_defaults(self):
         # no branch switching, all branches should be on
-        for usemipstart in [True, False]:
-            with self.subTest(usemipstart=usemipstart):
+        for use_mip_start in [True, False]:
+            with self.subTest(use_mip_start=use_mip_start):
                 solution = solve_opf(
                     self.case,
                     opftype="ACRelax",
-                    branchswitching=False,
-                    usemipstart=usemipstart,
+                    branch_switching=False,
+                    use_mip_start=use_mip_start,
                 )
                 counts = collections.Counter(
                     branch["switching"] for branch in solution["branch"]
@@ -273,14 +273,14 @@ class TestAPIBranchSwitching(unittest.TestCase):
 
     def test_acrelax_branchswitching(self):
         # branch switching with no minimum, some branches should be off
-        for usemipstart in [True, False]:
-            with self.subTest(usemipstart=usemipstart):
+        for use_mip_start in [True, False]:
+            with self.subTest(use_mip_start=use_mip_start):
                 solution = solve_opf(
                     self.case,
                     opftype="ACRelax",
-                    branchswitching=True,
-                    minactivebranches=0.0,
-                    usemipstart=usemipstart,
+                    branch_switching=True,
+                    min_active_branches=0.0,
+                    use_mip_start=use_mip_start,
                     solver_params={
                         "MIPGap": 0.0
                     },  # need to make sure that we always find those solutions
@@ -293,14 +293,14 @@ class TestAPIBranchSwitching(unittest.TestCase):
 
     def test_acrelax_minactivebranches(self):
         # branch switching with 100% minimum, all branches should be on
-        for usemipstart in [True, False]:
-            with self.subTest(usemipstart=usemipstart):
+        for use_mip_start in [True, False]:
+            with self.subTest(use_mip_start=use_mip_start):
                 solution = solve_opf(
                     self.case,
                     opftype="ACRelax",
-                    branchswitching=True,
-                    minactivebranches=1.0,
-                    usemipstart=usemipstart,
+                    branch_switching=True,
+                    min_active_branches=1.0,
+                    use_mip_start=use_mip_start,
                 )
                 counts = collections.Counter(
                     branch["switching"] for branch in solution["branch"]
@@ -309,13 +309,13 @@ class TestAPIBranchSwitching(unittest.TestCase):
 
     def test_dc_defaults(self):
         # no branch switching, all branches should be on
-        for usemipstart in [True, False]:
-            with self.subTest(usemipstart=usemipstart):
+        for use_mip_start in [True, False]:
+            with self.subTest(use_mip_start=use_mip_start):
                 solution = solve_opf(
                     self.case,
                     opftype="DC",
-                    branchswitching=False,
-                    usemipstart=usemipstart,
+                    branch_switching=False,
+                    use_mip_start=use_mip_start,
                 )
                 counts = collections.Counter(
                     branch["switching"] for branch in solution["branch"]
@@ -325,14 +325,14 @@ class TestAPIBranchSwitching(unittest.TestCase):
     @unittest.expectedFailure
     def test_dc_branchswitching(self):
         # branch switching with no minimum, some branches should be off
-        for usemipstart in [True, False]:
-            with self.subTest(usemipstart=usemipstart):
+        for use_mip_start in [True, False]:
+            with self.subTest(use_mip_start=use_mip_start):
                 solution = solve_opf(
                     self.case,
                     opftype="DC",
-                    branchswitching=True,
-                    minactivebranches=0.0,
-                    usemipstart=usemipstart,
+                    branch_switching=True,
+                    min_active_branches=0.0,
+                    use_mip_start=use_mip_start,
                 )
                 counts = collections.Counter(
                     branch["switching"] for branch in solution["branch"]
@@ -342,14 +342,14 @@ class TestAPIBranchSwitching(unittest.TestCase):
 
     def test_dc_minactivebranches(self):
         # branch switching with 100% minimum, all branches should be on
-        for usemipstart in [True, False]:
-            with self.subTest(usemipstart=usemipstart):
+        for use_mip_start in [True, False]:
+            with self.subTest(use_mip_start=use_mip_start):
                 solution = solve_opf(
                     self.case,
                     opftype="DC",
-                    branchswitching=True,
-                    minactivebranches=0.99,
-                    usemipstart=usemipstart,
+                    branch_switching=True,
+                    min_active_branches=0.99,
+                    use_mip_start=use_mip_start,
                 )
                 counts = collections.Counter(
                     branch["switching"] for branch in solution["branch"]
