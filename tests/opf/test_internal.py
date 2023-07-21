@@ -43,28 +43,6 @@ class TestInternal(unittest.TestCase):
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
 
-    def test_ac_failed(self):
-        # This test sometimes failed before with a math domain error
-        # This should not be the case anymore
-        settings = {
-            "opftype": "AC",
-            "polar": False,
-            "useef": True,
-            "usejabr": False,
-            "branchswitching": 2,
-            "usemipstart": False,
-            "useactivelossineqs": False,
-            "minactivebranches": 0.5,
-            "ivtype": "aggressive",
-        }
-        self.env.setParam("SolutionLimit", 1)  # unlucky solution
-        _solve_opf_model_internal(
-            self.env,
-            self.case,
-            **settings,
-        )
-
-    @unittest.skip("expensive; and failing until above test is fixed")
     def test_ac_settings(self):
         # Test all AC solver options with polar=False.
         settingslist = [
