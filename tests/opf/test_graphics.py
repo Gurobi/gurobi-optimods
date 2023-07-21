@@ -70,6 +70,7 @@ class TestGraphicsCase9(unittest.TestCase):
         )
 
         # Load manually created solution with some branches switched off
+        self.case9_switching = load_opf_example("case9-switching")
         self.switching_solution = json.loads(
             pathlib.Path(__file__)
             .parent.joinpath("data/case9_switching_solution.json")
@@ -91,7 +92,9 @@ class TestGraphicsCase9(unittest.TestCase):
 
     def test_plot_branchswitching(self):
         # Plot figure using case, coordinates, switching solution
-        fig = solution_plot(self.case9, self.case9_coords, self.switching_solution)
+        fig = solution_plot(
+            self.case9_switching, self.case9_coords, self.switching_solution
+        )
 
         # If set to true, plot opens in browser for manual checking
         if self.plot_graphics:
