@@ -175,7 +175,7 @@ An important extension of the OPF problem is the so-called Branch-Switching, whe
     ...
 
 
-We can see in the example code, that indeed 1 branch has been turned off in the optimal solution. Please note, that the used examplary network has been artificially adjusted to achieve this result and this is **not** the usual behavior in a realistic power grid of such small size.
+We can see in the below graphic, that indeed 1 branch has been turned off in the optimal solution. Please note, that the used examplary network has been artificially adjusted to achieve this result and this is **not** the usual behavior in a realistic power grid of such small size.
 
 .. image:: ../figures/switching_opf.png
 
