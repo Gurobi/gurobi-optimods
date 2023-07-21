@@ -112,9 +112,8 @@ class TestAPICase9(unittest.TestCase):
         self.case["bus"][1]["Vmax"] = 0.8
 
         # Solve model, expect failure
-        solution = solve_opf(self.case, opftype="AC", branch_switching=True)
-        self.assertIsNotNone(solution)
-        self.assertEqual(solution["success"], 0)
+        with self.assertRaisesRegex(ValueError, "Infeasible model"):
+            solve_opf(self.case, opftype="AC", branch_switching=True)
 
 
 @unittest.skipIf(size_limited_license(), "size-limited-license")

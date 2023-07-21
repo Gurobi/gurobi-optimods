@@ -193,29 +193,20 @@ def lpformulator_optimize(alldata, model, opftype):
 
     model.optimize()
 
-    # Check model status and re-optimize or try computing an IIS if necessary
+    # Check model status and re-optimize if numerical trouble or inconclusive results.
     if model.status == GRB.INF_OR_UNBD:
-        logger.info("\nModel Status: infeasible or unbounded.\n")
-        logger.info("Re-optimizing with DualReductions turned off.\n")
+        logger.info("\nModel Status: infeasible or unbounded.")
+        logger.info("Re-optimizing with DualReductions turned off.")
         model.Params.DualReductions = 0
         model.optimize()
 
     if model.status == GRB.INFEASIBLE:
-        logger.info("\nModel Status: infeasible.\n")
-        logger.info("Computing IIS...")
-        iisname = opftype.value + "opfmodel.ilp"
-        model.computeIIS()
-        model.write(iisname)
-        logger.info(f"\nIIS computed, written IIS to file {iisname}.")
-        logger.info("For more information on how to deal with infeasible models.")
-        logger.info(
-            "Please refer to\n  https://support.gurobi.com/hc/en-us/articles/360029969391-How-do-I-determine-why-my-model-is-infeasible-"
-        )
+        raise ValueError("Infeasible model")
 
     if model.status == GRB.NUMERIC:
-        logger.info("\nModel Status: Numerically difficult model.\n")
+        logger.info("\nModel Status: Numerically difficult model.")
         logger.info(
-            "Re-optimizing with settings focused on improving numerical stability.\n"
+            "Re-optimizing with settings focused on improving numerical stability."
         )
         model.Params.NumericFocus = 2
         model.Params.BarHomogeneous = 1
@@ -223,13 +214,13 @@ def lpformulator_optimize(alldata, model, opftype):
         model.optimize()
 
     elif model.status == GRB.UNBOUNDED:
-        logger.info("\nModel Status: unbounded.\n")
+        logger.info("\nModel Status: unbounded.")
 
     elif model.status == GRB.INTERRUPTED:
-        logger.info("\nModel Status: interrupted.\n")
+        logger.info("\nModel Status: interrupted.")
 
     elif model.status == GRB.OPTIMAL:
-        logger.info("\nModel Status: optimal.\n")
+        logger.info("\nModel Status: optimal.")
 
     # Only print objective value and solution quality if at least
     # one feasible point is available
