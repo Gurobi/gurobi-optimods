@@ -3,7 +3,6 @@ Module for loading datasets for use in optimods examples, in the same vein
 as sklearn.datasets.
 """
 
-import csv
 import pathlib
 
 import numpy as np
