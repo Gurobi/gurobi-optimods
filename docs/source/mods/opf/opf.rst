@@ -326,6 +326,12 @@ There is also the convenience function :meth:`opf.read_case_matpower` which read
     case = opf.read_case_matpower("my_case.mat")
     solution = solve_opf(case, opftype="AC")
 
+
+.. warning::
+
+    In the current version of the mod, we only accept generator costs with `costtype = 2`, i.e., polynomial model, up to degree 2, i.e, `n=3` in the `gencost` structure. For now, these seem to be the most commonly used settings in practice. If a different costtype or `n` value is provided, an error is issued. It is possible that more functionality will be added in a future release.
+
+
 Result Dictionary
 ~~~~~~~~~~~~~~~~~
 
