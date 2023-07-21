@@ -89,8 +89,20 @@ Some errors thrown by the old reader (TODO add tests):
 
 
 def read_case_matpower(file_path):
-    """Read a .mat file containing a MATPOWER version 2 'mpc' struct. Returns
-    the dictionary-based format we use for the solver APIs."""
+    """Read in a MATPOWER case file.
+
+    The file must contain a MATPOWER version 2 'mpc' struct.
+
+    Parameters
+    ----------
+    file_path : dict
+        Path to .mat file
+
+    Returns
+    -------
+    dict
+        Case dictionary following MATPOWER notation
+    """
     mat = scipy.io.loadmat(
         file_path, variable_names=["mpc"], struct_as_record=True, squeeze_me=True
     )

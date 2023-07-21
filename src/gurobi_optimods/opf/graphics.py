@@ -15,18 +15,21 @@ def solution_plot(case, coords, solution):
     Reads the given case and returns a plotly figure object. Ideally the
     solution has been computed by the ``solve_opf`` function
 
-    :param case: Dictionary holding case data
-    :type case: dict
-    :param coords: Dictionary holding bus coordinates
-    :type coords: dict
-    :param solution: Dictionary holding solution data following the MATPOWER
-                      notation as returned by the ``solve_opf`` function
-    :type solution: dict
+    Parameters
+    ----------
+    case : dict
+        Dictionary holding case data
+    coords : dict
+        Dictionary holding bus coordinates
+    solution: dict
+        Dictionary holding solution data following the MATPOWER notation as
+        returned by the ``solve_opf`` function
 
-    :return: A plotly figure objects which can be displayed via the show()
-             function, see
-             https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
-    :rtype: :class:`plotly.graph_objects.Figure`
+    Returns
+    -------
+    plotly.graph_objects.Figure
+        A plotly figure object displaying the solution. The plot can be
+        displaged by calling ``figure.show()``.
     """
 
     # Populate the alldata dictionary with case data
@@ -51,19 +54,22 @@ def violation_plot(case, coords, violations):
     violations. Ideally the violations have been computed by the
     ``compute_violations`` function
 
-    :param case: Dictionary holding case data
-    :type case: dict
-    :param coords: Dictionary holding bus coordinates
-    :type coords: dict
-    :param violations: Dictionary holding case data following the MATPOWER
-                       notation with additional violations fields as returned by
-                       the ``compute_violations`` function
-    :type violations: dict
+    Parameters
+    ----------
+    case : dict
+        Dictionary holding case data
+    coords : dict
+        Dictionary holding bus coordinates
+    violations : dict
+        Dictionary holding case data following the MATPOWER notation with
+        additional violations fields as returned by the ``compute_violations``
+        function
 
-    :return: A plotly figure objects which can be displayed via the show()
-             function, see
-             https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html
-    :rtype: :class:`plotly.graph_objects.Figure`
+    Returns
+    -------
+    plotly.graph_objects.Figure
+        A plotly figure object highlighting violations in the solution. The
+        plot can be displaged by calling ``figure.show()``.
     """
 
     # Populate the alldata dictionary with case data

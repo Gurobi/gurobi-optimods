@@ -10,6 +10,9 @@ API Reference
 .. automodule:: gurobi_optimods.mwis
    :members: maximum_weighted_independent_set
 
+.. automodule:: gurobi_optimods.opf
+   :members: solve_opf, compute_violations, solution_plot, violation_plot, read_case_matpower
+
 .. automodule:: gurobi_optimods.portfolio
    :members: MeanVariancePortfolio, PortfolioResult
 
@@ -24,6 +27,3 @@ API Reference
 
 .. automodule:: gurobi_optimods.workforce
    :members: solve_workforce_scheduling
-
-.. automodule:: gurobi_optimods.opf
-   :members: solve_opf, compute_violations, solution_plot, violation_plot, read_case_matpower

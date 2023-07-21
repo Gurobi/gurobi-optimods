@@ -54,24 +54,24 @@ def solve_opf(
     case : dict
         Dictionary holding case data
     opftype : str
-        Desired OPF model type. One of ``AC``, ``AC_Relax``, ``DC``, or ``IV``.
-    branchswitching : bool, optional
+        Desired OPF model type. One of ``AC``, ``AC_Relax``, or ``DC``
+    branch_switching : bool, optional
         If set to True, enables branch switching.
-    minactivebranches : float, optional
+    min_active_branches : float, optional
         Defines the minimum number of branches that must be turned on when
         branch switching is active, i.e. the minimum number of turned on
         branches is equal to ``numbranches * min_active_branches``. Has no
         effect if ``branchswitching`` is set to False.
-    usemipstart : bool, optional
-        If set to True, try various MIP starts for branch switching models. Has
-        no effect if ``branchswitching`` is set to False. For DC models, this
-        setting is ignored, and the mip start is always used.
+    use_mip_start : bool, optional
+        (Advanced) If set to True, try various MIP starts for branch switching
+        models. Has no effect if ``branchswitching`` is set to False. For DC
+        models, this setting is ignored, and the mip start is always used.
     valid_inequalities : str, optional
-        Whether to include outer approximations for the AC formulation. Options
-        are ``activeloss`` (the default), ``jabr``, or ``disable``. `jabr` uses
-        SOCP constraints, ``activeloss`` uses linear outer approximations to the
-        jabr inequalities, while ``disable`` does not generate valid
-        inequalities.
+        (Advanced) Whether to include outer approximations for the AC
+        formulation. Options are ``activeloss`` (the default), ``jabr``, or
+        ``disable``. `jabr` uses SOCP constraints, ``activeloss`` uses linear
+        outer approximations to the jabr inequalities, while ``disable`` does
+        not generate valid inequalities.
 
     Returns
     -------
