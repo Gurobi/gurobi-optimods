@@ -75,10 +75,6 @@ Some errors thrown by the old reader (TODO add tests):
         if x not in mpc.keys():
             raise ValueError(f"Provided .mat file does not have a {x} field")
 
-    # TODO this case should be handled? Also still need to handle 1gen, 1branch,
-    etc if mpcbuses.ndim == 1:
-        raise ValueError("Provided .mat files has only 1 bus")
-
     if numgencosts > numgens:
         # FIXME: spec says we can have twice as many entries, representing
         reactive power. Do we not handle this case?
@@ -109,21 +105,27 @@ def read_case_matpower(file_path):
     mpc = mat["mpc"]
     assert int(mpc["version"]) == 2
 
+    def fix_shape(arr, ncols=None):
+        if ncols is None:
+            ncols = arr.shape[-1]
+        if arr.ndim == 1:
+            return arr[:ncols].reshape((1, -1))
+        else:
+            assert arr.ndim == 2
+            return arr[:, :ncols]
+
     # We assume column ordering matches the field name order, and discard any
     # additional columns.
-    bus_array = mpc["bus"].item()
-    bus_array = bus_array[:, : len(bus_field_names)]
+    bus_array = fix_shape(mpc["bus"].item(), ncols=len(bus_field_names))
     bus = pd.DataFrame(data=bus_array, columns=bus_field_names).assign(
         bus_i=lambda df: df["bus_i"].astype(int),
         type=lambda df: df["type"].astype(int),
     )
-    gen_array = mpc["gen"].item()
-    gen_array = gen_array[:, : len(gen_field_names)]
+    gen_array = fix_shape(mpc["gen"].item(), ncols=len(gen_field_names))
     gen = pd.DataFrame(data=gen_array, columns=gen_field_names).assign(
         bus=lambda df: df["bus"].astype(int)
     )
-    branch_array = mpc["branch"].item()
-    branch_array = branch_array[:, : len(branch_field_names)]
+    branch_array = fix_shape(mpc["branch"].item(), ncols=len(branch_field_names))
     branch = pd.DataFrame(data=branch_array, columns=branch_field_names).assign(
         fbus=lambda df: df["fbus"].astype(int), tbus=lambda df: df["tbus"].astype(int)
     )
@@ -131,10 +133,11 @@ def read_case_matpower(file_path):
     # gencost has variable number of columns, we contract the extra columns
     # to a sub-list for costvector data. The length of this list should match
     # the 'n' field.
+    gencost_array = fix_shape(mpc["gencost"].item())
     gencost_main = pd.DataFrame(
-        data=mpc["gencost"].item()[:, :4], columns=gencost_field_names[:4]
+        data=gencost_array[:, :4], columns=gencost_field_names[:4]
     )
-    gencost_vectors = mpc["gencost"].item()[:, 4:].tolist()
+    gencost_vectors = gencost_array[:, 4:].tolist()
     gencost = [
         dict(main, costvector=vector)
         for main, vector in zip(gencost_main.to_dict("records"), gencost_vectors)
