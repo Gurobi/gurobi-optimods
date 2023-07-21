@@ -66,12 +66,6 @@ def solve_opf(
         (Advanced) If set to True, try various MIP starts for branch switching
         models. Has no effect if ``branchswitching`` is set to False. For DC
         models, this setting is ignored, and the mip start is always used.
-    valid_inequalities : str, optional
-        (Advanced) Whether to include outer approximations for the AC
-        formulation. Options are ``activeloss`` (the default), ``jabr``, or
-        ``disable``. `jabr` uses SOCP constraints, ``activeloss`` uses linear
-        outer approximations to the jabr inequalities, while ``disable`` does
-        not generate valid inequalities.
 
     Returns
     -------
@@ -80,7 +74,7 @@ def solve_opf(
         fields
     """
 
-    # Exact cartesian AC
+    # Exact cartesian AC (force jabr for performance reasons)
     if opftype.lower() == "ac":
         opftype = "ac"
         useef = True
@@ -92,7 +86,7 @@ def solve_opf(
         useef = False
         usejabr = True
         default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
-    # DC linear approximation
+    # DC linear approximation (ef & jabr are irrelevant)
     elif opftype.lower() == "dc":
         opftype = "dc"
         useef = False
