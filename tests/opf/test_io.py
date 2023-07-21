@@ -5,7 +5,7 @@ import pathlib
 import tempfile
 import unittest
 
-from gurobi_optimods.datasets import load_opf_example
+from gurobi_optimods.datasets import load_opf_example, load_opf_extra
 from gurobi_optimods.opf import read_case_matpower, write_case_matpower
 
 
@@ -17,6 +17,22 @@ class TestDatasets(unittest.TestCase):
             self.assertEqual(
                 set(case_data.keys()), {"baseMVA", "bus", "branch", "gen", "gencost"}
             )
+
+    def test_load_opf_extras_coordinates(self):
+        for extra in ["case9-coordinates", "caseNY-coordinates"]:
+            data = load_opf_extra(extra)
+            for bus, (lat, lon) in data.items():
+                self.assertIsInstance(bus, int)
+                self.assertIsInstance(lat, float)
+                self.assertIsInstance(lon, float)
+
+    def test_load_opf_extras_case9voltages(self):
+        data = load_opf_extra("case9-voltages")
+        self.assertEqual(data[2], (1.099999, 20.552543))
+        for bus, (Vm, Va) in data.items():
+            self.assertIsInstance(bus, int)
+            self.assertIsInstance(Vm, float)
+            self.assertIsInstance(Va, float)
 
 
 class TestIO(unittest.TestCase):

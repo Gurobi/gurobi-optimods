@@ -7,14 +7,13 @@ import unittest
 
 import gurobipy as gp
 
-from gurobi_optimods.datasets import load_filepath, load_opf_example
+from gurobi_optimods.datasets import load_opf_example, load_opf_extra
 from gurobi_optimods.opf import (
     compute_violations,
     solution_plot,
     solve_opf,
     violation_plot,
 )
-from gurobi_optimods.opf.io import read_coords_csv, read_voltages_csv
 
 # If plotly is not installed, tests will be skipped
 try:
@@ -36,6 +35,7 @@ def size_limited_license():
 @unittest.skipIf(plotly is None, "plotly is not installed")
 class TestGraphicsCase9(unittest.TestCase):
     def setUp(self):
+        self.plot_graphics = False
         # graphics test values
         self.graphics_9_x = [
             1129.2,
@@ -63,8 +63,8 @@ class TestGraphicsCase9(unittest.TestCase):
         # Info related to case9
         self.case9 = load_opf_example("case9")
         self.case9_solution = solve_opf(self.case9, opftype="AC", verbose=False)
-        self.case9_coords = read_coords_csv(load_filepath("case9coords.csv"))
-        volts_data = read_voltages_csv(load_filepath("case9volts.csv"))
+        self.case9_coords = load_opf_extra("case9-coordinates")
+        volts_data = load_opf_extra("case9-voltages")
         self.case9_violations = compute_violations(
             self.case9, volts_data, polar=True, verbose=False
         )
@@ -86,7 +86,7 @@ class TestGraphicsCase9(unittest.TestCase):
             self.assertLess(abs(fig.data[1].y[i] - self.graphics_9_y[i]), 1e-9)
 
         # If set to true, plot opens in browser for manual checking
-        if True:
+        if self.plot_graphics:
             fig.show()
 
     def test_plot_branchswitching(self):
@@ -94,7 +94,7 @@ class TestGraphicsCase9(unittest.TestCase):
         fig = solution_plot(self.case9, self.case9_coords, self.switching_solution)
 
         # If set to true, plot opens in browser for manual checking
-        if True:
+        if self.plot_graphics:
             fig.show()
 
     def test_violation_plot(self):
@@ -102,7 +102,7 @@ class TestGraphicsCase9(unittest.TestCase):
         fig = violation_plot(self.case9, self.case9_coords, self.case9_violations)
 
         # If set to true, plot opens in browser for manual checking
-        if True:
+        if self.plot_graphics:
             fig.show()
 
 
@@ -112,9 +112,9 @@ class TestGraphicsNewYork(unittest.TestCase):
     # test a real data set for New York
 
     def setUp(self):
+        self.plot_graphics = False
         self.case = load_opf_example("caseNY")
-        coordsfile = load_filepath("nybuses.csv")
-        self.coords = read_coords_csv(coordsfile)
+        self.coords = load_opf_extra("caseNY-coordinates")
         self.switching_solution = json.loads(
             pathlib.Path(__file__)
             .parent.joinpath("data/ny_dc_switching_solution.json")
@@ -133,7 +133,7 @@ class TestGraphicsNewYork(unittest.TestCase):
         self.assertLess(abs(fig.data[1].y[-1] - 511.85), 1e-9)
 
         # If set to true, plot opens in browser for manual checking
-        if True:
+        if self.plot_graphics:
             fig.show()
 
     def test_branchswitching(self):
@@ -141,5 +141,5 @@ class TestGraphicsNewYork(unittest.TestCase):
         fig = solution_plot(self.case, self.coords, self.switching_solution)
 
         # If set to true, plot opens in browser for manual checking
-        if True:
+        if self.plot_graphics:
             fig.show()

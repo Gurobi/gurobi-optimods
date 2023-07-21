@@ -1,13 +1,9 @@
 """
-Contains file I/O methods for reading and writing known data formats.
+Contains file I/O methods for reading and writing MATPOWER format.
 
 - read_case_matpower: read case from MATPOWER format .mat file
 - write_case_matpower: write case (or solution) to MATPOWER format .mat file
-- read_coords_csv: read coordinate data from csv
-- read_voltages_csv: read voltage data from csv
 """
-
-import csv
 
 import numpy as np
 import pandas as pd
@@ -175,89 +171,3 @@ def write_case_matpower(case, file_path):
             }
         },
     )
-
-
-def read_file_csv(filename, data):
-    """
-    Reads bus data from a `.csv` file
-
-    :param filename: Path to text based file holding bus data
-    :type filename: str
-    :param data: Name of data to be read in
-    :type data: str
-
-    :return: Dictionary holding the respective data of the form busID : (data1, data2)
-    :rtype: dict
-    """
-
-    with open(filename, mode="r") as infile:
-        reader = csv.reader(infile)
-        # Sanity check
-        data_dict = {}
-        first = True
-        for rows in reader:
-            # Skip first row of the .csv file
-            if first:
-                first = False
-                continue
-
-            if len(rows) != 5:
-                # TODO ... what???
-                raise ValueError(
-                    f"Incorrect input in {data} .csv file {filename}. Number of columns does not equal 5."
-                )
-
-            data_dict[int(rows[1])] = (
-                float(rows[3]),
-                float(rows[4]),
-            )
-
-    return data_dict
-
-
-def read_coords_csv(coordsfile):
-    """
-    Helper function for users. Constructs a coordinate dictionary which can be
-    used as input for the ``solution_plot`` function.
-
-    :param coordsfile: Name of and possibly full path to bus coordinates file
-        given as `.csv` file. The `.csv` file has to consist of the following
-        columns in the given order: ``index(starting with 0), busID, busname,
-        latitude, longitude``
-    :type coordsfile: str
-
-    :return: Dictionary of the given coordinates which can be used in the
-             ``solution_plot`` function
-    :rtype: dict
-
-    .. note::
-        The first row of the csv file is ignored.
-    """
-
-    coord_dict = read_file_csv(coordsfile, "coordinates")
-
-    return coord_dict
-
-
-def read_voltages_csv(voltsfile):
-    """
-    Helper function for users. Constructs a bus input voltage dictionary which
-    can be used as input for the ``check_voltage_solution_violations`` function
-
-    :param voltsfile: Name of and possibly full path to voltage input file given
-        as `.csv` file. The `.csv` file has to consist of the following columns
-        in the given order: ``index(starting with 0), busID, busname, latitude,
-        longitude``
-    :type voltsfile: str
-
-    :return: Dictionary of the given coordinates which can be used in the
-             ``check_voltage_solution_violations`` function
-    :rtype: dict
-
-    .. note::
-        The first row of the csv file is ignored.
-    """
-
-    volts_dict = read_file_csv(voltsfile, "voltages")
-
-    return volts_dict

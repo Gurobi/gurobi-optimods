@@ -3,6 +3,7 @@ Module for loading datasets for use in optimods examples, in the same vein
 as sklearn.datasets.
 """
 
+import csv
 import pathlib
 
 import numpy as np
@@ -148,6 +149,25 @@ def load_opf_example(case):
     return read_case_matpower(file_path)
 
 
-def load_filepath(filename):
-    file = str(DATA_FILE_DIR) + "/opf/" + filename
-    return file
+def load_opf_extra(extra):
+    data_files = {
+        "case9-coordinates": ("case9coords.csv", "coords"),
+        "case9-voltages": ("case9volts.csv", "volts"),
+        "caseNY-coordinates": ("nybuses.csv", "coords"),
+    }
+
+    file_name, file_type = data_files[extra]
+    file_path = DATA_FILE_DIR.joinpath("opf").joinpath(file_name)
+    data = pd.read_csv(file_path)
+
+    if file_type == "coords":
+
+        def mapper(row):
+            return row["bus_i"], (row["lat"], row["lon"])
+
+    elif file_type == "volts":
+
+        def mapper(row):
+            return row["bus_i"], (row["Vm"], row["Va"])
+
+    return dict(mapper(record) for record in data.to_dict("records"))

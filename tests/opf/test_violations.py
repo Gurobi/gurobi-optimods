@@ -2,7 +2,7 @@
 
 import unittest
 
-from gurobi_optimods.datasets import load_opf_example
+from gurobi_optimods.datasets import load_opf_example, load_opf_extra
 from gurobi_optimods.opf import compute_violations
 
 
@@ -10,11 +10,8 @@ class TestComputeVoltages(unittest.TestCase):
     # test violation computation out of pre-defined voltage data
 
     def setUp(self):
-        from gurobi_optimods.datasets import load_filepath
-        from gurobi_optimods.opf.io import read_voltages_csv
-
         self.case = load_opf_example("case9")
-        self.volts_data = read_voltages_csv(load_filepath("case9volts.csv"))
+        self.volts_data = load_opf_extra("case9-voltages")
 
     def assert_approx_equal(self, value, expected, tol):
         self.assertLess(abs(value - expected), tol)

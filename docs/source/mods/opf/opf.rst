@@ -139,7 +139,7 @@ Once a ``.csv`` file holding bus coordinate information is available, we can use
 
 .. testcode:: opf
 
-    coords_dict = opf.io.read_coords_csv(datasets.load_filepath("case9coords.csv"))
+    coords_dict = datasets.load_opf_extra("case9-coordinates")
 
 .. testoutput:: opf
     :hide:
@@ -168,7 +168,7 @@ After obtaining a result dictionary as discussed in `Solving an OPF Problem`_ an
     import plotly
     case = datasets.load_opf_example("caseNY")
     result = opf.solve_opf(case, opftype='DC')
-    coords_dict = opf.io.read_coords_csv(datasets.load_filepath("nybuses.csv"))
+    coords_dict = datasets.load_opf_extra("caseNY-coordinates")
     fig = opf.solution_plot(case, coords_dict, solution)
     fig.show()
 
@@ -205,7 +205,7 @@ Once a ``.csv`` file holding voltage information for every bus is available, we 
 
 .. testcode:: opf
 
-    volts_dict = opf.io.read_voltages_csv(datasets.load_filepath("case9volts.csv"))
+    volts_dict = datasets.load_opf_extra("case9-voltages")
 
 .. testoutput:: opf
     :hide:
@@ -238,7 +238,7 @@ The following fields in the violations dictionary are added to store violations 
 
 .. testcode:: opf
 
-    volts_dict = opf.io.read_voltages_csv(datasets.load_filepath("case9volts.csv"))
+    volts_dict = datasets.load_opf_extra("case9-voltages")
     case = datasets.load_opf_example("case9")
     violations = opf.compute_violations(case, volts_dict)
 
@@ -267,9 +267,9 @@ Similar to generating a graphical representation of a feasible solution, it is a
 
 .. code-block::
 
-    volts_dict = opf.io.read_voltages_csv(datasets.load_filepath("case9volts.csv"))
+    volts_dict = datasets.load_opf_extra("case9-voltages")
     case = datasets.load_opf_example("case9")
-    coords_dict = opf.io.read_coords_csv(datasets.load_filepath("case9coords.csv"))
+    coords_dict = datasets.load_opf_extra("case9-coordinates")
     violations = opf.compute_violations(case, volts_dict)
     fig = opf.violation_plot(case, coords, violations)
     fig.show()
@@ -321,23 +321,10 @@ The case dictionary for this mod expects a dictionary with keys ``baseMVA``, ``b
     >>> generatorcosts[2]
     {'costtype': 2.0, 'startup': 3000.0, 'shutdown': 0.0, 'n': 3.0, 'costvector': [0.1225, 1.0, 335.0]}
 
-There is also the convenience function :meth:`opf.read_case_from_mat_file` which reads in a standard MATLAB ``.mat`` data file holding the network data. The data stored in the ``.mat`` file has to follow the `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ in order to be accepted by the function. Below, we generate a case dictionary from a ``.mat`` file containing network data for a small 9 bus network.
+There is also the convenience function :meth:`opf.read_case_matpower` which reads in a standard MATLAB ``.mat`` data file holding the network data. The data stored in the ``.mat`` file has to follow the `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ in order to be accepted by the function. This function returns a case dictionary which can be read by the solver methods::
 
-.. testcode:: opf
-
-    casefile = datasets.load_filepath("case9")
-    case = opf.read_case_matpower(casefile)
-
-.. doctest:: opf
-    :options: +NORMALIZE_WHITESPACE
-
-    >>> case['baseMVA']
-    100.0
-
-    >>> buses = case['bus']
-    >>> buses[0]  # doctest:+ELLIPSIS
-    {'bus_i': 1, ...}
-
+    case = opf.read_case_matpower("my_case.mat")
+    solution = solve_opf(case, opftype="AC")
 
 Result Dictionary
 ~~~~~~~~~~~~~~~~~
