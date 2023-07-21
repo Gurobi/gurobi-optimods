@@ -44,29 +44,29 @@ class TestIO(unittest.TestCase):
     def test_matfile_roundtrip(self):
         # round trip test of dictionary format
 
-        original = json.loads(
-            self.testdata_dir.joinpath("bus2-branch2-gen2.json").read_text()
-        )
+        for jsondata in ["bus1-branch1-gen1.json", "bus2-branch2-gen2.json"]:
+            with self.subTest(jsondata=jsondata):
+                original = json.loads(self.testdata_dir.joinpath(jsondata).read_text())
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tmpfile = pathlib.Path(tmpdir) / "testcase.mat"
-            write_case_matpower(original, tmpfile)
-            reread = read_case_matpower(tmpfile)
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    tmpfile = pathlib.Path(tmpdir) / "testcase.mat"
+                    write_case_matpower(original, tmpfile)
+                    reread = read_case_matpower(tmpfile)
 
-        self.assertEqual(set(reread.keys()), set(original.keys()))
+                self.assertEqual(set(reread.keys()), set(original.keys()))
 
-        for field, data in reread.items():
-            self.assertEqual(data, original[field])
+                for field, data in reread.items():
+                    self.assertEqual(data, original[field])
 
-        # Check types for some special cases
-        for bus in reread["bus"]:
-            self.assertIsInstance(bus["bus_i"], int)
-            self.assertIsInstance(bus["type"], int)
-        for gen in reread["gen"]:
-            self.assertIsInstance(gen["bus"], int)
-        for branch in reread["branch"]:
-            self.assertIsInstance(branch["fbus"], int)
-            self.assertIsInstance(branch["tbus"], int)
+                # Check types for some special cases
+                for bus in reread["bus"]:
+                    self.assertIsInstance(bus["bus_i"], int)
+                    self.assertIsInstance(bus["type"], int)
+                for gen in reread["gen"]:
+                    self.assertIsInstance(gen["bus"], int)
+                for branch in reread["branch"]:
+                    self.assertIsInstance(branch["fbus"], int)
+                    self.assertIsInstance(branch["tbus"], int)
 
     def test_read_case_matpower(self):
         # Check that all example cases are read without errors
