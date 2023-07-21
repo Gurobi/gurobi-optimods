@@ -38,7 +38,7 @@ In the below example code, we read in a pre-defined case dictionary for a small 
 Optimization Process
 ~~~~~~~~~~~~~~~~~~~~
 
-After generating a case dictionary, we can solve an OPF problem defined by the given network data. For this task, we use the :meth:`gurobi_optimods.opf.solve_opf` function. We can define the type of the OPF problem that we want to solve by defining the ``opftype`` argument when calling the function. Currently, the available options are ``AC``, ``AC_relax``, and ``DC``.
+After generating a case dictionary, we can solve an OPF problem defined by the given network data. For this task, we use the :func:`gurobi_optimods.opf.solve_opf` function. We can define the type of the OPF problem that we want to solve by defining the ``opftype`` argument when calling the function. Currently, the available options are ``AC``, ``AC_relax``, and ``DC``.
 
 - The ``AC`` setting solves an ACOPF problem defined by the given network data. The ACOPF problem is formulated as a nonconvex bilinear model as described in the :ref:`ACOPF <acopf-label>` section of the :doc:`opf_specification`.
 
@@ -87,7 +87,7 @@ We successfully solved an ACOPF problem and retrieved a so-called *result dictio
 Branch-Switching
 ----------------
 
-An important extension of the OPF problem is the so-called Branch-Switching, where we are allowed to turn off branches. Note that already turning off a single branch changes the whole power flow through the network. Thus in practice, it is rare that branches are turned off at all. If any are turned off, then it is usually only a small fraction of the overall power grid. For the mathematical formulation, please refer to the :ref:`Branch-Switching <branchswitching-label>` subsection of the :doc:`opf_specification`. In order to enable branch-switching in a given OPF problem, it is necessary to set the ``branchswitching`` argument to ``True`` when calling the :meth:`opf.solve_opf` function. The default value for the ``branchswitching`` argument is ``False`` (turned off). This mod additionally offers the possibility to control the number of branches that has to stay turned on via the ``minactivebranches`` argument. In practice, it is expected that only a very small fraction of branches are turned off. Thus, the default value of the ``minactivebranches`` argument is 0.9 (90%). Additionally, the argument ``usemipstart`` controls whether a trivial starting point for the Branch-Switching MIP is used. The default value is ``False``. In the following, we solve an artificially altered version of a small 9 bus network to see whether branches could be turned off.
+An important extension of the OPF problem is the so-called Branch-Switching, where we are allowed to turn off branches. Note that already turning off a single branch changes the whole power flow through the network. Thus in practice, it is rare that branches are turned off at all. If any are turned off, then it is usually only a small fraction of the overall power grid. For the mathematical formulation, please refer to the :ref:`Branch-Switching <branchswitching-label>` subsection of the :doc:`opf_specification`. In order to enable branch-switching in a given OPF problem, it is necessary to set the ``branchswitching`` argument to ``True`` when calling the :func:`gurobi_optimods.opf.solve_opf` function. The default value for the ``branchswitching`` argument is ``False`` (turned off). This mod additionally offers the possibility to control the number of branches that has to stay turned on via the ``minactivebranches`` argument. In practice, it is expected that only a very small fraction of branches are turned off. Thus, the default value of the ``minactivebranches`` argument is 0.9 (90%). Additionally, the argument ``usemipstart`` controls whether a trivial starting point for the Branch-Switching MIP is used. The default value is ``False``. In the following, we solve an artificially altered version of a small 9 bus network to see whether branches could be turned off.
 
 .. testcode:: opf
 
@@ -135,7 +135,7 @@ In order to plot a previously obtained result, an additional input of coordinate
    1, 2, B2, 41.271, -73.953
    ...
 
-Once a ``.csv`` file holding bus coordinate information is available, we can use the :meth:`opf.io.read_coords_csv` function to automatically generate a coordinate dictionary. In the following example we use the ``case9coords.csv`` file from our dataset to generate a coordinate dictionary
+Once a ``.csv`` file holding bus coordinate information is available, we can use the ``read_coords_csv`` function to automatically generate a coordinate dictionary. In the following example we use the ``case9coords.csv`` file from our dataset to generate a coordinate dictionary
 
 .. testcode:: opf
 
@@ -186,7 +186,7 @@ In the above image, you can see the power grid generated out of the given networ
 Violations for Pre-defined Voltage Values
 -----------------------------------------
 
-In practice, it is likely that we have voltage magnitudes and voltage angles for each bus at hand and would like to know whether these values are actually feasible within a given network. To tackle this, we can use the :meth:`opf.compute_violations` function. This function takes a *voltage dictionary* and a case dictionary as arguments and is discussed in more detail below.
+In practice, it is likely that we have voltage magnitudes and voltage angles for each bus at hand and would like to know whether these values are actually feasible within a given network. To tackle this, we can use the :func:`gurobi_optimods.opf.compute_violations` function. This function takes a *voltage dictionary* and a case dictionary as arguments and is discussed in more detail below.
 
 
 Voltage Information
@@ -201,7 +201,7 @@ In order to compute possible violations for given voltage data, an additional in
    1, 2, B2, 1.099999, 20.552543
    ...
 
-Once a ``.csv`` file holding voltage information for every bus is available, we can use the :meth:`opf.io.read_voltages_csv` function to automatically generate a voltage dictionary. In the following example we use the ``case9volts.csv`` file to generate a voltage dictionary
+Once a ``.csv`` file holding voltage information for every bus is available, we can use the ``read_voltages_csv`` function to automatically generate a voltage dictionary. In the following example we use the ``case9volts.csv`` file to generate a voltage dictionary
 
 .. testcode:: opf
 
@@ -227,7 +227,7 @@ Once a ``.csv`` file holding voltage information for every bus is available, we 
 Checking for Violations
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Once we have a voltage dictionary at hand, we can check for possible model violations by calling the :meth:`opf.compute_violations` function. In addition to the verbose output, the function returns a *violations dictionary* which similar to the case dictionary follows the `MATPOWER Case Format <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_. However, the violations dictionary has additional fields storing the violations for particular buses and branches.
+Once we have a voltage dictionary at hand, we can check for possible model violations by calling the :func:`gurobi_optimods.opf.compute_violations` function. In addition to the verbose output, the function returns a *violations dictionary* which similar to the case dictionary follows the `MATPOWER Case Format <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_. However, the violations dictionary has additional fields storing the violations for particular buses and branches.
 
 The following fields in the violations dictionary are added to store violations data.
 
@@ -263,7 +263,7 @@ We can see that among others, the limit at branch 6 and the real power injection
 Inspecting Violations Graphically
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Similar to generating a graphical representation of a feasible solution, it is also possible to generate a figure representing the violations within a given power grid. We can use the :meth:`generate_opf_violations_figure` to generate a :class:`plotly.graph_objects.Figure` object that can be displayed in, e.g., a browser window. Please note that it is required to install the ``plotly`` package to use this functionality. In addition to bus coordinates and case information, we also need to provide the violations dictionary to the function. In the following we use the previously discussed violated solution and plot the result.
+Similar to generating a graphical representation of a feasible solution, it is also possible to generate a figure representing the violations within a given power grid. We can use the :func:`gurobi_optimods.opf.violation_plot` to generate a :class:`plotly.graph_objects.Figure` object that can be displayed in, e.g., a browser window. Please note that it is required to install the ``plotly`` package to use this functionality. In addition to bus coordinates and case information, we also need to provide the violations dictionary to the function. In the following we use the previously discussed violated solution and plot the result.
 
 .. code-block::
 
@@ -321,7 +321,7 @@ The case dictionary for this mod expects a dictionary with keys ``baseMVA``, ``b
     >>> generatorcosts[2]
     {'costtype': 2.0, 'startup': 3000.0, 'shutdown': 0.0, 'n': 3.0, 'costvector': [0.1225, 1.0, 335.0]}
 
-There is also the convenience function :meth:`opf.read_case_matpower` which reads in a standard MATLAB ``.mat`` data file holding the network data. The data stored in the ``.mat`` file has to follow the `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ in order to be accepted by the function. This function returns a case dictionary which can be read by the solver methods::
+There is also the convenience function :func:`gurobi_optimods.opf.read_case_matpower` which reads in a standard MATLAB ``.mat`` data file holding the network data. The data stored in the ``.mat`` file has to follow the `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ in order to be accepted by the function. This function returns a case dictionary which can be read by the solver methods::
 
     case = opf.read_case_matpower("my_case.mat")
     solution = solve_opf(case, opftype="AC")

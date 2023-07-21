@@ -39,6 +39,7 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "networkx": ("https://networkx.org/documentation/stable", None),
+    "plotly": ("https://plotly.com/python-api-reference", None),
 }
 
 templates_path = ["_templates"]
