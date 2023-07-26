@@ -6,6 +6,7 @@ import unittest
 import gurobipy as gp
 
 from gurobi_optimods.datasets import load_opf_example
+from gurobi_optimods.opf import converters, grbformulator
 from gurobi_optimods.opf.api import _solve_opf_model_internal
 
 
@@ -173,3 +174,111 @@ class TestInternal(unittest.TestCase):
         self.assertLess(abs(solution["gen"][2]["Qg"] + 22.802347), 1e1)
         self.assertLess(abs(solution["branch"][3]["Pf"] - 95.113306), 1e1)
         self.assertLess(abs(solution["branch"][4]["Qt"] + 18.431373), 1e1)
+
+
+class TestFingerprints(unittest.TestCase):
+    # Check model fingerprints for some specific cases. Useful while
+    # refactoring the code, but
+
+    def setUp(self):
+        self.env = gp.Env()
+        self.data = [
+            {
+                "name": "case9",
+                "case": load_opf_example("case9"),
+                "dc_fingerprint": 1980532444,
+                "ac_fingerprint": 36099204,
+                "ac_relax_fingerprint": -552798165,
+            },
+            {
+                "name": "caseNY",
+                "case": load_opf_example("caseNY"),
+                "dc_fingerprint": -693889576,
+                "ac_fingerprint": 355397043,
+                "ac_relax_fingerprint": 1748156239,
+            },
+        ]
+
+    def tearDown(self):
+        self.env.close()
+
+    def test_dc(self):
+        for example in self.data:
+            with self.subTest(name=example["name"]):
+                with gp.Model(env=self.env) as model:
+                    alldata = converters.convert_case_to_internal_format(
+                        example["case"]
+                    )
+                    alldata.update(
+                        converters.build_internal_settings(
+                            opftype="DC",
+                            branchswitching=False,
+                            usemipstart=False,
+                            useactivelossineqs=False,
+                            minactivebranches=0.0,
+                            polar=False,
+                            useef=True,
+                            usejabr=True,
+                            ivtype="aggressive",
+                        )
+                    )
+                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.DC)
+                    grbformulator.lpformulator_body(
+                        alldata, model, grbformulator.OpfType.DC
+                    )
+                    model.update()
+                    self.assertEqual(model.Fingerprint, example["dc_fingerprint"])
+
+    def test_ac(self):
+        for example in self.data:
+            with self.subTest(name=example["name"]):
+                with gp.Model(env=self.env) as model:
+                    alldata = converters.convert_case_to_internal_format(
+                        example["case"]
+                    )
+                    alldata.update(
+                        converters.build_internal_settings(
+                            opftype="AC",
+                            polar=False,
+                            useef=True,
+                            usejabr=True,
+                            branchswitching=False,
+                            usemipstart=False,
+                            useactivelossineqs=False,
+                            minactivebranches=0.0,
+                            ivtype="aggressive",
+                        )
+                    )
+                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
+                    grbformulator.lpformulator_body(
+                        alldata, model, grbformulator.OpfType.AC
+                    )
+                    model.update()
+                    self.assertEqual(model.Fingerprint, example["ac_fingerprint"])
+
+    def test_ac_relax(self):
+        for example in self.data:
+            with self.subTest(name=example["name"]):
+                with gp.Model(env=self.env) as model:
+                    alldata = converters.convert_case_to_internal_format(
+                        example["case"]
+                    )
+                    alldata.update(
+                        converters.build_internal_settings(
+                            opftype="AC",
+                            polar=False,
+                            useef=False,
+                            usejabr=True,
+                            branchswitching=False,
+                            usemipstart=False,
+                            useactivelossineqs=False,
+                            minactivebranches=0.0,
+                            ivtype="aggressive",
+                        )
+                    )
+                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
+                    grbformulator.lpformulator_body(
+                        alldata, model, grbformulator.OpfType.AC
+                    )
+                    model.update()
+                    self.assertEqual(model.Fingerprint, example["ac_relax_fingerprint"])
