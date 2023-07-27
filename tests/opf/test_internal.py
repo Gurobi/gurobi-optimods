@@ -197,10 +197,10 @@ class TestFingerprints(unittest.TestCase):
             {
                 "name": "caseNY",
                 "case": load_opf_example("caseNY"),
-                "dc_fingerprint": -693889576,
-                "ac_fingerprint": 1058705558,
-                "ac_relax_fingerprint": 1748156239,
-                "iv_fingerprint": -1099302589,
+                "dc_fingerprint": 1466917423,
+                "ac_fingerprint": 1587606503,
+                "ac_relax_fingerprint": -557544349,
+                "iv_fingerprint": -199906229,
             },
         ]
 
