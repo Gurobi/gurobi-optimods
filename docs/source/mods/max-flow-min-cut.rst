@@ -1,47 +1,42 @@
 Maximum Flow / Minimum Cut
 ==========================
 
-The maximum flow and minimum cut problems are closely related due to their
-mathematical properties. Given a graph or network with a source and sink vertex
-and some edge capacities, we can say that the maximum flow that can be routed
-through the graph is equal to the capacity of the minimum cut. The capacity of
-the minimum cut is the sum of the capacity of the edges in the minimum cut --
-those that minimize the capacity and would disconnect the source from the sink.
+The maximum flow problem finds the total flow that can be routed through a
+capacitated network from a given source vertex to a given sink vertex. The
+minimum cut problem finds a set of edges in the same graph with minimal combined
+capacity that, when removed, would disconnect the source from the sink. The two
+problems are related through duality: the maximum flow is equal to the capacity
+of the minimum cut.
 
-The first algorithm to solve this problem was proposed
-:footcite:t:`ford1956maximal`, called the Ford-Fulkerson algorithm.
-Additionally, they also showed the relationship between these problems. Later
-on, :footcite:t:`goldberg1988new` proposed the famous push-relabel algorithm,
-and more recently :footcite:t:`orlin2013max` and other authors have proposed
-polynomial-time algorithms. Since this problem is a special case of the minimum
-cost flow problem, it can be solved using the network simplex algorithm,
-although not polynomial, a specialized version of the network simplex can be
-competitive :footcite:t:`caliskan2012faster`.
+The first algorithm proposed to solve this problem was the Ford-Fulkerson
+algorithm :footcite:p:`ford1956maximal`. :footcite:t:`goldberg1988new` later
+proposed the famous push-relabel algorithm, and more recently,
+:footcite:t:`orlin2013max` and other authors have proposed polynomial-time
+algorithms. The maximum flow problem is a special case of the minimum cost flow
+problem, so it can also be solved efficiently using the network simplex
+algorithm :footcite:p:`caliskan2012faster` making a linear programming (LP)
+solver a suitable approach.
 
 Problem Specification
 ---------------------
 
-For a given graph :math:`G` with set of vertices :math:`V` and edges
-:math:`E`. Each edge :math:`(i,j)\in E` has a capacity attribute
-:math:`B_{ij}\in\mathbb{R}`.
+Let :math:`G` be a graph with set of vertices :math:`V` and edges :math:`E`.
+Each edge :math:`(i,j)\in E` has capacity :math:`B_{ij}\in\mathbb{R}`. Given a
+source vertex :math:`s\in V` and a sink vertex :math:`t\in V` the two problems
+can be stated as follows:
 
-Given a source and sink vertices :math:`s\in V` and :math:`t\in V`,
-respectively, the problems can be stated as finding:
+- Maximum Flow: Find the flow with maximum value from source to sink such that
+  the flow is capacity feasible.
+- Minimum Cut: Find the set of edges which disconnects the source and sink such
+  that the total capacity of the cut is minimised.
 
-- the flow with maximum value from source to sink such that the flow is
-  capacity feasible.
-- the set of edges which disconnects the source and sink such that the
-  total capacity is minimised.
-
-.. dropdown:: Background: Mathematical Model
+.. dropdown:: Background: Optimization Model
 
     Let us define a set of continuous variables :math:`x_{ij}` to represent
     the amount of non-negative (:math:`\geq 0`) flow going through an edge
-    :math:`(i,j)\in E`.
+    :math:`(i,j) \in E`.
 
-
-    The mathematical formulation for the maximum flow can be stated as
-    follows:
+    The mathematical formulation for the maximum flow can be stated as:
 
     .. math::
 
@@ -51,27 +46,26 @@ respectively, the problems can be stated as finding:
                             & 0 \leq x_{ij} \le B_{ij} & \forall (i, j) \in E \\
         \end{alignat}
 
-    Where :math:`\delta^+(\cdot)` (:math:`\delta^-(\cdot)`) denotes the
-    outgoing (incoming) neighbours.
+    where :math:`\delta^+(\cdot)` (:math:`\delta^-(\cdot)`) denotes the
+    outgoing (incoming) neighbours of a given vertex.
 
-    The objective maximises the total flow outgoing from the source vertex.
-
-    The first constraints ensure flow balance for all vertices (other than
-    the source or sink). That is, for a given node, the outgoing flow must
-    be equal to the incoming flow.
-
-    The last constraints ensure non-negativity of the variables and that the
-    capacity per edge is not exceeded.
+    The objective maximises the total outgoing flow from the source vertex. The
+    first set of constraint ensure flow balance for all vertices. That is, for a
+    given node that is neither the source or the sink, the outgoing flow must be
+    equal to the incoming flow. The last set of constraints ensure
+    non-negativity of the variables and that the capacity of each edge is not
+    exceeded.
 
     The minimum cut problem formulation is the dual of the maximum flow
-    formulation. So we can easily extract the solution information.
+    formulation. The minimum cut is found by solving the maximum flow problem
+    and extracting the constraint dual values.
 
 |
 
 Code and Inputs
 ---------------
 
-For this mod, one can use input graphs of different types:
+This Mod accepts input graphs of any of the following types:
 
 * pandas: using a ``pd.DataFrame``;
 * NetworkX: using a ``nx.DiGraph`` or ``nx.Graph``;
