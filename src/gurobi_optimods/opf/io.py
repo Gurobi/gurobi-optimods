@@ -65,25 +65,6 @@ branch_field_names = [
 gencost_field_names = ["costtype", "startup", "shutdown", "n", "costvector"]
 
 
-"""
-Some errors thrown by the old reader (TODO add tests):
-
-    if "mpc" not in mat.keys():
-        raise ValueError("Provided .mat file does not have an mpc field")
-
-    for x in ["baseMVA", "bus", "gen", "branch", "gencost"]:
-        if x not in mpc.keys():
-            raise ValueError(f"Provided .mat file does not have a {x} field")
-
-    if numgencosts > numgens:
-        # FIXME: spec says we can have twice as many entries, representing
-        reactive power. Do we not handle this case?
-
-        raise ValueError(f"Read {numgencosts} gen costs but only {numgens}
-        generators.")
-"""
-
-
 def read_case_matpower(file_path):
     """Read in a MATPOWER case file.
 
@@ -102,8 +83,20 @@ def read_case_matpower(file_path):
     mat = scipy.io.loadmat(
         file_path, variable_names=["mpc"], struct_as_record=True, squeeze_me=True
     )
+
+    if "mpc" not in mat.keys():
+        raise ValueError("Provided .mat file does not have an mpc field")
+
     mpc = mat["mpc"]
-    assert int(mpc["version"]) == 2
+
+    if mpc is None or int(mpc["version"]) != 2:
+        raise ValueError("Provided .mat file must use MATPOWER specification version 2")
+
+    missing_keys = sorted(
+        {"baseMVA", "bus", "gen", "branch", "gencost"} - set(mpc.dtype.names)
+    )
+    if missing_keys:
+        raise ValueError(f"Provided .mat file is missing keys: {missing_keys}")
 
     def fix_shape(arr, ncols=None):
         if ncols is None:
@@ -130,9 +123,10 @@ def read_case_matpower(file_path):
         fbus=lambda df: df["fbus"].astype(int), tbus=lambda df: df["tbus"].astype(int)
     )
 
-    # gencost has variable number of columns, we contract the extra columns
-    # to a sub-list for costvector data. The length of this list should match
-    # the 'n' field.
+    # gencost has variable number of columns, we contract the extra columns to a
+    # sub-list for costvector data. The length of this list should match the 'n'
+    # field. Note: we don't check this here, it will be checked when the model
+    # is built.
     gencost_array = fix_shape(mpc["gencost"].item())
     gencost_main = pd.DataFrame(
         data=gencost_array[:, :4], columns=gencost_field_names[:4]
@@ -142,8 +136,6 @@ def read_case_matpower(file_path):
         dict(main, costvector=vector)
         for main, vector in zip(gencost_main.to_dict("records"), gencost_vectors)
     ]
-    for entry in gencost:
-        assert entry["n"] == len(entry["costvector"])
 
     return {
         "baseMVA": float(mpc["baseMVA"]),

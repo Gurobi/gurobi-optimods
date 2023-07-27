@@ -4,9 +4,54 @@ import json
 import pathlib
 import tempfile
 import unittest
+from contextlib import contextmanager
+
+import scipy
 
 from gurobi_optimods.datasets import load_opf_example, load_opf_extra
 from gurobi_optimods.opf import read_case_matpower, write_case_matpower
+
+
+class TestBadData(unittest.TestCase):
+    @contextmanager
+    def save_scipy_data_to_tempfile(self, content):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            matfile = pathlib.Path(tmpdir) / "testcase.mat"
+            scipy.io.savemat(matfile, content)
+            yield matfile
+
+    def test_no_mpc_key(self):
+        content = {}
+        with self.save_scipy_data_to_tempfile(content) as matfile:
+            with self.assertRaisesRegex(
+                ValueError, "Provided .mat file does not have an mpc field"
+            ):
+                read_case_matpower(matfile)
+
+    def test_bad_version(self):
+        content = {"mpc": {}}
+        with self.save_scipy_data_to_tempfile(content) as matfile:
+            with self.assertRaisesRegex(
+                ValueError,
+                "Provided .mat file must use MATPOWER specification version 2",
+            ):
+                read_case_matpower(matfile)
+
+        content = {"mpc": {"version": 1}}
+        with self.save_scipy_data_to_tempfile(content) as matfile:
+            with self.assertRaisesRegex(
+                ValueError,
+                "Provided .mat file must use MATPOWER specification version 2",
+            ):
+                read_case_matpower(matfile)
+
+    def test_missing_field(self):
+        content = {"mpc": {"version": 2, "branch": 3, "gen": 4, "baseMVA": 5}}
+        with self.save_scipy_data_to_tempfile(content) as matfile:
+            with self.assertRaisesRegex(
+                ValueError, "Provided .mat file is missing keys"
+            ):
+                read_case_matpower(matfile)
 
 
 class TestDatasets(unittest.TestCase):
