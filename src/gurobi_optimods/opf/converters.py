@@ -217,6 +217,8 @@ def convert_case_to_internal_format(case_dict):
             dbus["Vmin"],
         )
 
+        # Could save a lot of pain by using the nodeID as the ... node ID :-)
+        # assert nodeID == count
         IDtoCountmap[nodeID] = count
         numPload += Pd > 0
 

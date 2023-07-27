@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def lpformulator_dc_body(alldata, model):
-    """Builds the DCOPF formulation in the given model"""
+    """Add variables and constraints for DC formulation to the given model"""
 
     _add_dc_gen_bus_variables(alldata, model)
     _add_dc_branch_variables(alldata, model)
@@ -19,6 +19,7 @@ def lpformulator_dc_body(alldata, model):
     _add_dc_branch_activepower_constraints(alldata, model)
     _add_dc_bus_balance_constraints(alldata, model)
     _add_dc_bus_injection_constraints(alldata, model)
+    _add_min_active_branch_constraint(alldata, model)
 
 
 def _add_dc_gen_bus_variables(alldata, model):
@@ -32,7 +33,6 @@ def _add_dc_gen_bus_variables(alldata, model):
     """
 
     fixtolerance = alldata["fixtolerance"]
-
     buses = alldata["buses"]
     gens = alldata["gens"]
 
@@ -43,24 +43,16 @@ def _add_dc_gen_bus_variables(alldata, model):
     for j, bus in buses.items():
         ubound = 2 * math.pi
         lbound = -ubound
-
         if bus.inputvoltage:
-            candidatelbound = bus.inputA_rad - fixtolerance
-            candidateubound = bus.inputA_rad + fixtolerance
-            lbound = max(lbound, candidatelbound)
-            ubound = min(ubound, candidateubound)
-
-        thetavar[bus] = model.addVar(
-            lb=lbound, ub=ubound, name="theta_" + str(bus.nodeID)
-        )
+            lbound = max(lbound, bus.inputA_rad - fixtolerance)
+            ubound = min(ubound, bus.inputA_rad + fixtolerance)
+        thetavar[bus] = model.addVar(lb=lbound, ub=ubound, name=f"theta_{bus.nodeID}")
 
         Pubound, Plbound, _, _ = computebalbounds(alldata, bus)
-
-        Pinjvar[bus] = model.addVar(lb=Plbound, ub=Pubound, name="IP_%d" % j)
+        Pinjvar[bus] = model.addVar(lb=Plbound, ub=Pubound, name=f"IP_{j}")
 
         # This is done in the inner loop because each generator should have only
-        # one associated bus. However it would be cleaner to just iterate over
-        # the generators.
+        # one associated bus. May be cleaner to just iterate over the generators.
         for genid in bus.genidsbycount:
             gen = gens[genid]
             lower = gen.Pmin * gen.status
@@ -69,7 +61,7 @@ def _add_dc_gen_bus_variables(alldata, model):
             #     upper = GRB.INFINITY
             #     lower = -GRB.INFINITY  #ignoring slack bus
             GenPvar[gen] = model.addVar(
-                lb=lower, ub=upper, name="GP_%d_%d" % (gen.count, gen.nodeID)
+                lb=lower, ub=upper, name=f"GP_{gen.count}_{gen.nodeID}"
             )
 
     alldata["LP"]["thetavar"] = thetavar
@@ -91,55 +83,38 @@ def _add_dc_branch_variables(alldata, model):
         - zvar: branch switching decision variable
     """
 
-    buses = alldata["buses"]
-    IDtoCountmap = alldata["IDtoCountmap"]
+    branches = alldata["branches"]
+    branchswitching = alldata["branchswitching_mip"]
+
     Pvar_f = {}  # DC, so f-flow = - t-flow
     twinPvar_f = {}
-
-    branches = alldata["branches"]
+    zvar = {}
 
     for j, branch in branches.items():
-        f = branch.f
-        t = branch.t
-        count_of_f = IDtoCountmap[f]
-        count_of_t = IDtoCountmap[t]
-        busf = buses[count_of_f]
-        bust = buses[count_of_t]
-        if branch.constrainedflow:
-            ubound = branch.limit
-        else:
-            ubound = alldata["sumPd"]  # DC
-        lbound = -ubound
-
+        bound = branch.limit if branch.constrainedflow else alldata["sumPd"]
         Pvar_f[branch] = model.addVar(
-            lb=lbound,
-            ub=ubound,
-            name="P_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
+            lb=-bound,
+            ub=bound,
+            name=f"P_{j}_{branch.f}_{branch.t}",
         )
 
-        if alldata["branchswitching_mip"]:
+        if branchswitching:
             twinPvar_f[branch] = model.addVar(
-                lb=lbound,
-                ub=ubound,
-                name="twinP_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
+                lb=-bound,
+                ub=bound,
+                name=f"twinP_{j}_{branch.f}_{branch.t}",
             )
 
-    zvar = {}
-    if alldata["branchswitching_mip"]:
+    if branchswitching:
         for j, branch in branches.items():
-            f = branch.f
-            t = branch.t
             zvar[branch] = model.addVar(
                 obj=0.0,
                 vtype=GRB.BINARY,
-                name="z_%d_%d_%d" % (j, f, t),
+                name=f"z_{j}_{branch.f}_{branch.t}",
             )
 
     alldata["LP"]["Pvar_f"] = Pvar_f
-
-    if alldata["branchswitching_mip"]:
-        alldata["LP"]["twinPvar_f"] = twinPvar_f
-
+    alldata["LP"]["twinPvar_f"] = twinPvar_f
     alldata["MIP"]["zvar"] = zvar
 
 
@@ -149,68 +124,54 @@ def _add_dc_branch_activepower_constraints(alldata, model):
     buses = alldata["buses"]
     branches = alldata["branches"]
     IDtoCountmap = alldata["IDtoCountmap"]
-
     thetavar = alldata["LP"]["thetavar"]
     Pvar_f = alldata["LP"]["Pvar_f"]
-    if alldata["branchswitching_mip"]:
-        twinPvar_f = alldata["LP"]["twinPvar_f"]
+    twinPvar_f = alldata["LP"]["twinPvar_f"]
     zvar = alldata["MIP"]["zvar"]
+    branchswitching = alldata["branchswitching_mip"]
 
-    count = 0
     for j, branch in branches.items():
-        f = branch.f
-        t = branch.t
-        count_of_f = IDtoCountmap[f]
-        count_of_t = IDtoCountmap[t]
-        busf = buses[count_of_f]
-        bust = buses[count_of_t]
-        branch.Pfcname = "Pdef_%d_%d_%d" % (j, f, t)
+        busf = buses[IDtoCountmap[branch.f]]
+        bust = buses[IDtoCountmap[branch.t]]
 
         if not branch.status:  # out of operation
             branch.Pdeffconstr = model.addConstr(
-                Pvar_f[branch] == 0, name=branch.Pfcname
+                Pvar_f[branch] == 0, name=f"Pdef_{j}_{branch.f}_{branch.t}"
             )
             continue
 
-        # Pf = (thetaf - thetat)/(x*ratio)
         coeff = 1 / (branch.x * branch.ratio)
-        expP = Pvar_f[branch]
-        if alldata["branchswitching_mip"]:
-            expP += twinPvar_f[branch]
-        # angle_exp = (
-        #     coeff*thetavar[busf] - coeff*thetavar[bust]
-        #     - coeff*branch.angle_rad
-        # )
+        if branchswitching:
+            lhs = Pvar_f[branch] + twinPvar_f[branch]
+        else:
+            lhs = Pvar_f[branch]
+
         branch.Pdeffconstr = model.addConstr(
-            expP
+            lhs
             == coeff * thetavar[busf]
             - coeff * thetavar[bust]
             - coeff * branch.angle_rad,
-            name=branch.Pfcname,
+            name=f"Pdef_{j}_{branch.f}_{branch.t}",
         )
-        count += 1
 
-        if alldata["branchswitching_mip"]:
-            if branch.constrainedflow:
-                coeff = branch.limit
-            else:
-                coeff = alldata["sumPd"]  # DC
+        if branchswitching:
+            coeff = branch.limit if branch.constrainedflow else alldata["sumPd"]
 
             model.addConstr(
                 Pvar_f[branch] <= coeff * zvar[branch],
-                name="upmip_%d_%d_%d" % (j, f, t),
+                name=f"upmip_{j}_{branch.f}_{branch.t}",
             )
             model.addConstr(
                 Pvar_f[branch] >= -coeff * zvar[branch],
-                name="dnmip_%d_%d_%d" % (j, f, t),
+                name=f"dnmip_{j}_{branch.f}_{branch.t}",
             )
             model.addConstr(
                 twinPvar_f[branch] <= coeff * (1 - zvar[branch]),
-                name="upmip_twin_%d_%d_%d" % (j, f, t),
+                name=f"upmip_twin_{j}_{branch.f}_{branch.t}",
             )
             model.addConstr(
                 twinPvar_f[branch] >= -coeff * (1 - zvar[branch]),
-                name="dnmip_twin_%d_%d_%d" % (j, f, t),
+                name=f"dnmip_twin__{j}_{branch.f}_{branch.t}",
             )
 
 
@@ -231,7 +192,7 @@ def _add_dc_bus_balance_constraints(alldata, model):
                 Pvar_f[branches[branchid]] for branchid in bus.tobranchids.values()
             )
             == Pinjvar[bus],
-            name="PBaldef%d_%d" % (j, bus.nodeID),
+            name=f"PBaldef_{j}_{bus.nodeID}",
         )
         for j, bus in buses.items()
     }
@@ -241,10 +202,7 @@ def _add_dc_bus_injection_constraints(alldata, model):
     """Injection definitions"""
 
     buses = alldata["buses"]
-    numbranches = alldata["numbranches"]
-    branches = alldata["branches"]
     gens = alldata["gens"]
-    zvar = alldata["MIP"]["zvar"]
     Pinjvar = alldata["LP"]["Pinjvar"]
     GenPvar = alldata["LP"]["GenPvar"]
 
@@ -253,14 +211,17 @@ def _add_dc_bus_injection_constraints(alldata, model):
             Pinjvar[bus]
             == gp.quicksum(GenPvar[gens[genid]] for genid in bus.genidsbycount)
             - bus.Pd,
-            name="Bus_PInj_%d" % j,
+            name=f"Bus_PInj_{j}",
         )
 
+
+def _add_min_active_branch_constraint(alldata, model):
+    branches = alldata["branches"]
+    zvar = alldata["MIP"]["zvar"]
+    N = math.floor(alldata["numbranches"] * alldata["minactivebranches"])
+
     if alldata["branchswitching_mip"]:
-        N = math.floor(
-            numbranches * alldata["minactivebranches"]
-        )  # <<<<<<---- here is the heuristic lower bound
-        logger.info(f"In bound_zs constraint, N = {N}.")
+        logger.info(f"In bound_zs constraint, {N=}")
         model.addConstr(
             gp.quicksum(zvar[branch] for _, branch in branches.items()) >= N,
             name="sumz_lower_heuristic_bound",

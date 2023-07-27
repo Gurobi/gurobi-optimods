@@ -10,14 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def lpformulator_ac_body(alldata, model):
-    """
-    Adds variables and constraints for AC formulation to a given Gurobi model
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param model: Gurobi model to be constructed
-    :type model: :class: `gurobipy.Model`
-    """
+    """Add variables and constraints for AC formulation to the given model"""
 
     lpformulator_ac_create_vars(alldata, model)
     set_gencost_objective(alldata, model)
@@ -25,16 +18,7 @@ def lpformulator_ac_body(alldata, model):
 
 
 def lpformulator_ac_create_vars(alldata, model):
-    """
-    Creates and adds variables for AC formulation to a given Gurobi model
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param model: Gurobi model to be constructed
-    :type model: :class: `gurobipy.Model`
-    """
-
-    logger.info("Creating variables.")
+    """Add variables for AC formulation to a given Gurobi model"""
 
     fixtolerance = alldata["fixtolerance"]
     buses = alldata["buses"]
@@ -50,48 +34,41 @@ def lpformulator_ac_create_vars(alldata, model):
     gens = alldata["gens"]
 
     for j, bus in buses.items():
-        # First, injection variables
-        maxprod = bus.Vmax * bus.Vmax
-        minprod = bus.Vmin * bus.Vmin
-        ubound = maxprod
-        lbound = minprod
-
-        # Check whether to fix variable and we have a input voltage solution
+        # Injection variables
         if alldata["fixcs"] and bus.inputvoltage:
+            # We have a input voltage solution: fix variables within tolerance
             lbound = bus.inputV * bus.inputV - fixtolerance
             ubound = bus.inputV * bus.inputV + fixtolerance
-
+        else:
+            ubound = bus.Vmax * bus.Vmax
+            lbound = bus.Vmin * bus.Vmin
         cvar[bus] = model.addVar(
-            obj=0.0, lb=lbound, ub=ubound, name="c_%d_%d" % (bus.nodeID, bus.nodeID)
+            lb=lbound, ub=ubound, name=f"c_{bus.nodeID}_{bus.nodeID}"
         )
 
-        # csdefslacks to be done
-        Plbound = Qlbound = -GRB.INFINITY
-        Pubound = Qubound = GRB.INFINITY
+        # TODO csdefslacks?
         Pubound, Plbound, Qubound, Qlbound = computebalbounds(alldata, bus)
 
-        Pinjvar[bus] = model.addVar(
-            obj=0.0, lb=Plbound, ub=Pubound, name="IP_%d" % bus.nodeID
-        )
-        # comment: Pinjvar is the variable modeling total active power injected
-        # by bus j into the branches incident with j
+        # Pinjvar is the variable modeling total active power injected by bus j
+        # into the branches incident with j.
+        Pinjvar[bus] = model.addVar(lb=Plbound, ub=Pubound, name=f"IP_{bus.nodeID}")
 
-        Qinjvar[bus] = model.addVar(
-            obj=0.0, lb=Qlbound, ub=Qubound, name="IQ_%d" % bus.nodeID
-        )
-        # comment: Qinjvar is the variable modeling total reactive power injected
-        # by bus j into the branches incident with j
+        # Qinjvar is the variable modeling total reactive power injected by bus
+        # j into the branches incident with j.
+        Qinjvar[bus] = model.addVar(lb=Qlbound, ub=Qubound, name=f"IQ_{bus.nodeID}")
 
-        # Next, generator variables in a bus
+        # Generator variables in a bus (fixed to zero if gen.status == 0)
         for genid in bus.genidsbycount:
             gen = gens[genid]
+
+            # ignoring slack bus
+            # if bus.nodetype == 3:
+            #     upper = GRB.INFINITY
+            #     lower = -GRB.INFINITY
             lower = gen.Pmin * gen.status
             upper = gen.Pmax * gen.status
-            # if bus.nodetype == 3:
-            #  upper = GRB.INFINITY
-            #  lower = -GRB.INFINITY  #ignoring slack bus
             GenPvar[gen] = model.addVar(
-                obj=0.0, lb=lower, ub=upper, name="GP_%d_%d" % (gen.count, gen.nodeID)
+                lb=lower, ub=upper, name=f"GP_{gen.count}_{gen.nodeID}"
             )
 
             lower = gen.Qmin * gen.status
@@ -99,33 +76,24 @@ def lpformulator_ac_create_vars(alldata, model):
             if bus.nodetype == 3:
                 lower = -GRB.INFINITY
                 upper = GRB.INFINITY
-
             GenQvar[gen] = model.addVar(
-                obj=0.0, lb=lower, ub=upper, name="GQ_%d_%d" % (gen.count, gen.nodeID)
+                lb=lower, ub=upper, name=f"GQ_{gen.count}_{gen.nodeID}"
             )
 
     # Branch related variables
     branches = alldata["branches"]
     for j, branch in branches.items():
-        f = branch.f
-        t = branch.t
-        count_of_f = IDtoCountmap[f]
-        count_of_t = IDtoCountmap[t]
-        busf = buses[count_of_f]
-        bust = buses[count_of_t]
-        maxprod = buses[count_of_f].Vmax * buses[count_of_t].Vmax
-        minprod = buses[count_of_f].Vmin * buses[count_of_t].Vmin
+        busf = buses[IDtoCountmap[branch.f]]
+        bust = buses[IDtoCountmap[branch.t]]
+        maxprod = busf.Vmax * bust.Vmax
+        minprod = busf.Vmin * bust.Vmin
 
         # Assumption 1.  zero angle difference is always allowed!
         # More precisely minangle_rad <= 0 and maxaxangle_rad >= 0
         if branch.maxangle_rad < 0 or branch.minangle_rad > 0:
-            logger.error(
-                f" --- Broken assumption 1: branch j {j} f {f} t {t} "
-                f"minanglerad {branch.minangle_rad} maxanglerad {branch.maxangle_rad}."
-            )
             raise ValueError(
-                f"Broken assumption 1: branch j {j} f {f} t {t} minanglerad "
-                f"{branch.minangle_rad} maxanglerad {branch.maxangle_rad}."
+                f"Broken assumption 1: branch j {j} f {branch.f} t {branch.t} "
+                f"minanglerad {branch.minangle_rad} maxanglerad {branch.maxangle_rad}."
             )
 
         ubound = maxprod
@@ -170,10 +138,7 @@ def lpformulator_ac_create_vars(alldata, model):
             lbound = branch.inputc - fixtolerance
 
         cvar[branch] = model.addVar(
-            obj=0.0,
-            lb=lbound,
-            ub=ubound,
-            name="c_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
+            lb=lbound, ub=ubound, name=f"c_{j}_{branch.f}_{branch.t}"
         )
 
         # Sine
@@ -219,10 +184,7 @@ def lpformulator_ac_create_vars(alldata, model):
             lbound = -maxprod
 
         svar[branch] = model.addVar(
-            obj=0.0,
-            lb=lbound,
-            ub=ubound,
-            name="s_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
+            lb=lbound, ub=ubound, name=f"s_{j}_{branch.f}_{branch.t}"
         )
 
     Pvar_f = {}
@@ -236,87 +198,54 @@ def lpformulator_ac_create_vars(alldata, model):
     twinQvar_t = {}
 
     for j, branch in branches.items():
-        f = branch.f
-        t = branch.t
-        count_of_f = IDtoCountmap[f]
-        count_of_t = IDtoCountmap[t]
-        busf = buses[count_of_f]
-        bust = buses[count_of_t]
+        busf = buses[IDtoCountmap[branch.f]]
+        bust = buses[IDtoCountmap[branch.t]]
+
         if branch.constrainedflow:
-            ubound = branch.limit
+            bound = branch.limit
         else:
             # Generous: assumes line charging up to 100%.
             # However it still amounts to an assumption.
-            ubound = 2 * (abs(alldata["summaxgenP"]) + abs(alldata["summaxgenQ"]))
-        lbound = -ubound
+            bound = 2 * (abs(alldata["summaxgenP"]) + abs(alldata["summaxgenQ"]))
 
         Pvar_f[branch] = model.addVar(
-            obj=0.0,
-            lb=lbound,
-            ub=ubound,
-            name="P_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
+            lb=-bound, ub=bound, name=f"P_{j}_{branch.f}_{branch.t}"
         )
 
         Pvar_t[branch] = model.addVar(
-            obj=0.0,
-            lb=lbound,
-            ub=ubound,
-            name="P_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
+            lb=-bound, ub=bound, name=f"P_{j}_{branch.t}_{branch.f}"
         )
 
         Qvar_f[branch] = model.addVar(
-            obj=0.0,
-            lb=lbound,
-            ub=ubound,
-            name="Q_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
+            lb=-bound, ub=bound, name=f"Q_{j}_{branch.f}_{branch.t}"
         )
 
         Qvar_t[branch] = model.addVar(
-            obj=0.0,
-            lb=lbound,
-            ub=ubound,
-            name="Q_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
+            lb=-bound, ub=bound, name=f"Q_{j}_{branch.t}_{branch.f}"
         )
 
         if alldata["branchswitching_mip"]:
             twinPvar_f[branch] = model.addVar(
-                obj=0.0,
-                lb=lbound,
-                ub=ubound,
-                name="twinP_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
+                lb=-bound, ub=bound, name=f"twinP_{j}_{branch.f}_{branch.t}"
             )
 
             twinPvar_t[branch] = model.addVar(
-                obj=0.0,
-                lb=lbound,
-                ub=ubound,
-                name="twinP_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
+                lb=-bound, ub=bound, name=f"twinP_{j}_{branch.t}_{branch.f}"
             )
 
             twinQvar_f[branch] = model.addVar(
-                obj=0.0,
-                lb=lbound,
-                ub=ubound,
-                name="twinQ_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
+                lb=-bound, ub=bound, name=f"twinQ_{j}_{branch.f}_{branch.t}"
             )
 
             twinQvar_t[branch] = model.addVar(
-                obj=0.0,
-                lb=lbound,
-                ub=ubound,
-                name="twinQ_%d_%d_%d" % (j, bust.nodeID, busf.nodeID),
+                lb=-bound, ub=bound, name=f"twinQ_{j}_{branch.t}_{branch.f}"
             )
 
     zvar = {}
     if alldata["branchswitching_mip"] or alldata["branchswitching_comp"]:
-        logger.info("Adding branch switching variables.")
         for j, branch in branches.items():
-            f = branch.f
-            t = branch.t
             zvar[branch] = model.addVar(
-                obj=0.0,
-                vtype=GRB.BINARY,
-                name="z_%d_%d_%d" % (j, f, t),
+                vtype=GRB.BINARY, name=f"z_{j}_{branch.f}_{branch.t}"
             )
 
     # Powerflow variables
@@ -476,24 +405,19 @@ def lpformulator_ac_create_efvars(alldata, model):
     """
 
     buses = alldata["buses"]
-    alldata["IDtoCountmap"]
-    efvarcount = 0
-
-    logger.info("  Creating e, f variables.")
 
     evar = {}
     fvar = {}
-    for j, bus in buses.items():
-        ubound = bus.Vmax
-        lbound = -ubound
 
+    for j, bus in buses.items():
         if alldata["usemaxdispersion"]:
             lbound = bus.Vmin * math.cos(alldata["maxdispersion_rad"])
             ubound = bus.Vmax
+        else:
+            ubound = bus.Vmax
+            lbound = -ubound
 
-        evar[bus] = model.addVar(
-            obj=0.0, lb=lbound, ub=ubound, name="e_%d" % bus.nodeID
-        )
+        evar[bus] = model.addVar(lb=lbound, ub=ubound, name=f"e_{bus.nodeID}")
 
         if alldata["usemaxdispersion"]:
             lbound = 0
@@ -501,16 +425,11 @@ def lpformulator_ac_create_efvars(alldata, model):
         elif j == alldata["refbus"]:
             ubound = lbound = 0
 
-        fvar[bus] = model.addVar(
-            obj=0.0, lb=lbound, ub=ubound, name="f_%d" % bus.nodeID
-        )
-        efvarcount += 2
+        fvar[bus] = model.addVar(lb=lbound, ub=ubound, name=f"f_{bus.nodeID}")
 
     # Save e, f variables data
     alldata["LP"]["evar"] = evar
     alldata["LP"]["fvar"] = fvar  # e^2 + f^2 = voltage magnitude
-
-    logger.info(f"  Added {efvarcount} e, f variables.")
 
 
 def lpformulator_ac_create_constraints(alldata, model):
@@ -1059,46 +978,32 @@ def lpformulator_ac_add_nonconvexconstraints(alldata, model):
     cvar = alldata["LP"]["cvar"]  # Square of the voltage magnitude e^2 + f^2
     svar = alldata["LP"]["svar"]
     IDtoCountmap = alldata["IDtoCountmap"]
-    count = 0
     logger.info("  Adding nonconvex e, f, constraints.")
 
     for j, bus in buses.items():
         model.addConstr(
             -cvar[bus] + evar[bus] * evar[bus] + fvar[bus] * fvar[bus] == 0,
-            name="cbusdef_%d_%d" % (j, bus.nodeID),
+            name=f"cbusdef_{j}_{bus.nodeID}",
         )
-        count += 1
 
     for j, branch in branches.items():
         if branch.status:
-            f = branch.f
-            t = branch.t
-            count_of_f = IDtoCountmap[f]
-            count_of_t = IDtoCountmap[t]
-            busf = buses[count_of_f]
-            bust = buses[count_of_t]
+            busf = buses[IDtoCountmap[branch.f]]
+            bust = buses[IDtoCountmap[branch.t]]
 
             model.addConstr(
                 -cvar[branch] + evar[busf] * evar[bust] + fvar[busf] * fvar[bust] == 0,
-                name="cdef_%d_%d_%d" % (j, f, t),
+                name=f"cdef_{j}_{branch.f}_{branch.t}",
             )
             model.addConstr(
                 -svar[branch] - evar[busf] * fvar[bust] + fvar[busf] * evar[bust] == 0,
-                name="sdef_%d_%d_%d" % (j, f, t),
+                name=f"sdef_{j}_{branch.f}_{branch.t}",
             )
-            count += 2
-
-    logger.info(f"    {count} nonconvex e, f constraints added.")
 
 
 def computebalbounds(alldata, bus):
     """
     Computes active and reactive max and min bus flow balance values
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param bus: Input bus
-    :type bus: :class: `Bus`
 
     :return: Values for active and reactive bounds
     :rtype: float, float, float, float
