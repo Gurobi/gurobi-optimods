@@ -365,16 +365,16 @@ class TestAPINewYork(unittest.TestCase):
 
         # New York test values
         self.Va_NY = [
-            -4.317424,
-            -6.18956,
-            -5.959205,
-            -6.085699,
-            -6.0442,
-            -5.796713,
-            -5.670924,
-            -5.770995,
-            -3.930278,
-            -5.679304,
+            1.642,
+            -0.202,
+            0.0122,
+            -0.116,
+            -0.085,
+            0.128,
+            0.294,
+            0.124,
+            1.987,
+            0.211,
         ]
         self.Pg_NY = [
             1299.0,
@@ -388,17 +388,18 @@ class TestAPINewYork(unittest.TestCase):
             641.8,
             100.0,
         ]
-        self.Pf_NY = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 82.369589]
+        self.Pf_NY = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 72.0]
 
     def test_dc(self):
         # solve opf model and return a solution
-        solution = solve_opf(self.case, opftype="DC")
+        solution = solve_opf(
+            self.case, opftype="DC", solver_params={"OptimalityTol": 1e-6}
+        )
         self.assertIsNotNone(solution)
         self.assertEqual(solution["success"], 1)
         self.assertIsNotNone(solution["f"])
-        # differences can be quite big because we solve only to 0.1% optimality
-        self.assertLess(abs(solution["f"] - 681590.8014), 1e2)
+        self.assertLess(abs(solution["f"] - 726388.1), 1e0)
         for i in range(0, 10):
-            self.assertLess(abs(solution["bus"][i]["Va"] - self.Va_NY[i]), 1e1)
-            self.assertLess(abs(solution["gen"][i]["Pg"] - self.Pg_NY[i]), 1e1)
-            self.assertLess(abs(solution["branch"][i]["Pf"] - self.Pf_NY[i]), 1e1)
+            self.assertLess(abs(solution["bus"][i]["Va"] - self.Va_NY[i]), 1e-1)
+            self.assertLess(abs(solution["gen"][i]["Pg"] - self.Pg_NY[i]), 1e-1)
+            self.assertLess(abs(solution["branch"][i]["Pf"] - self.Pf_NY[i]), 1e-1)
