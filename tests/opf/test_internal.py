@@ -187,14 +187,14 @@ class TestFingerprints(unittest.TestCase):
                 "name": "case9",
                 "case": load_opf_example("case9"),
                 "dc_fingerprint": 1980532444,
-                "ac_fingerprint": 36099204,
+                "ac_fingerprint": -121125607,
                 "ac_relax_fingerprint": -552798165,
             },
             {
                 "name": "caseNY",
                 "case": load_opf_example("caseNY"),
                 "dc_fingerprint": -693889576,
-                "ac_fingerprint": 355397043,
+                "ac_fingerprint": 1058705558,
                 "ac_relax_fingerprint": 1748156239,
             },
         ]

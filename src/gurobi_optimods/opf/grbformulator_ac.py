@@ -319,6 +319,13 @@ def lpformulator_ac_create_vars(alldata, model):
                 name="z_%d_%d_%d" % (j, f, t),
             )
 
+    # Powerflow variables
+    if alldata["use_ef"]:
+        lpformulator_ac_create_efvars(alldata, model)
+
+    if alldata["dopolar"]:
+        lpformulator_ac_create_polar_vars(alldata, model)
+
     lincostvar = model.addVar(
         obj=1.0, lb=-GRB.INFINITY, ub=GRB.INFINITY, name="lincost"
     )
@@ -333,13 +340,6 @@ def lpformulator_ac_create_vars(alldata, model):
             constobjval += gen.costvector[gen.costdegree]
 
     constvar = model.addVar(obj=constobjval, lb=1.0, ub=1.0, name="constant")
-
-    # Powerflow variables
-    if alldata["use_ef"]:
-        lpformulator_ac_create_efvars(alldata, model)
-
-    if alldata["dopolar"]:
-        lpformulator_ac_create_polar_vars(alldata, model)
 
     # Save variable data
     alldata["LP"]["cvar"] = cvar
