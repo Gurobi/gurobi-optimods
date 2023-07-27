@@ -10,16 +10,16 @@ def set_gencost_objective(alldata, model):
 
     # TODO fail earlier if not linear or quadratic.
     for gen in gens.values():
-        assert gen.costdegree >= 2
+        assert gen.costdegree >= 1
+        assert gen.costdegree == len(gen.costvector) - 1
         if gen.costdegree > 2:
             assert all(coeff == 0 for coeff in gen.costvector[:-3])
 
-    # Quadratic parts are computed directly (quadcostvar was never used)
-    # FIXME: wrong for NY case
+    # Quadratic terms are included directly (quadcostvar was never used)
     objective_quadratic = gp.quicksum(
-        gen.costvector[0] * GenPvar[gen] * GenPvar[gen]
+        gen.costvector[-3] * GenPvar[gen] * GenPvar[gen]
         for gen in gens.values()
-        if gen.costdegree == 2 and gen.costvector[0] != 0
+        if len(gen.costvector) >= 3
     )
 
     # Linear parts are added via an equality constraint
