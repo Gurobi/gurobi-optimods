@@ -189,6 +189,7 @@ class TestFingerprints(unittest.TestCase):
                 "dc_fingerprint": 1980532444,
                 "ac_fingerprint": -121125607,
                 "ac_relax_fingerprint": -552798165,
+                "iv_fingerprint": 696846664,
             },
             {
                 "name": "caseNY",
@@ -196,6 +197,7 @@ class TestFingerprints(unittest.TestCase):
                 "dc_fingerprint": -693889576,
                 "ac_fingerprint": 1058705558,
                 "ac_relax_fingerprint": 1748156239,
+                "iv_fingerprint": -1099302589,
             },
         ]
 
@@ -282,3 +284,30 @@ class TestFingerprints(unittest.TestCase):
                     )
                     model.update()
                     self.assertEqual(model.Fingerprint, example["ac_relax_fingerprint"])
+
+    def test_iv(self):
+        for example in self.data:
+            with self.subTest(name=example["name"]):
+                with gp.Model(env=self.env) as model:
+                    alldata = converters.convert_case_to_internal_format(
+                        example["case"]
+                    )
+                    alldata.update(
+                        converters.build_internal_settings(
+                            opftype="IV",
+                            ivtype="aggressive",
+                            useactivelossineqs=False,
+                            minactivebranches=0.0,
+                            polar=False,
+                            useef=True,
+                            usejabr=True,
+                            branchswitching=0,
+                            usemipstart=True,
+                        )
+                    )
+                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.IV)
+                    grbformulator.lpformulator_body(
+                        alldata, model, grbformulator.OpfType.IV
+                    )
+                    model.update()
+                    self.assertEqual(model.Fingerprint, example["iv_fingerprint"])
