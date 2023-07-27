@@ -192,7 +192,9 @@ class TestFingerprints(unittest.TestCase):
                 "dc_fingerprint": 1980532444,
                 "dc_switching_fingerprint": 1441352667,
                 "ac_fingerprint": -121125607,
+                "ac_switching_fingerprint": 1863109018,
                 "ac_relax_fingerprint": -552798165,
+                "ac_relax_switching_fingerprint": 1908254825,
                 "iv_fingerprint": 696846664,
             },
             {
@@ -201,7 +203,9 @@ class TestFingerprints(unittest.TestCase):
                 "dc_fingerprint": 1466917423,
                 "dc_switching_fingerprint": 1343022114,
                 "ac_fingerprint": 1587606503,
+                "ac_switching_fingerprint": 549489140,
                 "ac_relax_fingerprint": -557544349,
+                "ac_relax_switching_fingerprint": 1800895367,
                 "iv_fingerprint": -199906229,
             },
         ]
@@ -292,6 +296,35 @@ class TestFingerprints(unittest.TestCase):
                     model.update()
                     self.assertEqual(model.Fingerprint, example["ac_fingerprint"])
 
+    def test_ac_switching(self):
+        for example in self.data:
+            with self.subTest(name=example["name"]):
+                with gp.Model(env=self.env) as model:
+                    alldata = converters.convert_case_to_internal_format(
+                        example["case"]
+                    )
+                    alldata.update(
+                        converters.build_internal_settings(
+                            opftype="AC",
+                            polar=False,
+                            useef=True,
+                            usejabr=True,
+                            branchswitching=True,
+                            usemipstart=False,
+                            useactivelossineqs=False,
+                            minactivebranches=0.9,
+                            ivtype="aggressive",
+                        )
+                    )
+                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
+                    grbformulator.lpformulator_body(
+                        alldata, model, grbformulator.OpfType.AC
+                    )
+                    model.update()
+                    self.assertEqual(
+                        model.Fingerprint, example["ac_switching_fingerprint"]
+                    )
+
     def test_ac_relax(self):
         for example in self.data:
             with self.subTest(name=example["name"]):
@@ -318,6 +351,35 @@ class TestFingerprints(unittest.TestCase):
                     )
                     model.update()
                     self.assertEqual(model.Fingerprint, example["ac_relax_fingerprint"])
+
+    def test_ac_relax_switching(self):
+        for example in self.data:
+            with self.subTest(name=example["name"]):
+                with gp.Model(env=self.env) as model:
+                    alldata = converters.convert_case_to_internal_format(
+                        example["case"]
+                    )
+                    alldata.update(
+                        converters.build_internal_settings(
+                            opftype="AC",
+                            polar=False,
+                            useef=False,
+                            usejabr=True,
+                            branchswitching=True,
+                            usemipstart=False,
+                            useactivelossineqs=False,
+                            minactivebranches=0.9,
+                            ivtype="aggressive",
+                        )
+                    )
+                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
+                    grbformulator.lpformulator_body(
+                        alldata, model, grbformulator.OpfType.AC
+                    )
+                    model.update()
+                    self.assertEqual(
+                        model.Fingerprint, example["ac_relax_switching_fingerprint"]
+                    )
 
     def test_iv(self):
         for example in self.data:
