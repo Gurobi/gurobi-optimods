@@ -15,6 +15,7 @@ def set_gencost_objective(alldata, model):
             assert all(coeff == 0 for coeff in gen.costvector[:-3])
 
     # Quadratic parts are computed directly (quadcostvar was never used)
+    # FIXME: wrong for NY case
     objective_quadratic = gp.quicksum(
         gen.costvector[0] * GenPvar[gen] * GenPvar[gen]
         for gen in gens.values()
