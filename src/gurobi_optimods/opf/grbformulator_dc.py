@@ -40,7 +40,7 @@ def _add_dc_gen_bus_variables(alldata, model):
     Pinjvar = {}
     GenPvar = {}
 
-    for bus in buses.values():
+    for j, bus in buses.items():
         ubound = 2 * math.pi
         lbound = -ubound
 
@@ -56,7 +56,7 @@ def _add_dc_gen_bus_variables(alldata, model):
 
         Pubound, Plbound, _, _ = computebalbounds(alldata, bus)
 
-        Pinjvar[bus] = model.addVar(lb=Plbound, ub=Pubound, name="IP_%d" % bus.nodeID)
+        Pinjvar[bus] = model.addVar(lb=Plbound, ub=Pubound, name="IP_%d" % j)
 
         # This is done in the inner loop because each generator should have only
         # one associated bus. However it would be cleaner to just iterate over
@@ -177,7 +177,10 @@ def _add_dc_branch_activepower_constraints(alldata, model):
         expP = Pvar_f[branch]
         if alldata["branchswitching_mip"]:
             expP += twinPvar_f[branch]
-        # angle_exp = coeff*thetavar[busf] - coeff*thetavar[bust] - coeff*branch.angle_rad
+        # angle_exp = (
+        #     coeff*thetavar[busf] - coeff*thetavar[bust]
+        #     - coeff*branch.angle_rad
+        # )
         branch.Pdeffconstr = model.addConstr(
             expP
             == coeff * thetavar[busf]
