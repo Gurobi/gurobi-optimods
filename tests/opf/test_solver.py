@@ -19,6 +19,20 @@ def size_limited_license():
             return True
 
 
+# TODO test invalid data throws an error:
+#
+# - non-quadratic cost vectors, or costtype=1
+# - non-matching gen/gencost lengths
+
+# TODO test bad formatting throws an error
+# - len(gencost) != len(gen) or 2xlen(gen)
+# - n not matching costvector
+
+# Test some more minor cases:
+#
+# - out of service generator (esp. gens[numgens]["status"] = 0 if g[7] <= 0 else 1)
+
+
 class TestAPICase9(unittest.TestCase):
     # Test configurations of case9 with known optimal values. We should
     # get reasonable reproducibility on this small case.

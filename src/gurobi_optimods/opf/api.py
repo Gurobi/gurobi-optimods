@@ -7,7 +7,7 @@ Contains the actual mods / public API.
 
 import logging
 
-from gurobi_optimods.opf import converters, grbformulator
+from gurobi_optimods.opf import converters, grbformulator, violations
 from gurobi_optimods.utils import optimod
 
 logger = logging.getLogger(__name__)
@@ -214,6 +214,4 @@ def compute_violations(case, voltages, polar=False, *, create_env):
 
     # Compute model violations based on user input voltages
     with create_env() as env:
-        violations = grbformulator.compute_violations_from_voltages(env, alldata)
-
-    return violations
+        return violations.compute_violations_from_voltages(env, alldata)

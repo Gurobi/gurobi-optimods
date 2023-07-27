@@ -6,10 +6,7 @@ from enum import Enum
 import gurobipy as gp
 from gurobipy import GRB
 
-from gurobi_optimods.opf.grbformulator_ac import (
-    lpformulator_ac_body,
-    lpformulator_ac_strictchecker,
-)
+from gurobi_optimods.opf.grbformulator_ac import lpformulator_ac_body
 from gurobi_optimods.opf.grbformulator_dc import lpformulator_dc_body
 from gurobi_optimods.opf.grbformulator_iv import lpformulator_iv_body
 
@@ -27,19 +24,9 @@ class OpfType(Enum):
 
 
 def construct_and_solve_model(env, alldata):
-    """
-    Construct OPF model for given data and solve it
+    """Construct OPF model for given data and solve it. Return the solution
+    dictionary."""
 
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-
-    :raises ValueError: No model type set
-
-    :return: A dictionary holding result data in MATPOWER notation
-    :rtype: dict
-    """
-
-    opftype = None
     if alldata["doac"]:
         opftype = OpfType.AC
     elif alldata["dodc"]:
@@ -47,100 +34,38 @@ def construct_and_solve_model(env, alldata):
     elif alldata["doiv"]:
         opftype = OpfType.IV
     else:
-        # This should have been checked before already but it can't hurt to have this error
-        raise ValueError(
-            "No model type set. Have to use exactly 1 of options [doac, dodc, doiv]."
-        )
+        # Should not happen (this would be a configuration setup bug)
+        raise ValueError("No model type set")
 
-    logger.info(f"\n{opftype.value} formulation.")
-
-    starttime = time.time()
-
-    sol_count = 0
-    solution = None
-    modelname = opftype.value + "_Formulation_Model"
+    logger.info(f"Running {opftype.value}OPF formulation.")
 
     # Handle special settings
     lpformulator_setup(alldata, opftype)
 
     # Create model
-    with gp.Model(modelname, env=env) as model:
-        # Add model variables and constraints
-        lpformulator_body(alldata, model, opftype)
+    with gp.Model(f"{opftype.value}_Formulation_Model", env=env) as model:
+        # Formulate model, update and print statistics
 
-        # Update to get correct model stats
+        tic = time.perf_counter()
+
+        if opftype == OpfType.AC:
+            lpformulator_ac_body(alldata, model)
+        elif opftype == OpfType.DC:
+            lpformulator_dc_body(alldata, model)
+        elif opftype == OpfType.IV:
+            lpformulator_iv_body(alldata, model)
+        else:
+            raise ValueError("Unknown OPF type.")
+
+        toc = time.perf_counter()
+
+        logger.info(f"{opftype.value}OPF model constructed ({toc - tic:.2f}s). Stats:")
         model.update()
-        logger.info(
-            f"Constructed {opftype.value}OPF model with {model.NumVars} variables and {model.NumConstrs} constraints.\n"
-        )
+        model.printStats()
 
-        # Solve the OPF model
-        sol_count = lpformulator_optimize(alldata, model, opftype)
-
-        endtime = time.time()
-        logger.info(
-            f"Overall time taken (model construction + optimization): {endtime - starttime} s."
-        )
-        logger.info(f"Solution count: {sol_count}.")
-
-        # Need to turn Gurobi solution into a dictionary following MATPOWER notation
-        solution = turn_solution_into_result_dict(alldata, model, opftype, "result")
-
-    return solution
-
-
-def lpformulator_body(alldata, model, opftype):
-    """
-    Calls the corresponding model construction method
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param model: Gurobi model to be constructed
-    :type model: :class: `gurobipy.Model`
-    :param opftype: Type of OPF formulation
-    :type opftype: :enum: `OpfType`
-
-    :raises ValueError: Unknown OPF type
-    """
-    if opftype == OpfType.AC:
-        lpformulator_ac_body(alldata, model)
-    elif opftype == OpfType.DC:
-        lpformulator_dc_body(alldata, model)
-    elif opftype == OpfType.IV:
-        lpformulator_iv_body(alldata, model)
-    else:
-        raise ValueError("Unknown OPF type.")
-
-
-def compute_violations_from_voltages(env, alldata):
-    """
-    Calls the corresponding violation checker function
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param model: Gurobi model to be constructed
-    :type model: :class: `gurobipy.Model`
-    :param opftype: Type of OPF formulation
-    :type opftype: :enum: `OpfType`
-
-    :return: Dictionary holding case data following the MATPOWER notation with additional
-             violations fields
-    :rtype: dict
-    """
-
-    logger.info("Computing violations from given voltage inputs.")
-    violations = None
-    # Create model
-    with gp.Model("AC_Violations_Model", env=env) as model:
-        # Add model variables and constraints
-        lpformulator_body(alldata, model, OpfType.AC)
-        # Compute violations
-        lpformulator_ac_strictchecker(alldata, model)
-        violations = turn_solution_into_result_dict(
-            alldata, model, OpfType.AC, "violation"
-        )
-
-    return violations
+        # Solve the OPF model, return a dictionary following MATPOWER notation
+        lpformulator_optimize(alldata, model, opftype)
+        return turn_solution_into_result_dict(alldata, model, opftype, "result")
 
 
 def lpformulator_optimize(alldata, model, opftype):
@@ -150,24 +75,10 @@ def lpformulator_optimize(alldata, model, opftype):
     Resolves model with DualReductions=0 when model is found to
     be infeasible or unbounded in order to get more information.
 
-    Computes an IIS if model is found to be infeasible and saves
-    it to an `.ilp` file.
-
     Resolves model with additional settings if numerical trouble
-    has been encountered to possible still get a solution.
+    has been encountered to possibly still get a solution.
 
-    In any other case, returns the feasible solution count.
-
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param model: Constructed Gurobi model
-    :type model: :class: `gurobipy.Model`
-    :param opftype: Type of OPF formulation
-    :type opftype: :enum: `OpfType`
-
-    :return: Number of found solutions
-    :rtype: int
+    Returns the feasible solution count.
     """
 
     # NonConvex solver needed for normal AC models
@@ -195,7 +106,7 @@ def lpformulator_optimize(alldata, model, opftype):
 
     # Check model status and re-optimize if numerical trouble or inconclusive results.
     if model.status == GRB.INF_OR_UNBD:
-        logger.info("\nModel Status: infeasible or unbounded.")
+        logger.info("Model Status: infeasible or unbounded.")
         logger.info("Re-optimizing with DualReductions turned off.")
         model.Params.DualReductions = 0
         model.optimize()
@@ -204,7 +115,7 @@ def lpformulator_optimize(alldata, model, opftype):
         raise ValueError("Infeasible model")
 
     if model.status == GRB.NUMERIC:
-        logger.info("\nModel Status: Numerically difficult model.")
+        logger.info("Solve failed due to numerical issues.")
         logger.info(
             "Re-optimizing with settings focused on improving numerical stability."
         )
@@ -213,19 +124,10 @@ def lpformulator_optimize(alldata, model, opftype):
         model.reset()
         model.optimize()
 
-    elif model.status == GRB.UNBOUNDED:
-        logger.info("\nModel Status: unbounded.")
-
-    elif model.status == GRB.INTERRUPTED:
-        logger.info("\nModel Status: interrupted.")
-
-    elif model.status == GRB.OPTIMAL:
-        logger.info("\nModel Status: optimal.")
-
     # Only print objective value and solution quality if at least
     # one feasible point is available
     if model.SolCount > 0:
-        logger.info(f"Objective value = {model.objVal}.")
+        logger.info(f"Objective value = {model.objVal}. Solution quality:")
         model.printQuality()
 
     return model.SolCount
@@ -234,11 +136,6 @@ def lpformulator_optimize(alldata, model, opftype):
 def lpformulator_setup(alldata, opftype):
     """
     Helper function to handle specific settings before starting optimization
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param opftype: Type of OPF formulation
-    :type opftype: :enum: `OpfType`
     """
 
     logger.info("Auxiliary setup.")
@@ -268,7 +165,8 @@ def lpformulator_setup(alldata, opftype):
         alldata["branchswitching_mip"] = False
         alldata["branchswitching_comp"] = False
         logger.info(
-            "  IV formulation currently does not support branch switching. Turning it off."
+            "IV formulation currently does not support branch switching. "
+            "Turning it off."
         )
 
     # The following settings are only for AC
@@ -320,6 +218,9 @@ def turn_solution_into_result_dict(alldata, model, opftype, type):
              The "success" entry states whether a feasible solution has been found
              during the optimization process
     :rtype: dict
+
+    TODO most of this could be done by copying the case input dictionary, instead
+    of reverse engineering it here
     """
 
     # Reconstruct case data from our data

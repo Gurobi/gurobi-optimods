@@ -9,7 +9,14 @@ import gurobipy as gp
 from gurobipy import GRB
 
 from gurobi_optimods.datasets import load_opf_example
-from gurobi_optimods.opf import converters, grbformulator, grbformulator_common
+from gurobi_optimods.opf import (
+    converters,
+    grbformulator,
+    grbformulator_ac,
+    grbformulator_common,
+    grbformulator_dc,
+    grbformulator_iv,
+)
 from gurobi_optimods.opf.api import _solve_opf_model_internal
 
 
@@ -234,9 +241,7 @@ class TestFingerprints(unittest.TestCase):
                         )
                     )
                     grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.DC)
-                    grbformulator.lpformulator_body(
-                        alldata, model, grbformulator.OpfType.DC
-                    )
+                    grbformulator_dc.lpformulator_dc_body(alldata, model)
                     model.update()
                     self.assertEqual(model.Fingerprint, example["dc_fingerprint"])
 
@@ -261,9 +266,7 @@ class TestFingerprints(unittest.TestCase):
                         )
                     )
                     grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.DC)
-                    grbformulator.lpformulator_body(
-                        alldata, model, grbformulator.OpfType.DC
-                    )
+                    grbformulator_dc.lpformulator_dc_body(alldata, model)
                     model.update()
                     self.assertEqual(
                         model.Fingerprint, example["dc_switching_fingerprint"]
@@ -290,9 +293,7 @@ class TestFingerprints(unittest.TestCase):
                         )
                     )
                     grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
-                    grbformulator.lpformulator_body(
-                        alldata, model, grbformulator.OpfType.AC
-                    )
+                    grbformulator_ac.lpformulator_ac_body(alldata, model)
                     model.update()
                     self.assertEqual(model.Fingerprint, example["ac_fingerprint"])
 
@@ -317,9 +318,7 @@ class TestFingerprints(unittest.TestCase):
                         )
                     )
                     grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
-                    grbformulator.lpformulator_body(
-                        alldata, model, grbformulator.OpfType.AC
-                    )
+                    grbformulator_ac.lpformulator_ac_body(alldata, model)
                     model.update()
                     self.assertEqual(
                         model.Fingerprint, example["ac_switching_fingerprint"]
@@ -346,9 +345,7 @@ class TestFingerprints(unittest.TestCase):
                         )
                     )
                     grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
-                    grbformulator.lpformulator_body(
-                        alldata, model, grbformulator.OpfType.AC
-                    )
+                    grbformulator_ac.lpformulator_ac_body(alldata, model)
                     model.update()
                     self.assertEqual(model.Fingerprint, example["ac_relax_fingerprint"])
 
@@ -373,9 +370,7 @@ class TestFingerprints(unittest.TestCase):
                         )
                     )
                     grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
-                    grbformulator.lpformulator_body(
-                        alldata, model, grbformulator.OpfType.AC
-                    )
+                    grbformulator_ac.lpformulator_ac_body(alldata, model)
                     model.update()
                     self.assertEqual(
                         model.Fingerprint, example["ac_relax_switching_fingerprint"]
@@ -402,9 +397,7 @@ class TestFingerprints(unittest.TestCase):
                         )
                     )
                     grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.IV)
-                    grbformulator.lpformulator_body(
-                        alldata, model, grbformulator.OpfType.IV
-                    )
+                    grbformulator_iv.lpformulator_iv_body(alldata, model)
                     model.update()
                     self.assertEqual(model.Fingerprint, example["iv_fingerprint"])
 
