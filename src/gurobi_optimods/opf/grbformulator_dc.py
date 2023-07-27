@@ -33,7 +33,6 @@ def _add_dc_gen_bus_variables(alldata, model):
 
     fixtolerance = alldata["fixtolerance"]
 
-    numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     gens = alldata["gens"]
 
@@ -41,8 +40,7 @@ def _add_dc_gen_bus_variables(alldata, model):
     Pinjvar = {}
     GenPvar = {}
 
-    for j in range(1, numbuses + 1):
-        bus = buses[j]
+    for bus in buses.values():
         ubound = 2 * math.pi
         lbound = -ubound
 
@@ -99,10 +97,8 @@ def _add_dc_branch_variables(alldata, model):
     twinPvar_f = {}
 
     branches = alldata["branches"]
-    numbranches = alldata["numbranches"]
 
-    for j in range(1, 1 + numbranches):
-        branch = branches[j]
+    for j, branch in branches.items():
         f = branch.f
         t = branch.t
         count_of_f = IDtoCountmap[f]
@@ -130,8 +126,7 @@ def _add_dc_branch_variables(alldata, model):
 
     zvar = {}
     if alldata["branchswitching_mip"]:
-        for j in range(1, 1 + numbranches):
-            branch = branches[j]
+        for j, branch in branches.items():
             f = branch.f
             t = branch.t
             zvar[branch] = model.addVar(
@@ -152,7 +147,6 @@ def _add_dc_branch_activepower_constraints(alldata, model):
     """Add constraints defining active power"""
 
     buses = alldata["buses"]
-    numbranches = alldata["numbranches"]
     branches = alldata["branches"]
     IDtoCountmap = alldata["IDtoCountmap"]
 
@@ -163,8 +157,7 @@ def _add_dc_branch_activepower_constraints(alldata, model):
     zvar = alldata["MIP"]["zvar"]
 
     count = 0
-    for j in range(1, 1 + numbranches):
-        branch = branches[j]
+    for j, branch in branches.items():
         f = branch.f
         t = branch.t
         count_of_f = IDtoCountmap[f]
@@ -221,34 +214,29 @@ def _add_dc_branch_activepower_constraints(alldata, model):
 def _add_dc_bus_balance_constraints(alldata, model):
     """Balance definintions"""
 
-    numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     branches = alldata["branches"]
     Pvar_f = alldata["LP"]["Pvar_f"]
     Pinjvar = alldata["LP"]["Pinjvar"]
 
-    balancecons = {}
-    for j in range(1, 1 + numbuses):
-        bus = buses[j]
-        expr = gp.LinExpr()
-        for branchid in bus.frombranchids.values():
-            expr.add(Pvar_f[branches[branchid]])
-
-        for branchid in bus.tobranchids.values():
-            expr.add(-Pvar_f[branches[branchid]])
-        # Create dictionary accessed by bus holding these constraints to
-        # access their duals afterwards
-        balancecons[bus] = model.addConstr(
-            expr == Pinjvar[bus], name="PBaldef%d_%d" % (j, bus.nodeID)
+    alldata["LP"]["balancecons"] = {
+        bus: model.addConstr(
+            gp.quicksum(
+                Pvar_f[branches[branchid]] for branchid in bus.frombranchids.values()
+            )
+            - gp.quicksum(
+                Pvar_f[branches[branchid]] for branchid in bus.tobranchids.values()
+            )
+            == Pinjvar[bus],
+            name="PBaldef%d_%d" % (j, bus.nodeID),
         )
-
-    alldata["LP"]["balancecons"] = balancecons
+        for j, bus in buses.items()
+    }
 
 
 def _add_dc_bus_injection_constraints(alldata, model):
     """Injection definitions"""
 
-    numbuses = alldata["numbuses"]
     buses = alldata["buses"]
     numbranches = alldata["numbranches"]
     branches = alldata["branches"]
@@ -257,24 +245,20 @@ def _add_dc_bus_injection_constraints(alldata, model):
     Pinjvar = alldata["LP"]["Pinjvar"]
     GenPvar = alldata["LP"]["GenPvar"]
 
-    for j in range(1, 1 + numbuses):
-        bus = buses[j]
-        expr = gp.LinExpr()
-
-        if len(bus.genidsbycount) > 0:
-            for genid in bus.genidsbycount:
-                gen = gens[genid]
-                expr.add(GenPvar[gen])
-
-        model.addConstr(Pinjvar[bus] == expr - bus.Pd, name="Bus_PInj_%d" % j)
+    for j, bus in buses.items():
+        model.addConstr(
+            Pinjvar[bus]
+            == gp.quicksum(GenPvar[gens[genid]] for genid in bus.genidsbycount)
+            - bus.Pd,
+            name="Bus_PInj_%d" % j,
+        )
 
     if alldata["branchswitching_mip"]:
-        expr = gp.LinExpr()
         N = math.floor(
             numbranches * alldata["minactivebranches"]
         )  # <<<<<<---- here is the heuristic lower bound
         logger.info(f"In bound_zs constraint, N = {N}.")
-        for j in range(1, 1 + numbranches):
-            branch = branches[j]
-            expr.add(zvar[branch])
-        model.addConstr(expr >= N, name="sumz_lower_heuristic_bound")
+        model.addConstr(
+            gp.quicksum(zvar[branch] for _, branch in branches.items()) >= N,
+            name="sumz_lower_heuristic_bound",
+        )
