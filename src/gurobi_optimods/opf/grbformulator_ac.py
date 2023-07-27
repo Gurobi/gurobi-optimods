@@ -4,6 +4,8 @@ import math
 import gurobipy as gp
 from gurobipy import GRB
 
+from gurobi_optimods.opf.grbformulator_common import set_gencost_objective
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,9 +19,8 @@ def lpformulator_ac_body(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
-    # Create model variables
     lpformulator_ac_create_vars(alldata, model)
-    # Create model constraints
+    set_gencost_objective(alldata, model)
     lpformulator_ac_create_constraints(alldata, model)
 
 
@@ -326,21 +327,6 @@ def lpformulator_ac_create_vars(alldata, model):
     if alldata["dopolar"]:
         lpformulator_ac_create_polar_vars(alldata, model)
 
-    lincostvar = model.addVar(
-        obj=1.0, lb=-GRB.INFINITY, ub=GRB.INFINITY, name="lincost"
-    )
-
-    if alldata["usequadcostvar"]:
-        quadcostvar = model.addVar(obj=1.0, lb=0, ub=GRB.INFINITY, name="quadcost")
-        alldata["LP"]["quadcostvar"] = quadcostvar
-
-    constobjval = 0
-    for gen in gens.values():
-        if gen.status > 0:
-            constobjval += gen.costvector[gen.costdegree]
-
-    constvar = model.addVar(obj=constobjval, lb=1.0, ub=1.0, name="constant")
-
     # Save variable data
     alldata["LP"]["cvar"] = cvar
     alldata["LP"]["svar"] = svar
@@ -371,9 +357,6 @@ def lpformulator_ac_create_vars(alldata, model):
     alldata["LP"][
         "Qinjvar"
     ] = Qinjvar  # Qinjvar is the variable modeling total reactive power injected by bus j into the branches incident with j
-
-    alldata["LP"]["lincostvar"] = lincostvar
-    alldata["LP"]["constvar"] = constvar
 
 
 def lpformulator_ac_create_polar_vars(alldata, model):
@@ -568,46 +551,10 @@ def lpformulator_ac_create_constraints(alldata, model):
     Qinjvar = alldata["LP"]["Qinjvar"]
     GenPvar = alldata["LP"]["GenPvar"]
     GenQvar = alldata["LP"]["GenQvar"]
-    lincostvar = alldata["LP"]["lincostvar"]
     zvar = alldata["MIP"]["zvar"]
 
     logger.info("Creating constraints.")
     logger.info("  Adding cost definition.")
-
-    coeff = [gen.costvector[gen.costdegree - 1] for gen in gens.values()]
-    variables = [GenPvar[gen] for gen in gens.values()]
-    expr = gp.LinExpr(coeff, variables)
-    model.addConstr(expr == lincostvar, name="lincostdef")
-
-    numquadgens = 0
-    for gen in gens.values():
-        if gen.costdegree >= 2 and gen.costvector[0] > 0 and gen.status:
-            numquadgens += 1
-
-    logger.info(
-        f"    Number of generators with quadratic cost coefficient: {numquadgens}."
-    )
-
-    if numquadgens > 0:
-        if alldata["usequadcostvar"]:  # Currently this is always False
-            quadcostvar = alldata["LP"]["quadcostvar"]
-            logger.info("    Adding quadratic cost definition constraint.")
-            qcost = gp.QuadExpr()
-            for gen in gens.values():
-                if gen.costdegree == 2 and gen.costvector[0] != 0:
-                    qcost.add(gen.costvector[0] * GenPvar[gen] * GenPvar[gen])
-
-            model.addConstr(qcost <= quadcostvar, name="qcostdef")
-        else:
-            logger.info("    Adding quadratic cost to objective.")
-            model.update()  # Necessary to flush changes in the objective function
-            oldobj = model.getObjective()
-            newobj = gp.QuadExpr(oldobj)
-            for gen in gens.values():
-                if gen.costdegree == 2 and gen.costvector[0] != 0:
-                    newobj.add(gen.costvector[0] * GenPvar[gen] * GenPvar[gen])
-
-            model.setObjective(newobj, GRB.MINIMIZE)
 
     # Active PF defs
     logger.info("  Adding active power flow definitions.")
