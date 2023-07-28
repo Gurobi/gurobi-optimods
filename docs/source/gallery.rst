@@ -30,6 +30,12 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/mwis.png
 
+    .. grid-item-card:: Optimal Power Flow
+        :link: mods/opf/opf
+        :link-type: doc
+        :text-align: center
+        :img-top: mods/figures/opf.png
+
     .. grid-item-card:: Mean-Variance Portfolio
         :link: mods/portfolio
         :link-type: doc
@@ -54,12 +60,6 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/bipartite-matching-flow.png
 
-    .. grid-item-card:: Optimal Power Flow
-        :link: mods/opf/opf
-        :link-type: doc
-        :text-align: center
-        :img-top: mods/figures/opf.png
-
 
 .. toctree::
    :maxdepth: 1
@@ -69,8 +69,8 @@ The OptiMods Gallery
    mods/lad-regression
    mods/min-cost-flow
    mods/mwis
+   mods/opf/opf
    mods/portfolio
    mods/qubo
    mods/sharpe-ratio
    mods/workforce
-   mods/opf/opf
