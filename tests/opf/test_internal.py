@@ -240,7 +240,6 @@ class TestFingerprints(unittest.TestCase):
                             ivtype="aggressive",
                         )
                     )
-                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.DC)
                     grbformulator_dc.lpformulator_dc_body(alldata, model)
                     model.update()
                     self.assertEqual(model.Fingerprint, example["dc_fingerprint"])
@@ -265,7 +264,6 @@ class TestFingerprints(unittest.TestCase):
                             ivtype="aggressive",
                         )
                     )
-                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.DC)
                     grbformulator_dc.lpformulator_dc_body(alldata, model)
                     model.update()
                     self.assertEqual(
@@ -292,7 +290,6 @@ class TestFingerprints(unittest.TestCase):
                             ivtype="aggressive",
                         )
                     )
-                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
                     grbformulator_ac.lpformulator_ac_body(alldata, model)
                     model.update()
                     self.assertEqual(model.Fingerprint, example["ac_fingerprint"])
@@ -317,7 +314,6 @@ class TestFingerprints(unittest.TestCase):
                             ivtype="aggressive",
                         )
                     )
-                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
                     grbformulator_ac.lpformulator_ac_body(alldata, model)
                     model.update()
                     self.assertEqual(
@@ -344,7 +340,6 @@ class TestFingerprints(unittest.TestCase):
                             ivtype="aggressive",
                         )
                     )
-                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
                     grbformulator_ac.lpformulator_ac_body(alldata, model)
                     model.update()
                     self.assertEqual(model.Fingerprint, example["ac_relax_fingerprint"])
@@ -369,7 +364,6 @@ class TestFingerprints(unittest.TestCase):
                             ivtype="aggressive",
                         )
                     )
-                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.AC)
                     grbformulator_ac.lpformulator_ac_body(alldata, model)
                     model.update()
                     self.assertEqual(
@@ -396,7 +390,6 @@ class TestFingerprints(unittest.TestCase):
                             usemipstart=True,
                         )
                     )
-                    grbformulator.lpformulator_setup(alldata, grbformulator.OpfType.IV)
                     grbformulator_iv.lpformulator_iv_body(alldata, model)
                     model.update()
                     self.assertEqual(model.Fingerprint, example["iv_fingerprint"])

@@ -39,9 +39,6 @@ def construct_and_solve_model(env, alldata):
 
     logger.info(f"Running {opftype.value}OPF formulation.")
 
-    # Handle special settings
-    lpformulator_setup(alldata, opftype)
-
     # Create model
     with gp.Model(f"{opftype.value}_Formulation_Model", env=env) as model:
         # Formulate model, update and print statistics
@@ -131,37 +128,6 @@ def lpformulator_optimize(alldata, model, opftype):
         model.printQuality()
 
     return model.SolCount
-
-
-def lpformulator_setup(alldata, opftype):
-    """
-    Helper function to handle specific settings before starting optimization
-    """
-
-    # The following settings are only for AC
-    if opftype != OpfType.AC:
-        return
-
-    branches = alldata["branches"]
-    numbranches = alldata["numbranches"]
-
-    if alldata["usemaxphasediff"]:
-        logger.info(
-            f"Applying max phase diff of {alldata['maxphasediff_deg']} degrees."
-        )
-
-        maxrad = alldata["maxphasediff_rad"]
-        count = 0
-        for j in range(1, 1 + numbranches):
-            branch = branches[j]
-
-            if branch.maxangle_rad > maxrad:
-                branch.maxangle_rad = maxrad
-                count += 1
-            if branch.minangle_rad < -maxrad:
-                branch.minangle_rad = -maxrad
-
-        logger.info(f"Updated {count} maxangle constraints.")
 
 
 def turn_solution_into_result_dict(alldata, model, opftype, type):

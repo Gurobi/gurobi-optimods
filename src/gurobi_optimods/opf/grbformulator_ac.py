@@ -19,6 +19,26 @@ def lpformulator_ac_body(alldata, model):
         assert not alldata["use_ef"]
         assert alldata["skipjabr"]
 
+    if alldata["usemaxphasediff"]:
+        assert False, "Internal setting, never used or tested"
+
+        # Old code from lp_formulator_setup functior (never hit)
+
+        # logger.info(
+        #     f"Applying max phase diff of {alldata['maxphasediff_deg']} degrees."
+        # )
+
+        # maxrad = alldata["maxphasediff_rad"]
+        # count = 0
+        # for j, branch in alldata["branches"].items():
+        #     if branch.maxangle_rad > maxrad:
+        #         branch.maxangle_rad = maxrad
+        #         count += 1
+        #     if branch.minangle_rad < -maxrad:
+        #         branch.minangle_rad = -maxrad
+
+        # logger.info(f"Updated {count} maxangle constraints.")
+
     lpformulator_ac_create_vars(alldata, model)
     set_gencost_objective(alldata, model)
     lpformulator_ac_create_constraints(alldata, model)
