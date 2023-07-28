@@ -33,8 +33,9 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 examples = [
-    "networkx",
     "matplotlib",
+    "networkx",
+    "plotly",
     "scikit-learn"
 ]
 
