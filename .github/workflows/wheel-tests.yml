@@ -38,15 +38,15 @@ jobs:
       - name: Install from built wheel
         run: |
           python -m pip install --find-links dist --no-index --only-binary=:all: gurobi-optimods
-      - name: Test import
-        run: |
-          python -c "import gurobi_optimods"
       - name: Run unit tests
         run: |
           python -m unittest discover -b
-      - name: Install networkx (optional dependency)
+      - name: Fetch dependencies for offline install
         run: |
-          python -m pip install networkx
+          pip wheel --wheel-dir=dist matplotlib networkx plotly scikit-learn
+      - name: Install example dependencies
+        run: |
+          python -m pip install --find-links dist --no-index --only-binary=:all: gurobi-optimods[examples]
       - name: Run additional tests
         run: |
           python -m unittest discover -b
