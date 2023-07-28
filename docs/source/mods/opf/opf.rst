@@ -1,6 +1,11 @@
 Optimal Power Flow
 ==================
 
+.. toctree::
+    :hidden:
+
+    opf_specification
+
 The operation of power systems relies on a number of optimization tasks, known
 as Optimal Power Flow (OPF) problems. The objective of a standard OPF problem is
 to minimize operational cost such that the underlying grid constraints on
