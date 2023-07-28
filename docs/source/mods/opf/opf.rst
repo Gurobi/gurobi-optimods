@@ -108,13 +108,22 @@ be done by using the ``solver_params`` argument. For a full list of all Gurobi
 parameters please refer to `our documentation
 <https://www.gurobi.com/documentation/current/refman/parameter_descriptions.html>`_.
 
-.. code-block:: opf
+.. testcode:: opf
 
     result = opf.solve_opf(
         case,
         opftype="AC",
         solver_params={"TimeLimit": 60}
     )
+
+.. testoutput:: opf
+    :hide:
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
+
+    Set parameter TimeLimit to value 60
+    ...
+    Optimal solution found...
+    ...
 
 The Mod returns the result as a dictionary, following the same `MATPOWER Case
 Format conventions
@@ -150,7 +159,7 @@ Coordinate Information
 In order to plot a previously obtained result, you must provide :math:`(x, y)`
 coordinates for all buses in the network. Coordinates are provided as a
 dictionary mapping bus IDs to coordinates. The OptiMods datasets module provides
-an example set of coordinates for plotting.
+an example set of coordinates for plotting the 9 bus test case:
 
 .. doctest:: opf
     :options: +NORMALIZE_WHITESPACE
