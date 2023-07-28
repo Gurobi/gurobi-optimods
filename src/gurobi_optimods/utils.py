@@ -143,3 +143,12 @@ def optimod(mod_logger=None):
         return optimod_decorated
 
     return optimod_decorator
+
+
+def run(f):
+    """A decorator that will run the body of the decorated function,
+    and then store the result of that function in place of the function’s name.
+
+    From: https://chrisjrn.com/2021/09/10/talk-notes--on-the-use-and-misuse-of-decorators/#run-the-scoped-block
+    """
+    return f()
