@@ -19,18 +19,43 @@ def size_limited_license():
             return True
 
 
-# TODO test invalid data throws an error:
-#
-# - non-quadratic cost vectors, or costtype=1
-# - non-matching gen/gencost lengths
+class TestInvalidData(unittest.TestCase):
+    def setUp(self):
+        self.case = load_opf_example("case9")
 
-# TODO test bad formatting throws an error
-# - len(gencost) != len(gen) or 2xlen(gen)
-# - n not matching costvector
+    def test_costtype_1(self):
+        # Error out, we only handle costtype 2
+        self.case["gencost"][1]["costtype"] = 1
+        with self.assertRaisesRegex(
+            ValueError, "only generator costtype=2 is supported"
+        ):
+            solve_opf(self.case, opftype="AC")
 
-# Test some more minor cases:
-#
-# - out of service generator (esp. gens[numgens]["status"] = 0 if g[7] <= 0 else 1)
+    def test_gencost_costvector_length(self):
+        # Error out if gencost.n is wrong
+        self.case["gencost"][2]["n"] = 4
+        with self.assertRaisesRegex(
+            ValueError, "mismatch between gencost.n and costvector length"
+        ):
+            solve_opf(self.case, opftype="AC")
+
+    def test_nonquadratic_cost(self):
+        # Error out on any nonzero cubic terms or higher
+        self.case["gencost"][0]["n"] = 4
+        self.case["gencost"][0]["costvector"] = [1, 2, 3, 4]
+        with self.assertRaisesRegex(
+            ValueError, "only quadratic and linear cost functions are supported"
+        ):
+            solve_opf(self.case, opftype="AC")
+
+    def test_gencost_matches_gen(self):
+        # Error out if not 1:1 between gen and gencost (we don't handle the
+        # reactive power case)
+        self.case["gen"].append(dict(self.case["gen"][-1]))
+        with self.assertRaisesRegex(
+            ValueError, "mismatch between gen and gencost records"
+        ):
+            solve_opf(self.case, opftype="AC")
 
 
 class TestAPICase9(unittest.TestCase):
