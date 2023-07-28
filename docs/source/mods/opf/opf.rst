@@ -182,26 +182,16 @@ an example set of coordinates for plotting the 9 bus test case:
 Given a solution and a coordinate mapping, the plotting functions return plotly
 figures which can be displayed in a web browser. In the following code, we solve
 the DCOPF problem for a real-world dataset for the city of New York and produce
-a solution plot:
-
-.. testcode:: opf
+a solution plot::
 
     case = datasets.load_opf_example("caseNY")
     solution = opf.solve_opf(case, opftype='DC')
     coordinates = datasets.load_opf_extra("caseNY-coordinates")
     fig = opf.solution_plot(case, coordinates, solution)
+    fig.show()  # open plot in a browser window
 
-.. testoutput:: opf
-    :hide:
-    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
-
-    ...
-    Optimal objective...
-    ...
-
-To open the plot in a browser window, run::
-
-    fig.show()
+.. NB: we cannot do this in a doctest as the model is large and requires a
+.. license. So it's tricky to ensure this code stays working ...
 
 .. figure:: ../figures/opf.png
 
