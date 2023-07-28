@@ -152,6 +152,23 @@ def convert_case_to_internal_format(case_dict):
     e.g. bus type not allowed, illegal angle for branch, bad bus references.
     """
 
+    if len(case_dict["gen"]) != len(case_dict["gencost"]):
+        raise ValueError("Invalid input: mismatch between gen and gencost records")
+
+    for gencost in case_dict["gencost"]:
+        if gencost["costtype"] != 2:
+            raise ValueError("Invalid input: only generator costtype=2 is supported")
+        if gencost["n"] != len(gencost["costvector"]):
+            raise ValueError(
+                "Invalid input: mismatch between gencost.n and costvector length"
+            )
+        if gencost["n"] > 3:
+            if not all(coeff == 0 for coeff in gencost["costvector"][:-3]):
+                raise ValueError(
+                    "Invalid input: only quadratic and linear cost functions "
+                    "are supported"
+                )
+
     # Pre-conversion needed for hacky approach to indexing
     import copy
 
