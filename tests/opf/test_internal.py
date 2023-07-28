@@ -11,7 +11,6 @@ from gurobipy import GRB
 from gurobi_optimods.datasets import load_opf_example
 from gurobi_optimods.opf import (
     converters,
-    grbformulator,
     grbformulator_ac,
     grbformulator_common,
     grbformulator_dc,
