@@ -67,6 +67,13 @@ def build_internal_settings(
         "usequadcostvar": False,
     }
 
+    settings.update(
+        {
+            "maxdispersion_rad": (math.pi / 180.0) * settings["maxdispersion_deg"],
+            "maxphasediff_rad": (math.pi / 180.0) * settings["maxphasediff_deg"],
+        }
+    )
+
     # Set the AC/DC/IV model type
     opftype = opftype.lower()
     if opftype in ["ac", "dc", "iv"]:

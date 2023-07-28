@@ -138,42 +138,9 @@ def lpformulator_setup(alldata, opftype):
     Helper function to handle specific settings before starting optimization
     """
 
-    logger.info("Auxiliary setup.")
-    if opftype == OpfType.DC:
-        if alldata["branchswitching_comp"]:
-            logger.info("branchswitching = 2 only available for AC. Turning it off.")
-            alldata["branchswitching_comp"] = False
-
-        return
-
-    # Additional setup is only meant for AC and IV
-    alldata["maxdispersion_rad"] = (math.pi / 180.0) * alldata["maxdispersion_deg"]
-
-    if alldata["dopolar"]:
-        logger.info("  Polar formulation, shutting down incompatible options:")
-        alldata["use_ef"] = False
-        alldata["skipjabr"] = True
-        logger.info("    use_ef, jabr.")
-
-    if alldata["doiv"] and not alldata["use_ef"]:
-        alldata["use_ef"] = True
-        logger.info("  IV formulation requires use_ef. Turning it on.")
-
-    if alldata["doiv"] and (
-        alldata["branchswitching_mip"] or alldata["branchswitching_comp"]
-    ):
-        alldata["branchswitching_mip"] = False
-        alldata["branchswitching_comp"] = False
-        logger.info(
-            "IV formulation currently does not support branch switching. "
-            "Turning it off."
-        )
-
     # The following settings are only for AC
     if opftype != OpfType.AC:
         return
-
-    alldata["maxphasediff_rad"] = (math.pi / 180.0) * alldata["maxphasediff_deg"]
 
     branches = alldata["branches"]
     numbranches = alldata["numbranches"]
