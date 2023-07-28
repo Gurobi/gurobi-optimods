@@ -13,6 +13,11 @@ logger = logging.getLogger(__name__)
 def lpformulator_dc_body(alldata, model):
     """Add variables and constraints for DC formulation to the given model"""
 
+    # Assert compatible settings: Avoiding these asserts when called from the
+    # public API should be handled correctly by build_internal_settings(...).
+    # 1. branchswitching = 2 only available for AC. Turning it off.
+    assert not alldata["branchswitching_comp"]
+
     _add_dc_gen_bus_variables(alldata, model)
     _add_dc_branch_variables(alldata, model)
     set_gencost_objective(alldata, model)

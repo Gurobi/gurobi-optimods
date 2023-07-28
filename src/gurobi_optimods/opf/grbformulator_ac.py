@@ -12,6 +12,13 @@ logger = logging.getLogger(__name__)
 def lpformulator_ac_body(alldata, model):
     """Add variables and constraints for AC formulation to the given model"""
 
+    # Assert compatible settings: Avoiding these asserts when called from the
+    # public API should be handled correctly by build_internal_settings(...).
+    # 1. Polar form incompatible with ef and jabr
+    if alldata["dopolar"]:
+        assert not alldata["use_ef"]
+        assert alldata["skipjabr"]
+
     lpformulator_ac_create_vars(alldata, model)
     set_gencost_objective(alldata, model)
     lpformulator_ac_create_constraints(alldata, model)

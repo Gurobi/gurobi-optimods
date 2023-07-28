@@ -19,6 +19,17 @@ def lpformulator_iv_body(alldata, model):
     :type model: :class: `gurobipy.Model`
     """
 
+    # Assert compatible settings: Avoiding these asserts when called from the
+    # public API should be handled correctly by build_internal_settings(...).
+    # 1. Polar form incompatible with jabr
+    if alldata["dopolar"]:
+        assert alldata["skipjabr"]
+    # 2. IV formulation currently does not support branch switching.
+    assert not alldata["branchswitching_mip"]
+    assert not alldata["branchswitching_comp"]
+    # 3. IV formulation requires ef constraints.
+    assert alldata["use_ef"]
+
     lpformulator_iv_create_vars(alldata, model)
     set_gencost_objective(alldata, model)
     lpformulator_iv_create_constraints(alldata, model)
@@ -66,6 +77,8 @@ def lpformulator_iv_create_vars(alldata, model):
     logger.info('Added %d cff variables\n'%(varcount))
     """
 
+    # TODO shouldn't this check whether use_ef is True? Or is it always needed
+    # (even with polar)?
     lpformulator_ac_create_efvars(alldata, model)
 
     # Next, generator variables
