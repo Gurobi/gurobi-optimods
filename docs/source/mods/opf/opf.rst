@@ -322,20 +322,34 @@ violated by the given input voltages.
 Inspecting Violations Graphically
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Similar to generating a graphical representation of a feasible solution, it is also possible to generate a figure representing the violations within a given power grid. We can use the :func:`gurobi_optimods.opf.violation_plot` to generate a :class:`plotly.graph_objects.Figure` object that can be displayed in, e.g., a browser window. Please note that it is required to install the ``plotly`` package to use this functionality. In addition to bus coordinates and case information, we also need to provide the violations dictionary to the function. In the following we use the previously discussed violated solution and plot the result.
+Similar to generating a graphical representation of a feasible solution, it is
+also possible to generate a figure representing the violations within a given
+power grid. We can use the :func:`gurobi_optimods.opf.violation_plot` for this.
+The violations result is provided as input, along with the case and coordinate
+data, to produce this plot.
 
-.. code-block::
+.. testcode:: opf
 
-    volts_dict = datasets.load_opf_extra("case9-voltages")
+    voltages = datasets.load_opf_extra("case9-voltages")
     case = datasets.load_opf_example("case9")
-    coords_dict = datasets.load_opf_extra("case9-coordinates")
-    violations = opf.compute_violations(case, volts_dict)
-    fig = opf.violation_plot(case, coords, violations)
-    fig.show()
+    coordinates = datasets.load_opf_extra("case9-coordinates")
+    violations = opf.compute_violations(case, voltages)
+    fig = opf.violation_plot(case, coordinates, violations)
+
+.. testoutput:: opf
+    :hide:
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
+
+    ...
+    Warning: branch # 7 has 'from' flow magnitude...
+    ...
 
 .. image:: ../figures/violations_opf.png
 
-In the above image, you can see the power grid generated out of the given network data together with the coordinate and violation information. The red circles depict buses where the voltage magnitude or real or reactive power injections are violated. Red marked branches depict branches with violated limits.
+The above image shows the power grid generated from the given network data
+together with coordinate and violation data. The red circles depict buses where
+the voltage magnitude or real or reactive power injections are violated. Red
+marked branches depict branches with violated limits.
 
 
 Case and Result Dictionaries
