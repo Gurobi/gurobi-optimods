@@ -1,22 +1,30 @@
 Optimal Power Flow
 ==================
 
-The operation of power systems relies on a number of optimization tasks, known as *optimal power flow* (*OPF*) problems. The objective of a standard OPF problem is to minimize operation cost such that the underlying grid constraints, such as generation, demand, and voltage limits, are satisfied.
+The operation of power systems relies on a number of optimization tasks, known
+as Optimal Power Flow (OPF) problems. The objective of a standard OPF problem is
+to minimize operational cost such that the underlying grid constraints on
+generation, demand, and voltage limits, are satisfied.
 
-In this mod, we consider the cases of *alternating current* (*AC*) and *direct current* (*DC*) OPF formulations. The ACOPF problem in its natural form requires the introduction of complex numbers in order to formulate the voltage. We circumvent the usage of complex numbers by using the so-called cartesian-coordinates formulation where we introduce additional optimization variables to formulate the complex terms via nonconvex quadratic relationships. The DCOPF problem is an approximation of the ACOPF problem where additional assumptions are made in order to make the optimization model linear. While the additional assumptions result in potential loss of solution accuracy, they make the DCOPF problem a lot easier to solve. This is especially useful if the solution accuracy can be neglected in favor of solution time and problem size. For additional information regarding the formulations, please refer to the :doc:`opf_specification`.
+In this mod, we consider the cases of Alternating Current (AC) and Direct
+Current (DC) OPF formulations. The ACOPF problem in its natural form requires
+the introduction of complex numbers in order to formulate voltage constraints.
+This Mod uses a cartesian-coordinates formulation of ACOPF that reformulates
+complex-valued terms via nonconvex quadratic relationships. The DCOPF problem is
+an approximation of the ACOPF problem where additional assumptions to produce
+linear constraints. While the additional assumptions result in potential loss of
+solution accuracy, they make the DCOPF problem a lot easier to solve. This is
+especially useful if the solution accuracy can be neglected in favor of solution
+time and problem size. For full details of the formulations, please refer to the
+:doc:`opf_specification`.
 
-Here we assume basic familiarity with concepts such as *voltage* (potential energy), *current* (charge flow), and *power* (instantaneous energy generation or consumption).  The engineering community also uses the terms *bus* (nodes in a network, with some simplification) and *branch* (arc in a network, a connection between two buses, typically a line or a transformer). For more details and more comprehensive descriptions of power systems and the underlying problems, please refer to the `Recommended Literature`_ section found further down below.
-
-
-Problem Specification
----------------------
-
-The problem specification of an OPF problem is quite involved and lengthy. Thus, we ask the reader to refer to the
-
-.. toctree::
-    :maxdepth: 1
-
-    opf_specification
+Here we assume basic familiarity with concepts such as *voltage* (potential
+energy), *current* (charge flow), and *power* (instantaneous energy generation
+or consumption). The engineering community also uses the terms *bus* to refer to
+nodes in a network, and branch to refer to arcs in a network (a connection
+between two buses, typically a line or a transformer). For more details and
+comprehensive descriptions of power systems and the underlying problems, please
+refer to the `Recommended Literature`_ section.
 
 Solving an OPF Problem
 ----------------------
