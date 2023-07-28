@@ -1,6 +1,7 @@
 # Tests of plotting functions
 # FIXME: "unclosed socket" warnings when showing the plot
 
+import gzip
 import json
 import pathlib
 import unittest
@@ -118,11 +119,12 @@ class TestGraphicsNewYork(unittest.TestCase):
         self.plot_graphics = False
         self.case = load_opf_example("caseNY")
         self.coords = load_opf_extra("caseNY-coordinates")
-        self.switching_solution = json.loads(
-            pathlib.Path(__file__)
-            .parent.joinpath("data/ny_dc_switching_solution.json")
-            .read_text()
-        )
+        with gzip.open(
+            pathlib.Path(__file__).parent.joinpath(
+                "data/ny_dc_switching_solution.json.gz"
+            )
+        ) as infile:
+            self.switching_solution = json.load(infile)
 
     def test_dc_solution(self):
         # Solve and plot DC solution
