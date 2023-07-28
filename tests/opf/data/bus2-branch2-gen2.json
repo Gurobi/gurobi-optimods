@@ -1,0 +1,139 @@
+{
+    "baseMVA": 100.0,
+    "branch": [
+        {
+            "angle": 0.0,
+            "angmax": 360.0,
+            "angmin": -360.0,
+            "b": 0.0,
+            "fbus": 1,
+            "r": 0.0,
+            "rateA": 250.0,
+            "rateB": 250.0,
+            "rateC": 250.0,
+            "ratio": 1.0,
+            "status": 1,
+            "tbus": 4,
+            "x": 0.0576
+        },
+        {
+            "angle": 0.0,
+            "angmax": 360.0,
+            "angmin": -360.0,
+            "b": 0.158,
+            "fbus": 4,
+            "r": 0.017,
+            "rateA": 250.0,
+            "rateB": 250.0,
+            "rateC": 250.0,
+            "ratio": 1.0,
+            "status": 1,
+            "tbus": 5,
+            "x": 0.092
+        }
+    ],
+    "bus": [
+        {
+            "Bs": 0.0,
+            "Gs": 0.0,
+            "Pd": 0.0,
+            "Qd": 0.0,
+            "Va": 1.0,
+            "Vm": 1.0,
+            "Vmax": 1.1,
+            "Vmin": 0.9,
+            "area": 0.0,
+            "baseKV": 345.0,
+            "bus_i": 1,
+            "type": 3,
+            "zone": 1.0
+        },
+        {
+            "Bs": 0.0,
+            "Gs": 0.0,
+            "Pd": 0.0,
+            "Qd": 0.0,
+            "Va": 1.0,
+            "Vm": 1.0,
+            "Vmax": 1.1,
+            "Vmin": 0.9,
+            "area": 0.0,
+            "baseKV": 345.0,
+            "bus_i": 2,
+            "type": 2,
+            "zone": 1.0
+        }
+    ],
+    "gen": [
+        {
+            "Pc1": 0,
+            "Pc2": 0,
+            "Pg": 0.0,
+            "Pmax": 250.0,
+            "Pmin": 10.0,
+            "Qc1max": 0,
+            "Qc1min": 0,
+            "Qc2max": 0,
+            "Qc2min": 0,
+            "Qg": 0.0,
+            "Qmax": 300.0,
+            "Qmin": -300.0,
+            "Vg": 1,
+            "apf": 0,
+            "bus": 1,
+            "mBase": 100,
+            "ramp_10": 0,
+            "ramp_30": 0,
+            "ramp_agc": 0,
+            "ramp_q": 0,
+            "status": 1
+        },
+        {
+            "Pc1": 0,
+            "Pc2": 0,
+            "Pg": 163.0,
+            "Pmax": 300.0,
+            "Pmin": 10.0,
+            "Qc1max": 0,
+            "Qc1min": 0,
+            "Qc2max": 0,
+            "Qc2min": 0,
+            "Qg": 0.0,
+            "Qmax": 300.0,
+            "Qmin": -300.0,
+            "Vg": 1,
+            "apf": 0,
+            "bus": 2,
+            "mBase": 100,
+            "ramp_10": 0,
+            "ramp_30": 0,
+            "ramp_agc": 0,
+            "ramp_q": 0,
+            "status": 1
+        }
+    ],
+    "gencost": [
+        {
+            "costtype": 2,
+            "costvector": [
+                0.11,
+                5,
+                150
+            ],
+            "n": 3,
+            "shutdown": 0,
+            "startup": 1500
+        },
+        {
+            "costtype": 2,
+            "costvector": [
+                0.085,
+                1.2,
+                600
+            ],
+            "n": 3,
+            "shutdown": 0,
+            "startup": 2000
+        }
+    ]
+}
