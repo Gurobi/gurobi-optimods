@@ -34,36 +34,58 @@ refer to the `Recommended Literature`_ section.
 Solving an OPF Problem
 ----------------------
 
-Input
-~~~~~
+This Mod has multiple API functions. Each function takes a dictionary as input
+which describes an OPF case. This case dictionary holds all essential
+information about the underlying network: buses, branch connections, and
+generators. The case dictionary follows the `MATPOWER Case Format conventions
+<https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_. The details
+of the input format are discussed in the `Case and Result Dictionaries`_
+section.
 
-This mod has multiple callable API and convenience functions. All of the main API functions take a so-called *case dictionary* as input. The case dictionary holds all essential information about the underlying network, i.e., information about buses, branch connections, and generators. The case dictionary is meant to follow the `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_. We discuss all details of the case dictionary further down below in the `Case and Result Dictionaries`_ section.
+Several pre-defined MATPOWER cases can be read in from the
+`gurobi_optimods.datasets` module. The following code loads a 9 bus grid
+example:
 
-In the below example code, we read in a pre-defined case dictionary for a small 9 bus grid from our dataset.
+.. testcode:: opf
+
+    from gurobi_optimods import datasets
+
+    case = datasets.load_opf_example("case9")
+
+After reading in or otherwise generating a case dictionary, we can solve an OPF
+problem defined by the given network data. For this task, we use the
+:func:`gurobi_optimods.opf.solve_opf` function. We can define the type of the
+OPF problem that we want to solve by defining the ``opftype`` argument when
+calling the function. Currently, the available options are ``AC``, ``AC_relax``,
+and ``DC``.
+
+- The ``AC`` setting solves an ACOPF problem defined by the given network data.
+  The ACOPF problem is formulated as a nonconvex bilinear model as described in
+  the :ref:`ACOPF <acopf-label>` section of the :doc:`opf_specification`. This
+  setting yields the most accurate model of the physical power system. However,
+  it is also the most difficult problem to solve and thus usually leads to the
+  longer runtimes.
+
+- The ``AC_relax`` setting solves a Second Order Cone (SOC) relaxation of the
+  nonconvex bilinear ACOPF problem formulation defined by the given network
+  data. The relaxation is constructed by dropping nonconvex bilinear terms but
+  simultaneously keeping the convex JABR inequalities, see :ref:`JABR Relaxation
+  <jabr-label>` for more details. This setting often yields a good approximation
+  of the physical power system and is of moderate difficulty.
+
+- The ``DC`` setting solves a DCOPF problem defined by the given network data.
+  The DCOPF problem is a linear approximation of the ACOPF problem, see
+  :ref:`DCOPF <dcopf-label>` section of the :doc:`opf_specification` for more
+  details. This setting only yields a crude approximation of the physical power
+  system, but is usually an easy problem that can be solved very quickly even
+  for large networks.
+
+The ``solve_opf`` function solves an ``AC`` problem unless the ``opftype``
+argument specifies otherwise.
 
 .. testcode:: opf
 
     from gurobi_optimods import opf
-    from gurobi_optimods import datasets
-    case = datasets.load_opf_example("case9")
-
-
-Optimization Process
-~~~~~~~~~~~~~~~~~~~~
-
-After generating a case dictionary, we can solve an OPF problem defined by the given network data. For this task, we use the :func:`gurobi_optimods.opf.solve_opf` function. We can define the type of the OPF problem that we want to solve by defining the ``opftype`` argument when calling the function. Currently, the available options are ``AC``, ``AC_relax``, and ``DC``.
-
-- The ``AC`` setting solves an ACOPF problem defined by the given network data. The ACOPF problem is formulated as a nonconvex bilinear model as described in the :ref:`ACOPF <acopf-label>` section of the :doc:`opf_specification`. This setting yields the most accurate model of the physical power system, but it is also the most difficult problem to solve and thus, usually leads to the longest runtimes.
-
-- The ``AC_relax`` setting solves a Second Order Cone (SOC) relaxation of the nonconvex bilinear ACOPF problem formulation defined by the given network data. The relaxation is constructed by dropping nonconvex bilinear terms but simultaneously keeping the convex JABR inequalities, see :ref:`JABR Relaxation <jabr-label>` for more details. This setting often yields a good approximation of the physical power system and is of moderate difficulty.
-
-- The ``DC`` setting solves a DCOPF problem defined by the given network data. The DCOPF problem is a linear approximation of the ACOPF problem, see :ref:`DCOPF <dcopf-label>` section of the :doc:`opf_specification` for more details. This setting only yields a pretty crude approximation of the physical power system, but is usually an easy problem that can be solved very quickly (even for large networks).
-
-The default value of the ``opftype`` argument is to solve an ``AC`` problem.
-
-The function returns a so-called *result* dictionary which we discuss below.
-
-.. testcode:: opf
 
     result = opf.solve_opf(case, opftype="AC")
 
@@ -78,72 +100,73 @@ The function returns a so-called *result* dictionary which we discuss below.
     Objective value = 5296...
     ...
 
+ACOPF and `Branch-Switching`_ models are most often very hard to solve to
+optimality. For this reason, it is best to pass specific solver settings such
+as, e.g., a `TimeLimit
+<https://www.gurobi.com/documentation/current/refman/timelimit.html>`_. This can
+be done by using the ``solver_params`` argument. For a full list of all Gurobi
+parameters please refer to `our documentation
+<https://www.gurobi.com/documentation/current/refman/parameter_descriptions.html>`_.
 
-It is worth mentioning that ACOPF and `Branch-Switching`_ models are most often very hard to solve to optimality. For this reason, it is best to pass specific solver settings such as, e.g., a `TimeLimit <https://www.gurobi.com/documentation/current/refman/timelimit.html>`_. This can be done by using the ``solver_params`` argument. For a full list of all Gurobi parameters please refer to `our documentation <https://www.gurobi.com/documentation/current/refman/parameter_descriptions.html>`_.
+.. code-block:: opf
 
-.. code-block::
+    result = opf.solve_opf(
+        case,
+        opftype="AC",
+        solver_params={"TimeLimit": 60}
+    )
 
-    result = opf.solve_opf(case, opftype="AC", solver_params={"TimeLimit": 60})
-
-
-Result
-~~~~~~
-
-We successfully solved an ACOPF problem and retrieved a so-called *result dictionary*. The result dictionary follows the same `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ as the case dictionary. However, in the result dictionary some object entries are modified compared to the input case dictionary. These modified fields hold the solution values of the optimization. In some cases, there are also additional fields to store the solution information. We discuss all details of the result dictionary in the `Case and Result Dictionaries`_ section below.
-
-.. doctest:: opf
-
-    >>> result['success']
-    1
-
+The Mod returns the result as a dictionary, following the same `MATPOWER Case
+Format conventions
+<https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ as the case
+dictionary. However, in the result dictionary some object entries are modified
+compared to the input case dictionary. These modified fields hold the solution
+values of the optimization. In some cases, there are also additional fields to
+store the solution information. We discuss all details of the result dictionary
+in the `Case and Result Dictionaries`_ section.
 
 Graphical Representation of Feasible Solutions
 ----------------------------------------------
 
-In addition to solving an OPF problem, this mod also provides the possibility to plot the obtained result as a graphical representation of the network. There are already very involved graphical tools to represent OPF solutions provided by other packages such as
+In addition to solving an OPF problem, this Mod also provides plotting functions
+to display graphical representation of the network and the OPF result. There are
+already very involved graphical tools to represent OPF solutions provided by
+other packages such as:
 
 - `MATPOWER <https://matpower.org>`_
 - `PyPSA <https://pypsa.org/>`_
 - `pandapower <http://www.pandapower.org/>`_
 
+thus the graphical representation provided by this Mod is kept intentionally
+simple. In order to use this functionality, it is necessary to install the
+``plotly`` package as follows::
 
-Thus, the graphical representation provided by this mod is very basic.  In order to use this functionality, it is necessary to install the ``plotly`` package.
+    pip install plotly
 
 
 Coordinate Information
 ~~~~~~~~~~~~~~~~~~~~~~
 
-In order to plot a previously obtained result, an additional input of coordinates for all buses in the network is necessary. The coordinates have to be provided as a *coordinate dictionary*. The recommended way to generate a coordinate dictionary is to use a ``.csv`` file holding all coordinate data. The ``.csv`` file holding the coordinate data has to follow the format
-
-.. code-block::
-
-   index(starting with 0), busID, busname, latitude, longitude
-   0, 1, B1, 44.492, -73.208
-   1, 2, B2, 41.271, -73.953
-   ...
-
-Once a ``.csv`` file holding bus coordinate information is available, we can use the ``read_coords_csv`` function to automatically generate a coordinate dictionary. In the following example we use the ``case9coords.csv`` file from our dataset to generate a coordinate dictionary
-
-.. testcode:: opf
-
-    coords_dict = datasets.load_opf_extra("case9-coordinates")
-
-.. testoutput:: opf
-    :hide:
-    :options: +NORMALIZE_WHITESPACE
-
-    ...
-
+In order to plot a previously obtained result, you must provide :math:`(x, y)`
+coordinates for all buses in the network. Coordinates are provided as a
+dictionary mapping bus IDs to coordinates. The OptiMods datasets module provides
+an example set of coordinates for plotting.
 
 .. doctest:: opf
     :options: +NORMALIZE_WHITESPACE
 
-    >>> coords_dict[1]
-    (44.492, -73.208)
-
-    >>> coords_dict[2]
-    (41.271, -73.953)
-
+    >>> coordinates = datasets.load_opf_extra("case9-coordinates")
+    >>> from pprint import pprint
+    >>> pprint(coordinates)
+    {1: (44.492, -73.208),
+     2: (41.271, -73.953),
+     3: (41.574, -73.966),
+     4: (40.814, -72.94),
+     5: (43.495, -76.451),
+     6: (42.779, -78.427),
+     7: (44.713, -73.456),
+     8: (43.066, -76.214),
+     9: (43.048, -78.854)}
 
 Plotting the Result
 ~~~~~~~~~~~~~~~~~~~
