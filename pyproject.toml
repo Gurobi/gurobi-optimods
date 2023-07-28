@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gurobi-optimods"
-description = "Nice APIs for common optimization tasks"
+description = "Data-driven APIs for common optimization tasks"
 readme = "README.md"
 requires-python = ">=3.8"
 license = "Apache-2.0"
