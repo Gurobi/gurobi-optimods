@@ -153,13 +153,15 @@ simple. In order to use this functionality, it is necessary to install the
     pip install plotly
 
 
-Coordinate Information
-~~~~~~~~~~~~~~~~~~~~~~
+Plotting the Result
+~~~~~~~~~~~~~~~~~~~
 
 In order to plot a previously obtained result, you must provide :math:`(x, y)`
 coordinates for all buses in the network. Coordinates are provided as a
 dictionary mapping bus IDs to coordinates. The OptiMods datasets module provides
 an example set of coordinates for plotting the 9 bus test case:
+
+.. TODO is it mapping bus IDs? Or positions in the bus list of the case?
 
 .. doctest:: opf
     :options: +NORMALIZE_WHITESPACE
@@ -177,23 +179,37 @@ an example set of coordinates for plotting the 9 bus test case:
      8: (43.066, -76.214),
      9: (43.048, -78.854)}
 
-Plotting the Result
-~~~~~~~~~~~~~~~~~~~
+Given a solution and a coordinate mapping, the plotting functions return plotly
+figures which can be displayed in a web browser. In the following code, we solve
+the DCOPF problem for a real-world dataset for the city of New York and produce
+a solution plot:
 
-After obtaining a result dictionary as discussed in `Solving an OPF Problem`_ and generating a coordinates dictionary, we can generate a :class:`plotly.graph_objects.Figure` object that can be displayed in, e.g., a browser window. Please note that it is required to install the ``plotly`` package to use this functionality. In the following, we solve the DCOPF problem for a given network data for the city of New York and plot the result.
+.. testcode:: opf
 
-.. code-block::
-
-    import plotly
     case = datasets.load_opf_example("caseNY")
-    result = opf.solve_opf(case, opftype='DC')
-    coords_dict = datasets.load_opf_extra("caseNY-coordinates")
-    fig = opf.solution_plot(case, coords_dict, solution)
+    solution = opf.solve_opf(case, opftype='DC')
+    coordinates = datasets.load_opf_extra("caseNY-coordinates")
+    fig = opf.solution_plot(case, coordinates, solution)
+
+.. testoutput:: opf
+    :hide:
+    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
+
+    ...
+    Optimal objective...
+    ...
+
+To open the plot in a browser window, run::
+
     fig.show()
 
-.. image:: ../figures/opf.png
+.. figure:: ../figures/opf.png
 
-In the above image, you can see the power grid generated out of the given network data together with the coordinate information. The colored circles depict generators and the amount of power they generate
+    DCOPF solution for the New York power grid example dataset
+
+The above image shows the grid solution generated from the given network data,
+plotted using the provided coordinates. The colored circles depict generators
+and the amount of power they generate:
 
 - Black bus: Power generation :math:`\leq 75` and load :math:`< 50`
 - Blue bus: Power generation :math:`\leq 75` and load :math:`\geq 50`
@@ -204,12 +220,29 @@ In the above image, you can see the power grid generated out of the given networ
 Branch-Switching
 ----------------
 
-An important extension of the OPF problem is the so-called Branch-Switching, where we are allowed to turn off branches. Note that already turning off a single branch changes the whole power flow through the network. Thus in practice, it is rare that branches are turned off at all. If any are turned off, then it is usually only a small fraction of the overall power grid. For the mathematical formulation, please refer to the :ref:`Branch-Switching <branchswitching-label>` subsection of the :doc:`opf_specification`. In order to enable branch-switching in a given OPF problem, it is necessary to set the ``branch_switching`` argument to ``True`` when calling the :func:`gurobi_optimods.opf.solve_opf` function. The default value for the ``branch_switching`` argument is ``False`` (turned off). This mod additionally offers the possibility to control the number of branches that has to stay turned on via the ``min_active_branches`` argument. In practice, it is expected that only a very small fraction of branches are turned off. Thus, the default value of the ``min_active_branches`` argument is 0.9 (90%). Additionally, the argument ``use_mip_start`` controls whether a trivial starting point for the Branch-Switching MIP is used. The default value is ``False``. In the following, we solve an artificially altered version of a small 9 bus network to see whether branches could be turned off.
+An important extension of the OPF problem is Branch Switching, where branches
+may be turned off. Note that already turning off a single branch changes the
+whole power flow through the network. Thus in practice, it is rare that branches
+are turned off at all, even if this option is enabled. If any are turned off,
+then it is usually only a small fraction of the overall power grid. For the
+mathematical formulation, please refer to the :ref:`Branch-Switching
+<branchswitching-label>` subsection of the :doc:`opf_specification`.
+
+To enable branch-switching in a given OPF problem, set the ``branch_switching``
+argument to ``True`` when calling :func:`gurobi_optimods.opf.solve_opf`. The Mod
+additionally offers the possibility to control the number of branches that must
+remain switched on via the ``min_active_branches`` argument. In practice, it is
+expected that only a very small fraction of branches are turned off. Thus, the
+default value of the ``min_active_branches`` argument is 0.9 (90%). In the
+following example, we solve a modified version of the 9 bus network to see
+whether branch switching allows a better solution.
 
 .. testcode:: opf
 
     case = datasets.load_opf_example("case9-switching")
-    result = opf.solve_opf(case, opftype="AC", branch_switching=True, min_active_branches=0.1)
+    result = opf.solve_opf(
+        case, opftype="AC", branch_switching=True, min_active_branches=0.1
+    )
 
 .. testoutput:: opf
     :hide:
@@ -219,59 +252,53 @@ An important extension of the OPF problem is the so-called Branch-Switching, whe
     Optimize a model with 278 rows, 185 columns and 694 nonzeros
     ...
 
+Plotting the resulting solution shows that one branch has been turned off in the
+optimal solution. Please note, that the used examplary network has been
+artificially adjusted to achieve this result and this is **not** the usual
+behavior in a realistic power grid of such small size.
 
-We can see in the below graphic, that indeed 1 branch has been turned off in the optimal solution. Please note, that the used examplary network has been artificially adjusted to achieve this result and this is **not** the usual behavior in a realistic power grid of such small size.
+.. figure:: ../figures/switching_opf.png
 
-.. image:: ../figures/switching_opf.png
-
+    Branch switching solution. The plot highlighted the switched-off branch in
+    red
 
 Violations for Pre-defined Voltage Values
 -----------------------------------------
 
-In practice, it is likely that we have voltage magnitudes and voltage angles for each bus at hand and would like to know whether these values are actually feasible within a given network. To tackle this, we can use the :func:`gurobi_optimods.opf.compute_violations` function. This function takes a *voltage dictionary* and a case dictionary as arguments and is discussed in more detail below.
+In practice we may have voltage magnitudes and voltage angles for each bus at
+hand and would like to know whether these values are actually feasible within a
+given network. To tackle this problem, we can use the
+:func:`gurobi_optimods.opf.compute_violations` function. This function takes a
+set of bus voltages in addition to the case data and returns the computed
+violations in this voltage solution.
 
-
-Voltage Information
-~~~~~~~~~~~~~~~~~~~
-
-In order to compute possible violations for given voltage data, an additional input of voltage information for all buses in the network is necessary. The voltage magnitudes (Vm) and voltage angles (Va) have to be provided as a *voltage dictionary*. The recommended way to generate a voltage dictionary is to use a ``.csv`` holding all voltage data. The ``.csv`` file holding the voltage data has to follow the format
-
-.. code-block::
-
-   index(starting with 0), busID, busname, Vm, Va
-   0, 1, B1, 1.089026, 0.000000
-   1, 2, B2, 1.099999, 20.552543
-   ...
-
-Once a ``.csv`` file holding voltage information for every bus is available, we can use the ``read_voltages_csv`` function to automatically generate a voltage dictionary. In the following example we use the ``case9volts.csv`` file to generate a voltage dictionary
-
-.. testcode:: opf
-
-    volts_dict = datasets.load_opf_extra("case9-voltages")
-
-.. testoutput:: opf
-    :hide:
-    :options: +NORMALIZE_WHITESPACE
-
-    ...
-
+Bus voltages are provided as a dictionary mapping the Bus ID to a pair
+:math:`(V_m, V_a)` where :math:`V_m` is the voltage magnitude and :math:`V_a` is
+the voltage angle. An example is provided for the 9 bus case:
 
 .. doctest:: opf
-    :options: +NORMALIZE_WHITESPACE
 
-    >>> volts_dict[1]
-    (1.089026, 0.0)
+    >>> voltages = datasets.load_opf_extra("case9-voltages")
+    >>> pprint(voltages)
+    {1: (1.089026, 0.0),
+     2: (1.099999, 20.552543),
+     3: (1.090717, 16.594399),
+     4: (1.084884, -2.408447),
+     5: (1.096711, 2.43001),
+     6: (1.099999, 11.859651),
+     7: (1.072964, 9.257936),
+     8: (1.066651, 11.200108),
+     9: (1.08914, 2.847507)}
 
-    >>> volts_dict[2]
-    (1.099999, 20.552543)
 
+Using this voltage data, we can check for possible model violations by calling
+the :func:`gurobi_optimods.opf.compute_violations` function. The function
+returns a dictionary which follows the `MATPOWER Case Format
+<https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ with
+additional fields storing the violations for particular buses and branches.
 
-Checking for Violations
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Once we have a voltage dictionary at hand, we can check for possible model violations by calling the :func:`gurobi_optimods.opf.compute_violations` function. In addition to the verbose output, the function returns a *violations dictionary* which similar to the case dictionary follows the `MATPOWER Case Format <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_. However, the violations dictionary has additional fields storing the violations for particular buses and branches.
-
-The following fields in the violations dictionary are added to store violations data.
+The following fields in the violations dictionary are added to store violations
+data:
 
 - ``violation['bus'][i]['Vmviol']`` Voltage magnitude violation at bus `i`
 - ``violation['bus'][i]['Pviol']`` real power injection violation at bus `i`
@@ -299,8 +326,8 @@ The following fields in the violations dictionary are added to store violations 
     >>> print(violations['bus'][3]['Pviol'])
     -318.8997836192236
 
-We can see that among others, the limit at branch 6 and the real power injection at bus 3 are violated.
-
+In this case, the limit at branch 6 and the real power injection at bus 3 are
+violated by the given input voltages.
 
 Inspecting Violations Graphically
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
