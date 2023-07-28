@@ -56,7 +56,7 @@ def construct_and_solve_model(env, alldata):
 
         toc = time.perf_counter()
 
-        logger.info(f"{opftype.value}OPF model constructed ({toc - tic:.2f}s). Stats:")
+        logger.info(f"{opftype.value}OPF model constructed ({toc - tic:.2f}s).")
         model.update()
         model.printStats()
 
@@ -124,7 +124,7 @@ def lpformulator_optimize(alldata, model, opftype):
     # Only print objective value and solution quality if at least
     # one feasible point is available
     if model.SolCount > 0:
-        logger.info(f"Objective value = {model.objVal}. Solution quality:")
+        logger.info(f"Objective value = {model.objVal}.")
         model.printQuality()
 
     return model.SolCount
