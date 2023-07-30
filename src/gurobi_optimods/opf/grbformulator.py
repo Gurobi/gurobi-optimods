@@ -432,6 +432,9 @@ def compute_voltage_angles(alldata, result):
     :type result: dict
     """
 
+    # FIXME this code assumes bus.nodeID == busindex (NOT TRUE!)
+    # Need to use the 'count map' (or fix the issue at the source)
+
     # After setting all voltage magnitudes, we can compute the voltage angle
     # Set voltage angle of reference bus to 0 (this is arbitrary)
     buses = alldata["buses"]
