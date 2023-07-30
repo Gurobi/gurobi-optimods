@@ -99,7 +99,8 @@ def process_signature(app, what, name, obj, options, signature, return_annotatio
         if "create_env" not in signature:
             raise ValueError(f"Decorated mod {name} does not accept create_env")
         new_signature = signature.replace(
-            "create_env", "verbose=True, logfile=None, solver_params=None"
+            "create_env",
+            "verbose=True, logfile=None, time_limit=None, solver_params=None",
         )
         print(f"Modified signature of {name}")
         return new_signature, return_annotation
@@ -113,6 +114,9 @@ boilerplate = """
 
     **logfile** : :class:`python:str`, optional
         Write all mod output to the given file path
+
+    **time_limit** : :class:`python:float`
+        Solver time limit in seconds (default no limit)
 
     **solver_params** : :class:`python:dict`, optional
         Gurobi parameters to be passed to the solver
