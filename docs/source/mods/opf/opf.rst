@@ -101,20 +101,13 @@ argument specifies otherwise.
     ...
 
 ACOPF and `Branch-Switching`_ models are most often very hard to solve to
-optimality. For this reason, it is best to pass specific solver settings such
-as, e.g., a `TimeLimit
-<https://www.gurobi.com/documentation/current/refman/timelimit.html>`_. This can
-be done by using the ``solver_params`` argument. For a full list of all Gurobi
-parameters please refer to `our documentation
-<https://www.gurobi.com/documentation/current/refman/parameter_descriptions.html>`_.
+optimality. For this reason, it is recommended to specify a solver time limit
+using the ``time_limit`` parameter. If the problem has not been solved to
+optimality within the time limit, the best known solution will be returned.
 
 .. testcode:: opf
 
-    result = opf.solve_opf(
-        case,
-        opftype="AC",
-        solver_params={"TimeLimit": 60}
-    )
+    result = opf.solve_opf(case, opftype="AC", time_limit=60)
 
 .. testoutput:: opf
     :hide:
