@@ -55,3 +55,12 @@ class TestQubo(unittest.TestCase):
         result = solve_qubo(Q)
         self.assertEqual(result.objective_value, -2)
         assert_array_equal(result.solution, np.array([1, 0, 1]))
+
+    def test_large_matrix_time_limit(self):
+        # Should get a solution quickly, but take forever without a time limit.
+        # Largest model size solvable by the trial license.
+        Q = sp.random(200, 200, 0.5)
+        Q = sp.coo_matrix((Q.data - 0.5, (Q.row, Q.col)))
+        result = solve_qubo(Q, time_limit=0.5)
+        self.assertLess(result.objective_value, 0.0)
+        self.assertEqual(result.solution.shape, (200,))
