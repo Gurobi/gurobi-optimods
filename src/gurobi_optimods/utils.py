@@ -50,6 +50,7 @@ def _mod_context(
     mod_logger: logging.Logger,
     log_to_console: bool,
     log_to_file: Optional[str],
+    time_limit: Optional[float],
     user_params: Optional[Dict],
 ):
     if not log_to_console and log_to_file:
@@ -82,6 +83,12 @@ def _mod_context(
         grb_logger.setLevel(logging.INFO)
         grb_logger.addHandler(fh)
 
+    if user_params is None:
+        user_params = {}
+
+    if time_limit is not None:
+        user_params["TimeLimit"] = float(time_limit)
+
     # Environment factory for decorated mod to use
     def create_env(params=None):
         final_params = {}
@@ -112,12 +119,18 @@ def optimod(mod_logger=None):
     def optimod_decorator(func):
         @functools.wraps(func)
         def optimod_decorated(
-            *args, verbose=True, logfile=None, solver_params=None, **kwargs
+            *args,
+            verbose=True,
+            logfile=None,
+            time_limit=None,
+            solver_params=None,
+            **kwargs,
         ):
             with _mod_context(
                 mod_logger=mod_logger,
                 log_to_console=verbose,
                 log_to_file=logfile,
+                time_limit=time_limit,
                 user_params=solver_params,
             ) as create_env:
                 try:
