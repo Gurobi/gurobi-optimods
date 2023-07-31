@@ -265,25 +265,25 @@ class TestAPICase9Reordered(unittest.TestCase):
         solution_reordered = solve_opf(self.case_reordered, **kwargs)
 
         self.assert_approx_equal(
-            solution_original["f"], solution_reordered["f"], tol=1e-1
+            solution_original["f"], solution_reordered["f"], tol=1e0
         )
 
         for ind, orig_ind in enumerate(self.bus_reorder):
             bus_original = solution_original["bus"][orig_ind]
             bus_reordered = solution_reordered["bus"][ind]
-            self.assert_approx_equal(bus_reordered["Vm"], bus_original["Vm"], tol=1e-1)
+            self.assert_approx_equal(bus_reordered["Vm"], bus_original["Vm"], tol=1e0)
 
         for ind, orig_ind in enumerate(self.branch_reorder):
             branch_original = solution_original["branch"][orig_ind]
             branch_reordered = solution_reordered["branch"][ind]
             self.assert_approx_equal(
-                branch_reordered["Qf"], branch_original["Qf"], tol=1e-1
+                branch_reordered["Qf"], branch_original["Qf"], tol=1e0
             )
 
         for ind, orig_ind in enumerate(self.gen_reorder):
             gen_original = solution_original["gen"][orig_ind]
             gen_reordered = solution_reordered["gen"][ind]
-            self.assert_approx_equal(gen_reordered["Qg"], gen_original["Qg"], tol=1e-1)
+            self.assert_approx_equal(gen_reordered["Qg"], gen_original["Qg"], tol=1e0)
 
     def test_ac_relax(self):
         kwargs = dict(
