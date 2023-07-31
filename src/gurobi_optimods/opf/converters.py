@@ -167,6 +167,14 @@ def convert_case_to_internal_format(case_dict):
                     "are supported"
                 )
 
+    bus_ids = {bus["bus_i"] for bus in case_dict["bus"]}
+    if any(branch["fbus"] not in bus_ids for branch in case_dict["branch"]):
+        raise ValueError("Unknown bus ID referenced in branch fbus")
+    if any(branch["tbus"] not in bus_ids for branch in case_dict["branch"]):
+        raise ValueError("Unknown bus ID referenced in branch tbus")
+    if any(gen["bus"] not in bus_ids for gen in case_dict["gen"]):
+        raise ValueError("Unknown bus ID referenced in generator bus")
+
     # For each field we create a key value for use internally.
     # Note: index != nodeID (bus_i) for buses.
     # Note: some parts of the code still rely on these indexes being 1..n and

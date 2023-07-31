@@ -58,6 +58,30 @@ class TestInvalidData(unittest.TestCase):
         ):
             solve_opf(self.case, opftype="AC")
 
+    def test_bad_branch_fbus(self):
+        # All branches must point to valid bus ids
+        self.case["branch"][3]["fbus"] = 22
+        with self.assertRaisesRegex(
+            ValueError, "Unknown bus ID referenced in branch fbus"
+        ):
+            solve_opf(self.case, opftype="AC")
+
+    def test_bad_branch_tbus(self):
+        # All branches must point to valid bus ids
+        self.case["branch"][5]["tbus"] = 15
+        with self.assertRaisesRegex(
+            ValueError, "Unknown bus ID referenced in branch tbus"
+        ):
+            solve_opf(self.case, opftype="AC")
+
+    def test_bad_gen_bus(self):
+        # All generators must point to valid bus ids
+        self.case["gen"][1]["bus"] = 48
+        with self.assertRaisesRegex(
+            ValueError, "Unknown bus ID referenced in generator bus"
+        ):
+            solve_opf(self.case, opftype="AC")
+
 
 class TestAPICase9(unittest.TestCase):
     # Test configurations of case9 with known optimal values. We should
