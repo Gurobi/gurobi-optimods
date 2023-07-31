@@ -53,13 +53,10 @@ def build_internal_settings(
         # New linear inequalities developed and implemented by Dan.
         # They are outer approximations of the JABR inequalities
         "useactivelossineqs": bool(useactivelossineqs),
-        #############################
-        # The following settings should currently not be disclosed
-        # (TODO: we can't exactly hide these ... what do we mean "not be disclosed")
-        # For now keep for us, mainly used for debugging and experimenting with heuristics
-        "fixcs": False,  # (approximately) fix c, s variables if a voltage solution was read in
+        ### The following settings are internal and not exposed in the API
+        # (approximately) fix c, s variables if a voltage solution was read in
+        "fixcs": False,
         "fixtolerance": 1.0e-5,
-        # Heuristics to help NL solver find a good solution
         "usemaxdispersion": False,  # difference between all bus angles is small
         "usemaxphasediff": False,  # difference between 2 adjacent branches is small
         "maxdispersion_deg": 0.0,
@@ -152,6 +149,7 @@ def convert_case_to_internal_format(case_dict):
     e.g. bus type not allowed, illegal angle for branch, bad bus references.
     """
 
+    # Input data validation
     if len(case_dict["gen"]) != len(case_dict["gencost"]):
         raise ValueError("Invalid input: mismatch between gen and gencost records")
 
@@ -169,21 +167,25 @@ def convert_case_to_internal_format(case_dict):
                     "are supported"
                 )
 
-    # Pre-conversion needed for hacky approach to indexing
-    import copy
+    # For each field we create a key value for use internally.
+    # Note: index != nodeID (bus_i) for buses.
+    # Note: some parts of the code still rely on these indexes being 1..n and
+    # the keys being in ascending order in dictionary iterators. Be very careful
+    # when trying to change this.
+    case_dict = {
+        "baseMVA": case_dict["baseMVA"],
+        "bus": {i + 1: dict(bus) for i, bus in enumerate(case_dict["bus"])},
+        "branch": {i + 1: dict(branch) for i, branch in enumerate(case_dict["branch"])},
+        "gen": {i + 1: dict(gen) for i, gen in enumerate(case_dict["gen"])},
+        "gencost": {
+            i + 1: dict(gencost) for i, gencost in enumerate(case_dict["gencost"])
+        },
+    }
 
-    case_dict = copy.deepcopy(case_dict)
-
-    def matlabify(values):
-        # 0..n-1 list -> 1..n dict
-        return dict(zip(range(1, len(values) + 1), values))
-
-    for branch in case_dict["branch"]:
+    # Manual correction to ratios
+    for branch in case_dict["branch"].values():
         if branch["ratio"] == 0.0:
             branch["ratio"] = 1.0
-    for field in ["bus", "gen", "branch", "gencost"]:
-        case_dict[field] = matlabify(case_dict[field])
-    # case_dict is now matlab-like
 
     alldata = {"LP": {}, "MIP": {}}
 
@@ -343,12 +345,12 @@ def convert_case_to_internal_format(case_dict):
             summaxgenP += Pmax
             summaxgenQ += Qmax
 
-        # TODO status > 0 generator in service, <= 0 out of service
-        # Is this how the spec works? The old reader code did this:
+        # From MATPOWER Generator Data Format
+        # https://matpower.org/docs/ref/matpower5.0/caseformat.html
         #
-        # gens[numgens]["status"] = 0 if g[7] <= 0 else 1
-        #
-        # but we don't have any tests that hit it.
+        # 8   status,  >  0 - machine in service
+        #             <= 0 - machine out of service
+        dgen["status"] == 0 if dgen["status"] <= 0 else 1
         assert dgen["status"] in (0, 1)
 
         gens[gencount1] = Gen(
