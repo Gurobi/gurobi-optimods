@@ -142,9 +142,9 @@ an example case with 9 buses and displays the key fields:
              'ramp_q': 0,
              'status': 1}
 
-    .. tab:: ``genpower``
+    .. tab:: ``gencost``
 
-        Each entry in the list ``case['genpower']`` corresponds to the generator
+        Each entry in the list ``case['gencost']`` corresponds to the generator
         at the same position in ``case['gen']``, and defines the cost function
         of that generator.
 
