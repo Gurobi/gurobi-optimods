@@ -441,8 +441,6 @@ def compute_voltage_angles(alldata, result):
     """
 
     IDtoCountmap = alldata["IDtoCountmap"]
-    # for k, v in IDtoCountmap.items():
-    # assert k == v
     buses = alldata["buses"]
     branches = alldata["branches"]
     cvar = alldata["LP"]["cvar"]
