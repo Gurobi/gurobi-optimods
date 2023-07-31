@@ -126,6 +126,8 @@ def lpformulator_optimize(alldata, model, opftype):
     if model.SolCount > 0:
         logger.info(f"Objective value = {model.objVal}.")
         model.printQuality()
+    else:
+        raise ValueError("No feasible solution found")
 
     return model.SolCount
 
