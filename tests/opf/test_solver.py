@@ -41,11 +41,11 @@ class TestInvalidData(unittest.TestCase):
             solve_opf(self.case, opftype="AC")
 
     def test_nonquadratic_cost(self):
-        # Error out on any nonzero cubic terms or higher
+        # Error out on any cubic terms or higher
         self.case["gencost"][0]["n"] = 4
         self.case["gencost"][0]["costvector"] = [1, 2, 3, 4]
         with self.assertRaisesRegex(
-            ValueError, "only quadratic and linear cost functions are supported"
+            ValueError, "only quadratic and linear cost functions"
         ):
             solve_opf(self.case, opftype="AC")
 
