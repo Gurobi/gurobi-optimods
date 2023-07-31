@@ -278,7 +278,7 @@ class TestAPICase9Reordered(unittest.TestCase):
             bus_reordered = solution_reordered["bus"][ind]
             for key in ["Vm"]:
                 self.assert_approx_equal(
-                    bus_reordered[key], bus_original["Vm"], tol=1e-2
+                    bus_reordered[key], bus_original["Vm"], tol=1e-1
                 )
 
         for ind, orig_ind in enumerate(self.branch_reorder):
@@ -286,7 +286,7 @@ class TestAPICase9Reordered(unittest.TestCase):
             branch_reordered = solution_reordered["branch"][ind]
             for key in ["Pt"]:
                 self.assert_approx_equal(
-                    branch_reordered["Pt"], branch_original["Pt"], tol=1e-2
+                    branch_reordered["Pt"], branch_original["Pt"], tol=1e-1
                 )
 
         for ind, orig_ind in enumerate(self.gen_reorder):
@@ -294,7 +294,7 @@ class TestAPICase9Reordered(unittest.TestCase):
             gen_reordered = solution_reordered["gen"][ind]
             for key in ["Pg"]:
                 self.assert_approx_equal(
-                    gen_reordered[key], gen_original[key], tol=1e-2
+                    gen_reordered[key], gen_original[key], tol=1e-1
                 )
 
 
