@@ -1,63 +1,193 @@
 Optimal Power Flow
 ==================
 
-.. toctree::
-    :hidden:
-
-    opf_specification
-
-The operation of power systems relies on a number of optimization tasks, known
+The operation of power systems relies on a number of optimization tasks known
 as Optimal Power Flow (OPF) problems. The objective of a standard OPF problem is
-to minimize operational cost such that the underlying grid constraints on
-generation, demand, and voltage limits, are satisfied.
+to minimize operational costs such that the underlying grid constraints on
+generation, demand, and voltage limits are satisfied.
 
-In this mod, we consider the cases of Alternating Current (AC) and Direct
-Current (DC) OPF formulations. The ACOPF problem in its natural form requires
-the introduction of complex numbers in order to formulate voltage constraints.
-This Mod uses a cartesian-coordinates formulation of ACOPF that reformulates
-complex-valued terms via nonconvex quadratic relationships. The DCOPF problem is
-an approximation of the ACOPF problem where additional assumptions to produce
-linear constraints. While the additional assumptions result in potential loss of
-solution accuracy, they make the DCOPF problem a lot easier to solve. This is
-especially useful if the solution accuracy can be neglected in favor of solution
-time and problem size. For full details of the formulations, please refer to the
-:doc:`opf_specification`.
+This Mod considers the Alternating Current (AC) and Direct Current (DC) OPF
+formulations. The ACOPF problem, in its natural form, requires the introduction
+of complex numbers to formulate voltage constraints. This Mod uses a
+cartesian-coordinates formulation of ACOPF that reformulates complex-valued
+terms via nonconvex quadratic relationships. The DCOPF problem approximates the
+ACOPF problem by making additional assumptions to produce linear constraints.
+While the additional assumptions result in a potential loss of solution
+accuracy, they make the DCOPF problem much easier to solve. This is especially
+useful if the solution accuracy can be neglected in favour of solution time and
+problem size. Please refer to the :doc:`opf_specification` for full details of
+the formulations.
 
 Here we assume basic familiarity with concepts such as *voltage* (potential
 energy), *current* (charge flow), and *power* (instantaneous energy generation
 or consumption). The engineering community also uses the terms *bus* to refer to
-nodes in a network, and branch to refer to arcs in a network (a connection
-between two buses, typically a line or a transformer). For more details and
-comprehensive descriptions of power systems and the underlying problems, please
-refer to the `Recommended Literature`_ section.
+nodes in a network and branch to refer to arcs in a network (a connection
+between two buses, typically a line or a transformer). Please refer to the
+`Recommended Literature`_ section for more details and comprehensive
+descriptions of power systems and the underlying problems.
+
+MATPOWER Case Input Format
+--------------------------
+
+This Mod has multiple API functions, each of which accepts a dictionary as input
+describing an OPF case. This case dictionary follows the `MATPOWER Case Format
+conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_
+and holds all essential information about the underlying network: buses, branch
+connections, and generators. Several pre-defined MATPOWER cases can be loaded
+directly using the ``gurobi_optimods.datasets`` module. The following code loads
+an example case with 9 buses and displays the key fields:
+
+.. tabs::
+
+    .. tab:: ``baseMVA``
+
+        ``baseMVA`` holds the base units of voltage for this case.
+
+        .. doctest:: opf
+            :options: +NORMALIZE_WHITESPACE
+
+            >>> from gurobi_optimods import datasets
+            >>>
+            >>> case = datasets.load_opf_example("case9")
+            >>> case['baseMVA']
+            100.0
+
+    .. tab:: ``bus``
+
+        Each entry in the list ``case['bus']`` represents a bus in the network.
+
+        .. doctest:: opf
+            :options: +NORMALIZE_WHITESPACE
+
+            >>> from pprint import pprint
+            >>> from gurobi_optimods import datasets
+            >>>
+            >>> case = datasets.load_opf_example("case9")
+            >>> pprint(case['bus'][0])  # The first bus
+            {'Bs': 0.0,
+             'Gs': 0.0,
+             'Pd': 0.0,
+             'Qd': 0.0,
+             'Va': 0.0,
+             'Vm': 1.0,
+             'Vmax': 1.1,
+             'Vmin': 0.9,
+             'area': 1.0,
+             'baseKV': 345.0,
+             'bus_i': 1,
+             'type': 3,
+             'zone': 1.0}
+
+    .. tab:: ``branch``
+
+        Each entry in the list ``case['branch']`` represents a branch in the
+        network. Note that the ``fbus`` and ``tbus`` fields must refer to a bus
+        by its ``bus_i`` value.
+
+        .. doctest:: opf
+            :options: +NORMALIZE_WHITESPACE
+
+            >>> from pprint import pprint
+            >>> from gurobi_optimods import datasets
+            >>>
+            >>> case = datasets.load_opf_example("case9")
+            >>> pprint(case['branch'][0])  # The first branch
+            {'angle': 0.0,
+             'angmax': 360.0,
+             'angmin': -360.0,
+             'b': 0.0,
+             'fbus': 1,
+             'r': 0.0,
+             'rateA': 250.0,
+             'rateB': 250.0,
+             'rateC': 250.0,
+             'ratio': 0.0,
+             'status': 1.0,
+             'tbus': 4,
+             'x': 0.0576}
+
+    .. tab:: ``gen``
+
+        Each entry in the list ``case['gen']`` represents a generator in the
+        network. Note that the ``bus`` field must refer to a bus by its
+        ``bus_i`` value.
+
+        .. doctest:: opf
+            :options: +NORMALIZE_WHITESPACE
+
+            >>> from pprint import pprint
+            >>> from gurobi_optimods import datasets
+            >>>
+            >>> case = datasets.load_opf_example("case9")
+            >>> pprint(case['gen'][0])  # The first generator
+            {'Pc1': 0,
+             'Pc2': 0,
+             'Pg': 0,
+             'Pmax': 250,
+             'Pmin': 10,
+             'Qc1max': 0,
+             'Qc1min': 0,
+             'Qc2max': 0,
+             'Qc2min': 0,
+             'Qg': 0,
+             'Qmax': 300,
+             'Qmin': -300,
+             'Vg': 1,
+             'apf': 0,
+             'bus': 1,
+             'mBase': 100,
+             'ramp_10': 0,
+             'ramp_30': 0,
+             'ramp_agc': 0,
+             'ramp_q': 0,
+             'status': 1}
+
+    .. tab:: ``genpower``
+
+        Each entry in the list ``case['genpower']`` corresponds to the generator
+        at the same position in ``case['gen']``, and defines the cost function
+        of that generator.
+
+        .. doctest:: opf
+            :options: +NORMALIZE_WHITESPACE
+
+            >>> from pprint import pprint
+            >>> from gurobi_optimods import datasets
+            >>>
+            >>> case = datasets.load_opf_example("case9")
+            >>> pprint(case['gencost'][0])  # Cost function for the first generator
+            {'costtype': 2.0,
+             'costvector': [0.11, 5.0, 150.0],
+             'n': 3.0,
+             'shutdown': 0.0,
+             'startup': 1500.0}
+
+        .. warning::
+
+            The Mod only supports generator costs with ``costtype = 2`` i.e.,
+            polynomial model, up to degree 2, i.e, ``n=3`` in the ``gencost``
+            structure. For now, these seem to be the most commonly used settings
+            in practice. If a different costtype or ``n`` value is provided, an
+            error is issued. It is possible that more functionality will be
+            added in a future release.
+
+
+Cases can also be read directly from MATPOWER format using
+:func:`~gurobi_optimods.opf.read_case_matpower`. This function reads a standard
+MATLAB ``.mat`` data file holding the case data into the native Python format
+accepted by the Mod. For example::
+
+    case = opf.read_case_matpower("my_case.mat")
 
 Solving an OPF Problem
 ----------------------
 
-This Mod has multiple API functions. Each function takes a dictionary as input
-which describes an OPF case. This case dictionary holds all essential
-information about the underlying network: buses, branch connections, and
-generators. The case dictionary follows the `MATPOWER Case Format conventions
-<https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_. The details
-of the input format are discussed in the `Case and Result Dictionaries`_
-section.
-
-Several pre-defined MATPOWER cases can be read in from the
-`gurobi_optimods.datasets` module. The following code loads a 9 bus grid
-example:
-
-.. testcode:: opf
-
-    from gurobi_optimods import datasets
-
-    case = datasets.load_opf_example("case9")
-
-After reading in or otherwise generating a case dictionary, we can solve an OPF
-problem defined by the given network data. For this task, we use the
-:func:`gurobi_optimods.opf.solve_opf` function. We can define the type of the
-OPF problem that we want to solve by defining the ``opftype`` argument when
-calling the function. Currently, the available options are ``AC``, ``AC_relax``,
-and ``DC``.
+After reading in or otherwise generating a MATPOWER case in the format described
+above, we can solve an OPF problem defined by the given network data. For this
+task, we use the :func:`~gurobi_optimods.opf.solve_opf` function. We can define
+the type of the OPF problem that we want to solve by defining the ``opftype``
+argument when calling the function. Currently, the available options are ``AC``,
+``AC_relax``, and ``DC``.
 
 - The ``AC`` setting solves an ACOPF problem defined by the given network data.
   The ACOPF problem is formulated as a nonconvex bilinear model as described in
@@ -86,7 +216,9 @@ argument specifies otherwise.
 .. testcode:: opf
 
     from gurobi_optimods import opf
+    from gurobi_optimods import datasets
 
+    case = datasets.load_opf_example("case9")
     result = opf.solve_opf(case, opftype="AC")
 
 .. testoutput:: opf
@@ -100,7 +232,7 @@ argument specifies otherwise.
     Objective value = 5296...
     ...
 
-ACOPF and `Branch-Switching`_ models are most often very hard to solve to
+ACOPF and `Branch Switching`_ models are most often very hard to solve to
 optimality. For this reason, it is recommended to specify a solver time limit
 using the ``time_limit`` parameter. If the problem has not been solved to
 optimality within the time limit, the best known solution will be returned.
@@ -118,17 +250,68 @@ optimality within the time limit, the best known solution will be returned.
     Optimal solution found...
     ...
 
+Solution Format
+---------------
+
 The Mod returns the result as a dictionary, following the same `MATPOWER Case
 Format conventions
 <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ as the case
 dictionary. However, in the result dictionary some object entries are modified
 compared to the input case dictionary. These modified fields hold the solution
-values of the optimization. In some cases, there are also additional fields to
-store the solution information. We discuss all details of the result dictionary
-in the `Case and Result Dictionaries`_ section.
+values of the optimization. There are also additional fields to store the
+solution information, as specified below.
 
-Graphical Representation of Feasible Solutions
-----------------------------------------------
+.. tabs::
+
+    .. tab:: Buses
+
+        The ``bus`` entries ``result['bus'][i]['Vm']`` and
+        ``result['bus'][i]['Va']`` store the voltage magnitude (Vm) and voltage
+        angle (Va) values in the OPF solution for bus `i`.
+
+        If a DCOPF problem was solved, additional fields
+        ``result['bus'][i]['mu']`` hold the shadow prices for balance
+        constraints at bus `i`.
+
+        .. doctest:: opf
+            :options: +NORMALIZE_WHITESPACE
+
+            >>> result['bus'][0]
+            {... 'Vm': 1.09..., 'Va': 0, ...}
+
+    .. tab:: Branches
+
+        The additional ``branch`` entries populated in the solution data are:
+
+        * ``Pf``: real power injection at the "from" end of the branch,
+        * ``Pt``: real power injection at the "to" end of the branch,
+        * ``Qf``: reactive power injection at the "from" end of the branch, and
+        * ``Qt``: reactive power injection at the "to" end of the branch.
+
+        The ``switching`` field defines whether a branch is turned on (1) or off
+        (0) in the given result.
+
+        .. doctest:: opf
+            :options: +NORMALIZE_WHITESPACE
+
+            >>> result['branch'][1]
+            {... 'Pf': 35.2..., 'Pt': -35.0..., 'Qf': -3.8..., 'Qt': -13.8..., ...}
+
+    .. tab:: Generators
+
+        Then ``gen`` entries ``result['gen'][i]['Pg']`` and
+        ``result['gen'][i]['Qg']`` hold the real and reactive power injection
+        values, respectively, for the :math:`i^{th}` generator.
+
+        .. doctest:: opf
+            :options: +NORMALIZE_WHITESPACE
+
+            >>> result['gen'][2]
+            {... 'Pg': 94.1..., 'Qg': -22.6..., ...}
+
+
+Plotting Feasible Solutions
+---------------------------
 
 In addition to solving an OPF problem, this Mod also provides plotting functions
 to display graphical representation of the network and the OPF result. There are
@@ -144,10 +327,6 @@ simple. In order to use this functionality, it is necessary to install the
 ``plotly`` package as follows::
 
     pip install plotly
-
-
-Plotting the Result
-~~~~~~~~~~~~~~~~~~~
 
 In order to plot a previously obtained result, you must provide :math:`(x, y)`
 coordinates for all buses in the network. Coordinates are provided as a
@@ -200,7 +379,7 @@ and the amount of power they generate:
 - Orange bus: Power generation :math:`> 150`
 - Red bus: Power generation :math:`> 500`
 
-Branch-Switching
+Branch Switching
 ----------------
 
 An important extension of the OPF problem is Branch Switching, where branches
@@ -208,10 +387,10 @@ may be turned off. Note that already turning off a single branch changes the
 whole power flow through the network. Thus in practice, it is rare that branches
 are turned off at all, even if this option is enabled. If any are turned off,
 then it is usually only a small fraction of the overall power grid. For the
-mathematical formulation, please refer to the :ref:`Branch-Switching
+mathematical formulation, please refer to the :ref:`Branch Switching
 <branchswitching-label>` subsection of the :doc:`opf_specification`.
 
-To enable branch-switching in a given OPF problem, set the ``branch_switching``
+To enable branch switching in a given OPF problem, set the ``branch_switching``
 argument to ``True`` when calling :func:`gurobi_optimods.opf.solve_opf`. The Mod
 additionally offers the possibility to control the number of branches that must
 remain switched on via the ``min_active_branches`` argument. In practice, it is
@@ -312,8 +491,8 @@ data:
 In this case, the limit at branch 6 and the real power injection at bus 3 are
 violated by the given input voltages.
 
-Inspecting Violations Graphically
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Plotting Violations
+-------------------
 
 Similar to generating a graphical representation of a feasible solution, it is
 also possible to generate a figure representing the violations within a given
@@ -344,126 +523,10 @@ together with coordinate and violation data. The red circles depict buses where
 the voltage magnitude or real or reactive power injections are violated. Red
 marked branches depict branches with violated limits.
 
-
-Case and Result Dictionaries
-----------------------------
-
-This mod uses so-called *case* and *result* dictionaries for input and output. Both dictionaries are meant to follow the `MATPOWER Case Format <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ and are described in full detail below.
-
-Case Dictionary
-~~~~~~~~~~~~~~~
-
-The case dictionary for this mod expects a dictionary with keys ``baseMVA``, ``bus``, ``branch``, ``gen``, and ``gencost``. All other entries of the dictionary are ignored in the current version of the mod. The value stored via the ``baseMVA`` key is a numerical float value. The values stored in the case dictionary via keys ``bus``, ``branch``, ``gen``, and ``gencost`` are lists of dictionaries, where each dictionary holds specific data about the particular object. Every single object is defined by a dictionary holding entries following the `MATPOWER Case Format <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_, e.g., every bus has a bus number ``bus_i``, real power demand ``Pd``, etc.
-
-.. testcode:: opf
-
-    case = datasets.load_opf_example("case9")
-
-.. testoutput:: opf
-    :hide:
-    :options: +NORMALIZE_WHITESPACE
-
-    ...
-
-.. doctest:: opf
-    :options: +NORMALIZE_WHITESPACE
-
-    >>> case['baseMVA']
-    100.0
-
-    >>> buses = case['bus']
-    >>> buses[0]
-    {'bus_i': 1, 'type': 3, 'Pd': 0.0, 'Qd': 0.0, 'Gs': 0.0, 'Bs': 0.0, 'area': 1.0, 'Vm': 1.0, 'Va': 0.0, 'baseKV': 345.0, 'zone': 1.0, 'Vmax': 1.1, 'Vmin': 0.9}
-
-    >>> branches = case['branch']
-    >>> branches[1]
-    {'fbus': 4, 'tbus': 5, 'r': 0.017, 'x': 0.092, 'b': 0.158, 'rateA': 250.0, 'rateB': 250.0, 'rateC': 250.0, 'ratio': 0.0, 'angle': 0.0, 'status': 1.0, 'angmin': -360.0, 'angmax': 360.0}
-
-    >>> generators = case['gen']
-    >>> generators[2]
-    {'bus': 3, 'Pg': 85, 'Qg': 0, 'Qmax': 300, 'Qmin': -300, 'Vg': 1, 'mBase': 100, 'status': 1, 'Pmax': 270, 'Pmin': 10, 'Pc1': 0, 'Pc2': 0, 'Qc1min': 0, 'Qc1max': 0, 'Qc2min': 0, 'Qc2max': 0, 'ramp_agc': 0, 'ramp_10': 0, 'ramp_30': 0, 'ramp_q': 0, 'apf': 0}
-
-    >>> generatorcosts = case['gencost']
-    >>> generatorcosts[2]
-    {'costtype': 2.0, 'startup': 3000.0, 'shutdown': 0.0, 'n': 3.0, 'costvector': [0.1225, 1.0, 335.0]}
-
-There is also the convenience function :func:`gurobi_optimods.opf.read_case_matpower` which reads in a standard MATLAB ``.mat`` data file holding the network data. The data stored in the ``.mat`` file has to follow the `MATPOWER Case Format conventions <https://matpower.org/docs/ref/matpower7.1/lib/caseformat.html>`_ in order to be accepted by the function. This function returns a case dictionary which can be read by the solver methods::
-
-    case = opf.read_case_matpower("my_case.mat")
-    solution = solve_opf(case, opftype="AC")
-
-
-.. warning::
-
-    In the current version of the mod, we only accept generator costs with `costtype = 2`, i.e., polynomial model, up to degree 2, i.e, `n=3` in the `gencost` structure. For now, these seem to be the most commonly used settings in practice. If a different costtype or `n` value is provided, an error is issued. It is possible that more functionality will be added in a future release.
-
-
-Result Dictionary
-~~~~~~~~~~~~~~~~~
-
-The following fields in the result dictionary are altered or added to store solution data.
-
-- The field ``result['et']`` holds the runtime value of the whole solution process in seconds.
-- The field ``result['success']`` defines whether at least one feasible solution has been found (1) or no feasible solution is available (0).
-- The field ``result['f']`` holds the solution objective value (only valid if ``result['success'] == 1``).
-- If a feasible solution has been found, the ``bus`` entries
-
-  * ``result['bus'][i]['Vm']``
-  * ``result['bus'][i]['Va']``
-
-  store the voltage magnitude (Vm) and voltange angle (Va) values in the optimal solution for bus `i`.
-- If we solved a DCOPF problem, additional fields ``result['bus'][i]['mu']`` hold the shadow prices for balance constraints at bus `i`.
-- If a feasible solution has been found, the ``gen`` entries
-
-  * ``result['gen'][i]['Pg']``
-  * ``result['gen'][i]['Qg']``
-
-  hold the real (Pg) and reactive (Qg) power injection values at the optimal solution for generator `i`.
-- If a feasible solution has been found, the additional ``branch`` entries
-
-  * ``result["branch"][i]["Pf"]``
-  * ``result["branch"][i]["Pt"]``
-  * ``result["branch"][i]["Qf"]``
-  * ``result["branch"][i]["Qt"]``
-  * ``result["branch"][i]["switching"]``
-
-  hold real (P) and reactive (Q) power injection values into the `from` (f) and into the `to` (t) end at the optimal solution point for branch `i`. The ``switching`` field holds the information whether a branch is turned on (1) or off (0) in the given result.
-
-
-.. testcode:: opf
-
-    result = opf.solve_opf(case, opftype="AC")
-
-.. testoutput:: opf
-    :hide:
-    :options: +NORMALIZE_WHITESPACE +ELLIPSIS
-
-    ...
-    Optimize a model with 73 rows, 107 columns and 208 nonzeros
-    ...
-
-.. doctest:: opf
-    :options: +NORMALIZE_WHITESPACE
-
-    >>> result['success']
-    1
-
-    >>> result['bus'][0]
-    {... 'Vm': 1.09..., 'Va': 0, ...}
-
-    >>> result['branch'][1]
-    {... 'Pf': 35.2..., 'Pt': -35.0..., 'Qf': -3.8..., 'Qt': -13.8..., ...}
-
-    >>> result['gen'][2]
-    {... 'Pg': 94.1..., 'Qg': -22.6..., ...}
-
-We can see that the respective entries for ``bus`` and ``gen`` changed compared to the case dictionary, because they are different from the input at the optimal solution point. We also see that addtional fields have been created in the ``branch`` dictionary to hold solution information.
-
-
-.. _recommended-label:
-
 Recommended Literature
 ----------------------
+
+.. _recommended-label:
 
 Power systems and the optimal power flow problem are well studied. For a more comprehensive descrition, we recommend the following literature.
 
@@ -477,3 +540,13 @@ Power systems and the optimal power flow problem are well studied. For a more co
   equations*. Foundations and Trends in Electric Energy Systems, 4:1–221, 2019.
 - J.D. Glover, M.S. Sarma, and T.J. Overbye. *Power System Analysis and Design*. CENGAGE
   Learning, 2012.
+
+Formulation Details
+-------------------
+
+Full details of the formulations used in the OPF Mod are given in the following
+sections:
+
+.. toctree::
+
+    opf_specification

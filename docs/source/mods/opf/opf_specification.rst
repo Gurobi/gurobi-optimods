@@ -263,7 +263,7 @@ The objective to optimize is the same (usually quadratic convex) cost expression
 
 .. _branchswitching-label:
 
-Branch-switching
+Branch Switching
 ~~~~~~~~~~~~~~~~
 
 An important binary MILP extension of DCOPF is that where a binary variable :math:`z_{km}` is used to decide if a branch :math:`km` is "on" (:math:`z_{km} = 1`) or not (:math:`z_{km} = 0`).  To achive this goal, we simply reformulate the power flow definition as
@@ -274,4 +274,4 @@ An important binary MILP extension of DCOPF is that where a binary variable :mat
 
 This constrained is linearized through standard methods.
 
-Branch-switching is most often used in DCOPF only due to its additional complexity. Still, it can be applied to an ACOPF model as well. Please note that introducing branch-switching greatly increases problem complexity and thus, obtaining feasible solution to branch-switching ACOPF models is very difficult.
+Branch switching is most often used in DCOPF only due to its additional complexity. Still, it can be applied to an ACOPF model as well. Please note that introducing branch-switching greatly increases problem complexity and thus, obtaining feasible solution to branch-switching ACOPF models is very difficult.
