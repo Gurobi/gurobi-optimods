@@ -161,11 +161,10 @@ def convert_case_to_internal_format(case_dict):
                 "Invalid input: mismatch between gencost.n and costvector length"
             )
         if gencost["n"] > 3:
-            if not all(coeff == 0 for coeff in gencost["costvector"][:-3]):
-                raise ValueError(
-                    "Invalid input: only quadratic and linear cost functions "
-                    "are supported"
-                )
+            raise ValueError(
+                "Invalid input: only quadratic and linear cost functions "
+                "(gencost.n <= 3) are supported"
+            )
 
     bus_ids = {bus["bus_i"] for bus in case_dict["bus"]}
     if any(branch["fbus"] not in bus_ids for branch in case_dict["branch"]):

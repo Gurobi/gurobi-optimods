@@ -142,9 +142,9 @@ an example case with 9 buses and displays the key fields:
              'ramp_q': 0,
              'status': 1}
 
-    .. tab:: ``genpower``
+    .. tab:: ``gencost``
 
-        Each entry in the list ``case['genpower']`` corresponds to the generator
+        Each entry in the list ``case['gencost']`` corresponds to the generator
         at the same position in ``case['gen']``, and defines the cost function
         of that generator.
 
@@ -164,12 +164,11 @@ an example case with 9 buses and displays the key fields:
 
         .. warning::
 
-            The Mod only supports generator costs with ``costtype = 2`` i.e.,
-            polynomial model, up to degree 2, i.e, ``n=3`` in the ``gencost``
-            structure. For now, these seem to be the most commonly used settings
-            in practice. If a different costtype or ``n`` value is provided, an
-            error is issued. It is possible that more functionality will be
-            added in a future release.
+            The Mod only supports generator costs with ``costtype = 2`` and ``n
+            <= 3`` (i.e. linear and quadratic cost functions) in the ``gencost``
+            structure, as these are the most commonly used settings in practice.
+            If a different costtype or larger value of ``n`` value is provided,
+            an error will be issued.
 
 
 Cases can also be read directly from MATPOWER format using
