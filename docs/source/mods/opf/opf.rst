@@ -187,7 +187,7 @@ above, we can solve an OPF problem defined by the given network data. For this
 task, we use the :func:`~gurobi_optimods.opf.solve_opf` function. We can define
 the type of the OPF problem that we want to solve by defining the ``opftype``
 argument when calling the function. Currently, the available options are ``AC``,
-``AC_relax``, and ``DC``.
+``ACrelax``, and ``DC``.
 
 - The ``AC`` setting solves an ACOPF problem defined by the given network data.
   The ACOPF problem is formulated as a nonconvex bilinear model as described in
@@ -196,7 +196,7 @@ argument when calling the function. Currently, the available options are ``AC``,
   it is also the most difficult problem to solve and thus usually leads to the
   longer runtimes.
 
-- The ``AC_relax`` setting solves a Second Order Cone (SOC) relaxation of the
+- The ``ACrelax`` setting solves a Second Order Cone (SOC) relaxation of the
   nonconvex bilinear ACOPF problem formulation defined by the given network
   data. The relaxation is constructed by dropping nonconvex bilinear terms but
   simultaneously keeping the convex JABR inequalities, see :ref:`JABR Relaxation
