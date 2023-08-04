@@ -60,6 +60,11 @@ can be stated as follows:
     formulation. The minimum cut is found by solving the maximum flow problem
     and extracting the constraint dual values.
 
+    Particularly, we can get the edges in the cutset by checking the non-zero
+    dual values of the capacity constraints (the last constraints), with these,
+    we can find the partions by checking the predecessors and successors
+    vertices of these edges.
+
 |
 
 Code and Inputs
@@ -143,8 +148,10 @@ An example of these inputs with their respective requirements is shown below.
 Solution
 --------
 
-Depending on the input of choice, the solution also comes with different
-formats.
+Maximum Flow
+^^^^^^^^^^^^
+
+Let us use the data to solve the maximum flow problem.
 
 .. tabs::
 
@@ -167,25 +174,11 @@ formats.
           3       5         2.0
           4       5         1.0
           Name: flow, dtype: float64
-          >>> from gurobi_optimods.min_cut import min_cut
-          >>> res = min_cut(edge_data, 0, 5, verbose=False)
-          >>> res
-          MinCutResult(cut_value=3.0, partition=({0, 1}, {2, 3, 4, 5}), cutset={(0, 2), (1, 3)})
-          >>> res.cut_value
-          3.0
-          >>> res.partition
-          ({0, 1}, {2, 3, 4, 5})
-          >>> res.cutset
-          {(0, 2), (1, 3)}
 
       The ``max_flow`` function returns the cost of the solution as well
       as ``pd.Series`` with the flow per edge. Similarly as the input
       DataFrame the resulting series is indexed by ``source`` and ``target``.
       In this case, the resulting maximum flow has value 3.
-
-      The ``min_cut`` function returns a ``MinCutResult`` which contains the
-      cutset value, the partition of the nodes and the edges in the cutset.
-
 
   .. group-tab:: NetworkX
 
@@ -200,22 +193,9 @@ formats.
           <class 'networkx.classes.digraph.DiGraph'>
           >>> list(sol.edges(data=True))
           [(0, 1, {'flow': 1.0}), (0, 2, {'flow': 2.0}), (1, 3, {'flow': 1.0}), (2, 3, {'flow': 1.0}), (2, 4, {'flow': 1.0}), (3, 5, {'flow': 2.0}), (4, 5, {'flow': 1.0})]
-          >>> from gurobi_optimods.min_cut import min_cut
-          >>> res = min_cut(G, 0, 5, verbose=False)
-          >>> res
-          MinCutResult(cut_value=3.0, partition=({0, 1}, {2, 3, 4, 5}), cutset={(0, 2), (1, 3)})
-          >>> res.cut_value
-          3.0
-          >>> res.partition
-          ({0, 1}, {2, 3, 4, 5})
-          >>> res.cutset
-          {(0, 2), (1, 3)}
 
       The ``max_flow`` function returns the cost of the solution
       as well as a dictionary indexed by edge with the non-zero flow.
-
-      The ``min_cut`` function returns a ``MinCutResult`` which contains the
-      cutset value, the partition of the nodes and the edges in the cutset.
 
   .. group-tab:: scipy.sparse
 
@@ -236,6 +216,53 @@ formats.
             (2, 4)    2.0
             (3, 5)    1.0
             (4, 5)    2.0
+
+      The ``max_flow`` function returns the value of the maximum flow as well a
+      sparse matrix with the amount of non-zero flow in each edge in the
+      solution.
+
+The solution for this example is shown in the figure below. The edge labels
+denote the edge capacity and resulting flow: :math:`x^*_{ij}/B_{ij}`. All
+edges in the maximum flow solution carry some flow, totalling at 3.0 at the
+sink.
+
+.. image:: figures/max-flow.png
+  :width: 600
+  :alt: Maximum Flow Solution.
+  :align: center
+
+Minimum Cut
+^^^^^^^^^^^
+
+Let us use the data to solve the minimum cut problem.
+
+.. tabs::
+
+  .. group-tab:: pandas
+
+      .. doctest:: pandas
+          :options: +NORMALIZE_WHITESPACE
+
+          >>> from gurobi_optimods.min_cut import min_cut
+          >>> res = min_cut(edge_data, 0, 5, verbose=False)
+          >>> res
+          MinCutResult(cut_value=3.0, partition=({0, 1}, {2, 3, 4, 5}), cutset={(0, 2), (1, 3)})
+          >>> res.cut_value
+          3.0
+          >>> res.partition
+          ({0, 1}, {2, 3, 4, 5})
+          >>> res.cutset
+          {(0, 2), (1, 3)}
+
+      The ``min_cut`` function returns a ``MinCutResult`` which contains the
+      cutset value, the partition of the nodes and the edges in the cutset.
+
+
+  .. group-tab:: NetworkX
+
+      .. doctest:: networkx
+          :options: +NORMALIZE_WHITESPACE
+
           >>> from gurobi_optimods.min_cut import min_cut
           >>> res = min_cut(G, 0, 5, verbose=False)
           >>> res
@@ -247,21 +274,39 @@ formats.
           >>> res.cutset
           {(0, 2), (1, 3)}
 
-      The ``max_flow`` function returns the flow of the solution as
-      well as a ``sp.sparray`` with the edges where the data is the amount of
-      non-zero flow in the solution.
+      The ``min_cut`` function returns a ``MinCutResult`` which contains the
+      cutset value, the partition of the nodes and the edges in the cutset.
+
+  .. group-tab:: scipy.sparse
+
+      .. doctest:: scipy
+          :options: +NORMALIZE_WHITESPACE
+
+          >>> from gurobi_optimods.min_cut import min_cut
+          >>> res = min_cut(G, 0, 5, verbose=False)
+          >>> res
+          MinCutResult(cut_value=3.0, partition=({0, 1}, {2, 3, 4, 5}), cutset={(0, 2), (1, 3)})
+          >>> res.cut_value
+          3.0
+          >>> res.partition
+          ({0, 1}, {2, 3, 4, 5})
+          >>> res.cutset
+          {(0, 2), (1, 3)}
 
       The ``min_cut`` function returns a ``MinCutResult`` which contains the
       cutset value, the partition of the nodes and the edges in the cutset.
 
-The solution for this example is shown in the figure below. The edge labels
-denote the edge capacity and resulting flow: :math:`(B_{ij}, x^*_{ij})`. All
-edges in the maximum flow solution carry some flow, totalling at 3.0 at the
-sink. The cutset from the minimum solution is shown with the edges in blue, and
-the nodes in the partitions are shown in blue and in green.
+The solution for the minimum cut problem is shown in the figure below. The edges
+in the cutset are shown in blue (with their capacity values shown), and the
+nodes in the partitions are shown in blue (nodes 0 and 1) and in green (nodes 2,
+3, 4 and 5). The capacity of the minimum cut is :math:`B_{0,2}+B_{1,3}=2+1=3`
+which is also the value of the maximum flow. We can also see that if we remove
+the blue edges we would be left with a disconnected graph with the two
+partitions.
 
-.. image:: figures/max-flow-min-cut.png
+.. image:: figures/min-cut.png
   :width: 600
-  :alt: Sample network.
+  :alt: Minimum Cut solution.
+  :align: center
 
 .. footbibliography::

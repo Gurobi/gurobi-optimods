@@ -170,7 +170,7 @@ def _min_cut_scipy(G, source, sink, create_env):
     ones = np.ones(from_arc.shape)
     data = np.column_stack((ones * -1.0, ones)).reshape(-1, order="C")
 
-    A = sp.csc_array((data, indices, indptr))
+    A = sp.csc_matrix((data, indices, indptr))
 
     logger.info(
         f"Solving min-cut problem with {A.shape[0]} nodes and " f"{A.shape[1]-1} edges"
@@ -180,7 +180,6 @@ def _min_cut_scipy(G, source, sink, create_env):
         # Solve max-flow problem
         model.ModelSense = GRB.MAXIMIZE
         x = model.addMVar(A.shape[1], lb=0, obj=costs, name="x")
-        model.update()
         cap = model.addConstr(x <= capacities, name="capacity")
         model.addMConstr(A, x, GRB.EQUAL, demands, name="flow")
         model.optimize()
