@@ -154,7 +154,7 @@ def _min_cut_scipy(G, source, sink, create_env):
 
     from_arc = np.append(G.row, sink)
     to_arc = np.append(G.col, source)
-    G = sp.coo_matrix((data, (from_arc, to_arc)), dtype=float)
+    G = sp.coo_array((data, (from_arc, to_arc)), dtype=float)
 
     capacities = data
 
@@ -170,7 +170,7 @@ def _min_cut_scipy(G, source, sink, create_env):
     ones = np.ones(from_arc.shape)
     data = np.column_stack((ones * -1.0, ones)).reshape(-1, order="C")
 
-    A = sp.csc_matrix((data, indices, indptr))
+    A = sp.csc_array((data, indices, indptr))
 
     logger.info(
         f"Solving min-cut problem with {A.shape[0]} nodes and " f"{A.shape[1]-1} edges"

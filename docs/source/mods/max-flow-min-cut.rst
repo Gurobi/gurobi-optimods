@@ -129,7 +129,7 @@ An example of these inputs with their respective requirements is shown below.
           >>> G, capacities, _, _ = datasets.simple_graph_scipy()
           >>> G.data = capacities.data # Copy capacity data
           >>> G
-          <5x6 sparse matrix of type '<class 'numpy.int64'>'
+          <5x6 sparse array of type '<class 'numpy.int64'>'
                   with 7 stored elements in COOrdinate format>
           >>> print(G)
             (0, 1)    2
@@ -140,7 +140,7 @@ An example of these inputs with their respective requirements is shown below.
             (3, 5)    2
             (4, 5)    2
 
-      We only need the adjacency matrix for the graph (as sparse matrix) where
+      We only need the adjacency matrix for the graph (as a sparse array) where
       each each entry contains the capacity of the edge.
 
 |
@@ -207,7 +207,7 @@ Let us use the data to solve the maximum flow problem.
           >>> obj
           3.0
           >>> sol
-          <5x6 sparse matrix of type '<class 'numpy.float64'>'
+          <5x6 sparse array of type '<class 'numpy.float64'>'
               with 6 stored elements in COOrdinate format>
           >>> print(sol)
             (0, 1)    1.0
@@ -218,7 +218,7 @@ Let us use the data to solve the maximum flow problem.
             (4, 5)    2.0
 
       The ``max_flow`` function returns the value of the maximum flow as well a
-      sparse matrix with the amount of non-zero flow in each edge in the
+      sparse array with the amount of non-zero flow in each edge in the
       solution.
 
 The solution for this example is shown in the figure below. The edge labels

@@ -96,19 +96,19 @@ def _max_flow_scipy(G, source, sink, **kwargs):
     data = np.append(G.data, max_flow)
     from_arc = np.append(G.row, sink)
     to_arc = np.append(G.col, source)
-    G = sp.coo_matrix((data, (from_arc, to_arc)), dtype=float)
+    G = sp.coo_array((data, (from_arc, to_arc)), dtype=float)
 
-    capacities = sp.coo_matrix(G)
+    capacities = sp.coo_array(G)
 
     costs = np.zeros(G.row.shape, dtype=float)
     costs[-1] = -1
-    costs = sp.coo_matrix((costs, (G.row, G.col)), dtype=float)
+    costs = sp.coo_array((costs, (G.row, G.col)), dtype=float)
     demands = np.zeros(G.shape[1], dtype=float)
     # Solve
     obj, flow = min_cost_flow_scipy(G, capacities, costs, demands, **kwargs)
     G = _remove_dummy_edge(G, source, sink)
     flow = _remove_dummy_edge(flow, source, sink)
-    return -obj, sp.coo_matrix(flow)
+    return -obj, sp.coo_array(flow)
 
 
 def _max_flow_networkx(G, source, sink, **kwargs):
