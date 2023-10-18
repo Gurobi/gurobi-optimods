@@ -215,5 +215,5 @@ def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
 
     # Return undirected, unweighted adjacency matrix
     arg = (np.ones(from_arc_result.shape), (from_arc_result, to_arc_result))
-    matching = sp.coo_matrix(arg, dtype=float, shape=G.shape)
+    matching = sp.coo_array(arg, dtype=float, shape=G.shape)
     return matching + matching.T

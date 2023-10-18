@@ -106,7 +106,7 @@ def _convert_pandas_to_scipy(
     edge_data, node_data, capacity=True, cost=True, demand=True
 ):
     """
-    Convert from a pandas DataFrame to several scipy.sparse.coo_matrix contain
+    Convert from a pandas DataFrame to several scipy.sparse.coo_array contain
     the graph structure, the capacity and cost values per edge, and the demand
     values per node.
     """
@@ -116,17 +116,17 @@ def _convert_pandas_to_scipy(
     a1 = np.array([c[1] for c in coords])
 
     data = np.ones(len(coords), dtype=np.int64)
-    G = sp.coo_matrix((data, (a0, a1)))
+    G = sp.coo_array((data, (a0, a1)))
 
     costs = None
     if cost:
         data = edge_data["cost"].values
-        costs = sp.coo_matrix((data, (a0, a1)))
+        costs = sp.coo_array((data, (a0, a1)))
 
     cap = None
     if capacity:
         data = edge_data["capacity"].values
-        cap = sp.coo_matrix((data, (a0, a1)))
+        cap = sp.coo_array((data, (a0, a1)))
 
     dem = None
     if demand:

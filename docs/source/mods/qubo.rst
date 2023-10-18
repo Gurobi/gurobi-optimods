@@ -109,7 +109,7 @@ definition as a SciPy sparse matrix in a comment).
     # weights = [-3, 2, -1, -2, 3]
     # row = [1, 2, 0, 0, 1]
     # col = [1, 2, 1, 2, 2]
-    # Q = sp.coo_matrix((weights, (row, col)), shape=(3, 3))
+    # Q = sp.coo_array((weights, (row, col)), shape=(3, 3))
 
     result = solve_qubo(Q)
 

@@ -149,7 +149,7 @@ def min_cost_flow_scipy(
         edge_source_result = edge_source[select]
         edge_target_result = edge_target[select]
         arg = (x.X[select], (edge_source_result, edge_target_result))
-        return model.ObjVal, sp.coo_matrix(arg, dtype=float, shape=G.shape)
+        return model.ObjVal, sp.coo_array(arg, dtype=float, shape=G.shape)
 
 
 @optimod()
