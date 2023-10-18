@@ -126,6 +126,17 @@ class TestBipartiteMatchingScipySparse(unittest.TestCase):
         self.assertEqual(matching.shape, adjacency.shape)
         self.assert_is_unweighted_matching(matching)
 
+    def test_random_csr_matrix(self):
+        # Property test for matchings on random graphs
+        adjacency, nodes1, nodes2 = random_bipartite(n1=8, n2=7, p=0.5, seed=98634)
+
+        matching = maximum_bipartite_matching(sp.csr_matrix(adjacency), nodes1, nodes2)
+
+        self.assertIsInstance(matching, sp.spmatrix)
+        self.assertIsNot(matching, adjacency)
+        self.assertEqual(matching.shape, adjacency.shape)
+        self.assert_is_unweighted_matching(matching)
+
     def test_random_csr_array(self):
         # Property test for matchings on random graphs
         adjacency, nodes1, nodes2 = random_bipartite(n1=8, n2=7, p=0.5, seed=98634)
