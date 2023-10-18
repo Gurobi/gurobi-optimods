@@ -23,7 +23,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "gurobipy>=10.0.1",
+    "gurobipy>=10.0.3",
     "gurobipy-pandas>=1.0.0",
     "numpy",
     "pandas",

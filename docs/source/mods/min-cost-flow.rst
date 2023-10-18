@@ -89,7 +89,7 @@ An example of these inputs with their respective requirements is shown below.
           >>> from gurobi_optimods import datasets
           >>> G, capacities, cost, demands = datasets.simple_graph_scipy()
           >>> G
-          <5x6 sparse matrix of type '<class 'numpy.int64'>'
+          <5x6 sparse array of type '<class 'numpy.int64'>'
                   with 7 stored elements in COOrdinate format>
           >>> print(G)
             (0, 1)        1
@@ -207,7 +207,7 @@ formats.
           >>> obj
           31.0
           >>> sol
-          <5x6 sparse matrix of type '<class 'numpy.float64'>'
+          <5x6 sparse array of type '<class 'numpy.float64'>'
                   with 5 stored elements in COOrdinate format>
           >>> print(sol)
             (0, 1)        1.0

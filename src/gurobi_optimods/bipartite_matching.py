@@ -194,7 +194,7 @@ def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
         indptr = np.arange(0, 2 * from_arc.shape[0] + 2, 2)
         ones = np.ones(from_arc.shape)
         data = np.column_stack((ones * -1.0, ones)).reshape(-1, order="C")
-        A = sp.csc_matrix((data, indices, indptr))
+        A = sp.csc_array((data, indices, indptr))
 
         # Solve model with gurobi, return cost and flows
         x = model.addMVar(A.shape[1], lb=0, ub=capacity)
@@ -215,5 +215,5 @@ def _maximum_bipartite_matching_scipy(adjacency, nodes1, nodes2, create_env):
 
     # Return undirected, unweighted adjacency matrix
     arg = (np.ones(from_arc_result.shape), (from_arc_result, to_arc_result))
-    matching = sp.coo_matrix(arg, dtype=float, shape=G.shape)
+    matching = sp.coo_array(arg, dtype=float, shape=G.shape)
     return matching + matching.T
