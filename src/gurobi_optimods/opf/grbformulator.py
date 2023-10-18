@@ -126,6 +126,8 @@ def lpformulator_optimize(alldata, model, opftype):
     if model.SolCount > 0:
         logger.info(f"Objective value = {model.objVal}.")
         model.printQuality()
+    else:
+        raise ValueError("No feasible solution found")
 
     return model.SolCount
 
@@ -423,74 +425,93 @@ def fill_result_fields(alldata, model, opftype, result):
 
 def compute_voltage_angles(alldata, result):
     """
-    Helper function to compute voltage angles out of previously computed
-    voltage magnitudes for a given AC OPF solution
+    Helper function to compute voltage angles out of previously computed voltage
+    magnitudes for a given AC OPF solution.
 
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param result: Result dictionary which is constructed for the user
-    :type result: dict
+    Starting from an arbitrary reference bus, the walks through all buses in a
+    connected order (by branches) so that voltage angle for a new bus can be
+    computed from a known bus. The voltage angle of the reference bus in set to
+    zero (arbitrary).
+
+    Computation for a new bus based on a known bus (where k = "from" m = "to":
+
+        cvar[km] = (voltage mag at k) * (voltage mag at m) * cos(thetak - thetam)
+
+    TODO will fail if the network is disconnected
+
+    TODO this could be implemented more simply
     """
 
-    # After setting all voltage magnitudes, we can compute the voltage angle
-    # Set voltage angle of reference bus to 0 (this is arbitrary)
+    IDtoCountmap = alldata["IDtoCountmap"]
     buses = alldata["buses"]
     branches = alldata["branches"]
-    busindex = alldata["refbus"]
     cvar = alldata["LP"]["cvar"]
+
+    # Start from the reference bus, set voltage angle to zero
+    busindex = alldata["refbus"]
     result["bus"][busindex]["Va"] = 0
-    # Next, compute the angle of all other buses starting from the reference bus
-    # k = "from" m = "to"
-    # cvar[km] = (voltage mag at k) * (voltage mag at m) * cos(thetak - thetam)
+
+    # Initial network search state. Note: all references to buses use the
+    # 'count' not the nodeID
     busesdone = {busindex}
     busesnext = set()
     for branchindex in buses[busindex].frombranchids.values():
         b = branches[branchindex]
-        # Already computed angle is always at first place of tuple
-        busesnext.add((b.f, b.t, branchindex, "f"))
+        busesnext.add((IDtoCountmap[b.f], IDtoCountmap[b.t], branchindex, "f"))
     for branchindex in buses[busindex].tobranchids.values():
         b = branches[branchindex]
-        # Already computed angle is always at first place of tuple
-        busesnext.add((b.t, b.f, branchindex, "t"))
+        busesnext.add((IDtoCountmap[b.t], IDtoCountmap[b.f], branchindex, "t"))
 
     while len(busesdone) != alldata["numbuses"]:
-        # Get a new bus
-        nextb = busesnext.pop()
-        while nextb[1] in busesdone:
-            nextb = busesnext.pop()
-        nextbusindex = nextb[1]
+        # Get a bus from the queue. This bus does not yet have it's voltage
+        # angle calculated, but is connected to a bus with a known voltage angle
+        # by the given branch.
+        knownbusindex, nextbusindex, branchindex, relationship = busesnext.pop()
+        while nextbusindex in busesdone:
+            knownbusindex, nextbusindex, branchindex, relationship = busesnext.pop()
         nextbus = buses[nextbusindex]
-        knownbusindex = nextb[0]
-        buses[knownbusindex]
+        knownbus = buses[knownbusindex]
+        assert knownbusindex in busesdone
+        branch = branches[branchindex]
+        if relationship == "f":
+            assert branch.f == knownbus.nodeID
+            assert branch.t == nextbus.nodeID
+        else:
+            assert relationship == "t"
+            assert branch.t == knownbus.nodeID
+            assert branch.f == nextbus.nodeID
+
+        # Compute the voltage angle of the next bus based on the known bus
         if alldata["doiv"]:
             # For IV, we filled the values manually so they are not Gurobi variables
-            cvarval = cvar[branches[nextb[2]]]
+            cvarval = cvar[branch]
         else:
-            cvarval = cvar[branches[nextb[2]]].X
-
+            cvarval = cvar[branch].X
         tmp = cvarval / (
             result["bus"][nextbusindex]["Vm"] * result["bus"][knownbusindex]["Vm"]
         )
         # Safe guard to avoid slightly being out of [-1,1] for numerical reasons
         tmp = max(-1, min(1, tmp))
         res = math.acos(tmp)
-        if nextb[3] == "f":
+        if relationship == "f":
             res -= result["bus"][knownbusindex]["Va"]
             res *= -1
         else:
             res += result["bus"][knownbusindex]["Va"]
         result["bus"][nextbusindex]["Va"] = res
-        busesdone.add(nextbusindex)
 
+        # Update search state
+        busesdone.add(nextbusindex)
         for branchindex in nextbus.frombranchids.values():
             b = branches[branchindex]
-            # Only add if bus is not done already
-            if b.t not in busesdone:
-                busesnext.add((b.f, b.t, branchindex, "f"))
+            assert b.f == nextbus.nodeID
+            if IDtoCountmap[b.t] not in busesdone:
+                busesnext.add((IDtoCountmap[b.f], IDtoCountmap[b.t], branchindex, "f"))
         for branchindex in nextbus.tobranchids.values():
             b = branches[branchindex]
-            if b.f not in busesdone:
-                busesnext.add((b.t, b.f, branchindex, "t"))
+            assert b.t == nextbus.nodeID
+            if IDtoCountmap[b.f] not in busesdone:
+                busesnext.add((IDtoCountmap[b.t], IDtoCountmap[b.f], branchindex, "t"))
 
 
 def fill_violations_fields(alldata, opftype, result):

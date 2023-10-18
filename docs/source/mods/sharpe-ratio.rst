@@ -138,9 +138,9 @@ One can optionally pass in ``rf_rate``, the non-negative risk-free return rate :
 The ``max_sharpe_ratio`` function returns a :class:`~gurobi_optimods.sharpe_ratio.SharpeRatioResult` instance. This object contains information about the computed portfolio. It features the following attributes:
 
 * ``x``: The portfolio that maximizes the Sharpe ratio. The values in the portfolio represent the relative weights that should be allocated to each asset. These weights sum to 1. If ``cov_matrix`` and/or ``mu`` were given as a pandas object, the portfolio is a :class:`pandas.Series`. Otherwise, the portfolio is a :class:`numpy.ndarray`.
-* ``sharpe_ratio``: The Sharpe ratio of the optimal portfolio.
-* ``ret``: The estimated return of the optimal portfolio.
-* ``risk``: The estimated risk of the optimal portfolio.
+* ``sharpe_ratio``: The Sharpe ratio :math:`(\mu^\top x - r_f) / \sqrt{x^\top \Sigma x}` of the optimal portfolio.
+* ``ret``: The estimated return :math:`\mu^\top x` of the optimal portfolio.
+* ``risk``: The estimated risk :math:`x^\top \Sigma x` of the optimal portfolio.
 
 Example code
 ------------
@@ -199,6 +199,7 @@ In the code below, we randomly generate 10,000 portfolios for the six assets fro
 
 .. code-block:: Python
 
+    import math
     import numpy as np
     import matplotlib.pyplot as plt
 
@@ -209,7 +210,7 @@ In the code below, we randomly generate 10,000 portfolios for the six assets fro
     wts = np.random.random((num_portfolios, num_assets))
     wts = wts / wts.sum(axis=1, keepdims=1)
 
-    # Calculate return, risk, and Sharpe ratio of each random portfolio
+    # Calculate return, standard deviation, and Sharpe ratio of each random portfolio
     risks = np.array([np.sqrt(wts[i] @ data.cov_matrix @ wts[i]) for i in range(num_portfolios)])
     returns = wts @ data.mu
     sharpe_ratios = returns / risks
@@ -218,9 +219,9 @@ In the code below, we randomly generate 10,000 portfolios for the six assets fro
     plt.figure(figsize=(10, 8))
     plt.scatter(risks, returns, c=sharpe_ratios, cmap="plasma")
     plt.colorbar(label="Sharpe ratio")
-    plt.xlabel("Risk")
+    plt.xlabel("Risk (standard deviation)")
     plt.ylabel("Return")
-    plt.scatter(portfolio.risk, portfolio.ret, marker="*", c="red", s=200)
+    plt.scatter(math.sqrt(portfolio.risk), portfolio.ret, marker="*", c="red", s=200)
 
     plt.show()
 

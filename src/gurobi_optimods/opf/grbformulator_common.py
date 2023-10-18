@@ -8,7 +8,7 @@ def set_gencost_objective(alldata, model):
     GenPvar = alldata["LP"]["GenPvar"]
     gens = alldata["gens"]
 
-    # TODO fail earlier if not linear or quadratic.
+    # Double checking: this should have been caught by input validation
     for gen in gens.values():
         assert gen.costdegree >= 1
         assert gen.costdegree == len(gen.costvector) - 1

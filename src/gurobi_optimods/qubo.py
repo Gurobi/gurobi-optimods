@@ -53,7 +53,7 @@ def callback(model, where):
 
 
 @optimod()
-def solve_qubo(coeff_matrix, time_limit=GRB.INFINITY, *, create_env) -> QuboResult:
+def solve_qubo(coeff_matrix, *, create_env) -> QuboResult:
     """
     Solve a quadratic unconstrained binary optimization (QUBO) problem, i.e.,
     minimize quadratic function :math:`x'Qx` defined by coefficient matrix
@@ -63,8 +63,6 @@ def solve_qubo(coeff_matrix, time_limit=GRB.INFINITY, *, create_env) -> QuboResu
     ----------
     coeff_matrix : spmatrix
         Quadratic coefficient matrix
-    time_limit : float
-        Time limit in seconds (optional, default no limit)
 
     Returns
     -------
@@ -81,7 +79,7 @@ def solve_qubo(coeff_matrix, time_limit=GRB.INFINITY, *, create_env) -> QuboResu
 
     n = shape[0]
 
-    params = {"TimeLimit": time_limit, "LogToConsole": 0}
+    params = {"LogToConsole": 0}
 
     with create_env(params=params) as env, gp.Model(env=env) as model:
         x = model.addMVar(n, vtype=GRB.BINARY)

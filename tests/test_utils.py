@@ -117,6 +117,17 @@ class TestOptimodDecorator(unittest.TestCase):
                 )
                 raise
 
+    def test_time_limit(self):
+        # Make time limit is a first class parameter for all mods
+
+        with redirect_stdout(io.StringIO()) as buffer_stdout, redirect_stderr(
+            io.StringIO()
+        ) as buffer_stderr:
+            self.mod(time_limit=10)
+
+        self.assertIn("Set parameter TimeLimit to value 10", buffer_stdout.getvalue())
+        self.assertEqual(buffer_stderr.getvalue(), "")
+
 
 class TestOverrideParams(unittest.TestCase):
     def test_mod_override_outputflag(self):

@@ -1,6 +1,7 @@
 # Tests that solve models using the public API
 
 import collections
+import random
 import unittest
 
 import gurobipy as gp
@@ -40,11 +41,11 @@ class TestInvalidData(unittest.TestCase):
             solve_opf(self.case, opftype="AC")
 
     def test_nonquadratic_cost(self):
-        # Error out on any nonzero cubic terms or higher
+        # Error out on any cubic terms or higher
         self.case["gencost"][0]["n"] = 4
         self.case["gencost"][0]["costvector"] = [1, 2, 3, 4]
         with self.assertRaisesRegex(
-            ValueError, "only quadratic and linear cost functions are supported"
+            ValueError, "only quadratic and linear cost functions"
         ):
             solve_opf(self.case, opftype="AC")
 
@@ -54,6 +55,30 @@ class TestInvalidData(unittest.TestCase):
         self.case["gen"].append(dict(self.case["gen"][-1]))
         with self.assertRaisesRegex(
             ValueError, "mismatch between gen and gencost records"
+        ):
+            solve_opf(self.case, opftype="AC")
+
+    def test_bad_branch_fbus(self):
+        # All branches must point to valid bus ids
+        self.case["branch"][3]["fbus"] = 22
+        with self.assertRaisesRegex(
+            ValueError, "Unknown bus ID referenced in branch fbus"
+        ):
+            solve_opf(self.case, opftype="AC")
+
+    def test_bad_branch_tbus(self):
+        # All branches must point to valid bus ids
+        self.case["branch"][5]["tbus"] = 15
+        with self.assertRaisesRegex(
+            ValueError, "Unknown bus ID referenced in branch tbus"
+        ):
+            solve_opf(self.case, opftype="AC")
+
+    def test_bad_gen_bus(self):
+        # All generators must point to valid bus ids
+        self.case["gen"][1]["bus"] = 48
+        with self.assertRaisesRegex(
+            ValueError, "Unknown bus ID referenced in generator bus"
         ):
             solve_opf(self.case, opftype="AC")
 
@@ -153,6 +178,111 @@ class TestAPICase9(unittest.TestCase):
         # Solve model, expect failure
         with self.assertRaisesRegex(ValueError, "Infeasible model"):
             solve_opf(self.case, opftype="AC", branch_switching=True)
+
+
+class TestComputeVoltageAnglesBug(unittest.TestCase):
+    # Reordering the buses on input (which does not change the network
+    # structure) causes compute_voltage_angles to fail.
+
+    def setUp(self):
+        self.case = load_opf_example("case9")
+        reorder = [8, 2, 5, 7, 6, 1, 3, 4, 0]
+        self.case["bus"] = [self.case["bus"][ind] for ind in reorder]
+
+    def assert_approx_equal(self, value, expected, tol):
+        self.assertLess(abs(value - expected), tol)
+
+    def test_bug(self):
+        # Should run without errors
+        solution = solve_opf(self.case, opftype="ac", verbose=False)
+        # Only one bus should have zero voltage angle (the reference bus)
+        num_zeros = sum(bus["Va"] == 0 for bus in solution["bus"])
+        self.assertEqual(num_zeros, 1)
+
+
+class TestAPICase9Reordered(unittest.TestCase):
+    # It should be possible to re-order the input data (i.e. the lists of buses,
+    # branches, generators) and get the same result
+
+    def setUp(self):
+        self.case = load_opf_example("case9")
+
+        self.bus_reorder = [i for i, _ in enumerate(self.case["bus"])]
+        self.branch_reorder = [i for i, _ in enumerate(self.case["branch"])]
+        self.gen_reorder = [i for i, _ in enumerate(self.case["gen"])]
+
+        random.shuffle(self.bus_reorder)
+        random.shuffle(self.branch_reorder)
+        random.shuffle(self.gen_reorder)
+
+        self.case_reordered = {
+            "baseMVA": self.case["baseMVA"],
+            "bus": [dict(self.case["bus"][ind]) for ind in self.bus_reorder],
+            "branch": [dict(self.case["branch"][ind]) for ind in self.branch_reorder],
+            "gen": [dict(self.case["gen"][ind]) for ind in self.gen_reorder],
+            "gencost": [dict(self.case["gencost"][ind]) for ind in self.gen_reorder],
+        }
+
+    def assert_approx_equal(self, value, expected, tol):
+        self.assertLess(abs(value - expected), tol)
+
+    def test_dc(self):
+        kwargs = dict(
+            opftype="dc",
+            solver_params={"OptimalityTol": 1e-6},
+        )
+        solution_original = solve_opf(self.case, **kwargs)
+        solution_reordered = solve_opf(self.case_reordered, **kwargs)
+
+        self.assert_approx_equal(
+            solution_original["f"], solution_reordered["f"], tol=1e-1
+        )
+
+        for ind, orig_ind in enumerate(self.bus_reorder):
+            bus_original = solution_original["bus"][orig_ind]
+            bus_reordered = solution_reordered["bus"][ind]
+            for key, value in bus_original.items():
+                self.assert_approx_equal(bus_reordered[key], value, tol=1e-3)
+
+        for ind, orig_ind in enumerate(self.branch_reorder):
+            branch_original = solution_original["branch"][orig_ind]
+            branch_reordered = solution_reordered["branch"][ind]
+            for key, value in branch_original.items():
+                self.assert_approx_equal(branch_reordered[key], value, tol=1e-3)
+
+        for ind, orig_ind in enumerate(self.gen_reorder):
+            gen_original = solution_original["gen"][orig_ind]
+            gen_reordered = solution_reordered["gen"][ind]
+            for key, value in gen_original.items():
+                self.assert_approx_equal(gen_reordered[key], value, tol=1e-3)
+
+    def test_ac(self):
+        # Results are too numerically unstable, just check the call goes through
+        # without errors and objective function value is in the ballpark.
+        kwargs = dict(
+            opftype="ac",
+            solver_params={"MIPGap": 1e-4},
+        )
+        solution_original = solve_opf(self.case, **kwargs)
+        solution_reordered = solve_opf(self.case_reordered, **kwargs)
+
+        self.assert_approx_equal(
+            solution_original["f"], solution_reordered["f"], tol=1e1
+        )
+
+    def test_ac_relax(self):
+        # Results are too numerically unstable, just check the call goes through
+        # without errors and objective function value is in the ballpark.
+        kwargs = dict(
+            opftype="acrelax",
+            solver_params={"OptimalityTol": 1e-6},
+        )
+        solution_original = solve_opf(self.case, **kwargs)
+        solution_reordered = solve_opf(self.case_reordered, **kwargs)
+
+        self.assert_approx_equal(
+            solution_original["f"], solution_reordered["f"], tol=1e1
+        )
 
 
 @unittest.skipIf(size_limited_license(), "size-limited-license")
