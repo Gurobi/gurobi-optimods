@@ -58,12 +58,10 @@ can be stated as follows:
 
     The minimum cut problem formulation is the dual of the maximum flow
     formulation. The minimum cut is found by solving the maximum flow problem
-    and extracting the constraint dual values.
-
-    Particularly, we can get the edges in the cutset by checking the non-zero
-    dual values of the capacity constraints (the last constraints), with these,
-    we can find the partions by checking the predecessors and successors
-    vertices of these edges.
+    and extracting the constraint dual values. Specifically, the edges in the
+    cutset are those whose capacity constraints have non-zero dual values. The
+    graph partitions formed by removing the edges in the cutset can then be
+    round by following the predecessor and successor vertices of these edges.
 
 |
 
