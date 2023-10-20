@@ -9,6 +9,8 @@ import gurobipy as gp
 from gurobi_optimods.datasets import load_opf_example
 from gurobi_optimods.opf import solve_opf
 
+GUROBI_MAJOR_VERSION, *_ = gp.gurobi.version()
+
 
 def size_limited_license():
     with gp.Env(params={"OutputFlag": 0}) as env, gp.Model(env=env) as model:
@@ -178,6 +180,26 @@ class TestAPICase9(unittest.TestCase):
         # Solve model, expect failure
         with self.assertRaisesRegex(ValueError, "Infeasible model"):
             solve_opf(self.case, opftype="AC", branch_switching=True)
+
+    @unittest.skipIf(GUROBI_MAJOR_VERSION >= 11, "v10 specific test case")
+    def test_ac_polar_piecewise(self):
+        # We need to be fairly forgiving with v10 PWL approximations
+        kwargs = dict(
+            opftype="acpolar",
+            solver_params={"MIPGap": 2e-2, "TimeLimit": 60},
+        )
+        solution = solve_opf(self.case, **kwargs)
+        self.assertLess(solution["f"], 5450.0)
+
+    @unittest.skipIf(GUROBI_MAJOR_VERSION < 11, "v11 specific test case")
+    def test_ac_polar_nonlinear(self):
+        # v11 brings home the bacon
+        kwargs = dict(
+            opftype="acpolar",
+            solver_params={"MIPGap": 1e-3, "TimeLimit": 60},
+        )
+        solution = solve_opf(self.case, **kwargs)
+        self.assertLess(solution["f"], 5300.0)
 
 
 class TestComputeVoltageAnglesBug(unittest.TestCase):
