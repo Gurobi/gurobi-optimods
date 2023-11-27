@@ -30,11 +30,11 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/min-cost-flow-result.png
 
-    .. grid-item-card:: Maximum Weighted Independent Set
-        :link: mods/mwis
+    .. grid-item-card:: Maximum Weighted Independent Set/Clique
+        :link: mods/mwis_mwc
         :link-type: doc
         :text-align: center
-        :img-top: mods/figures/mwis.png
+        :img-top: mods/figures/mwis_mwc.png
 
     .. grid-item-card:: Optimal Power Flow
         :link: mods/opf/opf
