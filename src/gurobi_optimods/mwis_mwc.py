@@ -32,9 +32,9 @@ class Result:
 
 
 def check_input(adjacency_matrix, weights):
-    if not isinstance(adjacency_matrix, sp.sparray):
+    if not isinstance(adjacency_matrix, sp.spmatrix):
         raise ValueError(
-            "The adjacency matrix should be a scipy sparse array in CSR format."
+            "The adjacency matrix should be a scipy sparse matrix in CSR format."
         )
     if not isinstance(weights, np.ndarray):
         raise ValueError("The weights of the vertices should be a numpy array.")
@@ -52,7 +52,7 @@ def maximum_weighted_independent_set(adjacency_matrix, weights, *, create_env):
 
     Parameters
     ----------
-    adjacency_matrix : sparray
+    adjacency_matrix : spmatrix
         The upper triangular adjacency matrix
     weights : ndarray
         Vertex weight array
@@ -83,13 +83,12 @@ def maximum_weighted_independent_set(adjacency_matrix, weights, *, create_env):
         return Result(mwis, sum(weights[mwis]))
 
 
-@optimod()
 def maximum_weighted_clique(adjacency_matrix, weights, **kwargs):
     """Find a set of fully connected vertices with maximum weighted sum.
 
     Parameters
     ----------
-    adjacency_matrix : sparray
+    adjacency_matrix : spmatrix
         The upper triangular adjacency matrix
     weights : ndarray
         Vertex weight array
@@ -100,7 +99,7 @@ def maximum_weighted_clique(adjacency_matrix, weights, **kwargs):
     """
     check_input(adjacency_matrix, weights)
     num_vertices, _ = adjacency_matrix.shape
-    complement_array = (
+    complement_matrix = (
         sp.triu(np.ones((num_vertices, num_vertices)), k=1) - adjacency_matrix
     )
-    return maximum_weighted_independent_set(complement_array, weights, **kwargs)
+    return maximum_weighted_independent_set(complement_matrix, weights, **kwargs)
