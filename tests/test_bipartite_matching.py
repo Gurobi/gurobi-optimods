@@ -65,7 +65,7 @@ class TestBipartiteMatchingScipySparse(unittest.TestCase):
 
         matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
 
-        self.assertIsInstance(matching, sp.spmatrix)
+        self.assertIsInstance(matching, sp.sparray)
         self.assertIsNot(matching, adjacency)
         self.assertEqual(matching.shape, (degree, degree))
         self.assert_is_unweighted_matching(matching)
@@ -85,7 +85,7 @@ class TestBipartiteMatchingScipySparse(unittest.TestCase):
 
         matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
 
-        self.assertIsInstance(matching, sp.spmatrix)
+        self.assertIsInstance(matching, sp.sparray)
         self.assertIsNot(matching, adjacency)
         self.assertEqual(matching.shape, (degree, degree))
         self.assert_is_unweighted_matching(matching)
@@ -103,7 +103,7 @@ class TestBipartiteMatchingScipySparse(unittest.TestCase):
 
         matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
 
-        self.assertIsInstance(matching, sp.spmatrix)
+        self.assertIsInstance(matching, sp.sparray)
         self.assertIsNot(matching, adjacency)
         self.assertEqual(matching.shape, (6, 6))
         self.assert_is_unweighted_matching(matching)
@@ -121,7 +121,7 @@ class TestBipartiteMatchingScipySparse(unittest.TestCase):
 
         matching = maximum_bipartite_matching(adjacency, nodes1, nodes2)
 
-        self.assertIsInstance(matching, sp.spmatrix)
+        self.assertIsInstance(matching, sp.sparray)
         self.assertIsNot(matching, adjacency)
         self.assertEqual(matching.shape, adjacency.shape)
         self.assert_is_unweighted_matching(matching)
@@ -132,7 +132,7 @@ class TestBipartiteMatchingScipySparse(unittest.TestCase):
 
         matching = maximum_bipartite_matching(sp.csr_matrix(adjacency), nodes1, nodes2)
 
-        self.assertIsInstance(matching, sp.spmatrix)
+        self.assertIsInstance(matching, sp.sparray)
         self.assertIsNot(matching, adjacency)
         self.assertEqual(matching.shape, adjacency.shape)
         self.assert_is_unweighted_matching(matching)
@@ -143,7 +143,7 @@ class TestBipartiteMatchingScipySparse(unittest.TestCase):
 
         matching = maximum_bipartite_matching(sp.csr_array(adjacency), nodes1, nodes2)
 
-        self.assertIsInstance(matching, sp.spmatrix)
+        self.assertIsInstance(matching, sp.sparray)
         self.assertIsNot(matching, adjacency)
         self.assertEqual(matching.shape, adjacency.shape)
         self.assert_is_unweighted_matching(matching)
@@ -154,7 +154,7 @@ class TestBipartiteMatchingScipySparse(unittest.TestCase):
 
         matching = maximum_bipartite_matching(sp.csc_array(adjacency), nodes1, nodes2)
 
-        self.assertIsInstance(matching, sp.spmatrix)
+        self.assertIsInstance(matching, sp.sparray)
         self.assertIsNot(matching, adjacency)
         self.assertEqual(matching.shape, adjacency.shape)
         self.assert_is_unweighted_matching(matching)
