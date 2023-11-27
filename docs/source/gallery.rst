@@ -75,7 +75,7 @@ The OptiMods Gallery
    mods/lad-regression
    mods/min-cost-flow
    mods/max-flow-min-cut
-   mods/mwis
+   mods/mwis_mwc
    mods/opf/opf
    mods/portfolio
    mods/qubo

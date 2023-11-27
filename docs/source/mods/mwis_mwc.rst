@@ -69,7 +69,7 @@ set :math:`S` represents the stability number of graph :math:`G`.
                             & x_i \in \{0, 1\} & \forall i \in V
         \end{align}
 
-The input data for this Mod includes a scipy sparse array in CSR (Compressed
+The input data for this Mod includes a scipy sparse matrix in CSR (Compressed
 SparseRow) format that captures the adjacency matrix of the
 graph :math:`G` (upper triangle with zero diagonals only), plus a
 numpy array that captures the weights of the vertices.
@@ -93,14 +93,14 @@ The example below finds the maximum weighted independent set and
 the maximum weighted clique for a graph with 8 vertices and 12 edges
 known as the cube graph.
 
-.. testcode:: mwis
+.. testcode:: mwis_mwc
 
     import scipy.sparse as sp
     import networkx as nx
     import numpy as np
     from gurobi_optimods.mwis import maximum_weighted_independent_set, maximum_weighted_clique
 
-    # Graph adjacency matrix (upper triangular) as a sparse array.
+    # Graph adjacency matrix (upper triangular) as a sparse matrix.
     g = nx.cubical_graph()
     adjacency_matrix = sp.triu(nx.to_scipy_sparse_array(g))
     # Vertex weights
@@ -112,7 +112,7 @@ known as the cube graph.
     # Compute maximum weighted clique.
     mwc = maximum_weighted_clique(adjacency_matrix, weights)
 
-.. testoutput:: mwis
+.. testoutput:: mwis_mwc
     :hide:
 
     ...
@@ -122,28 +122,49 @@ known as the cube graph.
 Solution
 --------
 
-The solution is a numpy array containing the vertices in set :math:`S`.
+The solution is a data class including the numpy array of the vertices in the
+independent set or clique as well as the its weight.
 
-.. doctest:: mwis
+.. doctest:: mwis_mwc
     :options: +NORMALIZE_WHITESPACE
 
     >>> mwis
+    Result(x=array([0, 2, 5, 7]), f=165)
+    >>> mwis.x
     array([0, 2, 5, 7])
-    >>> maximum_vertex_weight = sum(weights[mwis])
-    >>> maximum_vertex_weight
+    >>> mwis.f
     165
 
+    >>> mwc
+    Result(x=array([6, 7]), f=192)
+    >>> mwc.x
+    array([6, 7]
+    >>> mwc.f
+    192
 
-.. doctest:: mwis
-    :options: +NORMALIZE_WHITESPACE
 
-    >>> import networkx as nx
-    >>> import matplotlib.pyplot as plt
-    >>> layout = nx.spring_layout(g, seed=0)
-    >>> color_map = ["red" if node in mwis else "lightgrey" for node in g.nodes()]
-    >>> nx.draw(g, pos=layout, node_color=color_map, node_size=600, with_labels=True)
+.. code-block:: Python
 
-The vertices in the independent set are highlighted in red.
+    import networkx as nx
+    import matplotlib.pyplot as plt
 
-.. image:: figures/mwis.png
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    layout = nx.spring_layout(g, seed=0)
+
+    # Plot the maximum weighted independent set
+    color_map = ["red" if node in mwis.x else "lightgrey" for node in g.nodes()]
+    nx.draw(g, pos=layout, ax= ax1, node_color=color_map, node_size=600, with_labels=True)
+
+    # Plot the maximum weighted clique
+    color_map = ["blue" if node in mwc.x else "lightgrey" for node in g.nodes()]
+    nx.draw(g, pos=layout, ax = ax2, node_color=color_map, node_size=600, with_labels=True)
+
+    fig.tight_layout()
+    plt.show()
+
+
+The vertices in the independent set and in the clique are highlighted in red and
+blue, respectively.
+
+.. image:: figures/mwis_mwc.png
   :width: 600
