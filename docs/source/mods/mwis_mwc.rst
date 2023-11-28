@@ -2,12 +2,12 @@ Maximum Weighted Independent Set/Clique
 =========================================
 The maximum independent set problem and its complement, the maximum
 clique are among fundamental problems in combinatorial optimization with ubiquitous
-applications and connections to other problems [REF].
+applications and connections to other problems (:footcite:t:`bomze1999maximum,wu2015review`).
 
 In this Mod, we consider the more general problems of the maximum weighted
 independent set and maximum weighted clique which have applications
 in various fields such as computer vision, pattern recognition,
-molecular structure matching, social network analysis, and genome data mapping [REF].
+molecular structure matching, social network analysis, and genome data mapping.
 To better understand how a theoretical graph theory
 problem can be used to address a real-world challenge, let us review one
 application area for each problem in detail.
@@ -168,3 +168,5 @@ blue, respectively.
 
 .. image:: figures/mwis_mwc.png
   :width: 600
+
+.. footbibliography::
