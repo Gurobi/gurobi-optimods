@@ -117,6 +117,8 @@ known as the cube graph.
 
     ...
     Best objective 1.650000000000e+02, best bound 1.650000000000e+02, gap 0.0000%
+    ...
+    Best objective 1.920000000000e+02, best bound 1.920000000000e+02, gap 0.0000%
 
 
 Solution
@@ -138,7 +140,7 @@ independent set or clique as well as the its weight.
     >>> mwc
     Result(x=array([6, 7]), f=192)
     >>> mwc.x
-    array([6, 7]
+    array([6, 7])
     >>> mwc.f
     192
 
