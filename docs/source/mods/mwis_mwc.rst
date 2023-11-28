@@ -77,8 +77,8 @@ numpy array that captures the weights of the vertices.
 
 **Maximum weighted clique**: Given an undirected graph :math:`G = (V, E, w)`, finding
 the maximum weighted clique of graph :math:`G` is equivalent tp finding the
-maximum weighted independent set of the complement graph of :math:`G` known
-as :math:`G^{\prime} = (V, E^{\prime}, w)` where
+maximum weighted independent set of its complement graph
+:math:`G^{\prime} = (V, E^{\prime}, w)` where
 
 * for every edge :math:`(i, j)` in :math:`E`, there is no edge in :math:`E^{\prime}`, and
 * for every edge :math:`(i, j)` not in :math:`E`, there is an edge in :math:`E^{\prime}`.
@@ -125,7 +125,7 @@ Solution
 --------
 
 The solution is a data class including the numpy array of the vertices in the
-independent set or clique as well as the its weight.
+independent set or clique as well as its weight.
 
 .. doctest:: mwis_mwc
     :options: +NORMALIZE_WHITESPACE
