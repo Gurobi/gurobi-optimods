@@ -98,7 +98,7 @@ known as the cube graph.
     import scipy.sparse as sp
     import networkx as nx
     import numpy as np
-    from gurobi_optimods.mwis import maximum_weighted_independent_set, maximum_weighted_clique
+    from gurobi_optimods.mwis_mwc import maximum_weighted_independent_set, maximum_weighted_clique
 
     # Graph adjacency matrix (upper triangular) as a sparse matrix.
     g = nx.cubical_graph()

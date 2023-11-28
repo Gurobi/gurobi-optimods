@@ -102,4 +102,5 @@ def maximum_weighted_clique(adjacency_matrix, weights, **kwargs):
     complement_matrix = (
         sp.triu(np.ones((num_vertices, num_vertices)), k=1) - adjacency_matrix
     )
-    return maximum_weighted_independent_set(complement_matrix, weights, **kwargs)
+    result = maximum_weighted_independent_set(complement_matrix, weights, **kwargs)
+    return result
