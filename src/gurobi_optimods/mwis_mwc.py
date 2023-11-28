@@ -97,7 +97,8 @@ def maximum_weighted_clique(adjacency_matrix, weights, **kwargs):
     Returns
     -------
     Result
-        A data class representing the maximum weighted clique array and its weight
+        A data class representing the maximum weighted independent set array
+        and its weight
     """
     check_input(adjacency_matrix, weights)
     num_vertices, _ = adjacency_matrix.shape
