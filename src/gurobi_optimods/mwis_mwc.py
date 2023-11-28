@@ -59,6 +59,7 @@ def maximum_weighted_independent_set(adjacency_matrix, weights, *, create_env):
 
     Returns
     -------
+    Result
         A data class representing the maximum weighted independent set array
         and its weight
     """
@@ -95,6 +96,7 @@ def maximum_weighted_clique(adjacency_matrix, weights, **kwargs):
 
     Returns
     -------
+    Result
         A data class representing the maximum weighted clique array and its weight
     """
     check_input(adjacency_matrix, weights)
