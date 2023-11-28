@@ -98,6 +98,16 @@ class TestMWIS(unittest.TestCase):
         assert_array_equal(mwis.x, np.array([0, 2, 5, 7]))
         self.assertEqual(mwis.f, 165)
 
+    def test_solver_params(self):
+        num_vertices, density, seed = 10, 0.75, 0
+        adjacency_matrix = get_adjacency_matrix(num_vertices, density, seed)
+        weights = np.random.randint(1, 100, size=num_vertices)
+        mwis = maximum_weighted_independent_set(
+            adjacency_matrix, weights, solver_params={"presolve": 2, "method": 1}
+        )
+        self.assertGreaterEqual(len(mwis.x), 1)
+        self.assertLessEqual(mwis.f, weights.sum())
+
 
 class TestMWC(unittest.TestCase):
     def test_random_graph(self):
@@ -136,3 +146,13 @@ class TestMWC(unittest.TestCase):
         mwc = maximum_weighted_clique(adjacency_matrix, weights)
         assert_array_equal(mwc.x, np.array([6, 7]))
         self.assertEqual(mwc.f, 192)
+
+    def test_solver_params(self):
+        num_vertices, density, seed = 10, 0.75, 0
+        adjacency_matrix = get_adjacency_matrix(num_vertices, density, seed)
+        weights = np.random.randint(1, 100, size=num_vertices)
+        mwc = maximum_weighted_independent_set(
+            adjacency_matrix, weights, solver_params={"presolve": 2, "method": 1}
+        )
+        self.assertGreaterEqual(len(mwc.x), 1)
+        self.assertLessEqual(mwc.f, weights.sum())
