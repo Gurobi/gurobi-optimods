@@ -8,6 +8,7 @@ Contains file I/O methods for reading and writing MATPOWER format.
 import numpy as np
 import pandas as pd
 import scipy
+import scipy.io
 
 bus_field_names = [
     "bus_i",
