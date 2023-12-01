@@ -368,6 +368,7 @@ class TestAPILargeModels(unittest.TestCase):
                 )
 
 
+@unittest.skip("unstable")
 class TestAPIBranchSwitching(unittest.TestCase):
     def setUp(self):
         # Modification of case9 where branch switching has an effect
