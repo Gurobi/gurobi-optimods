@@ -63,7 +63,7 @@ extlinks = {
 # -- Bibfiles
 bibtex_bibfiles = [
     "refs/graphs.bib",
-    "refs/mwis_mwc.bib",
+    "refs/mwis.bib",
     "refs/opf.bib",
     "refs/portfolio.bib",
     "refs/qubo.bib",

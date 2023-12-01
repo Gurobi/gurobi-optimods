@@ -13,7 +13,7 @@ API Reference
 .. automodule:: gurobi_optimods.min_cut
    :members: min_cut, MinCutResult
 
-.. automodule:: gurobi_optimods.mwis_mwc
+.. automodule:: gurobi_optimods.mwis
    :members: maximum_weighted_independent_set, maximum_weighted_clique, Result
 
 .. automodule:: gurobi_optimods.opf

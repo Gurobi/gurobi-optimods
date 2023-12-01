@@ -93,12 +93,12 @@ The example below finds the maximum weighted independent set and
 the maximum weighted clique for a graph with 8 vertices and 12 edges
 known as the cube graph.
 
-.. testcode:: mwis_mwc
+.. testcode:: mwis
 
     import scipy.sparse as sp
     import networkx as nx
     import numpy as np
-    from gurobi_optimods.mwis_mwc import maximum_weighted_independent_set, maximum_weighted_clique
+    from gurobi_optimods.mwis import maximum_weighted_independent_set, maximum_weighted_clique
 
     # Graph adjacency matrix (upper triangular) as a sparse matrix.
     g = nx.cubical_graph()
@@ -112,7 +112,7 @@ known as the cube graph.
     # Compute maximum weighted clique.
     mwc = maximum_weighted_clique(adjacency_matrix, weights)
 
-.. testoutput:: mwis_mwc
+.. testoutput:: mwis
     :hide:
 
     ...
@@ -127,7 +127,7 @@ Solution
 The solution is a data class including the numpy array of the vertices in the
 independent set or clique as well as its weight.
 
-.. doctest:: mwis_mwc
+.. doctest:: mwis
     :options: +NORMALIZE_WHITESPACE
 
     >>> mwis
@@ -168,7 +168,7 @@ independent set or clique as well as its weight.
 The vertices in the independent set and in the clique are highlighted in red and
 blue, respectively.
 
-.. image:: figures/mwis_mwc.png
+.. image:: figures/mwis.png
   :width: 600
 
 .. footbibliography::

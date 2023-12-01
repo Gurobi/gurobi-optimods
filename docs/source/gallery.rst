@@ -31,10 +31,10 @@ The OptiMods Gallery
         :img-top: mods/figures/min-cost-flow-result.png
 
     .. grid-item-card:: Maximum Weighted Independent Set/Clique
-        :link: mods/mwis_mwc
+        :link: mods/mwis
         :link-type: doc
         :text-align: center
-        :img-top: mods/figures/mwis_mwc.png
+        :img-top: mods/figures/mwis.png
 
     .. grid-item-card:: Optimal Power Flow
         :link: mods/opf/opf
@@ -75,7 +75,7 @@ The OptiMods Gallery
    mods/lad-regression
    mods/min-cost-flow
    mods/max-flow-min-cut
-   mods/mwis_mwc
+   mods/mwis
    mods/opf/opf
    mods/portfolio
    mods/qubo
