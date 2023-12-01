@@ -1,36 +1,30 @@
-Maximum Weighted Independent Set/Clique
-=========================================
-The maximum independent set problem and its complement, the maximum
-clique are among fundamental problems in combinatorial optimization with ubiquitous
-applications and connections to other problems (:footcite:t:`bomze1999maximum,wu2015review`).
+Maximum Weighted Independent Set
+================================
+The maximum independent set problem is one of the fundamental problems
+in combinatorial optimization with ubiquitous applications and connections to
+other problems. Maximum clique, minimum vertex cover, and maximum matching are
+a few examples of problems that can be reduced to a maximum independent set problem.
 
-In this Mod, we consider the more general problems of the maximum weighted
-independent set and maximum weighted clique which have applications
-in various fields such as computer vision, pattern recognition,
-molecular structure matching, social network analysis, and genome data mapping.
-To better understand how a theoretical graph theory
+In this Mod, we consider the more general problem of the maximum weighted
+independent set (MWIS), which has applications in various fields such as computer
+vision, pattern recognition, molecular structure matching, social network analysis,
+and genome data mapping. To better understand how a theoretical graph theory
 problem can be used to address a real-world challenge, let us review one
-application area for each problem in detail.
+application area in detail.
 
-**Maximum weighted independent set**: To measure the structural similarity between
-two molecules, the molecules are first represented as labeled graphs where the
-vertices and the edges correspond to the atoms of the molecule and its chemical bonds,
-respectively. To find the largest substructure (subgraph) that appears in both molecular
+To measure the structural similarity between two molecules, the
+molecules are first represented as labeled graphs where the vertices and the edges
+correspond to the atoms of the molecule and its chemical bonds, respectively. To
+find the largest substructure (subgraph) that appears in both molecular
 graphs, it suffices to find the maximum weighted independent set of a third graph,
-known as conflict graph. The vertices and the edges of the conflict graph represent
-possible mappings and conflicts between two molecules, respectively.
+known as conflict graph. The vertices and the edges of the conflict
+graph represent possible mappings and conflicts
+between two molecules, respectively.
 
-**Maximum weighted clique**: Consider a social network where the people and the
-connections between them are respectively represented as vertices and the edges
-of a graph. Different social and psychological behavior of people are also taken
-into account as vertex weights. To find a group of people who all know each other
-and have the maximum social/psychological harmony, it suffices to identify the maximum
-weighted clique of the social graph.
 
 Problem Specification
 ---------------------
 
-**Maximum weighted independent set**:
 Consider an undirected graph :math:`G` with :math:`n` vertices and :math:`m`
 edges where each vertex is associated with a positive weight :math:`w`. Find a
 maximum weighted independent set, i.e., select a set of vertices in graph
@@ -44,9 +38,6 @@ vertex :math:`i \in V` has a positive weight :math:`w_i`. Find a subset :math:`S
 * no two vertices in :math:`S` are connected by an edge; and
 * among all such independent sets, the set :math:`S` has the maximum total
   vertex weight.
-
-*Note*: In case all vertices have equal weights, the cardinality of
-set :math:`S` represents the stability number of graph :math:`G`.
 
 .. dropdown:: Background: Optimization Model
 
@@ -70,35 +61,23 @@ set :math:`S` represents the stability number of graph :math:`G`.
         \end{align}
 
 The input data for this Mod includes a scipy sparse matrix in CSR (Compressed
-SparseRow) format that captures the adjacency matrix of the
-graph :math:`G` (upper triangle with zero diagonals only), plus a
+SparseRow) format
+that captures the adjacency matrix of the graph :math:`G` (upper triangle only), plus a
 numpy array that captures the weights of the vertices.
 
-
-**Maximum weighted clique**: Given an undirected graph :math:`G = (V, E, w)`, finding
-the maximum weighted clique of graph :math:`G` is equivalent tp finding the
-maximum weighted independent set of its complement graph
-:math:`G^{\prime} = (V, E^{\prime}, w)` where
-
-* for every edge :math:`(i, j)` in :math:`E`, there is no edge in :math:`E^{\prime}`, and
-* for every edge :math:`(i, j)` not in :math:`E`, there is an edge in :math:`E^{\prime}`.
-
-*Note*: In case all vertices have equal weights, the cardinality of
-the maximum clique set represents the clique number of graph :math:`G`.
 
 Code
 ----
 
-The example below finds the maximum weighted independent set and
-the maximum weighted clique for a graph with 8 vertices and 12 edges
-known as the cube graph.
+The example below finds a maximum weighted independent set for
+a graph with 8 vertices and 12 edges known as the cube graph.
 
 .. testcode:: mwis
 
     import scipy.sparse as sp
     import networkx as nx
     import numpy as np
-    from gurobi_optimods.mwis import maximum_weighted_independent_set, maximum_weighted_clique
+    from gurobi_optimods.mwis import maximum_weighted_independent_set
 
     # Graph adjacency matrix (upper triangular) as a sparse matrix.
     g = nx.cubical_graph()
@@ -109,66 +88,37 @@ known as the cube graph.
     # Compute maximum weighted independent set.
     mwis = maximum_weighted_independent_set(adjacency_matrix, weights)
 
-    # Compute maximum weighted clique.
-    mwc = maximum_weighted_clique(adjacency_matrix, weights)
-
 .. testoutput:: mwis
     :hide:
 
     ...
     Best objective 1.650000000000e+02, best bound 1.650000000000e+02, gap 0.0000%
-    ...
-    Best objective 1.920000000000e+02, best bound 1.920000000000e+02, gap 0.0000%
-
 
 Solution
 --------
 
-The solution is a data class including the numpy array of the vertices in the
-independent set or clique as well as its weight.
+The solution is a numpy array containing the vertices in set :math:`S`.
 
 .. doctest:: mwis
     :options: +NORMALIZE_WHITESPACE
 
     >>> mwis
-    Result(x=array([0, 2, 5, 7]), f=165)
-    >>> mwis.x
     array([0, 2, 5, 7])
-    >>> mwis.f
+    >>> maximum_vertex_weight = sum(weights[mwis])
+    >>> maximum_vertex_weight
     165
 
-    >>> mwc
-    Result(x=array([6, 7]), f=192)
-    >>> mwc.x
-    array([6, 7])
-    >>> mwc.f
-    192
 
+.. doctest:: mwis
+    :options: +NORMALIZE_WHITESPACE
 
-.. code-block:: Python
+    >>> import networkx as nx
+    >>> import matplotlib.pyplot as plt
+    >>> layout = nx.spring_layout(g, seed=0)
+    >>> color_map = ["red" if node in mwis else "lightgrey" for node in g.nodes()]
+    >>> nx.draw(g, pos=layout, node_color=color_map, node_size=600, with_labels=True)
 
-    import networkx as nx
-    import matplotlib.pyplot as plt
-
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    layout = nx.spring_layout(g, seed=0)
-
-    # Plot the maximum weighted independent set
-    color_map = ["red" if node in mwis.x else "lightgrey" for node in g.nodes()]
-    nx.draw(g, pos=layout, ax= ax1, node_color=color_map, node_size=600, with_labels=True)
-
-    # Plot the maximum weighted clique
-    color_map = ["blue" if node in mwc.x else "lightgrey" for node in g.nodes()]
-    nx.draw(g, pos=layout, ax = ax2, node_color=color_map, node_size=600, with_labels=True)
-
-    fig.tight_layout()
-    plt.show()
-
-
-The vertices in the independent set and in the clique are highlighted in red and
-blue, respectively.
+The vertices in the independent set are highlighted in red.
 
 .. image:: figures/mwis.png
   :width: 600
-
-.. footbibliography::
