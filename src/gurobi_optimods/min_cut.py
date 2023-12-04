@@ -64,7 +64,7 @@ def min_cut(graph, source, sink, *, create_env):
         A dataclass containing the cut value, and set of nodes and edges in the
         minimum cut.
     """
-    if isinstance(graph, sp.spmatrix):
+    if sp.issparse(graph):
         return _min_cut_scipy(graph, source, sink, create_env)
     elif isinstance(graph, pd.DataFrame):
         return _min_cut_pandas(graph, source, sink, create_env)
