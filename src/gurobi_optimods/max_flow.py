@@ -43,7 +43,7 @@ def max_flow(graph, source: int, sink: int, **kwargs):
     subgraph: spmatrix or Graph or DataFrame
         A subgraph of the original graph specifying the flow.
     """
-    if isinstance(graph, sp.spmatrix):
+    if sp.issparse(graph):
         return _max_flow_scipy(graph, source, sink, **kwargs)
     elif isinstance(graph, pd.DataFrame):
         return _max_flow_pandas(graph, source, sink, **kwargs)
@@ -54,7 +54,7 @@ def max_flow(graph, source: int, sink: int, **kwargs):
 
 
 def _remove_dummy_edge(graph, source, sink):
-    if isinstance(graph, sp.spmatrix):
+    if sp.issparse(graph):
         graph = graph.tolil()
         graph = graph[:-1, :]
     elif isinstance(graph, pd.Series) or isinstance(graph, pd.DataFrame):

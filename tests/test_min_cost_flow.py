@@ -89,7 +89,7 @@ class TestMinCostFlow(unittest.TestCase):
                 [0.0, 0.0, 0.0, 0.0, 0.0, 2.0],
             ]
         )
-        self.assertIsInstance(sol, sp.spmatrix)
+        self.assertTrue(sp.issparse(sol))
         self.assertTrue(check_solution_scipy(sol, [candidate]))
 
     @unittest.skipIf(nx is None, "networkx is not installed")

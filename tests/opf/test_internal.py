@@ -185,6 +185,7 @@ class TestInternal(unittest.TestCase):
         self.assertLess(abs(solution["branch"][4]["Qt"] + 18.431373), 1e1)
 
 
+@unittest.skip("varies between versions")
 class TestFingerprints(unittest.TestCase):
     # Check model fingerprints for some specific cases. Useful while
     # refactoring the code, but
