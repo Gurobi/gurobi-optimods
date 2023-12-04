@@ -11,7 +11,7 @@ from gurobi_optimods.mwis import (
 )
 
 
-def get_adjacency_matrix(num_vertices, density, seed):
+def get_adjacency_matrix(num_vertices, density, seed, scipy_func=sp.csr_matrix):
     """Create the upper triangular adjacency matrix for a random graph
         with the given number of vertices and density.
 
@@ -21,28 +21,40 @@ def get_adjacency_matrix(num_vertices, density, seed):
         seed (int): Random seed value.
 
     Returns:
-        csr_matrix: The adjacency matrix in CSR format.
+        matrix: The scipy adjacency matrix/array.
     """
     rng = np.random.default_rng(seed=seed)
     num_edges = int(0.5 * density * num_vertices * (num_vertices - 1))
     if num_edges == 0:
-        return sp.csr_matrix((num_vertices, num_vertices))
+        return scipy_func((num_vertices, num_vertices))
     edges = rng.choice(
         list(combinations(range(num_vertices), 2)), num_edges, replace=False
     )
     rows, cols = zip(*edges)
     data = np.ones(num_edges)
-    return sp.csr_matrix((data, (rows, cols)), shape=(num_vertices, num_vertices))
+    return scipy_func((data, (rows, cols)), shape=(num_vertices, num_vertices))
 
 
 class TestInput(unittest.TestCase):
     def test_input_adjacency_matrix_type(self):
-        numpy_matrix = np.triu(np.random.randint(low=0, high=2, size=(10, 10)))
-        scipy_array = sp.csr_array(numpy_matrix)
-        for adjacency_matrix in [numpy_matrix, scipy_array]:
+        for scipy_func in [
+            sp.csr_matrix,
+            sp.csc_matrix,
+            sp.coo_matrix,
+            sp.csr_array,
+            sp.csc_array,
+            sp.coo_array,
+        ]:
             for func in [maximum_weighted_independent_set, maximum_weighted_clique]:
-                with self.assertRaises(ValueError):
-                    func(adjacency_matrix, np.ones(10))
+                adjacency_matrix = get_adjacency_matrix(
+                    10, 0.75, 0, scipy_func=scipy_func
+                )
+                func(adjacency_matrix, np.ones(10))
+
+        numpy_matrix = np.triu(np.random.randint(low=0, high=2, size=(10, 10)))
+        for func in [maximum_weighted_independent_set, maximum_weighted_clique]:
+            with self.assertRaises(ValueError):
+                func(numpy_matrix, np.ones(10))
 
     def test_input_adjacency_upper_triangular(self):
         with_diagonals = get_adjacency_matrix(10, 0.75, 0) + sp.diags(np.ones(10))
@@ -156,3 +168,7 @@ class TestMWC(unittest.TestCase):
         )
         self.assertGreaterEqual(len(mwc.x), 1)
         self.assertLessEqual(mwc.f, weights.sum())
+
+
+if __name__ == "__main__":
+    unittest.main()

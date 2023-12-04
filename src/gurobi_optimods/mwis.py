@@ -32,10 +32,8 @@ class Result:
 
 
 def check_input(adjacency_matrix, weights):
-    if not isinstance(adjacency_matrix, sp.spmatrix):
-        raise ValueError(
-            "The adjacency matrix should be a scipy sparse matrix in CSR format."
-        )
+    if not sp.issparse(adjacency_matrix):
+        raise ValueError("The adjacency matrix should be a scipy sparse array/matrix.")
     if not isinstance(weights, np.ndarray):
         raise ValueError("The weights of the vertices should be a numpy array.")
 
@@ -52,8 +50,8 @@ def maximum_weighted_independent_set(adjacency_matrix, weights, *, create_env):
 
     Parameters
     ----------
-    adjacency_matrix : spmatrix
-        The upper triangular adjacency matrix
+    adjacency_matrix : scipy sparse array/matrix
+        The upper triangular adjacency matrix with zero diagonals
     weights : ndarray
         Vertex weight array
 
@@ -89,8 +87,8 @@ def maximum_weighted_clique(adjacency_matrix, weights, **kwargs):
 
     Parameters
     ----------
-    adjacency_matrix : spmatrix
-        The upper triangular adjacency matrix
+    adjacency_matrix : scipy sparse array/matrix
+        The upper triangular adjacency matrix with zero diagonals
     weights : ndarray
         Vertex weight array
 

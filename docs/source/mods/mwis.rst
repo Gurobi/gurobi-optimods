@@ -69,10 +69,9 @@ set :math:`S` represents the stability number of graph :math:`G`.
                             & x_i \in \{0, 1\} & \forall i \in V
         \end{align}
 
-The input data for this Mod includes a scipy sparse matrix in CSR (Compressed
-SparseRow) format that captures the adjacency matrix of the
-graph :math:`G` (upper triangle with zero diagonals only), plus a
-numpy array that captures the weights of the vertices.
+The input data for this Mod includes a scipy sparse matrix/array that captures
+the adjacency matrix of the graph :math:`G` (upper triangle with zero diagonals only),
+plus a numpy array that captures the weights of the vertices.
 
 
 **Maximum weighted clique**: Given an undirected graph :math:`G = (V, E, w)`, finding
