@@ -50,7 +50,7 @@ def maximum_weighted_independent_set(adjacency_matrix, weights, *, create_env):
 
     Parameters
     ----------
-    adjacency_matrix : spmatrix or sparray
+    adjacency_matrix : spmatrix
         The upper triangular adjacency matrix with zero diagonals
     weights : ndarray
         Vertex weight array
@@ -87,7 +87,7 @@ def maximum_weighted_clique(adjacency_matrix, weights, **kwargs):
 
     Parameters
     ----------
-    adjacency_matrix : spmatrix or sparray
+    adjacency_matrix : spmatrix
         The upper triangular adjacency matrix with zero diagonals
     weights : ndarray
         Vertex weight array
