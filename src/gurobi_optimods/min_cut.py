@@ -52,7 +52,9 @@ def min_cut(graph, source, sink, *, create_env):
     ----------
     graph : spmatrix or Graph or DataFrame
         A graph, specified either as a scipy.sparse adjacency matrix, networkx
-        graph, or pandas dataframe
+        graph, or pandas dataframe. These contain the capacity for each edge. In
+        the networkx (pandas dataframe) case, we expect the edge attribute
+        (column name) ``capacity``. Please see the example in the documentation.
     source : int or str
         The source (or origin) node for the cutset.
     sink : int or str
