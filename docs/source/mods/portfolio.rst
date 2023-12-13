@@ -71,7 +71,7 @@ Example
 -------
 
 Here we derive the matrix :math:`\Sigma` and the vector :math:`\mu` from a time
-series of logarithmic historic returns:
+series of historic excess returns:
 
 .. testsetup:: mod
 
