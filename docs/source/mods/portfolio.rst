@@ -41,7 +41,7 @@ to allocate wealth into :math:`n` risky assets. The returned portfolio
         \end{alignat}
 
     * :math:`\mu` is the vector of expected returns.
-    * :math:`\Sigma` is the return covariance matrix.
+    * :math:`\Sigma` is the return covariance matrix. This includes matrices given as a sum of mulitple sources, viz. :math:`\Sigma_1 + \Sigma_2`.
     * :math:`x` is the portfolio where :math:`x_i` denotes the fraction of
         wealth invested in the risky asset :math:`i`.
     * :math:`\gamma\geq0` is the risk aversion coefficient.
