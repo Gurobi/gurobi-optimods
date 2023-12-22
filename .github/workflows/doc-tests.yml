@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8", "3.12"]
+        python: ["3.8", "3.11"]
         gurobipy: ["10.0.3", "11.0.0"]
         scipy: ["1.8.1", "1.11.4"]
         exclude:
