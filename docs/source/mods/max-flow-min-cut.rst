@@ -173,10 +173,10 @@ Let us use the data to solve the maximum flow problem.
           4       5         1.0
           Name: flow, dtype: float64
 
-      The ``max_flow`` function returns the cost of the solution as well
-      as ``pd.Series`` with the flow per edge. Similarly as the input
-      DataFrame the resulting series is indexed by ``source`` and ``target``.
-      In this case, the resulting maximum flow has value 3.
+      The ``max_flow`` function returns the value of the maximum flow as well as
+      a ``pd.Series`` with the flow per edge. Similarly as the input DataFrame
+      the resulting series is indexed by ``source`` and ``target``. In this
+      case, the resulting maximum flow has value 3.
 
   .. group-tab:: NetworkX
 
@@ -192,8 +192,8 @@ Let us use the data to solve the maximum flow problem.
           >>> list(sol.edges(data=True))
           [(0, 1, {'flow': 1.0}), (0, 2, {'flow': 2.0}), (1, 3, {'flow': 1.0}), (2, 3, {'flow': 1.0}), (2, 4, {'flow': 1.0}), (3, 5, {'flow': 2.0}), (4, 5, {'flow': 1.0})]
 
-      The ``max_flow`` function returns the cost of the solution
-      as well as a dictionary indexed by edge with the non-zero flow.
+      The ``max_flow`` function returns the value of the maximum flow as well as
+      a dictionary indexed by edge with the non-zero flow.
 
   .. group-tab:: scipy.sparse
 
