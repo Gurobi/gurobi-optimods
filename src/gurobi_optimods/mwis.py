@@ -45,7 +45,7 @@ def maximum_weighted_independent_set(graph, weights, **kwargs):
     ----------
     graph : spmatrix or Graph or DataFrame
         A graph, specified as a scipy.sparse upper triangular adjacency
-        matrix with zero diagonals, networkx graph, or pandas dataframe.
+        matrix with zero diagonals, a networkx graph, or a pandas dataframe.
         The pandas dataframe must include edge information in two columns
         named as ``"node1"`` and ``"node2"``.
     weights : ndarray or DataFrame
@@ -99,7 +99,7 @@ def _maximum_weighted_independent_set_scipy(adjacency_matrix, weights, *, create
             name="no_adjacent_vertices",
         )
         model.optimize()
-        mwis = np.where(x.X >= 0.5)[0]
+        (mwis,) = np.where(x.X >= 0.5)
         return Result(mwis, sum(weights[mwis]))
 
 
@@ -149,7 +149,7 @@ def _maximum_weighted_independent_set_networkx(graph, weights, *, create_env):
             name="no_adjacent_vertices",
         )
         model.optimize()
-        (mwis,) = np.where(model.getAttr("X", model.getVars()))
+        (mwis,) = np.where(np.array(model.getAttr("X", model.getVars())) >= 0.5)
         return Result(mwis, sum(weights[mwis]))
 
 
@@ -160,12 +160,12 @@ def maximum_weighted_clique(graph, weights, **kwargs):
     ----------
     graph : spmatrix or Graph or DataFrame
         A graph, specified as a scipy.sparse upper triangular adjacency
-        matrix with zero diagonals, networkx graph, or pandas dataframe.
+        matrix with zero diagonals, a networkx graph, or a pandas dataframe.
         The pandas dataframe must include edge information in two columns
         named as ``"node1"`` and ``"node2"``.
     weights : ndarray of DataFrame
         Vertex weights. If ``graph`` is a scipy.sparse matrix or a
-        networkx graph, ``weightss` must be a numpy array. If ``graph``
+        networkx graph, ``weights`` must be a numpy array. If ``graph``
         is a pandas dataframe graph, ``weights`` must be a dataframe too.
         The weights dataframe must include the weight information in a column
         named ``"weights"`` and must be indexed by vertex number.
