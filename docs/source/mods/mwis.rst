@@ -69,11 +69,6 @@ set :math:`S` represents the stability number of graph :math:`G`.
                             & x_i \in \{0, 1\} & \forall i \in V
         \end{align}
 
-The input data for this Mod includes a scipy sparse matrix/array that captures
-the adjacency matrix of the graph :math:`G` (upper triangle with zero diagonals only),
-plus a numpy array that captures the weights of the vertices.
-
-
 **Maximum weighted clique**: Given an undirected graph :math:`G = (V, E, w)`, finding
 the maximum weighted clique of graph :math:`G` is equivalent tp finding the
 maximum weighted independent set of its complement graph
@@ -85,39 +80,115 @@ maximum weighted independent set of its complement graph
 *Note*: In case all vertices have equal weights, the cardinality of
 the maximum clique set represents the clique number of graph :math:`G`.
 
-Code
-----
+Interface
+---------
+
+The functions ``maximum_weighted_independent_set`` and ``maximum_weighted_clique``
+support scipy sparse matrix/array, networkx graph, and pandas dataframes as
+possible input graph. The input graph captures the adjacency matrix of
+the graph :math:`G` (upper triangle with zero diagonals only). The
+weights of the vertices should be also provided as a numpy array or a
+pandas dataframe depending on the input graph data structure.
 
 The example below finds the maximum weighted independent set and
 the maximum weighted clique for a graph with 8 vertices and 12 edges
 known as the cube graph.
 
-.. testcode:: mwis
+.. tabs::
 
-    import scipy.sparse as sp
-    import networkx as nx
-    import numpy as np
-    from gurobi_optimods.mwis import maximum_weighted_independent_set, maximum_weighted_clique
+    .. group-tab:: scipy.sparse
+        The input graph and the vertices' weights are provided as a scipy
+        sparse array and a numpy array, respectively.
 
-    # Graph adjacency matrix (upper triangular) as a sparse matrix.
-    g = nx.cubical_graph()
-    adjacency_matrix = sp.triu(nx.to_scipy_sparse_array(g))
-    # Vertex weights
-    weights = np.array([2**i for i in range(8)])
+        .. testcode:: mwis_sp
 
-    # Compute maximum weighted independent set.
-    mwis = maximum_weighted_independent_set(adjacency_matrix, weights)
+            import scipy.sparse as sp
+            import networkx as nx
+            import numpy as np
+            from gurobi_optimods.mwis import maximum_weighted_independent_set, maximum_weighted_clique
 
-    # Compute maximum weighted clique.
-    mwc = maximum_weighted_clique(adjacency_matrix, weights)
+            # Graph adjacency matrix (upper triangular) as a sparse matrix.
+            g = nx.cubical_graph()
+            graph_adjacency = sp.triu(nx.to_scipy_sparse_array(g))
+            # Vertex weights
+            weights = np.array([2**i for i in range(8)])
 
-.. testoutput:: mwis
-    :hide:
+            # Compute maximum weighted independent set.
+            mwis = maximum_weighted_independent_set(graph_adjacency, weights)
 
-    ...
-    Best objective 1.650000000000e+02, best bound 1.650000000000e+02, gap 0.0000%
-    ...
-    Best objective 1.920000000000e+02, best bound 1.920000000000e+02, gap 0.0000%
+            # Compute maximum weighted clique.
+            mwc = maximum_weighted_clique(graph_adjacency, weights)
+
+        .. testoutput:: mwis_sp
+            :hide:
+
+            ...
+            Best objective 1.650000000000e+02, best bound 1.650000000000e+02, gap 0.0000%
+            ...
+            Best objective 1.920000000000e+02, best bound 1.920000000000e+02, gap 0.0000%
+
+    .. group-tab:: networkx
+        The input graph and the vertex weights are provided as
+        a networkx graph and a numpy array, respectively.
+
+        .. testcode:: mwis_nx
+
+            import networkx as nx
+            import numpy as np
+            from gurobi_optimods.mwis import maximum_weighted_independent_set, maximum_weighted_clique
+
+            # A networkx Graph
+            graph = nx.cubical_graph()
+            # Vertex weights
+            weights = np.array([2**i for i in range(8)])
+
+            # Compute maximum weighted independent set.
+            mwis = maximum_weighted_independent_set(graph, weights)
+
+            # Compute maximum weighted clique.
+            mwc = maximum_weighted_clique(graph, weights)
+
+        .. testoutput:: mwis_nx
+            :hide:
+
+            ...
+            Best objective 1.650000000000e+02, best bound 1.650000000000e+02, gap 0.0000%
+            ...
+            Best objective 1.920000000000e+02, best bound 1.920000000000e+02, gap 0.0000%
+
+
+    .. group-tab:: pandas
+        The input graph is a pandas dataframe with two columns named as
+        node1 and node2 capturing the vertex pairs of an edge. The vertex
+        weights is also a pandas dataframe with a column named as weights
+        describing the weight of each vertex.
+
+        .. testcode:: mwis_pd
+
+            import networkx as nx
+            import pandas as pd
+            import numpy as np
+            from gurobi_optimods.mwis import maximum_weighted_independent_set, maximum_weighted_clique
+
+            # A networkx Graph
+            g = nx.cubical_graph()
+            frame = pd.DataFrame(g.edges, columns=["node1", "node2"])
+            # Vertex weights
+            weights = pd.DataFrame(np.array([2**i for i in range(8)]), columns=["weights"])
+
+            # Compute maximum weighted independent set.
+            mwis = maximum_weighted_independent_set(frame, weights)
+
+            # Compute maximum weighted clique.
+            mwc = maximum_weighted_clique(frame, weights)
+
+        .. testoutput:: mwis_pd
+            :hide:
+
+            ...
+            Best objective 1.650000000000e+02, best bound 1.650000000000e+02, gap 0.0000%
+            ...
+            Best objective 1.920000000000e+02, best bound 1.920000000000e+02, gap 0.0000%
 
 
 Solution
