@@ -79,6 +79,7 @@ class TestMWISScipySparse(unittest.TestCase):
                     self.assertLessEqual(len(mwis.x), num_vertices)
                     self.assertGreaterEqual(len(mwis.x), 1)
                     self.assertLessEqual(mwis.f, weights.sum())
+                    self.assertGreaterEqual(mwis.f, weights.max())
 
     def test_complete_graph(self):
         for num_vertices in [np.random.randint(10, 20) for _ in range(5)]:
@@ -140,6 +141,7 @@ class TestMWCScipySparse(unittest.TestCase):
                     self.assertLessEqual(len(mwc.x), num_vertices)
                     self.assertGreaterEqual(len(mwc.x), 1)
                     self.assertLessEqual(mwc.f, weights.sum())
+                    self.assertGreaterEqual(mwc.f, weights.max())
 
     def test_complete_graph(self):
         for num_vertices in [np.random.randint(10, 20) for _ in range(5)]:
@@ -197,6 +199,7 @@ class TestMISPandas(unittest.TestCase):
                     self.assertLessEqual(len(mwis.x), num_vertices)
                     self.assertGreaterEqual(len(mwis.x), 1)
                     self.assertLessEqual(mwis.f, weights["weights"].sum())
+                    self.assertGreaterEqual(mwis.f, weights["weights"].max())
 
     def test_complete_graph(self):
         for num_vertices in [np.random.randint(10, 20) for _ in range(5)]:
@@ -278,6 +281,7 @@ class TestMWCPandas(unittest.TestCase):
                     self.assertLessEqual(len(mwc.x), num_vertices)
                     self.assertGreaterEqual(len(mwc.x), 1)
                     self.assertLessEqual(mwc.f, weights["weights"].sum())
+                    self.assertGreaterEqual(mwc.f, weights["weights"].max())
 
     def test_complete_graph(self):
         for num_vertices in [np.random.randint(10, 20) for _ in range(5)]:
@@ -357,6 +361,7 @@ class TestMWISNetworkx(unittest.TestCase):
                     self.assertLessEqual(len(mwis.x), num_vertices)
                     self.assertGreaterEqual(len(mwis.x), 1)
                     self.assertLessEqual(mwis.f, weights.sum())
+                    self.assertGreaterEqual(mwis.f, weights.max())
 
     def test_complete_graph(self):
         for num_vertices in [np.random.randint(10, 20) for _ in range(5)]:
@@ -426,6 +431,7 @@ class TestMWCNetworkx(unittest.TestCase):
                     self.assertLessEqual(len(mwc.x), num_vertices)
                     self.assertGreaterEqual(len(mwc.x), 1)
                     self.assertLessEqual(mwc.f, weights.sum())
+                    self.assertGreaterEqual(mwc.f, weights.max())
 
     def test_complete_graph(self):
         for num_vertices in [np.random.randint(10, 20) for _ in range(5)]:
@@ -493,19 +499,17 @@ class TestMWISAll(unittest.TestCase):
                         num_vertices, density, seed = 10, density, seed
                         graph_sp = get_graph(num_vertices, density, seed, "spmatrix")
                         graph_pd = get_graph(num_vertices, density, seed, "DataFrame")
-                        weights_sp_nx = np.random.randint(1, 100, size=num_vertices)
-                        weights_pd = pd.DataFrame(weights_sp_nx, columns=["weights"])
+                        weights = np.random.randint(1, 100, size=num_vertices)
+                        weights_pd = pd.DataFrame(weights, columns=["weights"])
 
-                        mwis_sp = maximum_weighted_independent_set(
-                            graph_sp, weights_sp_nx
-                        )
+                        mwis_sp = maximum_weighted_independent_set(graph_sp, weights)
                         mwis_pd = maximum_weighted_independent_set(graph_pd, weights_pd)
                         self.assertEqual(mwis_sp.f, mwis_pd.f)
 
                         if nx is not None:
                             graph_nx = get_graph(num_vertices, density, seed, "Graph")
                             mwis_nx = maximum_weighted_independent_set(
-                                graph_nx, weights_sp_nx
+                                graph_nx, weights
                             )
                             self.assertEqual(mwis_sp.f, mwis_nx.f)
 
@@ -521,18 +525,14 @@ class TestMWCAll(unittest.TestCase):
                         num_vertices, density, seed = 10, density, seed
                         graph_sp = get_graph(num_vertices, density, seed, "spmatrix")
                         graph_pd = get_graph(num_vertices, density, seed, "DataFrame")
-                        weights_sp_nx = np.random.randint(1, 100, size=num_vertices)
-                        weights_pd = pd.DataFrame(weights_sp_nx, columns=["weights"])
+                        weights = np.random.randint(1, 100, size=num_vertices)
+                        weights_pd = pd.DataFrame(weights, columns=["weights"])
 
-                        mwc_sp = maximum_weighted_clique(graph_sp, weights_sp_nx)
+                        mwc_sp = maximum_weighted_clique(graph_sp, weights)
                         mwc_pd = maximum_weighted_clique(graph_pd, weights_pd)
                         self.assertEqual(mwc_sp.f, mwc_pd.f)
 
                         if nx is not None:
                             graph_nx = get_graph(num_vertices, density, seed, "Graph")
-                            mwc_nx = maximum_weighted_clique(graph_nx, weights_sp_nx)
+                            mwc_nx = maximum_weighted_clique(graph_nx, weights)
                             self.assertEqual(mwc_nx.f, mwc_sp.f)
-
-
-if __name__ == "__main__":
-    unittest.main()
