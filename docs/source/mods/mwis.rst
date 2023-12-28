@@ -70,7 +70,7 @@ set :math:`S` represents the stability number of graph :math:`G`.
         \end{align}
 
 **Maximum weighted clique**: Given an undirected graph :math:`G = (V, E, w)`, finding
-the maximum weighted clique of graph :math:`G` is equivalent tp finding the
+the maximum weighted clique of graph :math:`G` is equivalent to finding the
 maximum weighted independent set of its complement graph
 :math:`G^{\prime} = (V, E^{\prime}, w)` where
 
@@ -86,9 +86,9 @@ Interface
 The functions ``maximum_weighted_independent_set`` and ``maximum_weighted_clique``
 support scipy sparse matrix/array, networkx graph, and pandas dataframes as
 possible input graph. The input graph captures the adjacency matrix of
-the graph :math:`G` (upper triangle with zero diagonals only). The
-weights of the vertices should be also provided as a numpy array or a
-pandas dataframe depending on the input graph data structure.
+the graph :math:`G` (upper triangle with zero diagonals only). The user
+should also provide the vertex weights as a numpy array or a pandas dataframe
+depending on the input graph data structure.
 
 The example below finds the maximum weighted independent set and
 the maximum weighted clique for a graph with 8 vertices and 12 edges
@@ -97,7 +97,7 @@ known as the cube graph.
 .. tabs::
 
     .. group-tab:: scipy.sparse
-        The input graph and the vertices' weights are provided as a scipy
+        The input graph and the vertex weights are provided as a scipy
         sparse array and a numpy array, respectively.
 
         .. testcode:: mwis_sp
@@ -107,7 +107,7 @@ known as the cube graph.
             import numpy as np
             from gurobi_optimods.mwis import maximum_weighted_independent_set, maximum_weighted_clique
 
-            # Graph adjacency matrix (upper triangular) as a sparse matrix.
+            # Graph adjacency matrix (upper triangular) as a sparse array.
             g = nx.cubical_graph()
             graph_adjacency = sp.triu(nx.to_scipy_sparse_array(g))
             # Vertex weights
@@ -159,8 +159,8 @@ known as the cube graph.
 
     .. group-tab:: pandas
         The input graph is a pandas dataframe with two columns named as
-        node1 and node2 capturing the vertex pairs of an edge. The vertex
-        weights is also a pandas dataframe with a column named as weights
+        "node1" and "node2" capturing the vertex pairs of an edge. The vertex
+        weights is also a pandas dataframe with a column named as "weights"
         describing the weight of each vertex.
 
         .. testcode:: mwis_pd
@@ -194,8 +194,9 @@ known as the cube graph.
 Solution
 --------
 
-The solution is a data class including the numpy array of the vertices in the
-independent set or clique as well as its weight.
+Independent of the input types, the solution is always a data class including
+the numpy array of the vertices in the independent set or clique as well as
+its weight.
 
 .. code-block:: Python
 
