@@ -197,8 +197,7 @@ Solution
 The solution is a data class including the numpy array of the vertices in the
 independent set or clique as well as its weight.
 
-.. doctest:: mwis
-    :options: +NORMALIZE_WHITESPACE
+.. code-block:: Python
 
     >>> mwis
     Result(x=array([0, 2, 5, 7]), f=165)
