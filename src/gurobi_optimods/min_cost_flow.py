@@ -45,12 +45,12 @@ def min_cost_flow_pandas(
     ----------
     arc_data : DataFrame
         DataFrame with graph and respective attributes. These must include
-        ``"from"``, ``"to"`` nodes used as index, ``"capacity"``, and
-        ``"cost"``.
+        ``"from"``, ``"to"`` nodes used as index as well as ``"capacity"``, and
+        ``"cost"`` columns.
     demand_data : DataFrame
-        DataFrame with node demand information. These must
-        include indexed by `"node"`, and include the `"demand"`. This value can
-        be positive (requesting flow) or negative (supplying flow).
+        DataFrame with node demand information. These must include indexed by
+        ``"node"``, and include the ``"demand"`` column. This value can be
+        positive (requesting flow) or negative (supplying flow).
 
     Returns
     -------
