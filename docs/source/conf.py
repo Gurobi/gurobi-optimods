@@ -81,6 +81,7 @@ numpydoc_xref_aliases = {
     "Graph": "networkx.Graph",
     "LinAlgError": "numpy.linalg.LinAlgError",
     "spmatrix": "scipy.sparse.spmatrix",
+    "sparray": "scipy.sparse.sparray",
 }
 numpydoc_xref_ignore = {"optional", "or", "of"}
 
