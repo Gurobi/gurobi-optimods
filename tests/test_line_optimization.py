@@ -4,6 +4,11 @@ import unittest
 
 import pandas as pd
 
+try:
+    import networkx as nx
+except ImportError:
+    nx = None
+
 import gurobi_optimods.datasets as datasets
 import gurobi_optimods.line_optimization as lop
 
@@ -74,6 +79,7 @@ source,target,demand
 
 
 class Testlop(unittest.TestCase):
+    @unittest.skipIf(nx is None, "networkx is not installed")
     def test_sol(self):
         (
             node_data,
@@ -151,6 +157,7 @@ class Testlop(unittest.TestCase):
         self.assertEqual(objCost, 21)
         self.assertEqual(finalLines, [("L1", 3)])
 
+    @unittest.skipIf(nx is None, "networkx is not installed")
     def test_shortestPath(self):
         edge_data = pd.read_csv(io.StringIO(edge_data2))
         node_data = pd.read_csv(io.StringIO(node_data2))
