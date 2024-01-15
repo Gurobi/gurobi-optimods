@@ -154,17 +154,17 @@ An example of the inputs with the respective requirements is shown below.
             2	1	3	0.006	240
             3	3	1	0.006	240
           >>> line_data.head(4)
-                linename   capacity  fixCost  operatingCost
-            0     new9_B     600      100     4
-            1     new19_B     600     100     5
-            2     new24_B     600     100     6
-            3     new29_B     600     100     5
-          >>> linepath_data.head(4)
             linename	capacity	fixCost	operatingCost
             0	new7_B	600	15	3
             1	new15_B	600	15	2
             2	new23_B	600	15	6
             3	new31_B	600	15	6
+          >>> linepath_data.head(4)
+            linename	edgeSource	edgeTarget
+            0	new7_B	1	2
+            1	new7_B	2	6
+            2	new7_B	6	8
+            3	new7_B	8	6
           >>> demand_data.head(4)
             source	target	demand
             0	1	2	5
@@ -209,6 +209,7 @@ The second approach is also used if the parameter shortestPaths is set to False.
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
+          >>> from gurobi_optimods.line_optimization import line_optimization
           >>> node_data, edge_data, line_data, linepath_data, demand_data = datasets.load_siouxfalls_network_data()
           >>> frequencies = [1,3]
           >>> objCost, finalLines = line_optimization(node_data, edge_data, line_data, linepath_data, demand_data, frequencies, True)
