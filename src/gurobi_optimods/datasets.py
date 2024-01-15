@@ -41,6 +41,21 @@ def load_workforce():
     )
 
 
+def load_siouxfalls_network_data():
+    # edge and node data to create a graph
+    edge_data = pd.read_csv(DATA_FILE_DIR / "graphs/siouxfalls_edges.csv")
+    node_data = pd.read_csv(DATA_FILE_DIR / "graphs/siouxfalls_nodes.csv")
+
+    # line data including, line-path, capacity, fixed cost, and operating cost
+    linepath_data = pd.read_csv(DATA_FILE_DIR / "graphs/siouxfalls_linepaths.csv")
+    line_data = pd.read_csv(DATA_FILE_DIR / "graphs/siouxfalls_lines.csv")
+
+    # demand data
+    demand_data = pd.read_csv(DATA_FILE_DIR / "graphs/siouxfalls_demand.csv")
+
+    return (node_data, edge_data, line_data, linepath_data, demand_data)
+
+
 def _load_simple_graph_pandas(drop_pos=True, capacity=True, cost=True, demand=True):
     edge_data = pd.read_csv(DATA_FILE_DIR / "graphs/simple_graph_edges.csv").set_index(
         ["source", "target"]

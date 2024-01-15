@@ -66,6 +66,11 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/bipartite-matching-flow.png
 
+    .. grid-item-card:: Line Optimization
+        :link: mods/line-optimization
+        :link-type: doc
+        :text-align: center
+        :img-top: mods/figures/lop_siouxfalls.png
 
 .. toctree::
    :maxdepth: 1
@@ -81,3 +86,4 @@ The OptiMods Gallery
    mods/qubo
    mods/sharpe-ratio
    mods/workforce
+   mods/line-optimization
