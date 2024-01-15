@@ -142,17 +142,17 @@ An example of the inputs with the respective requirements is shown below.
           >>> from gurobi_optimods import datasets
           >>> node_data, edge_data, line_data, linepath_data, demand_data = datasets.load_siouxfalls_network_data()
           >>> node_data.head(4)
-                number
-            0     1
-            1     2
-            2     3
-            3     4
+            number	posx	  posy
+            0	1	50000.0	  510000.0
+            1	2	320000.0  510000.0
+            2	3	50000.0	  440000.0
+            3	4	130000.0  440000.0
           >>> edge_data.head(4)
-                source  target time
-            0    1      2      360
-            1    2      1      360
-            2    1      3      240
-            3    3      1      240
+           	source	target	length	time
+            0	1	2	0.010	360
+            1	2	1	0.010	360
+            2	1	3	0.006	240
+            3	3	1	0.006	240
           >>> line_data.head(4)
                 linename   capacity  fixCost  operatingCost
             0     new9_B     600      100     4
@@ -160,27 +160,26 @@ An example of the inputs with the respective requirements is shown below.
             2     new24_B     600     100     6
             3     new29_B     600     100     5
           >>> linepath_data.head(4)
-                linename   edgeSource  edgeTarget
-            0     new9_B     9          8
-            1     new9_B     8          6
-            2     new9_B     6          2
-            3     new9_B     2          1
-          >>> node_data
-                source  target  demand
-            0     1     2        1
-            1     1     3        1
-            2     1     4        5
-            3     1     5        2
+            linename	capacity	fixCost	operatingCost
+            0	new7_B	600	15	3
+            1	new15_B	600	15	2
+            2	new23_B	600	15	6
+            3	new31_B	600	15	6
+          >>> demand_data.head(4)
+            source	target	demand
+            0	1	2	5
+            1	1	3	5
+            2	1	4	25
+            3	1	5	10
           >>> frequencies = [1,3]
 
-      Note that the output shown above only contains the information that is required for computation.
       For the example we used data of the Sioux-Falls network. It is not considered as a realistic one. However,
       this network can be found on different websites when considering traffic problems
       (originally by Hillel Bar-Gera http://www.bgu.ac.il/~bargera/tntp/). We added a set of line routes.
-      The data contain additional information, for example ``posx`` and ``posy`` in the ``node_data``
-      which is not used for computation. It can be used to visualize the network as done below.
-      It is possible to add further information in the data for example to be able to define additional constraints
-      in the model.
+      Note that the output shown above contains some additional information that is not required for computation, for example
+      the property length in the edge data.
+      Also, ``posx`` and ``posy`` in the ``node_data`` is not used for computation. But it can be used to visualize the
+      network as done below.
       It is important that all data is consistant. For example, ``edgeSource``, ``edgeTarget``
       in the ``linepath_data`` must correspond to a ``number`` in the node_data. The same holds
       for ``source`` and ``target`` in ``edge_data`` and ``demand_data``.
@@ -212,7 +211,7 @@ The second approach is also used if the parameter shortestPaths is set to False.
           >>> from gurobi_optimods import datasets
           >>> node_data, edge_data, line_data, linepath_data, demand_data = datasets.load_siouxfalls_network_data()
           >>> frequencies = [1,3]
-          >>> objCost, finalLines = lop.lineplanning(node_data, edge_data, line_data, linepath_data, demand_data, frequencies, True)
+          >>> objCost, finalLines = line_optimization(node_data, edge_data, line_data, linepath_data, demand_data, frequencies, True)
           >>> objCost
           211.0
           >>> finalLines
