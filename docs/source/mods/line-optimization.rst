@@ -225,5 +225,4 @@ different colored paths in the network.
   :width: 600
   :alt: SiouxFalls.
 
-
 .. footbibliography::
