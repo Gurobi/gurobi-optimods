@@ -113,14 +113,12 @@ def _maximum_weighted_independent_set_pandas(frame, weights, *, create_env):
         # Maximize the sum of the vertex weights in the independent set
         model.setObjective((x * weights["weights"]).sum(), sense=GRB.MAXIMIZE)
 
-        # The independent set contains non-adjacent vertices
-        def f(node1, node2):
-            return x[node1] + x[node2]
-
+        # The independent set contains only non-adjacent vertices
         if len(frame) > 0:
+            df = frame.join(x.rename("x1"), on="node1").join(x.rename("x2"), on="node2")
             gppd.add_constrs(
                 model,
-                frame.apply(lambda x: f(x["node1"], x["node2"]), axis=1),
+                df["x1"] + df["x2"],
                 GRB.LESS_EQUAL,
                 1,
                 name="no_adjacent_vertices",
