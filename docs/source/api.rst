@@ -14,7 +14,7 @@ API Reference
    :members: min_cut, MinCutResult
 
 .. automodule:: gurobi_optimods.mwis
-   :members: maximum_weighted_independent_set
+   :members: maximum_weighted_independent_set, maximum_weighted_clique, Result
 
 .. automodule:: gurobi_optimods.opf
    :members: solve_opf, compute_violations, solution_plot, violation_plot, read_case_matpower

@@ -30,7 +30,7 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/min-cost-flow-result.png
 
-    .. grid-item-card:: Maximum Weighted Independent Set
+    .. grid-item-card:: Maximum Weighted Independent Set/Clique
         :link: mods/mwis
         :link-type: doc
         :text-align: center
