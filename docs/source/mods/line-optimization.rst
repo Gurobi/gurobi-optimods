@@ -212,7 +212,7 @@ The second approach is also used if the parameter shortestPaths is set to False.
           >>> from gurobi_optimods.line_optimization import line_optimization
           >>> node_data, edge_data, line_data, linepath_data, demand_data = datasets.load_siouxfalls_network_data()
           >>> frequencies = [1,3]
-          >>> objCost, finalLines = line_optimization(node_data, edge_data, line_data, linepath_data, demand_data, frequencies, True)
+          >>> objCost, finalLines = line_optimization(node_data, edge_data, line_data, linepath_data, demand_data, frequencies, True, verbose=False)
           >>> objCost
           211.0
           >>> finalLines
