@@ -116,9 +116,18 @@ def read_case_matpower(file_path):
         type=lambda df: df["type"].astype(int),
     )
     gen_array = fix_shape(mpc["gen"].item(), ncols=len(gen_field_names))
+
+    if gen_array.shape[1] < len(gen_field_names):
+        # If gen_array doesn't have all columns fill the remainder with Nan
+        # We must have at least 10 columns
+        assert gen_array.shape[1] >= 10
+        missing = len(gen_field_names) - gen_array.shape[1]
+        nan_array = np.full((gen_array.shape[0], missing), np.nan)
+        gen_array = np.append(gen_array, nan_array, axis=1)
     gen = pd.DataFrame(data=gen_array, columns=gen_field_names).assign(
         bus=lambda df: df["bus"].astype(int)
     )
+
     branch_array = fix_shape(mpc["branch"].item(), ncols=len(branch_field_names))
     branch = pd.DataFrame(data=branch_array, columns=branch_field_names).assign(
         fbus=lambda df: df["fbus"].astype(int), tbus=lambda df: df["tbus"].astype(int)
