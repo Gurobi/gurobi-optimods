@@ -1,6 +1,7 @@
 # Tests of reads/writes to data files
 
 import json
+import math
 import pathlib
 import tempfile
 import unittest
@@ -113,6 +114,18 @@ class TestIO(unittest.TestCase):
                     self.assertIsInstance(branch["fbus"], int)
                     self.assertIsInstance(branch["tbus"], int)
 
+    def read_write_and_read_case(self, file_path):
+        # Should read without errors
+        original = read_case_matpower(file_path)
+
+        # Test write and read back
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpfile = pathlib.Path(tmpdir) / "testcase.mat"
+            write_case_matpower(original, tmpfile)
+            reread = read_case_matpower(tmpfile)
+
+        return (original, reread)
+
     def test_read_case_matpower(self):
         # Check that all example cases are read without errors
 
@@ -123,19 +136,51 @@ class TestIO(unittest.TestCase):
 
         for file_path in case_mat_files:
             with self.subTest(file_path=file_path):
-                # Should read without errors
-                original = read_case_matpower(file_path)
-
-                # Test write and read back
-                with tempfile.TemporaryDirectory() as tmpdir:
-                    tmpfile = pathlib.Path(tmpdir) / "testcase.mat"
-                    write_case_matpower(original, tmpfile)
-                    reread = read_case_matpower(tmpfile)
+                original, reread = self.read_write_and_read_case(file_path)
 
                 # The first read and the round-trip should match exactly
                 self.assertEqual(set(reread.keys()), set(original.keys()))
                 for field, data in reread.items():
                     self.assertEqual(data, original[field])
+
+                # Check types for some special cases
+                for bus in reread["bus"]:
+                    self.assertIsInstance(bus["bus_i"], int)
+                    self.assertIsInstance(bus["type"], int)
+                for gen in reread["gen"]:
+                    self.assertIsInstance(gen["bus"], int)
+                for branch in reread["branch"]:
+                    self.assertIsInstance(branch["fbus"], int)
+                    self.assertIsInstance(branch["tbus"], int)
+
+    def test_read_case_pglib(self):
+        # Check that all example cases are read without errors
+
+        case_mat_files = [
+            self.dataset_dir.joinpath(f"pglib_case{case}.mat") for case in ["14"]
+        ]
+
+        for file_path in case_mat_files:
+            with self.subTest(file_path=file_path):
+                original, reread = self.read_write_and_read_case(file_path)
+
+                # The first read and the round-trip should match exactly
+                for (field1, data1), (field2, data2) in zip(
+                    reread.items(), original.items()
+                ):
+                    self.assertEqual(field1, field2)
+                    if field1 == "gen":
+                        # This is a list of dictionaries
+                        # The first 10 entries of each dictionary should match the remainder should be nan's
+                        for entry1, entry2 in zip(data1, data2):
+                            entry1 = list(entry1.items())
+                            entry2 = list(entry2.items())
+                            self.assertEqual(entry1[:10], entry2[:10])
+                            self.assertTrue(all(math.isnan(e) for _, e in entry1[10:]))
+                            self.assertTrue(all(math.isnan(e) for _, e in entry2[10:]))
+                        continue
+
+                    self.assertEqual(data1, data2)
 
                 # Check types for some special cases
                 for bus in reread["bus"]:
