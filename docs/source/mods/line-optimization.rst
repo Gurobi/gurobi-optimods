@@ -224,7 +224,7 @@ The second approach is also used if the parameter shortestPaths is set to False.
 We provide a basic method to plot a line plan that has at most 20 lines using networkx and matplotlib.
 In order to use this functionality, it is necessary to install both packages if not already available as follows::
 
-    pip install plotly
+    pip install matplotlib
     pip install networkx
 
 Additionally, the node_data must include coordinates for the node positions, i.e., the columns  ``posx`` and ``posy``
