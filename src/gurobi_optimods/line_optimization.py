@@ -51,6 +51,7 @@ def line_optimization(
     frequency: List
         List with possible frequencies: How often the line can be operated in the considered
         time horizon.
+
     Returns
     -------
     tuple
