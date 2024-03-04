@@ -418,7 +418,7 @@ def plot_lineplan(
     linepath_data: pd.DataFrame,
     line_plan: list,
 ):
-    """Visualize a line plan with at most 20 lines.
+    """Visualize a line plan with at most 20 lines. The figure is opened in a browser
 
     Parameters
     ----------
