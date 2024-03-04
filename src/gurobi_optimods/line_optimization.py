@@ -439,9 +439,9 @@ def plot_lineplan(
         A solution of the line optimization, i.e., a list with linenames and associated frequencies.
 
     """
-    if mpl is None:
+    if mpl is None or nx is None:
         logger.info(
-            "Plot not possible: matplotlib and matplotlib.pyplot is required for plotting the line plan"
+            "Plot not possible: networkx, matplotlib and matplotlib.pyplot are required for plotting the line plan"
         )
     if len(line_plan) >= 20:
         logger.info(
