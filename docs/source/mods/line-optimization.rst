@@ -9,13 +9,12 @@ There are different approaches and models to solve the line optimization problem
 A general overview on models and methods is given by Schoebel :footcite:p:`schoebel2012`.
 
 For this optimod we assume we are given a public transportation network, being
-a set of stations and the direct links between them. We are also given the
+a set of stations and the direct links between them. We are given the
 origin-destination (OD) demand, i.e., it is known how many passengers want to
 travel from one station to another in the network within a considered time horizon.
-We are also given a set of possible *lines*. A line is a route within a public
-transportation network from one station to another along direct links, via
-other stations if necessary. We call a subset of these lines where each line is
-associated with a frequency a line plan.  The optimod computes a line plan with
+We are also given a set of possible *lines*. A line is a path a public
+transportation network. We call a subset of these lines where each line is
+associated with a frequency a line plan. The optimod computes a line plan with
 minimum cost such that the capacity of the chosen lines sufficient to transport
 all passengers.
 
@@ -209,7 +208,7 @@ The second approach is also used if the parameter shortestPaths is set to False.
 
   .. group-tab:: pandas
 
-      .. doctest:: pandas
+      .. doctest:: solve
           :options: +NORMALIZE_WHITESPACE
 
           >>> from gurobi_optimods import datasets
@@ -221,6 +220,18 @@ The second approach is also used if the parameter shortestPaths is set to False.
           211.0
           >>> finalLines
           [('new271_B', 1), ('new31_B', 1), ('new407_B', 1), ('new415_B', 3), ('new423_B', 3), ('new535_B', 3), ('new551_B', 3), ('new71_B', 1)]
+
+We provide a basic method to plot a line plan that has at most 20 lines using networkx and matplotlib.
+In order to use this functionality, it is necessary to install both packages if not already available as follows::
+
+    pip install plotly
+    pip install networkx
+
+Additionally, the node_data must include coordinates for the node positions, i.e., the columns  ``posx`` and ``posy``
+must be available. The plot function generates a matplot that is opened in a browser::
+
+    from gurobi_optimods.line_optimization import plot_lineplan
+    plot_lineplan(node_data, edge_data, linepath_data, finalLines)
 
 The Sioux-Falls transportation network (left) and the optimal line plan (right) for this example is shown in the figure below. The lines are shown as
 different colored paths in the network.

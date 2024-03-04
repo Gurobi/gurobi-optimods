@@ -6,6 +6,8 @@ Line Optimization in Public Transportation Networks
 import logging
 
 import gurobipy as gp
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import pandas as pd
 
 try:
@@ -177,13 +179,17 @@ def line_optimization(
         )
 
 
-# Strategy 1:
-#  - compute all shortest path for each OD pair using networkx all_shortest_paths algorithm
-#  - create passenger variable for each path
 def allShortestPaths(
     nodes, edges, edge_data, lines, linepaths, demands, frequencies, create_env
 ):
-    logger.info("Starting line optimization using strategy 2.")
+    """
+    Strategy 1:
+    - compute all shortest path for each OD pair using networkx all_shortest_paths algorithm
+    - create passenger variable for each path
+    """
+    logger.info(
+        "Starting line optimization using strategy 1 - allow only shortest paths."
+    )
     G = nx.from_pandas_edgelist(
         edge_data, create_using=nx.DiGraph(), edge_attr=["time"]
     )
@@ -225,6 +231,7 @@ def allShortestPaths(
         )
 
         # compute all shortest paths (same travel time) for each OD pair
+        # define a variable for each such shortest path
         f = {}  # stuv from s to t using edge uv
         for s, t in demands:
             paths = list(nx.all_shortest_paths(G, source=s, target=t, weight="time"))
@@ -261,15 +268,16 @@ def allShortestPaths(
         return objCost, linesOut
 
 
-# Strategy 2:
-#  - multi commodity flow formulation for the passenger demand without any restrictions
-#  - multi-objective approach: first minimize cost then minimize travel times for passengers by allowing a cost
-#    degradation of 20%
-#  - add some cuts to the formulation to improve LP relaxation
 def allowAllPaths(
     nodes, edges, lines, linepaths, demands, demand_data, frequencies, create_env
 ):
-    logger.info("Starting line optimization using strategy 1.")
+    """Strategy 2:
+    - multi commodity flow formulation for the passenger demand without any restrictions
+    - multi-objective approach: first minimize cost then minimize travel times for passengers by allowing a cost
+      degradation of 20%
+    - add some cuts to the formulation to improve LP relaxation
+    """
+    logger.info("Starting line optimization using strategy 2.")
     with create_env() as env, gp.Model(env=env) as model:
         objcost = 0  # objective function for cost
         objtime = 0  # objective function for travel time
@@ -402,3 +410,94 @@ def allowAllPaths(
                     if x[i, j].X > 0.5:
                         linesOut.append((i, j))
         return objCost, linesOut
+
+
+def plot_lineplan(
+    node_data: pd.DataFrame,
+    edge_data: pd.DataFrame,
+    linepath_data: pd.DataFrame,
+    line_plan: list,
+):
+    """Visualize a line plan with at most 20 lines.
+
+    Parameters
+    ----------
+    node_data : DataFrame
+        DataFrame with information on the nodes/stations. The frame must include "source".
+    edge_data : DataFrame
+        DataFrame with edges / connections between stations and associated attributes.
+        The frame must include "source", "target", and "time"
+    linepath_data : DataFrame
+        DataFrame with information on the line routes/paths.
+        It must include "linename", "edgeSource", and "edgeTarget".
+    line_plan: List
+        A solution of the line optimization, i.e., a list with linenames and associated frequencies.
+
+    """
+    if len(line_plan) >= 20:
+        logger.info(
+            "Line plan has more than 20 lines, only visualize line plans with at most 20 lines"
+        )
+        return
+    linepaths = (
+        linepath_data.set_index("linename")
+        .groupby(["linename"])
+        .apply(lambda x: [(k, v) for k, v in zip(x["edgeSource"], x["edgeTarget"])])
+    )
+    G = nx.from_pandas_edgelist(
+        edge_data.reset_index(), create_using=nx.Graph(), edge_attr=["length", "time"]
+    )
+    for number, row in node_data.set_index("number").iterrows():
+        # print(number)
+        G.add_node(number, pos=(row["posx"], row["posy"]))
+
+    mpl.use("WebAgg")
+    plt.figure(1, figsize=(14, 7))
+    # plot network on the left
+    plt.subplot(1, 2, 1)  # row 1, col 2 index 1
+    pos = nx.get_node_attributes(G, "pos")
+    nx.draw(G, pos, width=1, node_size=100, node_color="gray")
+
+    if len(line_plan) <= 10:
+        colormap = mpl.cm.tab10.colors
+    else:
+        colormap = mpl.cm.tab20.colors
+    colornum = 0
+
+    plt.subplot(1, 2, 2)  # index 2
+    plt.axis("off")
+    xmean = round(node_data.loc[:, "posx"].mean() / 50)
+    ymean = round(node_data.loc[:, "posy"].mean() / 50)
+    pathList = []
+    for l, f in line_plan:
+        lastU = -1
+        for u, v in linepaths[l]:
+            if lastU == v:
+                break  # line path back
+            lastU = u
+            (x1, y1) = G.nodes[u]["pos"]
+            (x2, y2) = G.nodes[v]["pos"]
+            cnt = pathList.count((u, v)) + pathList.count((v, u))
+            if abs(x1 - x2) < abs(y1 - y2):
+                x1 += cnt * xmean
+                x2 += cnt * xmean
+            else:
+                y1 += cnt * ymean
+                y2 += cnt * ymean
+            plt.plot((x1, x2), (y1, y2), linewidth=2, color=colormap[colornum])
+            pathList.append((u, v))
+        colornum += 1
+
+    # plot again all nodes
+    for n in G.nodes:
+        (x, y) = G.nodes[n]["pos"]
+        plt.plot(
+            x,
+            y,
+            marker="o",
+            markersize=10,
+            markeredgecolor="black",
+            markerfacecolor="gray",
+        )
+
+    plt.show()
