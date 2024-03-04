@@ -6,14 +6,19 @@ Line Optimization in Public Transportation Networks
 import logging
 
 import gurobipy as gp
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import pandas as pd
 
 try:
     import networkx as nx
 except ImportError:
     nx = None
+
+try:
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+except ImportError:
+    mpl = None
+
 
 from gurobi_optimods.utils import optimod
 
@@ -434,6 +439,10 @@ def plot_lineplan(
         A solution of the line optimization, i.e., a list with linenames and associated frequencies.
 
     """
+    if mpl is None:
+        logger.info(
+            "Plot not possible: matplotlib and matplotlib.pyplot is required for plotting the line plan"
+        )
     if len(line_plan) >= 20:
         logger.info(
             "Line plan has more than 20 lines, only visualize line plans with at most 20 lines"
