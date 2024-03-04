@@ -1,56 +1,60 @@
 Line Optimization in Public Transport
 =====================================
 
-The line optimization in public transport is to choose a set of lines
+The line optimization problem in public transport is to choose a set of lines
 (routes in the transportation network) with associated frequencies (how often the
 lines are operated) such that a given transportation demand can be satisfied.
 This problem is an example of a classical network design problem.
 There are different approaches and models to solve the line optimization problem.
 A general overview on models and methods is given by Schoebel :footcite:p:`schoebel2012`.
 
-For this optimod we assume we are given a public transportation network with its stops or
-stations and its direct links. We are also given the demand as an origin-destination (OD)
-demand, i.e., it is known how many passengers want to travel from one node/station to another
-node/station in the public transportation network within a considered time horizon.
-A line is a route in the public transportation network.
-We assume we are given a set of possible lines. We call a subset of these lines where each
-line is associated with a frequency a line plan.
-The optimod computes a line plan with minimum cost such that the capacity of the chosen lines
-suffice to transport all passengers.
-We provide two different strategies to find a cost minimal line plan:
+For this optimod we assume we are given a public transportation network, being
+a set of stations and the direct links between them. We are also given the
+origin-destination (OD) demand, i.e., it is known how many passengers want to
+travel from one station to another in the network within a considered time horizon.
+We are also given a set of possible *lines*. A line is a route within a public
+transportation network from one station to another along direct links, via
+other stations if necessary. We call a subset of these lines where each line is
+associated with a frequency a line plan.  The optimod computes a line plan with
+minimum cost such that the capacity of the chosen lines sufficient to transport
+all passengers.
 
-#. The first approach assumes that passengers only travel on shortest paths w.r.t. travel time.
-   To this purpose, all shortest paths are computed for each OD pair and it is only allowed
-   to route passengers along these paths.
-#. The second approach does not restrict the passenger paths. Instead a multi-objective approach is
-   used. In the first objective the cost of a the line plan is minimized such that
-   all passengers can be transported using a multi-commodity-flow formulation for the passenger paths.
-   In the second objective the travel time for the
-   passengers is minimized such that the cost of the line plan increases by at most 20%.
+We provide two different strategies to find a line plan with minimum cost:
+
+#. The first approach assumes that passengers only travel from their origin to
+   their destination along the path with the shortest travel time.  For this
+   purpose, all shortest paths are computed for each OD pair and it is only
+   allowed to route passengers along these paths.
+#. The second approach does not restrict the passenger paths, but instead
+   applies a multi-objective approach.  In the first objective the cost of the
+   line plan is minimized such that all passenger demand can be satisfied.  In the
+   second objective the travel time for the passengers is minimized such that the
+   cost of the line plan increases by at most 20% over the minimum cost line plan.
 
 
 Problem Specification
 ---------------------
 
 Let a graph :math:`G=(V,E)` represent the transportation network. The set of
-vertices :math:`V` represent the stops or stations and the set of edges
-:math:`E` represent all possibilities to travel from one station/stop to another without
-an intermediate station/stop.
+vertices :math:`V` represent the stations and the set of edges
+:math:`E` represent all possibilities to travel from one station to another without
+an intermediate station.
 A directed edge :math:`(u,v)\in E` has the attribute time :math:`\tau_{uv}\geq 0` that
 represents the amount of time needed traveling from :math:`u` to :math:`v`.
-For each two nodes :math:`u,v\in V` a demand :math:`d_{uv}\geq 0` can be defined.
+For each pair of nodes :math:`u,v\in V` a demand :math:`d_{uv}\geq 0` can be defined.
 The demand represents the number of passengers that want to travel from :math:`u`
 to :math:`v` in the considered time horizon. Let :math:`D` be the set of all node pairs with
 positive demand. This set is also called OD pairs.
 Further given is a set of lines :math:`L`. A line :math:`l\in L` contains the stations it traverses
-in the given order. If it runs forth and back, the stations need to be repeated reversely.
+in the given order. If a line runs in both directions, it needs to be repeated in reverse order.
+
 A line has the following additional attributes:
 
 - fixed cost: :math:`C_{l}\geq 0` for installing the line
 - operating cost: :math:`c_{l}\geq 0` for operating the line once in the given time horizon
 - capacity: :math:`\kappa_{l}\geq 0` when operating the line :math:`l` once in the given time horizon
 
-Additionally, we have given a list of frequencies. The frequencies define the possible
+Additionally, we have a given list of frequencies. The frequencies define the possible
 number of operations for the lines in the given time horizon.
 If a line :math:`l` is operated with frequency :math:`f` the overall cost for the line is
 :math:`C_{lf}=C_l + c_{lf}\cdot f` and the total capacity provided by the line is
@@ -130,7 +134,7 @@ such that all passengers can be transported.
 Code and Inputs
 ---------------
 
-This Mod can be used with pandas: using a ``pd.DataFrame``.
+This Mod can be used with pandas using a ``pd.DataFrame``.
 An example of the inputs with the respective requirements is shown below.
 
 .. tabs::
