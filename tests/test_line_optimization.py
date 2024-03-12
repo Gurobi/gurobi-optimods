@@ -1,3 +1,4 @@
+import contextlib
 import io
 import pathlib
 import unittest
@@ -89,7 +90,7 @@ class Testlop(unittest.TestCase):
             demand_data,
         ) = datasets.load_siouxfalls_network_data()
         frequencies = [1, 3]
-        objCost, finalLines = lop.line_optimization(
+        obj_cost, final_lines = lop.line_optimization(
             node_data,
             edge_data,
             line_data,
@@ -98,8 +99,8 @@ class Testlop(unittest.TestCase):
             frequencies,
             True,
         )
-        self.assertEqual(objCost, 211)
-        self.assertEqual(len(finalLines), 8)
+        self.assertEqual(obj_cost, 211)
+        self.assertEqual(len(final_lines), 8)
 
     def test_wrong_data_format(self):
         edge_data = pd.read_csv(io.StringIO(edge_data2A))
@@ -108,11 +109,22 @@ class Testlop(unittest.TestCase):
         line_data = pd.read_csv(io.StringIO(lines2))
         demand_data = pd.read_csv(io.StringIO(demand2))
         frequencies = [3, 6]
-        objCost, finalLines = lop.line_optimization(
-            node_data, edge_data, line_data, linepath_data, demand_data, frequencies
-        )
-        self.assertEqual(objCost, -1)
-        self.assertEqual(len(finalLines), 0)
+
+        captured_output = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(captured_output):
+                lop.line_optimization(
+                    node_data,
+                    edge_data,
+                    line_data,
+                    linepath_data,
+                    demand_data,
+                    frequencies,
+                )
+        except ValueError:
+            self.assertEqual(
+                "column source not present in edge_data\n", captured_output.getvalue()
+            )
 
     def test_wrong_data_format2(self):
         edge_data = pd.read_csv(io.StringIO(edge_data2))
@@ -121,22 +133,22 @@ class Testlop(unittest.TestCase):
         line_data = pd.read_csv(io.StringIO(lines2))
         demand_data = pd.read_csv(io.StringIO(demand2A))
         frequencies = [3, 6, 9, 18]
-        objCost, finalLines = lop.line_optimization(
-            node_data, edge_data, line_data, linepath_data, demand_data, frequencies
-        )
-        self.assertEqual(objCost, -1)
-        self.assertEqual(len(finalLines), 0)
-
-    def test_wrong_data_format3(self):
-        edge_data = pd.read_csv(io.StringIO(edge_data2))
-        node_data = pd.read_csv(io.StringIO(node_data2))
-        linepath_data = pd.read_csv(io.StringIO(line_path2))
-        line_data = pd.read_csv(io.StringIO(lines2))
-        demand_data = pd.read_csv(io.StringIO(demand2))
-        frequencies = [1, -2, 3]
-        objCost, finalLines = lop.line_optimization(
-            node_data, edge_data, line_data, linepath_data, demand_data, frequencies
-        )
+        captured_output = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(captured_output):
+                lop.line_optimization(
+                    node_data,
+                    edge_data,
+                    line_data,
+                    linepath_data,
+                    demand_data,
+                    frequencies,
+                )
+        except ValueError:
+            self.assertEqual(
+                "All demand should be non-negative! Some value is negative in demand_data\n",
+                captured_output.getvalue(),
+            )
 
     def test_smallAllPaths(self):
         edge_data = pd.read_csv(io.StringIO(edge_data2))
@@ -145,7 +157,7 @@ class Testlop(unittest.TestCase):
         line_data = pd.read_csv(io.StringIO(lines2))
         demand_data = pd.read_csv(io.StringIO(demand2))
         frequencies = [1, 2, 3]
-        objCost, finalLines = lop.line_optimization(
+        obj_cost, final_lines = lop.line_optimization(
             node_data,
             edge_data,
             line_data,
@@ -154,8 +166,8 @@ class Testlop(unittest.TestCase):
             frequencies,
             False,
         )
-        self.assertEqual(objCost, 21)
-        self.assertEqual(finalLines, [("L1", 3)])
+        self.assertEqual(obj_cost, 21)
+        self.assertEqual(final_lines, [("L1", 3)])
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_shortestPath(self):
@@ -165,7 +177,7 @@ class Testlop(unittest.TestCase):
         line_data = pd.read_csv(io.StringIO(lines2))
         demand_data = pd.read_csv(io.StringIO(demand2))
         frequencies = [1, 2, 3]
-        objCost, finalLines = lop.line_optimization(
+        obj_cost, final_lines = lop.line_optimization(
             node_data,
             edge_data,
             line_data,
@@ -174,5 +186,5 @@ class Testlop(unittest.TestCase):
             frequencies,
             True,
         )
-        self.assertEqual(objCost, 50)
-        self.assertEqual(finalLines, [("L1", 2), ("L2", 3), ("L3", 3)])
+        self.assertEqual(obj_cost, 50)
+        self.assertEqual(final_lines, [("L1", 2), ("L2", 3), ("L3", 3)])

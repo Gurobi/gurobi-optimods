@@ -33,7 +33,7 @@ def line_optimization(
     linepath_data: pd.DataFrame,
     demand_data: pd.DataFrame,
     frequencies: list,
-    shortestPaths: bool = True,
+    shortest_paths: bool = True,
     *,
     create_env,
 ):
@@ -65,72 +65,72 @@ def line_optimization(
         - Cost of the optimal line concept (line frequency)
         - list of line-frequency tuples (optimal line concept)
     """
-    missingData = False
-    # check data
+    # check for missing or wrong data
+    missing_data = False
     if "number" not in node_data.columns:
         logger.info("column nr not present in node_data")
-        missingData = True
+        missing_data = True
     if "time" not in edge_data.columns:
         logger.info("column time not present in edge_data")
-        missingData = True
+        missing_data = True
     if "source" not in edge_data.columns:
         logger.info("column source not present in edge_data")
-        missingData = True
+        missing_data = True
     if "target" not in edge_data.columns:
         logger.info("column target not present in edge_data")
-        missingData = True
+        missing_data = True
     if "linename" not in line_data.columns:
         logger.info("column linename not present in line_data")
-        missingData = True
+        missing_data = True
     if "capacity" not in line_data.columns:
         logger.info("column capacity not present in line_data")
-        missingData = True
+        missing_data = True
     if "fixCost" not in line_data.columns:
         logger.info("column fixCost not present in line_data")
-        missingData = True
+        missing_data = True
     if "operatingCost" not in line_data.columns:
         logger.info("column operatingCost not present in line_data")
-        missingData = True
+        missing_data = True
     if "linename" not in linepath_data.columns:
         logger.info("column linename not present in linepath_data")
-        missingData = True
+        missing_data = True
     if "edgeSource" not in linepath_data.columns:
         logger.info("column edgeSource not present in linepath_data")
-        missingData = True
+        missing_data = True
     if "edgeTarget" not in linepath_data.columns:
         logger.info("column edgeTarget not present in linepath_data")
-        missingData = True
+        missing_data = True
     if "source" not in demand_data.columns:
         logger.info("column source not present in demand_data")
-        missingData = True
+        missing_data = True
     if "target" not in demand_data.columns:
         logger.info("column target not present in demand_data")
-        missingData = True
+        missing_data = True
     if "demand" not in demand_data.columns:
         logger.info("column demand not present in demand_data")
-        missingData = True
+        missing_data = True
     if node_data.isnull().values.any():
         logger.info("some value is nan or format is not correct for node_data")
-        missingData = True
+        missing_data = True
     if edge_data.isnull().values.any():
         logger.info("some value is nan or format is not correct for edge_data")
-        missingData = True
+        missing_data = True
     if line_data.isnull().values.any():
         logger.info("some value is nan or format is not correct for line_data")
-        missingData = True
+        missing_data = True
     if linepath_data.isnull().values.any():
         logger.info("some value is nan or format is not correct for linepath_data")
-        missingData = True
+        missing_data = True
     if demand_data.isnull().values.any():
         logger.info("some value is nan or format is not correct for demand_data")
-        missingData = True
+        missing_data = True
     if (demand_data < 0).values.any():
         logger.info(
             "All demand should be non-negative! Some value is negative in demand_data"
         )
-        missingData = True
-    if missingData:
-        return -1, []
+        missing_data = True
+    if missing_data:
+        raise ValueError("Cannot run optimization. Some data is wrong or missing!")
 
     # prepare data
     nodes = node_data.set_index("number").to_dict("index")
@@ -153,12 +153,12 @@ def line_optimization(
         if found == False:
             del edges[k]
 
-    if shortestPaths:
+    if shortest_paths:
         if nx is None:
             logger.info(
                 "Networkx is needed for strategy 1 but not available. Using strategy 2 instead."
             )
-            return allowAllPaths(
+            return allow_all_paths(
                 nodes,
                 edges,
                 lines,
@@ -168,11 +168,11 @@ def line_optimization(
                 frequencies,
                 create_env,
             )
-        return allShortestPaths(
+        return all_shortest_paths(
             nodes, edges, edge_data, lines, linepaths, demands, frequencies, create_env
         )
     else:
-        return allowAllPaths(
+        return allow_all_paths(
             nodes,
             edges,
             lines,
@@ -184,7 +184,7 @@ def line_optimization(
         )
 
 
-def allShortestPaths(
+def all_shortest_paths(
     nodes, edges, edge_data, lines, linepaths, demands, frequencies, create_env
 ):
     """
@@ -240,17 +240,17 @@ def allShortestPaths(
         f = {}  # stuv from s to t using edge uv
         for s, t in demands:
             paths = list(nx.all_shortest_paths(G, source=s, target=t, weight="time"))
-            demandExpr = 0
+            demand_expr = 0
             for p in paths:
                 y = model.addVar(
                     ub=demands[s, t],
                     vtype=gp.GRB.CONTINUOUS,
                     name="passpath" + str(s) + "," + str(t) + str(p),
                 )
-                demandExpr += y
+                demand_expr += y
                 for node in range(len(p) - 1):
                     model.chgCoeff(cap[p[node], p[node + 1]], y, -1.0)
-            model.addConstr(demandExpr == demands[s, t])
+            model.addConstr(demand_expr == demands[s, t])
 
         # each line with at most one frequency
         model.addConstrs(
@@ -261,19 +261,19 @@ def allShortestPaths(
         model.optimize()
 
         # prepare return values
-        objCost = -1
-        linesOut = []
+        obj_cost = -1
+        lines_out = []
         if model.Status == gp.GRB.OPTIMAL:
-            objCost = model.objVal
+            obj_cost = model.objVal
             for i in linepaths.index:
                 for j in frequencies:
                     if x[i, j].X > 0.5:
-                        linesOut.append((i, j))
+                        lines_out.append((i, j))
 
-        return objCost, linesOut
+        return obj_cost, lines_out
 
 
-def allowAllPaths(
+def allow_all_paths(
     nodes, edges, lines, linepaths, demands, demand_data, frequencies, create_env
 ):
     """Strategy 2:
@@ -284,7 +284,7 @@ def allowAllPaths(
     """
     logger.info("Starting line optimization using strategy 2.")
     with create_env() as env, gp.Model(env=env) as model:
-        objcost = 0  # objective function for cost
+        obj_cost = 0  # objective function for cost
         objtime = 0  # objective function for travel time
 
         # add variables for lines and frequencies
@@ -294,7 +294,7 @@ def allowAllPaths(
             numlines += 1
             for f in frequencies:
                 x[l, f] = model.addVar(vtype=gp.GRB.BINARY, name=str(l) + str(f))
-                objcost += x[l, f] * (
+                obj_cost += x[l, f] * (
                     f * lines[l]["operatingCost"] + lines[l]["fixCost"]
                 )
 
@@ -360,7 +360,7 @@ def allowAllPaths(
                     )
 
         # Set up primary objective: minimize total cost
-        model.setObjectiveN(objcost, index=0, priority=2, reltol=0.2, name="Cost")
+        model.setObjectiveN(obj_cost, index=0, priority=2, reltol=0.2, name="Cost")
 
         # Set up secondary objective: minimize passengers travel time
         model.setObjectiveN(objtime, index=1, priority=1, name="Traveltime")
@@ -368,44 +368,44 @@ def allowAllPaths(
         # add additional cuts to improve the LP relaxation: capacity and connectivity cuts around each station
         # where passengers want to start or end their trip
         for s in nodes:
-            demandFromS = demand_data.loc[demand_data["source"] == s, "demand"].sum()
-            demandToS = demand_data.loc[demand_data["target"] == s, "demand"].sum()
-            capFS = 0
-            linesFS = 0
-            capTS = 0
-            linesTS = 0
+            demand_from_s = demand_data.loc[demand_data["source"] == s, "demand"].sum()
+            demand_to_s = demand_data.loc[demand_data["target"] == s, "demand"].sum()
+            cap_from_s = 0
+            lines_from_s = 0
+            cap_to_s = 0
+            lines_to_s = 0
             for l in linepaths.index:
-                foundU = False
-                foundV = False
+                found_u = False
+                found_v = False
                 for u, v in linepaths[l]:
                     if s == u:
                         for f in frequencies:
-                            capFS += x[l, f] * lines[l]["capacity"] * f
-                        if foundU == False:
+                            cap_from_s += x[l, f] * lines[l]["capacity"] * f
+                        if found_u == False:
                             for f in frequencies:
-                                linesFS += x[l, f]
-                            foundU = True
+                                lines_from_s += x[l, f]
+                            found_u = True
                     if s == v:
                         for f in frequencies:
-                            capTS += x[l, f] * lines[l]["capacity"] * f
-                        if foundV == False:
+                            cap_to_s += x[l, f] * lines[l]["capacity"] * f
+                        if found_v == False:
                             for f in frequencies:
-                                linesTS += x[l, f]
-                            foundV = True
-            if demandFromS > 0:
-                model.addConstr(capFS >= demandFromS, name="capFrom" + str(s))
-                model.addConstr(linesFS >= 1, name="linesFrom" + str(s))
-            if demandToS > 0:
-                model.addConstr(capTS >= demandToS, name="capTo" + str(s))
-                model.addConstr(linesTS >= 1, name="linesTo" + str(s))
+                                lines_to_s += x[l, f]
+                            found_v = True
+            if demand_from_s > 0:
+                model.addConstr(cap_from_s >= demand_from_s, name="capFrom" + str(s))
+                model.addConstr(lines_from_s >= 1, name="linesFrom" + str(s))
+            if demand_to_s > 0:
+                model.addConstr(cap_to_s >= demand_to_s, name="capTo" + str(s))
+                model.addConstr(lines_to_s >= 1, name="linesTo" + str(s))
 
         model.optimize()
 
         # prepare return values
-        objCost = -1
-        linesOut = []
+        obj_cost = -1
+        lines_out = []
         if model.Status == gp.GRB.OPTIMAL:
-            objCost = model.objVal
+            obj_cost = model.objVal
             # model.setParam(gp.GRB.Param.ObjNumber, 1)
             # objTime = model.objVal
             # save optimal line plan (after both objectives) in list of tuples
@@ -413,8 +413,8 @@ def allowAllPaths(
             for i in linepaths.index:
                 for j in frequencies:
                     if x[i, j].X > 0.5:
-                        linesOut.append((i, j))
-        return objCost, linesOut
+                        lines_out.append((i, j))
+        return obj_cost, lines_out
 
 
 def plot_lineplan(
@@ -423,7 +423,10 @@ def plot_lineplan(
     linepath_data: pd.DataFrame,
     line_plan: list,
 ):
-    """Visualize a line plan with at most 20 lines. The figure is opened in a browser
+    """Visualize a line plan. The figure is opened in a browser
+    A colormap with 20 different colors is used.
+    If the line plan contains at most 10 lines, a colormap with 10 colors is used to have the colors more distinguishable.
+    If the line plan contains more than 20 lines, the same colors are rerun.
 
     Parameters
     ----------
@@ -440,22 +443,24 @@ def plot_lineplan(
 
     """
     if mpl is None or nx is None:
-        logger.info(
+        raise RuntimeError(
             "Plot not possible: networkx, matplotlib and matplotlib.pyplot are required for plotting the line plan"
         )
-    if len(line_plan) >= 20:
+
+    if "posx" not in node_data.columns or "posy" not in node_data.columns:
+        raise ValueError("Need posx and posy information in node_data!")
+
+    if len(line_plan) > 20:
         logger.info(
-            "Line plan has more than 20 lines, only visualize line plans with at most 20 lines"
+            "Note that only 20 different colors are used. Line plan has more than 20 lines, hence, different lines will have the same color."
         )
-        return
+
     linepaths = (
         linepath_data.set_index("linename")
         .groupby(["linename"])
         .apply(lambda x: [(k, v) for k, v in zip(x["edgeSource"], x["edgeTarget"])])
     )
-    G = nx.from_pandas_edgelist(
-        edge_data.reset_index(), create_using=nx.Graph(), edge_attr=["length", "time"]
-    )
+    G = nx.from_pandas_edgelist(edge_data.reset_index(), create_using=nx.Graph())
     for number, row in node_data.set_index("number").iterrows():
         # print(number)
         G.add_node(number, pos=(row["posx"], row["posy"]))
@@ -473,8 +478,12 @@ def plot_lineplan(
         colormap = mpl.cm.tab20.colors
     colornum = 0
 
+    # plot line plan on the right
     plt.subplot(1, 2, 2)  # index 2
     plt.axis("off")
+    # these parameters are used to "shift a line" when different lines use the same arc/edge
+    # this is done in a very simple way; it might be the case that different lines
+    # on the same edge are not easily distinguishable
     xmean = round(node_data.loc[:, "posx"].mean() / 50)
     ymean = round(node_data.loc[:, "posy"].mean() / 50)
     pathList = []
@@ -496,6 +505,9 @@ def plot_lineplan(
             plt.plot((x1, x2), (y1, y2), linewidth=2, color=colormap[colornum])
             pathList.append((u, v))
         colornum += 1
+        # start with first color if the number of colors is reached
+        if colornum == len(colormap):
+            colornum = 0
 
     # plot again all nodes
     for n in G.nodes:

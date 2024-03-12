@@ -215,10 +215,10 @@ The second approach is also used if the parameter shortestPaths is set to False.
           >>> from gurobi_optimods.line_optimization import line_optimization
           >>> node_data, edge_data, line_data, linepath_data, demand_data = datasets.load_siouxfalls_network_data()
           >>> frequencies = [1,3]
-          >>> objCost, finalLines = line_optimization(node_data, edge_data, line_data, linepath_data, demand_data, frequencies, True, verbose=False)
-          >>> objCost
+          >>> obj_cost, final_lines = line_optimization(node_data, edge_data, line_data, linepath_data, demand_data, frequencies, True, verbose=False)
+          >>> obj_cost
           211.0
-          >>> finalLines
+          >>> final_lines
           [('new271_B', 1), ('new31_B', 1), ('new407_B', 1), ('new415_B', 3), ('new423_B', 3), ('new535_B', 3), ('new551_B', 3), ('new71_B', 1)]
 
 We provide a basic method to plot a line plan that has at most 20 lines using networkx and matplotlib.
@@ -231,7 +231,7 @@ Additionally, the node_data must include coordinates for the node positions, i.e
 must be available. The plot function generates a matplot that is opened in a browser::
 
     from gurobi_optimods.line_optimization import plot_lineplan
-    plot_lineplan(node_data, edge_data, linepath_data, finalLines)
+    plot_lineplan(node_data, edge_data, linepath_data, final_lines)
 
 The Sioux-Falls transportation network (left) and the optimal line plan (right) for this example is shown in the figure below. The lines are shown as
 different colored paths in the network.
