@@ -239,7 +239,16 @@ def all_shortest_paths(
         # define a variable for each such shortest path
         f = {}  # stuv from s to t using edge uv
         for s, t in demands:
-            paths = list(nx.all_shortest_paths(G, source=s, target=t, weight="time"))
+            if s not in G:
+                raise ValueError(f"demand node {s} not found in edges")
+            if t not in G:
+                raise ValueError(f"demand node {t} not found in edges")
+            try:
+                paths = list(
+                    nx.all_shortest_paths(G, source=s, target=t, weight="time")
+                )
+            except nx.NetworkXNoPath:
+                raise ValueError(f"no path found for connection from {s} to {t}")
             demand_expr = 0
             for p in paths:
                 y = model.addVar(
