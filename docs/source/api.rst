@@ -4,6 +4,9 @@ API Reference
 .. automodule:: gurobi_optimods.bipartite_matching
    :members: maximum_bipartite_matching
 
+.. automodule:: gurobi_optimods.line_optimization
+   :members: line_optimization
+
 .. automodule:: gurobi_optimods.max_flow
    :members: max_flow
 

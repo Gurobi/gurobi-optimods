@@ -18,6 +18,12 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/icons/lad-regression.png
 
+    .. grid-item-card:: Line Optimization
+        :link: mods/line-optimization
+        :link-type: doc
+        :text-align: center
+        :img-top: mods/figures/lop_siouxfalls.png
+
     .. grid-item-card:: Maximum-Flow/Mininum-Cut
         :link: mods/max-flow-min-cut
         :link-type: doc
@@ -66,13 +72,13 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/bipartite-matching-flow.png
 
-
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    mods/bipartite-matching
    mods/lad-regression
+   mods/line-optimization
    mods/min-cost-flow
    mods/max-flow-min-cut
    mods/mwis
