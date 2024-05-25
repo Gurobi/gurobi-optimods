@@ -21,7 +21,7 @@ from gurobi_optimods.utils import optimod
 
 
 @dataclass
-class Result:
+class MWISResult:
     """
     Data class representing the maximum weighted independent set
     (clique) and its weight
@@ -100,7 +100,7 @@ def _maximum_weighted_independent_set_scipy(adjacency_matrix, weights, *, create
         )
         model.optimize()
         (mwis,) = np.where(x.X >= 0.5)
-        return Result(mwis, sum(weights[mwis]))
+        return MWISResult(mwis, sum(weights[mwis]))
 
 
 @optimod()
@@ -125,7 +125,7 @@ def _maximum_weighted_independent_set_pandas(frame, weights, *, create_env):
             )
         model.optimize()
         (mwis,) = np.where(x.gppd.X >= 0.5)
-        return Result(mwis, weights["weights"].iloc[mwis].sum())
+        return MWISResult(mwis, weights["weights"].iloc[mwis].sum())
 
 
 @optimod()
@@ -148,7 +148,7 @@ def _maximum_weighted_independent_set_networkx(graph, weights, *, create_env):
         )
         model.optimize()
         (mwis,) = np.where(np.array(model.getAttr("X", model.getVars())) >= 0.5)
-        return Result(mwis, sum(weights[mwis]))
+        return MWISResult(mwis, sum(weights[mwis]))
 
 
 def maximum_weighted_clique(graph, weights, **kwargs):
