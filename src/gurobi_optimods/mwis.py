@@ -38,7 +38,8 @@ class MWISResult:
     f: float
 
 
-def maximum_weighted_independent_set(graph, weights, **kwargs):
+@optimod()
+def maximum_weighted_independent_set(graph, weights, *, create_env):
     """Find a set of mutually non-adjacent vertices with maximum weighted sum.
 
     Parameters
@@ -57,22 +58,21 @@ def maximum_weighted_independent_set(graph, weights, **kwargs):
 
     Returns
     -------
-    Result
+    MWISResult
         A data class representing the maximum weighted independent set array
         and its weight.
     """
     if sp.issparse(graph):
-        return _maximum_weighted_independent_set_scipy(graph, weights, **kwargs)
+        return _maximum_weighted_independent_set_scipy(graph, weights, create_env)
     elif isinstance(graph, pd.DataFrame):
-        return _maximum_weighted_independent_set_pandas(graph, weights, **kwargs)
+        return _maximum_weighted_independent_set_pandas(graph, weights, create_env)
     elif nx is not None and isinstance(graph, nx.Graph):
-        return _maximum_weighted_independent_set_networkx(graph, weights, **kwargs)
+        return _maximum_weighted_independent_set_networkx(graph, weights, create_env)
     else:
         raise ValueError(f"Unknown graph type: {type(graph)}")
 
 
-@optimod()
-def _maximum_weighted_independent_set_scipy(adjacency_matrix, weights, *, create_env):
+def _maximum_weighted_independent_set_scipy(adjacency_matrix, weights, create_env):
     """This implementation uses the gurobipy matrix friendly APIs which are well
     suited for the input data in scipy data structures."""
     with create_env() as env, gp.Model("mwis", env=env) as model:
@@ -103,8 +103,7 @@ def _maximum_weighted_independent_set_scipy(adjacency_matrix, weights, *, create
         return MWISResult(mwis, sum(weights[mwis]))
 
 
-@optimod()
-def _maximum_weighted_independent_set_pandas(frame, weights, *, create_env):
+def _maximum_weighted_independent_set_pandas(frame, weights, create_env):
     """This implementation uses the gurobipy-pandas APIs which are well
     suited for the input data in pandas dataframes structures."""
     with create_env() as env, gp.Model("mwis", env=env) as model:
@@ -128,8 +127,7 @@ def _maximum_weighted_independent_set_pandas(frame, weights, *, create_env):
         return MWISResult(mwis, weights["weights"].iloc[mwis].sum())
 
 
-@optimod()
-def _maximum_weighted_independent_set_networkx(graph, weights, *, create_env):
+def _maximum_weighted_independent_set_networkx(graph, weights, create_env):
     """This implementation uses the gurobipy term-based APIs which are well
     suited for the input data in networkx data structures."""
     with create_env() as env, gp.Model("mwis", env=env) as model:
@@ -151,7 +149,8 @@ def _maximum_weighted_independent_set_networkx(graph, weights, *, create_env):
         return MWISResult(mwis, sum(weights[mwis]))
 
 
-def maximum_weighted_clique(graph, weights, **kwargs):
+@optimod()
+def maximum_weighted_clique(graph, weights, *, create_env):
     """Find a set of fully connected vertices with maximum weighted sum.
 
     Parameters
@@ -170,7 +169,7 @@ def maximum_weighted_clique(graph, weights, **kwargs):
 
     Returns
     -------
-    Result
+    MWISResult
         A data class representing the maximum weighted clique array
         and its weight.
     """
@@ -178,7 +177,7 @@ def maximum_weighted_clique(graph, weights, **kwargs):
         num_vertices, _ = graph.shape
         complement_matrix = sp.triu(np.ones((num_vertices, num_vertices)), k=1) - graph
         return _maximum_weighted_independent_set_scipy(
-            complement_matrix, weights, **kwargs
+            complement_matrix, weights, create_env
         )
     elif isinstance(graph, pd.DataFrame):
         num_vertices = len(weights)
@@ -190,11 +189,11 @@ def maximum_weighted_clique(graph, weights, **kwargs):
         )
         complement_frame = pd.DataFrame(data, columns=["node1", "node2"])
         return _maximum_weighted_independent_set_pandas(
-            complement_frame, weights, **kwargs
+            complement_frame, weights, create_env
         )
     elif nx is not None and isinstance(graph, nx.Graph):
         return _maximum_weighted_independent_set_networkx(
-            nx.complement(graph), weights, **kwargs
+            nx.complement(graph), weights, create_env
         )
     else:
         raise ValueError(f"Unknown graph type: {type(graph)}")
