@@ -44,7 +44,13 @@ intersphinx_mapping = {
 
 templates_path = ["_templates"]
 
-html_theme = "sphinx_rtd_theme"
+html_theme = "gurobi_sphinxtheme"
+html_theme_options = {
+    "version_warning": False,
+    "feedback_banner": False,
+    "construction_warning": False,
+}
+html_favicon = "https://www.gurobi.com/favicon.ico"
 
 autosectionlabel_prefix_document = True
 
