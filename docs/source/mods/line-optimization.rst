@@ -157,13 +157,13 @@ An example of the inputs with the respective requirements is shown below.
             2	1	3	0.006	240
             3	3	1	0.006	240
           >>> line_data.head(4)
-            linename	capacity	fixCost	operatingCost
+            linename	capacity	fix_cost	operating_cost
             0	new7_B	600	15	3
             1	new15_B	600	15	2
             2	new23_B	600	15	6
             3	new31_B	600	15	6
           >>> linepath_data.head(4)
-            linename	edgeSource	edgeTarget
+            linename	edge_source	edge_target
             0	new7_B	1	2
             1	new7_B	2	6
             2	new7_B	6	8
@@ -183,7 +183,7 @@ An example of the inputs with the respective requirements is shown below.
       the property length in the edge data.
       Also, ``posx`` and ``posy`` in the ``node_data`` is not used for computation. But it can be used to visualize the
       network as done below.
-      It is important that all data is consistant. For example, ``edgeSource``, ``edgeTarget``
+      It is important that all data is consistant. For example, ``edge_source``, ``edge_target``
       in the ``linepath_data`` must correspond to a ``number`` in the node_data. The same holds
       for ``source`` and ``target`` in ``edge_data`` and ``demand_data``.
       In the code it is checked that all tables provide the relevant columns.

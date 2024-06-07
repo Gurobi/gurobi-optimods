@@ -55,14 +55,14 @@ number
 """
 
 lines = """
-linename,capacity,fixCost,operatingCost
+linename,capacity,fix_cost,operating_cost
 L1,20,9,4
 L2,20,9,2
 L3,20,9,3
 """
 
 linepath = """
-linename,edgeSource,edgeTarget
+linename,edge_source,edge_target
 L1,0,1
 L1,1,3
 L1,3,4
