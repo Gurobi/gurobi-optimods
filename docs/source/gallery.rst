@@ -30,6 +30,12 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/max-flow-min-cut.png
 
+    .. grid-item-card:: Metro Map
+        :link: mods/metromap
+        :link-type: doc
+        :text-align: center
+        :img-top: mods/figures/metromap_uberlin.png
+
     .. grid-item-card:: Minimum-Cost Flow
         :link: mods/min-cost-flow
         :link-type: doc
@@ -79,6 +85,7 @@ The OptiMods Gallery
    mods/bipartite-matching
    mods/lad-regression
    mods/line-optimization
+   mods/metromap
    mods/min-cost-flow
    mods/max-flow-min-cut
    mods/mwis

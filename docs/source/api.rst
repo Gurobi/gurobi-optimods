@@ -10,6 +10,9 @@ API Reference
 .. automodule:: gurobi_optimods.max_flow
    :members: max_flow
 
+.. automodule:: gurobi_optimods.metromap
+   :members: metromap
+
 .. automodule:: gurobi_optimods.min_cost_flow
    :members: min_cost_flow_pandas, min_cost_flow_networkx, min_cost_flow_scipy
 

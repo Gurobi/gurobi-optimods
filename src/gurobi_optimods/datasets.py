@@ -56,6 +56,23 @@ def load_siouxfalls_network_data():
     return (node_data, edge_data, line_data, linepath_data, demand_data)
 
 
+def load_sberlin_graph_data():
+    # edge and node data to create a graph
+    edge_data = pd.read_csv(DATA_FILE_DIR / "graphs/sberlin_edges.csv")
+    node_data = pd.read_csv(DATA_FILE_DIR / "graphs/sberlin_nodes.csv")
+
+    # create graph
+    graph = nx.from_pandas_edgelist(edge_data.reset_index(), create_using=nx.Graph())
+    # add x-, y-coordinates as node attribute
+    for number, row in node_data.set_index("number").iterrows():
+        graph.add_node(number, pos=(row["posx"], row["posy"]))
+
+    # line path data
+    linepath_data = pd.read_csv(DATA_FILE_DIR / "graphs/sberlin_linepaths_sol.csv")
+
+    return (graph, linepath_data)
+
+
 def _load_simple_graph_pandas(drop_pos=True, capacity=True, cost=True, demand=True):
     edge_data = pd.read_csv(DATA_FILE_DIR / "graphs/simple_graph_edges.csv").set_index(
         ["source", "target"]
