@@ -51,10 +51,10 @@ def line_optimization(
         It must include "source", "target", and "demand". The demand value must be non-negative.
     line_data : DataFrame
         DataFrame with general line information.
-        It must include "linename", "capacity", "fixCost", and "operatingCost".
+        It must include "linename", "capacity", "fix_cost", and "operating_cost".
     linepath_data : DataFrame
         DataFrame with information on the line routes/paths.
-        It must include "linename", "edgeSource", and "edgeTarget".
+        It must include "linename", "edge_source", and "edge_target".
     frequency: List
         List with possible frequencies: How often the line can be operated in the considered
         time horizon.
@@ -85,20 +85,20 @@ def line_optimization(
     if "capacity" not in line_data.columns:
         logger.info("column capacity not present in line_data")
         missing_data = True
-    if "fixCost" not in line_data.columns:
-        logger.info("column fixCost not present in line_data")
+    if "fix_cost" not in line_data.columns:
+        logger.info("column fix_cost not present in line_data")
         missing_data = True
-    if "operatingCost" not in line_data.columns:
-        logger.info("column operatingCost not present in line_data")
+    if "operating_cost" not in line_data.columns:
+        logger.info("column operating_cost not present in line_data")
         missing_data = True
     if "linename" not in linepath_data.columns:
         logger.info("column linename not present in linepath_data")
         missing_data = True
-    if "edgeSource" not in linepath_data.columns:
-        logger.info("column edgeSource not present in linepath_data")
+    if "edge_source" not in linepath_data.columns:
+        logger.info("column edge_source not present in linepath_data")
         missing_data = True
-    if "edgeTarget" not in linepath_data.columns:
-        logger.info("column edgeTarget not present in linepath_data")
+    if "edge_target" not in linepath_data.columns:
+        logger.info("column edge_target not present in linepath_data")
         missing_data = True
     if "source" not in demand_data.columns:
         logger.info("column source not present in demand_data")
@@ -139,7 +139,7 @@ def line_optimization(
     linepaths = (
         linepath_data.set_index("linename")
         .groupby(["linename"])
-        .apply(lambda x: [(k, v) for k, v in zip(x["edgeSource"], x["edgeTarget"])])
+        .apply(lambda x: [(k, v) for k, v in zip(x["edge_source"], x["edge_target"])])
     )
     demands = demand_data.set_index(["source", "target"]).to_dict()["demand"]
 
@@ -208,7 +208,7 @@ def all_shortest_paths(
             for f in frequencies:
                 x[l, f] = model.addVar(
                     vtype=gp.GRB.BINARY,
-                    obj=f * lines[l]["operatingCost"] + lines[l]["fixCost"],
+                    obj=f * lines[l]["operating_cost"] + lines[l]["fix_cost"],
                     name=str(l) + str(f),
                 )
 
@@ -304,7 +304,7 @@ def allow_all_paths(
             for f in frequencies:
                 x[l, f] = model.addVar(vtype=gp.GRB.BINARY, name=str(l) + str(f))
                 obj_cost += x[l, f] * (
-                    f * lines[l]["operatingCost"] + lines[l]["fixCost"]
+                    f * lines[l]["operating_cost"] + lines[l]["fix_cost"]
                 )
 
         logger.info(
@@ -446,7 +446,7 @@ def plot_lineplan(
         The frame must include "source", "target", and "time"
     linepath_data : DataFrame
         DataFrame with information on the line routes/paths.
-        It must include "linename", "edgeSource", and "edgeTarget".
+        It must include "linename", "edge_source", and "edge_target".
     line_plan: List
         A solution of the line optimization, i.e., a list with linenames and associated frequencies.
 
@@ -467,7 +467,7 @@ def plot_lineplan(
     linepaths = (
         linepath_data.set_index("linename")
         .groupby(["linename"])
-        .apply(lambda x: [(k, v) for k, v in zip(x["edgeSource"], x["edgeTarget"])])
+        .apply(lambda x: [(k, v) for k, v in zip(x["edge_source"], x["edge_target"])])
     )
     G = nx.from_pandas_edgelist(edge_data.reset_index(), create_using=nx.Graph())
     for number, row in node_data.set_index("number").iterrows():
