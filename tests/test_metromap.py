@@ -1,5 +1,4 @@
 import io
-import pathlib
 import unittest
 
 import pandas as pd
@@ -9,11 +8,7 @@ try:
 except ImportError:
     nx = None
 
-import gurobi_optimods.datasets as datasets
 import gurobi_optimods.metromap as map
-
-DATA_FILE_DIR = pathlib.Path(__file__).parent / "data"
-
 
 # python -m unittest tests.test_metromap.Testmap
 
