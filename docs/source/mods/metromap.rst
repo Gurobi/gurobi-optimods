@@ -421,8 +421,8 @@ The plot function generates a plot that is opened in a browser. The lines can be
 turned off and on in this plot when clicking the respective name in the legend.
 The plot function can be called as follows::
 
-    from gurobi_optimods.metromap import plot_network
-    plot_network(graph_out, edge_directions, linepath_data)
+    from gurobi_optimods.metromap import plot_map
+    plot_map(graph_out, edge_directions, linepath_data)
 
 The following figure is an example of the above call, it shows the lines in the
 octilinear representation of the S-Bahn Berlin network.
@@ -469,7 +469,7 @@ this OptiMod. Here is an example of how this could be done
   from gurobi_optimods import datasets
   from gurobi_optimods.line_optimization import line_optimization
   from gurobi_optimods.metromap import metromap
-  from gurobi_optimods.metromap import plot_network
+  from gurobi_optimods.metromap import plot_map
   # load data for line optimization and compute line plan
   node_data, edge_data, line_data, linepath_data, demand_data = datasets.load_siouxfalls_network_data()
   frequencies = [1,3]
@@ -483,7 +483,7 @@ this OptiMod. Here is an example of how this could be done
     graph.add_node(number, pos = (row['posx'], row['posy']))
   # compute and plot metromap
   graph_out, edge_directions = metromap(graph, linepath_data_sol, verbose=False)
-  plot_network(graph_out, edge_directions, linepath_data_sol)
+  plot_map(graph_out, edge_directions, linepath_data_sol)
 
 
 

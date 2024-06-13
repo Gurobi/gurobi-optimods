@@ -1041,7 +1041,7 @@ def add_coordinateConstr(graph, model, d, x, y, mindist, bigM):
         )
 
 
-def plot_network(graph: nx.graph, directions: dict(), linepath_data: pd.DataFrame):
+def plot_map(graph, directions, linepath_data):
     """Plotting function for a metro map, the lines can be turned off and on via clicking in the legend
 
     Parameters
