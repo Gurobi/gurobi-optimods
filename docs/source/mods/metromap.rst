@@ -2,16 +2,16 @@ Metro Map: Computing an Octilinear Graph Representation
 =======================================================
 
 A metro map is a schematic drawing of metro lines with stations and transfer
-stations. A schematic graph drawing aims to ease navigation, such
-as how to get from A to B in a transportation network. There are several
-different requirements for a schematic graph drawing. In this OptiMod, we will
-consider an octilinear representation, i.e., the edges of the network are
-restricted to horizontals, verticals, and diagonals at 45 degrees. Such a
-schematic drawing can be considered for metro lines, general
-transportation networks, or graphs. Note that an octilinear representation
-requires a maximum vertex degree of eight. If satisfied, this OptiMod
-computes an octilinear representation for any undirected graph. The original
-geographical information of the graph is included. More precisely, the geographical
+stations. A schematic graph drawing aims to ease navigation, such as how to get
+from A to B in a transportation network. There are several different
+requirements for a schematic graph drawing. In this OptiMod, we will consider an
+octilinear representation, i.e., the edges of the network are restricted to
+horizontals, verticals, and diagonals at 45 degrees. Such a schematic drawing
+is of special interest when showing metro lines, but could also be useful for general
+transportation networks or graphs. Note that an octilinear representation
+requires a maximum vertex degree of eight. If satisfied, this OptiMod computes
+an octilinear representation for any undirected graph. The original geographical
+information of the graph is included. More precisely, the geographical
 information defines an input embedding, which is preserved in the schematic
 representation. The mathematical formulation is based on the one given by
 Nöllenburg :footcite:p:`noellenburg05`. This diploma thesis provides additional
@@ -49,7 +49,7 @@ have the same y-coordinate while the x-coordinate of :math:`v` must be at least
 one larger than the one of :math:`u`.
 
 In this OptiMod, an octilinear graph representation is computed. More precisely,
-for each edge, a direction (0 to 7) is computed, and all nodes are assigned to x-,
+for each edge, a direction (0 to 7) is computed, and all nodes are assigned to x-
 and y-coordinates that support the edge directions. Additionally, the following
 is considered
 
@@ -59,7 +59,7 @@ is considered
     directly neighbored are allowed. For example, if v is north-east (1) from u in the original
     positions, it is allowed to place v north, north-east, or east in the
     octilinear representation, i.e., for the edge :math:`(u,v)` the directions
-    2,1, and 0 are allowed.
+    2, 1, and 0 are allowed.
   * The ordering of all adjacent nodes of a node :math:`v` is preserved.
 * The distance (difference in x- or y-coordinate) between each two nodes is at
   least one and as minimal as possible
@@ -69,24 +69,26 @@ is considered
 
 Some remarks about planarity: The number of constraints to ensure planarity is
 quadratic in the number of edges of the graph. Hence, the planarity part is the
-largest part of the model. Instead of adding all the constraints initially, we use a callback approach and lazily add these constraints,
-i.e., only if they are violated. Moreover, the planarity restrictions are included
-as soft constraints, i.e., if there is no planar representation, an embedding
-with the fewest planarity violations is computed. There is an option to turn off
-the planarity requirement. The restrictions from the origin geographical
-positions often imply a planar solution without including planarity
-constraints. In these cases, the performance can be improved if planarity
-constraints are not considered.
+largest part of the model. Instead of adding all the constraints initially, we
+use a callback approach and lazily add these constraints, i.e., only when they
+are violated. Moreover, the planarity restrictions are included as soft
+constraints, i.e., if there is no planar representation, an embedding with the
+fewest planarity violations is computed. There is an option to turn off the
+planarity requirement. The restrictions from the origin geographical positions
+often imply a planar solution without including planarity constraints. In these
+cases, the performance can be improved if planarity constraints are not
+considered.
 
-We consider three weights to balance the different parts of the objective.
-:math:`w_o` is a penalty for a direction of an edge :math:`(u,v)` if v is not
-placed in the original but at a neighboring direction, :math:`w_d` penalizes a
-distance of an edge greater than a minimum distance of 1, and :math:`w_b`
-penalizes the line bends. These three weights are parameters for the
-computations and can be adapted. Additionally, the planarity violations are
-included in the objective. They are weighted with 1000. Therefore, the allowed
-values for the weights :math:`w_o`, :math:`w_d`, and :math:`w_b` are between 0
-and 100. The default value for all three weights is 1.
+We consider three weights to balance the different parts of the objective. The
+weight :math:`w_o` is a penalty for a direction of an edge :math:`(u,v)`. More
+precisely, it penalizes the direction if :math:`v` is not placed in the original
+but at a neighboring direction. The weight :math:`w_d` penalizes a distance of
+an edge greater than a minimum distance of one, and :math:`w_b` penalizes the
+line bends. These three weights have a default value of 1 but are parameterized
+and can be adapted. Additionally, the planarity violations are included in the
+objective. They are weighted with 1000. This should be considered when chosing
+weights for :math:`w_o`, :math:`w_d`, and :math:`w_b`; we restrict the values to
+be between 0 and 100.
 
 
 Background: Mathematical Formulation
@@ -105,12 +107,12 @@ is too bulky), the different aspects of the model are discussed below.
       which indicates whether the direction from :math:`u` to :math:`v` is :math:`r`.
     - :math:`x(v) \geq 0` the x-coordinate of node :math:`v` in an octilinear representation
     - :math:`y(v) \geq 0` the y-coordinate of node :math:`v` in an octilinear representation
-    - :math:`\delta(u,v)` the distance of :math:`u` and :math:`v` for each edge
+    - :math:`\delta(u,v)\geq 0` the distance of :math:`u` and :math:`v` for each edge
       :math:`(u,v)\in E` that is larger than the minimum required distance of 1
     - :math:`b(u,v,w,i)\in\{0,1\}` the bend of category :math:`i` on two adjacent edges
       :math:`(u,v), (v,w)\in E`. The category corresponds to the angle of the
       bend. The angle can be equal to 180 (=category 0), 135 (=category 1), 90
-      (=category 2), and 45 degree (=category 3).
+      (=category 2), and 45 degrees (=category 3).
 
 
 
@@ -186,7 +188,7 @@ is too bulky), the different aspects of the model are discussed below.
 .. dropdown:: Edge Order
 
   To ensure the preservation of the original edge order, it is sufficient to
-  consider all nodes that have at least two adjacent nodes. We need an auxiliary
+  consider all nodes that have at least two adjacent nodes. We need auxiliary
   binary variables :math:`\beta_v^i` for each such node :math:`v` and each
   adjacent node :math:`i` of :math:`v`. Let the adjacent nodes of :math:`v` be
   ordered counter-clockwise and assume that :math:`w_0,\ldots, w_{\deg(v)}`
@@ -225,9 +227,9 @@ is too bulky), the different aspects of the model are discussed below.
   Whenever, a line traverses the adjacent edges :math:`(u,v)` and
   :math:`(v,w)`, we want to amount the bend of the two edges in the octilinear
   representation. There are four possibilities reflected by the variables
-  :math:`b(u,v,w,0)` (no bend, 180 degree), :math:`b(u,v,w,1)` (a bend of 135
-  degree), :math:`b(u,v,w,2)` (a bend of 90 degree), and :math:`b(u,v,w,3)` (a
-  bend of 45 degree). The following constraints ensure that excatly one one of
+  :math:`b(u,v,w,0)` (no bend, 180 degrees), :math:`b(u,v,w,1)` (a bend of 135
+  degrees), :math:`b(u,v,w,2)` (a bend of 90 degrees), and :math:`b(u,v,w,3)` (a
+  bend of 45 degrees). The following constraints ensure that excatly one of
   these variables is chosen and that the bend in direction :math:`u,v,w` is
   equal to the bend in direction :math:`w,v,u`.
 
@@ -239,7 +241,7 @@ is too bulky), the different aspects of the model are discussed below.
 
 
   The angle or the bend category can be determined from the direction
-  variables of the edges. The following four constraints require that the
+  variables of the edges. The following constraints require that the
   directions of the edges :math:`(u,v)` and :math:`(v,u)` match the bend
   variable.
 
@@ -286,17 +288,16 @@ is too bulky), the different aspects of the model are discussed below.
         &\cdots
       \end{alignat}
 
-  The constraints need to be defined for all directions and each two
+  The constraints need to be defined for all directions and for each two
   non-adjacent edges. We include these constraints as lazy constraints in a
   callback function. Note that indicator constraints cannot be added in a
   callback function. Hence, we define these constraints as big-M constraints.
 
-.. dropdown:: User Cuts
+.. dropdown:: Improving Constraints
 
-  The IP model is well-defined with the above-discussed constraints. We want to
-  add some further user cuts to slightly improve the LP relaxation and the
-  performance of the optimization.
-
+  The IP model is well-defined with the above-discussed constraints. However, we
+  want to add some further constraints to slightly improve the LP relaxation and
+  the performance of the optimization.
 
   The first constraint ensures that each direction is chosen only once
   for all edges adjacent to :math:`v`
@@ -320,14 +321,22 @@ is too bulky), the different aspects of the model are discussed below.
   Similar constraints result when considering all other combinations of 3
   adjacent directions. We add these conditions as big-M constraints to the model
   and use an epsilon of 1e-6 (=feasibility tolerance) to handle the strict
-  constraint.
+  inequality.
+
+  For the bend variables, the following constraint can be added
+
+  .. math::
+      \sum_{(v,w)\in E, w\neq u} b(u,v,w,0) \leq 1 \quad \forall (u,v) \in E
+
+  The constraint states that edge :math:`(u,v)` can have a bend of 0 with at
+  most one of its adjacent edges.
 
 Code and Inputs
 ---------------
 
-For this OptiMod, the networkx package is needed. The input is a
-networkx graph for the network information and a ``pd.DataFrame`` for the line
-information. The output is a networkx graph with node property ``pos_oct``
+For this OptiMod, the ``networkx`` package is needed. The input is a
+``networkx`` graph for the network information and a ``pd.DataFrame`` for the line
+information. The output is a ``networkx`` graph with node property ``pos_oct``
 representing the x-and y-coordinates for the octilinear representation and a
 Python dictionary for the direction of each edge.
 
@@ -352,8 +361,8 @@ An example of the inputs with the respective requirements is shown below.
       2	S1	23	20
       3	S1	20	60
 
-For the example, we used data from the S-Bahn Berlin network. The graph contains
-the node attribute ``pos`` that contains a tuple of x-and y-coordinates for
+For the example, we used data from the S-Bahn Berlin network. The graph includes
+the node attribute ``pos`` that contains a tuple of x- and y-coordinates for
 the original position. The linepath_data must be consistent with
 the graph. For example, ``edge_source``, ``edge_target`` in the
 ``linepath_data`` must correspond to the node names in the graph.
@@ -364,7 +373,7 @@ Solution
 
 The output of the optimization is the following:
 
-- A graph with the node attribute pos_oct containing the x-, and y-coordinates
+- A graph with the node attribute ``pos_oct`` containing the x- and y-coordinates
   for the octilinear representation.
 - A Python dictionary providing the direction (0 to 7) for each edge. This
   information is needed for the plotting function provided in the OptiMod
@@ -376,8 +385,14 @@ The OptiMod can be run as follows:
     from gurobi_optimods import datasets
     from gurobi_optimods.metromap import metromap
     graph, linepath_data = datasets.load_sberlin_graph_data()
-    graph_out, edge_directions = metromap(graph, linepath_data, verbose=False, time_limit=15)
+    graph_out, edge_directions = metromap(graph, linepath_data, include_planarity=False, verbose=False, time_limit=2)
 
+Note, for this demonstration the parameter ``include_planarity`` is set to
+False, and we chose a time limit of 2 seconds. This is done to see results
+faster. For this example, the planarity constraints are usually satisfied. If
+the planarity constraints should be included in the computation, the parameter
+``include_planarity`` can be omitted or set to True.
+The ``time_limit`` parameter can also be omitted if no time limit shall be set.
 
 The graph can be plotted using the networkx plotting function, for example, as
 follows::
@@ -390,8 +405,8 @@ As a comparison the original node positions can be plotted as well::
     pos_orig=nx.get_node_attributes(graph, 'pos')
     nx.draw(graph, pos_orig, with_labels=False, node_size=12, edgecolors='black', node_color='white')
 
-Below is a graph networkx plot with the original positions and the computed
-octilinear positions for the S-Bahn Berlin network.
+Below is a ``networkx`` plot of the graph with the original positions (left) and the computed
+octilinear positions (right) for the S-Bahn Berlin network.
 
 .. image:: figures/sberlin_orig.png
    :width: 49%
@@ -399,19 +414,17 @@ octilinear positions for the S-Bahn Berlin network.
    :width: 49%
 
 
-We provide a method to plot the lines in the octilinear representation using plotly.
-In order to use this functionality, the plotly package is needed::
-
-    pip install plotly
+We provide a method to plot the lines in the octilinear representation using ``plotly``.
+In order to use this functionality, the ``plotly`` package is needed.
 
 The plot function generates a plot that is opened in a browser. The lines can be
-turned off and on in this plot using the legend. The plot function can be called
-as follows::
+turned off and on in this plot when clicking the respective name in the legend.
+The plot function can be called as follows::
 
     from gurobi_optimods.metromap import plot_network
     plot_network(graph_out, edge_directions, linepath_data)
 
-The following figure is the result of the above call, it shows the lines in the
+The following figure is an example of the above call, it shows the lines in the
 octilinear representation of the S-Bahn Berlin network.
 
 .. image:: figures/metromap_sberlin.png
@@ -429,21 +442,17 @@ Feel free to contribute with improvement ideas.
 Parameter: Planarity and Objective Function
 -------------------------------------------
 
-As already mentioned, it is possible to change the weights of the objective or
-omit the planarity restrictions. We can run the above example without
-considering planarity constraints as follows::
+As already mentioned, it is possible to change the weights in the objective or
+omit the planarity restrictions. The planarity parameter was already considered
+in the solve example. The default value is true, i.e., if the parameter is not
+set when calling the ``metromap`` function, the planarity constraints are
+included via a callback function.
 
-  from gurobi_optimods import datasets
-  from gurobi_optimods.metromap import metromap
-  graph, linepath_data = datasets.load_sberlin_graph_data()
-  graph_out, edge_directions = metromap(graph, linepath_data, include_planarity=False)
-
-
-Defining different weights for the parts in the objective, can be done as
-follows::
+Similar holds for the weights of the different parts in the objective. The
+default value for all weights is 1. If a different weighting is requested, this
+can be done as follows::
 
   graph_out, edge_directions = metromap(graph, linepath_data, penalty_edge_directions = 2,  penalty_line_bends = 0, penalty_distance = 1)
-
 
 
 Combination with Line Optimization OptiMod
@@ -466,7 +475,7 @@ this OptiMod. Here is an example of how this could be done
   frequencies = [1,3]
   obj_cost, final_lines = line_optimization(node_data, edge_data, line_data, linepath_data, demand_data, frequencies, True, verbose=False)
   # create a data frame containing only the linepaths of the solution
-  linepath_data_sol = linepath_data.loc[linepath_data['linename'].isin(final_lines[0])]
+  linepath_data_sol = linepath_data.loc[linepath_data['linename'].isin([tuple[0] for tuple in final_lines])]
   # create networkx graph
   graph = nx.from_pandas_edgelist(edge_data.reset_index(), create_using=nx.Graph())
   # add x-, y-coordinates as node attribute
@@ -474,7 +483,8 @@ this OptiMod. Here is an example of how this could be done
     graph.add_node(number, pos = (row['posx'], row['posy']))
   # compute and plot metromap
   graph_out, edge_directions = metromap(graph, linepath_data_sol, verbose=False)
-  plot_network(graph_out, edge_directions, linepath_data)
+  plot_network(graph_out, edge_directions, linepath_data_sol)
+
 
 
 Further Remarks
@@ -482,9 +492,9 @@ Further Remarks
 
 It is possible to compute an octilinear representation of a graph without
 providing a set of lines. Of course, line bends are then not considered in the
-objective. The linepath_data parameter can be omitted::
+objective. The ``linepath_data`` parameter can be omitted in this case::
 
-  graph_out, edge_directions = map.metromap(graph, include_planarity=False)
+  graph_out, edge_directions = map.metromap(graph)
 
 It is also possible to provide a graph without any information about the
 original positions, i.e., without the node attribute ``pos``. In this case, all
@@ -494,7 +504,6 @@ this case, the problem usually becomes much harder to solve. A different approac
 or a strengthened model formulation might be necessary to solve medium-sized
 problems to optimality if no further restrictions from original positions are
 given.
-
 
 
 .. footbibliography::

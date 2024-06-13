@@ -56,6 +56,13 @@ def metromap(
         This data frame could also be empty
     include_planarity : Bool
         parameter to turn off the consideration of planarity constraints
+    penalty_edge_directions : Float
+        weight for original direction part in the objective, default is 1
+    penalty_line_bends : Float
+        weight for line-bend part in the objective, default is 1
+    penalty_distance : Float
+        weight for distance part in the objective, default is 1
+
     Returns
     -------
     tuple
@@ -110,6 +117,20 @@ def metromap(
     # remove isolated nodes
     graph.remove_nodes_from(list(nx.isolates(graph)))
 
+    # restrict parameter to the interval of [0,100]
+    if penalty_edge_directions < 0:
+        penalty_edge_directions = 0
+    if penalty_edge_directions > 100:
+        penalty_edge_directions = 100
+    if penalty_line_bends < 0:
+        penalty_line_bends = 0
+    if penalty_line_bends > 100:
+        penalty_line_bends = 100
+    if penalty_distance < 0:
+        penalty_distance = 0
+    if penalty_distance > 100:
+        penalty_distance = 100
+
     return create_model(
         graph,
         linepaths,
@@ -132,27 +153,38 @@ def create_model(
     penalty_distance,
     create_env,
 ):
-    # restrict parameter to the interval of [0,100]
-    if penalty_edge_directions < 0:
-        penalty_edge_directions = 0
-    if penalty_edge_directions > 100:
-        penalty_edge_directions = 100
-    if penalty_line_bends < 0:
-        penalty_line_bends = 0
-    if penalty_line_bends > 100:
-        penalty_line_bends = 100
-    if penalty_distance < 0:
-        penalty_distance = 0
-    if penalty_distance > 100:
-        penalty_distance = 100
+    """Create the model
+    Parameters
+    ----------
+    graph : networkx graph with node attribute 'pos' being a tuple of x- and y-coordinate
+    linepaths : DataFrame
+        DataFrame with information on the line routes/paths.
+        This data frame could also be empty
+    include_planarity : Bool
+        parameter to turn off the consideration of planarity constraints
+    geofata : Bool
+        if original positions were given
+    penalty_edge_directions : Float
+        weight for original direction part in the objective
+    penalty_line_bends : Float
+        weight for line-bend part in the objective
+    penalty_distance : Float
+        weight for distance part in the objective
+
+    Returns
+    -------
+    tuple
+        - networkx graph with node property pos_oct representing the x and y coordinates of the octilinear representation
+        - Python dict for direction for each edge (needed for plotting)
+    """
 
     edge_directions_out = dict()
     with create_env() as env, gp.Model(env=env) as model:
         num_nodes = len(graph.nodes)
-        mindist = 1  # could be adjustable
+        mindist = 1  # required distance in x- or y-coordinate for each edge
         # variables for position (coordinates)
-        x = model.addVars(graph.nodes, ub=num_nodes, name="x-coord")  # vtype='I',
-        y = model.addVars(graph.nodes, ub=num_nodes, name="y-coord")  # vtype='I',
+        x = model.addVars(graph.nodes, ub=num_nodes, name="x-coord")
+        y = model.addVars(graph.nodes, ub=num_nodes, name="y-coord")
         dist = {}
         for u, v in graph.edges:
             dist[u, v] = model.addVar(name=f"distance{u},{v}")
@@ -220,7 +252,6 @@ def create_model(
             if len(graph.edges(w)) > 1
             for i in range(8)
         )
-        # model.addConstrs(gp.quicksum(edge_direction[v,u,i] for (u,v) in graph.edges(w)) <= 1 for w in graph.nodes if len(graph.edges(w))>1 for i in range(8))
         add_coordinateConstr(
             graph, model, edge_direction, x, y, mindist, num_nodes + mindist
         )
@@ -274,10 +305,8 @@ def create_model(
             for u, v in graph.edges:
                 for i in range(8):
                     if edge_direction[u, v, i].X > 0.5:
-                        # print(f'[{u},{v},{i}]')
                         edge_directions_out[(u, v)] = i
                     if edge_direction[v, u, i].X > 0.5:
-                        # print(f'[{v},{u},{i}]')
                         edge_directions_out[(v, u)] = i
 
     return graph, edge_directions_out
@@ -1012,9 +1041,19 @@ def add_coordinateConstr(graph, model, d, x, y, mindist, bigM):
         )
 
 
-def plot_network(
-    graph: nx.graph, directions: dict(), linepath_data: pd.DataFrame = None
-):
+def plot_network(graph: nx.graph, directions: dict(), linepath_data: pd.DataFrame):
+    """Plotting function for a metro map, the lines can be turned off and on via clicking in the legend
+
+    Parameters
+    ----------
+    graph : networkx graph with node attribute 'pos_oct' being a tuple of x- and y-coordinate
+    directions: dictionary providing the assigned direction (0 to 7) for each edge
+    linepath_data : DataFrame
+        DataFrame with information on the line routes/paths.
+    Returns
+    -------
+    A browser opens with the plot
+    """
     if pio is None or go is None:
         raise RuntimeError(
             "Plot not possible: plotly.graph_objs, plotly.subplots, and plotly.io are required for plotting the map"
@@ -1025,13 +1064,11 @@ def plot_network(
         return
     pos_oct = nx.get_node_attributes(graph, "pos_oct")
     if len(pos_oct) == 0:
-        logger.info(
-            f"No node attribute with name pos_oct is given, " f"cannot draw graph."
-        )
+        logger.info(f"No node attribute with name pos_oct is given; cannot draw graph.")
         return
 
     if linepath_data is None or len(directions) == 0:
-        logger.info(f"No lines given or no edge directions, " f"cannot draw graph.")
+        logger.info(f"No lines given or no edge directions; nothing to draw.")
         return
 
     try:
@@ -1047,6 +1084,7 @@ def plot_network(
     plot_lines(graph, linepaths, directions)
 
 
+# plotting function #
 def plot_lines(graph, linepaths, directions):
     num_nodes = graph.number_of_nodes()
     scale = 0.01
@@ -1145,12 +1183,11 @@ def plot_lines(graph, linepaths, directions):
     fig.update_layout(xaxis_visible=False, yaxis_visible=False)
     fig.update_layout(plot_bgcolor="white")
 
-    print("show lines with plotly")
     # Show the figure
     fig.show()
 
 
-# helper functions for plotting ######################
+# helper function for plotting #
 def check_shift(combined_edges, edge_shift, shift_val):
     # check if this shift value was already selected for one of the edges
     for c in combined_edges:
@@ -1159,6 +1196,7 @@ def check_shift(combined_edges, edge_shift, shift_val):
     return False
 
 
+# helper function for plotting #
 def shift_combined_edges(graph, combined_edges, edge_shift):
     # find the right shift, do not more than 10 shifts
     for i in [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5]:
@@ -1168,6 +1206,7 @@ def shift_combined_edges(graph, combined_edges, edge_shift):
     return i
 
 
+# helper function for plotting #
 def add_coordinates(
     graph, combined_edges, edge_shift, directions, xcoord, ycoord, scale
 ):

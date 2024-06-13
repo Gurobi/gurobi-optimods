@@ -169,9 +169,3 @@ class Testmap(unittest.TestCase):
         pos = nx.get_node_attributes(graph_out, "pos_oct")
         self.assertTrue(edge_directions[(3, 4)] == 0)
         self.assertTrue(edge_directions[(1, 5)] == 0)
-
-    # def test_real_example(self):
-    #     (graph, linepath_data) = datasets.load_sberlin_graph_data()
-    #     graph_out, edge_directions = map.metromap(graph, include_planarity=False)
-    #     print("print solution")
-    #     map.plot_network(graph_out, edge_directions, linepath_data)
