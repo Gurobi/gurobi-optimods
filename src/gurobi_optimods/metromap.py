@@ -35,9 +35,9 @@ logger = logging.getLogger(__name__)
 
 @optimod()
 def metromap(
-    graph: nx.Graph,
-    linepath_data: pd.DataFrame = None,
-    include_planarity: bool = True,
+    graph,
+    linepath_data=None,
+    include_planarity=True,
     penalty_edge_directions=1,
     penalty_line_bends=1,
     penalty_distance=1,
