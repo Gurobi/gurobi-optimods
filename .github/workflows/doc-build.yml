@@ -1,6 +1,4 @@
-# The docs should build without warnings from sphinx.
-# It should be possible to build the docs with python3.8 so contributors
-# can work with the oldest supported python version.
+# The docs should build without warnings from sphinx
 
 name: Docs build
 
@@ -16,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8", "3.11"]
+        python: ["3.11"]
 
     steps:
       - uses: actions/checkout@v4
