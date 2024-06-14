@@ -45,9 +45,8 @@ Development Environment
 To set up your development environment:
 
 1. Create and activate a Python virtual environment using your preferred tool.
-   We maintain compatibility with Python 3.8 and above, so developing using
-   version 3.8 locally should ensure that your contributions are compatible
-   with all supported Python versions.
+   You can use any currently supported Python version for development (versions
+   3.8 through 3.12).
 2. Run ``make develop`` from the top level of the repository. This command will
    install (using ``pip``) all packages required to run the unit tests, run the
    doc tests, and build the sphinx documentation. It will also install
