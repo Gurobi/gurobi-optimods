@@ -49,18 +49,19 @@ def metromap(
 
     Parameters
     ----------
-    graph : networkx graph with node attribute 'pos' being a tuple of x- and y-coordinate
+    graph : Graph
+        networkx graph with node attribute 'pos' being a tuple of x- and y-coordinate
     linepath_data : DataFrame
         DataFrame with information on the line routes/paths.
         It must include "linename", "edge_source", and "edge_target".
         This data frame could also be empty
-    include_planarity : Bool
+    include_planarity : bool
         parameter to turn off the consideration of planarity constraints
-    penalty_edge_directions : Float
+    penalty_edge_directions : float
         weight for original direction part in the objective, default is 1
-    penalty_line_bends : Float
+    penalty_line_bends : float
         weight for line-bend part in the objective, default is 1
-    penalty_distance : Float
+    penalty_distance : float
         weight for distance part in the objective, default is 1
 
     Returns
@@ -156,19 +157,20 @@ def create_model(
     """Create the model
     Parameters
     ----------
-    graph : networkx graph with node attribute 'pos' being a tuple of x- and y-coordinate
+    graph : Graph
+        networkx graph with node attribute 'pos' being a tuple of x- and y-coordinate
     linepaths : DataFrame
         DataFrame with information on the line routes/paths.
         This data frame could also be empty
-    include_planarity : Bool
+    include_planarity : bool
         parameter to turn off the consideration of planarity constraints
-    geofata : Bool
+    geodata : bool
         if original positions were given
-    penalty_edge_directions : Float
+    penalty_edge_directions : float
         weight for original direction part in the objective
-    penalty_line_bends : Float
+    penalty_line_bends : float
         weight for line-bend part in the objective
-    penalty_distance : Float
+    penalty_distance : float
         weight for distance part in the objective
 
     Returns
@@ -222,13 +224,13 @@ def create_model(
 
         if geodata == True:
             # include original geographic information
-            posOrig = nx.get_node_attributes(graph, "pos")
+            pos_orig = nx.get_node_attributes(graph, "pos")
             # only allow neighboring positions
             create_orig_nodepostion_constraints(
-                graph, edge_direction, obj, posOrig, penalty_edge_directions
+                graph, edge_direction, obj, pos_orig, penalty_edge_directions
             )
             # ensure the same edge order
-            create_orig_edgeorder_constraints(graph, model, edge_direction, posOrig)
+            create_orig_edgeorder_constraints(graph, model, edge_direction, pos_orig)
 
         # one direction for each edge
         model.addConstrs(
@@ -336,20 +338,20 @@ def counter_clockwise_sort(p, q):
     return q
 
 
-def create_orig_edgeorder_constraints(graph, model, edge_direction, posOrig):
-    """Assume geographical node data is given.
-        For each node in the graph order the neighbors counter-clock-wise and
-        add constraints to ensure the preservation of this order in the octilinear
-        graph representation
+# Assume geographical node data is given.
+# For each node in the graph order the neighbors counter-clock-wise and
+# add constraints to ensure the preservation of this order in the octilinear
+# graph representation
 
-    Parameters
-    ----------
-    graph : graph (networkx)
-        undirected networkx graph
-    model : Gurobi model object
-    edge_direction : tupledict (Gurobi variables)
-    posOrig : node attribute (of graph)
-    """
+
+# Parameters
+# ----------
+# graph : Graph
+#     undirected networkx graph
+# model : Gurobi model object
+# edge_direction : tupledict (Gurobi variables)
+# pos_orig : node attribute (of graph)
+def create_orig_edgeorder_constraints(graph, model, edge_direction, pos_orig):
     for v in graph.nodes:
         # we can assume that the degree is at most 8
         if len(graph.edges(v)) <= 1:
@@ -361,8 +363,8 @@ def create_orig_edgeorder_constraints(graph, model, edge_direction, posOrig):
         model.addConstr(beta.sum() <= 1)
         for u, w in graph.edges(v):
             neighbors.append(w)
-            positions.append(posOrig[w])
-        sorted_q = counter_clockwise_sort(posOrig[v], positions)
+            positions.append(pos_orig[w])
+        sorted_q = counter_clockwise_sort(pos_orig[v], positions)
         node = neighbors[sorted_q[0][0]]
         for i in range(1, len(sorted_q)):
             nextNode = neighbors[sorted_q[i][0]]
@@ -390,28 +392,27 @@ def create_orig_edgeorder_constraints(graph, model, edge_direction, posOrig):
                 )
 
 
+# Assume geographical node data is given.
+# For each edge in the graph compute the direction from the original graph data.
+# Fix variables such that for each edge only the original direction or the two adjacent
+# directions are allowed.
+
+# Parameters
+# ----------
+# graph : graph (networkx) - undirected networkx graph
+# edge_direction : tupledict (gurobi variables)
+# obj : list - position 0 holds the objective funtion
+# pos_orig : node attribute (of graph) - original position
+# penalty_edge_directions : penalty if not original position is chosen for the edge
+
+
+# edge_direction : tupledict (gurobi variables)
 def create_orig_nodepostion_constraints(
-    graph, edge_direction, obj, posOrig, penalty_edge_directions
+    graph, edge_direction, obj, pos_orig, penalty_edge_directions
 ):
-    """Assume geographical node data is given.
-        For each edge in the graph compute the direction from the original graph data.
-        Fix variables such that for each edge only the original direction or the two adjacent
-        directions are allowed.
-
-    Parameters
-    ----------
-    graph : graph (networkx) - undirected networkx graph
-    model : Gurobi model object
-    edge_direction : tupledict (gurobi variables)
-    obj : list - position 0 holds the objective funtion
-    posOrig : node attribute (of graph) - original position
-    penalty_edge_directions : penalty if not original position is chosen for the edge
-
-    edge_direction : tupledict (gurobi variables)
-    """
     for u, v in graph.edges:
-        posU = posOrig[u]
-        posV = posOrig[v]
+        posU = pos_orig[u]
+        posV = pos_orig[v]
         dx = posV[0] - posU[0]
         dy = posV[1] - posU[1]
         theta = math.atan2(dy, dx)
@@ -490,19 +491,18 @@ def create_orig_nodepostion_constraints(
             obj[0] += penalty_edge_directions * edge_direction[u, v, 6]
 
 
+# Define for each direction constraints on the position x and y for each edge
+
+
+# Parameters
+# ----------
+# graph : graph (networkx) - undirected networkx graph
+# model : Gurobi model object
+# edge_direction : tupledict (gurobi variables)
+# x : tupledict (gurobi variables) - x position of node
+# y : tupledict (gurobi variables) - y position of node
+# mindist : Scalar - minimum distance between two nodes
 def create_direction_constraints(graph, model, edge_direction, x, y, mindist):
-    """Define for each direction constraints on the position x and y for each edge
-
-    Parameters
-    ----------
-    graph : graph (networkx) - undirected networkx graph
-    model : Gurobi model object
-    edge_direction : tupledict (gurobi variables)
-    x : tupledict (gurobi variables) - x position of node
-    y : tupledict (gurobi variables) - y position of node
-    mindist : Scalar - minimum distance between two nodes
-    """
-
     for u, v in graph.edges:
         model.addConstr((edge_direction[u, v, 0] == 1) >> (y[v] - y[u] == 0))
         model.addConstr((edge_direction[u, v, 0] == 1) >> (x[v] - x[u] >= mindist))
@@ -534,19 +534,19 @@ def create_direction_constraints(graph, model, edge_direction, x, y, mindist):
         )
 
 
-def compute_bends(graph, model, edge_direction, obj, linepaths, penalty_line_bends):
-    """Compute bends for each two consecutive lines. If there are linepaths covering
-    both edges, add variables to model and objective that account for the "line bend".
+# Compute bends for each two consecutive lines. If there are linepaths covering
+# both edges, add variables to model and objective that account for the "line bend".
 
-    Parameters
-    ----------
-    graph : graph (networkx) - undirected networkx graph
-    model : Gurobi model object
-    edge_direction : tupledict (gurobi variables)
-    obj : list - position 0 holds the objective funtion
-    linepaths : pandas Dataframe - linepaths
-    penalty_line_bends : penalty to account for bends of lines
-    """
+
+# Parameters
+# ----------
+# graph : graph (networkx) - undirected networkx graph
+# model : Gurobi model object
+# edge_direction : tupledict (gurobi variables)
+# obj : list - position 0 holds the objective funtion
+# linepaths : pandas Dataframe - linepaths
+# penalty_line_bends : penalty to account for bends of lines
+def compute_bends(graph, model, edge_direction, obj, linepaths, penalty_line_bends):
     bend = {}
     for v in graph.nodes:
         templist = list(graph.edges(v))
@@ -881,19 +881,19 @@ def planarity_callback(model, where):
                 )
 
 
+# Define additional cuts to improve the LP relaxation
+
+
+# Parameters
+# ----------
+# graph : graph (networkx) - undirected networkx graph
+# model : Gurobi model object
+# d : tupledict (gurobi variables) edge_directions
+# x : tupledict (gurobi variables) - x position of node
+# y : tupledict (gurobi variables) - y position of node
+# mindist : Scalar - minimum distance between two nodes
+# bigM : scalar
 def add_coordinateConstr(graph, model, d, x, y, mindist, bigM):
-    """Define additional cuts to improve the LP relaxation
-
-    Parameters
-    ----------
-    graph : graph (networkx) - undirected networkx graph
-    model : Gurobi model object
-    edge_direction : tupledict (gurobi variables)
-    x : tupledict (gurobi variables) - x position of node
-    y : tupledict (gurobi variables) - y position of node
-    mindist : Scalar - minimum distance between two nodes
-    """
-
     for u, v in graph.edges:
         # one of the directions 0,1,2 then z1 increasing, y non-decreasing, x non-decreasing
         model.addConstr(
@@ -1046,8 +1046,10 @@ def plot_map(graph, directions, linepath_data):
 
     Parameters
     ----------
-    graph : networkx graph with node attribute 'pos_oct' being a tuple of x- and y-coordinate
-    directions: dictionary providing the assigned direction (0 to 7) for each edge
+    graph : Graph
+        networkx graph with node attribute 'pos_oct' being a tuple of x- and y-coordinate
+    directions: dict()
+        dictionary providing the assigned direction (0 to 7) for each edge
     linepath_data : DataFrame
         DataFrame with information on the line routes/paths.
     Returns

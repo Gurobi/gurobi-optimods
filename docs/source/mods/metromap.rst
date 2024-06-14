@@ -426,10 +426,12 @@ The plot function can be called as follows::
 
 The following figure is an example of the above call, it shows the lines in the
 octilinear representation of the S-Bahn Berlin network.
+(Use `link <../_static/sbahn_berlin.html>`_ to open in full screen.)
 
-.. image:: figures/metromap_sberlin.png
-  :width: 600
-  :alt: sberlin_oct.
+.. raw:: html
+
+    <iframe src="../_static/sbahn_berlin.html" width="100%" height="600"></iframe>
+
 
 Note that plotting the lines in the octilinear network is an art or a further
 optimization problem. If lines share an edge, it needs to be decided how to shift
