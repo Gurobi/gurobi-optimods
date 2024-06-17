@@ -54,5 +54,5 @@ sphinxcontrib-qthelp==1.0.7
 sphinxcontrib-serializinghtml==1.1.10
 tabulate==0.9.0
 typing_extensions==4.11.0
-urllib3==2.2.1
+urllib3==2.2.2
 webencodings==0.5.1
