@@ -91,11 +91,10 @@ def metromap(
     # check node degree and abort if infeasible
     for v in graph.nodes:
         if graph.degree(v) > 8:
-            logger.info(
+            raise ValueError(
                 f"Node with number {v} has node degree {len(graph.edges(v))}. "
                 f"Octilinear representation is not possible for node degree larger than 8"
             )
-            return  ## value ???
 
     if linepath_data is None:
         linepaths = pd.DataFrame()
@@ -121,16 +120,40 @@ def metromap(
     # restrict parameter to the interval of [0,100]
     if penalty_edge_directions < 0:
         penalty_edge_directions = 0
+        logger.warning(
+            f">>> Warning: parameter {penalty_edge_directions} should be in [0,100]. "
+            f"Set value to 0."
+        )
     if penalty_edge_directions > 100:
         penalty_edge_directions = 100
+        logger.warning(
+            f">>> Warning: parameter {penalty_edge_directions} should be in [0,100]. "
+            f"Set value to 100."
+        )
     if penalty_line_bends < 0:
         penalty_line_bends = 0
+        logger.warning(
+            f">>> Warning: parameter {penalty_line_bends} should be in [0,100]. "
+            f"Set value to 0."
+        )
     if penalty_line_bends > 100:
         penalty_line_bends = 100
+        logger.warning(
+            f">>> Warning: parameter {penalty_line_bends} should be in [0,100]. "
+            f"Set value to 100."
+        )
     if penalty_distance < 0:
         penalty_distance = 0
+        logger.warning(
+            f">>> Warning: parameter {penalty_distance} should be in [0,100]. "
+            f"Set value to 0."
+        )
     if penalty_distance > 100:
         penalty_distance = 100
+        logger.warning(
+            f">>> Warning: parameter {penalty_distance} should be in [0,100]. "
+            f"Set value to 100."
+        )
 
     return create_model(
         graph,
@@ -158,7 +181,7 @@ def create_model(
     Parameters
     ----------
     graph : Graph
-        networkx graph with node attribute 'pos' being a tuple of x- and y-coordinate
+        networkx graph with node attribute ``pos`` being a tuple of x- and y-coordinate
     linepaths : DataFrame
         DataFrame with information on the line routes/paths.
         This data frame could also be empty
@@ -218,19 +241,19 @@ def create_model(
             model.addConstr(edge_direction[u, v, 7] == edge_direction[v, u, 3])
 
         # objective edge length
-        obj = [0]
+        obj = 0
         for u, v in graph.edges:
-            obj[0] += penalty_distance * dist[u, v]
+            obj += penalty_distance * dist[u, v]
 
         if geodata == True:
-            # include original geographic information
+            # Assume geographical node data is given.
             pos_orig = nx.get_node_attributes(graph, "pos")
             # only allow neighboring positions
-            create_orig_nodepostion_constraints(
+            obj = _create_orig_nodepostion_constraints(
                 graph, edge_direction, obj, pos_orig, penalty_edge_directions
             )
             # ensure the same edge order
-            create_orig_edgeorder_constraints(graph, model, edge_direction, pos_orig)
+            _create_orig_edgeorder_constraints(graph, model, edge_direction, pos_orig)
 
         # one direction for each edge
         model.addConstrs(
@@ -242,10 +265,12 @@ def create_model(
         )
 
         # restriction on x and y coordinates if a direction is chosen for an edge
-        create_direction_constraints(graph, model, edge_direction, x, y, mindist)
+        _create_direction_constraints(graph, model, edge_direction, x, y, mindist)
 
         # define the bend for each two consecutive edges
-        compute_bends(graph, model, edge_direction, obj, linepaths, penalty_line_bends)
+        obj = _compute_bends(
+            graph, model, edge_direction, obj, linepaths, penalty_line_bends
+        )
 
         # add some helpful constraints (not needed for IP formulation)
         model.addConstrs(
@@ -254,12 +279,9 @@ def create_model(
             if len(graph.edges(w)) > 1
             for i in range(8)
         )
-        add_coordinateConstr(
+        _add_coordinateConstr(
             graph, model, edge_direction, x, y, mindist, num_nodes + mindist
         )
-
-        model.setObjective(obj[0])
-        model.update()
 
         if include_planarity:
             # helper variables for ensuring planarity
@@ -284,7 +306,9 @@ def create_model(
                         + objGamma
                         == 1
                     )
-                    obj[0] += 1000 * (objGamma)
+                    obj += 1000 * objGamma
+            # objective is now complete
+            model.setObjective(obj)
 
             # necessary data for planarity callback
             model._mindist = mindist
@@ -298,6 +322,7 @@ def create_model(
             # faster than adding all of them from the beginning
             model.optimize(planarity_callback)
         else:
+            model.setObjective(obj)
             model.optimize()
 
         if model.solCount > 0:
@@ -315,8 +340,9 @@ def create_model(
 
 
 # Helper function
-def counter_clockwise_sort(p, q):
+def _counter_clockwise_sort(p, q):
     # Sort the positions given in q counter clockwise around p, start from east
+    # Return the sorted points along with their original indices
 
     # Enumerate q to remember the original order
     q = list(enumerate(q))
@@ -334,24 +360,14 @@ def counter_clockwise_sort(p, q):
     # Sort the points counter-clockwise
     q.sort(key=sort_by_angle)
 
-    # Return the sorted points along with their original indices
     return q
 
 
-# Assume geographical node data is given.
-# For each node in the graph order the neighbors counter-clock-wise and
-# add constraints to ensure the preservation of this order in the octilinear
-# graph representation
+def _create_orig_edgeorder_constraints(graph, model, edge_direction, pos_orig):
+    # For each node in the graph order the neighbors counter-clock-wise and
+    # add constraints to ensure the preservation of this order in the octilinear
+    # graph representation
 
-
-# Parameters
-# ----------
-# graph : Graph
-#     undirected networkx graph
-# model : Gurobi model object
-# edge_direction : tupledict (Gurobi variables)
-# pos_orig : node attribute (of graph)
-def create_orig_edgeorder_constraints(graph, model, edge_direction, pos_orig):
     for v in graph.nodes:
         # we can assume that the degree is at most 8
         if len(graph.edges(v)) <= 1:
@@ -364,7 +380,7 @@ def create_orig_edgeorder_constraints(graph, model, edge_direction, pos_orig):
         for u, w in graph.edges(v):
             neighbors.append(w)
             positions.append(pos_orig[w])
-        sorted_q = counter_clockwise_sort(pos_orig[v], positions)
+        sorted_q = _counter_clockwise_sort(pos_orig[v], positions)
         node = neighbors[sorted_q[0][0]]
         for i in range(1, len(sorted_q)):
             nextNode = neighbors[sorted_q[i][0]]
@@ -392,24 +408,14 @@ def create_orig_edgeorder_constraints(graph, model, edge_direction, pos_orig):
                 )
 
 
-# Assume geographical node data is given.
-# For each edge in the graph compute the direction from the original graph data.
-# Fix variables such that for each edge only the original direction or the two adjacent
-# directions are allowed.
-
-# Parameters
-# ----------
-# graph : graph (networkx) - undirected networkx graph
-# edge_direction : tupledict (gurobi variables)
-# obj : list - position 0 holds the objective funtion
-# pos_orig : node attribute (of graph) - original position
-# penalty_edge_directions : penalty if not original position is chosen for the edge
-
-
-# edge_direction : tupledict (gurobi variables)
-def create_orig_nodepostion_constraints(
+def _create_orig_nodepostion_constraints(
     graph, edge_direction, obj, pos_orig, penalty_edge_directions
 ):
+    # Assume geographical node data is given.
+    # For each edge in the graph compute the direction from the original graph data.
+    # Fix variables such that for each edge only the original direction or the two adjacent
+    # directions are allowed.
+
     for u, v in graph.edges:
         posU = pos_orig[u]
         posV = pos_orig[v]
@@ -419,17 +425,17 @@ def create_orig_nodepostion_constraints(
         theta_deg = math.degrees(theta)
         if theta_deg > -22.5 and theta_deg <= 22.5:
             # direction = "East"
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 1]
+            obj += penalty_edge_directions * edge_direction[u, v, 1]
             edge_direction[u, v, 2].ub = 0
             edge_direction[u, v, 3].ub = 0
             edge_direction[u, v, 4].ub = 0
             edge_direction[u, v, 5].ub = 0
             edge_direction[u, v, 6].ub = 0
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 7]
+            obj += penalty_edge_directions * edge_direction[u, v, 7]
         elif theta_deg > 22.5 and theta_deg <= 67.5:
             # direction = "North-East"
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 0]
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 2]
+            obj += penalty_edge_directions * edge_direction[u, v, 0]
+            obj += penalty_edge_directions * edge_direction[u, v, 2]
             edge_direction[u, v, 3].ub = 0
             edge_direction[u, v, 4].ub = 0
             edge_direction[u, v, 5].ub = 0
@@ -438,8 +444,8 @@ def create_orig_nodepostion_constraints(
         elif theta_deg > 67.5 and theta_deg <= 112.5:
             # direction = "North"
             edge_direction[u, v, 0].ub = 0
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 1]
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 3]
+            obj += penalty_edge_directions * edge_direction[u, v, 1]
+            obj += penalty_edge_directions * edge_direction[u, v, 3]
             edge_direction[u, v, 4].ub = 0
             edge_direction[u, v, 5].ub = 0
             edge_direction[u, v, 6].ub = 0
@@ -448,8 +454,8 @@ def create_orig_nodepostion_constraints(
             # direction = "North-West"
             edge_direction[u, v, 0].ub = 0
             edge_direction[u, v, 1].ub = 0
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 2]
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 4]
+            obj += penalty_edge_directions * edge_direction[u, v, 2]
+            obj += penalty_edge_directions * edge_direction[u, v, 4]
             edge_direction[u, v, 5].ub = 0
             edge_direction[u, v, 6].ub = 0
             edge_direction[u, v, 7].ub = 0
@@ -458,8 +464,8 @@ def create_orig_nodepostion_constraints(
             edge_direction[u, v, 0].ub = 0
             edge_direction[u, v, 1].ub = 0
             edge_direction[u, v, 2].ub = 0
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 3]
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 5]
+            obj += penalty_edge_directions * edge_direction[u, v, 3]
+            obj += penalty_edge_directions * edge_direction[u, v, 5]
             edge_direction[u, v, 6].ub = 0
             edge_direction[u, v, 7].ub = 0
         elif theta_deg > -157.5 and theta_deg <= -112.5:
@@ -468,8 +474,8 @@ def create_orig_nodepostion_constraints(
             edge_direction[u, v, 1].ub = 0
             edge_direction[u, v, 2].ub = 0
             edge_direction[u, v, 3].ub = 0
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 4]
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 6]
+            obj += penalty_edge_directions * edge_direction[u, v, 4]
+            obj += penalty_edge_directions * edge_direction[u, v, 6]
             edge_direction[u, v, 7].ub = 0
         elif theta_deg > -112.5 and theta_deg <= -67.5:
             # direction = "South"
@@ -478,31 +484,23 @@ def create_orig_nodepostion_constraints(
             edge_direction[u, v, 2].ub = 0
             edge_direction[u, v, 3].ub = 0
             edge_direction[u, v, 4].ub = 0
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 5]
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 7]
+            obj += penalty_edge_directions * edge_direction[u, v, 5]
+            obj += penalty_edge_directions * edge_direction[u, v, 7]
         elif theta_deg > -67.5 and theta_deg <= -22.5:
             # direction = "South-East"
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 0]
+            obj += penalty_edge_directions * edge_direction[u, v, 0]
             edge_direction[u, v, 1].ub = 0
             edge_direction[u, v, 2].ub = 0
             edge_direction[u, v, 3].ub = 0
             edge_direction[u, v, 4].ub = 0
             edge_direction[u, v, 5].ub = 0
-            obj[0] += penalty_edge_directions * edge_direction[u, v, 6]
+            obj += penalty_edge_directions * edge_direction[u, v, 6]
+    return obj
 
 
-# Define for each direction constraints on the position x and y for each edge
+def _create_direction_constraints(graph, model, edge_direction, x, y, mindist):
+    # Define for each direction the implication on the position x and y for each edge
 
-
-# Parameters
-# ----------
-# graph : graph (networkx) - undirected networkx graph
-# model : Gurobi model object
-# edge_direction : tupledict (gurobi variables)
-# x : tupledict (gurobi variables) - x position of node
-# y : tupledict (gurobi variables) - y position of node
-# mindist : Scalar - minimum distance between two nodes
-def create_direction_constraints(graph, model, edge_direction, x, y, mindist):
     for u, v in graph.edges:
         model.addConstr((edge_direction[u, v, 0] == 1) >> (y[v] - y[u] == 0))
         model.addConstr((edge_direction[u, v, 0] == 1) >> (x[v] - x[u] >= mindist))
@@ -534,19 +532,10 @@ def create_direction_constraints(graph, model, edge_direction, x, y, mindist):
         )
 
 
-# Compute bends for each two consecutive lines. If there are linepaths covering
-# both edges, add variables to model and objective that account for the "line bend".
+def _compute_bends(graph, model, edge_direction, obj, linepaths, penalty_line_bends):
+    # Compute bends for each two consecutive lines. If there are linepaths covering
+    # both edges, add variables to model and objective that account for the "line bend".
 
-
-# Parameters
-# ----------
-# graph : graph (networkx) - undirected networkx graph
-# model : Gurobi model object
-# edge_direction : tupledict (gurobi variables)
-# obj : list - position 0 holds the objective funtion
-# linepaths : pandas Dataframe - linepaths
-# penalty_line_bends : penalty to account for bends of lines
-def compute_bends(graph, model, edge_direction, obj, linepaths, penalty_line_bends):
     bend = {}
     for v in graph.nodes:
         templist = list(graph.edges(v))
@@ -647,7 +636,7 @@ def compute_bends(graph, model, edge_direction, obj, linepaths, penalty_line_ben
                         for k in range(j, 8)
                     )
 
-                    obj[0] += (
+                    obj += (
                         penalty_line_bends
                         * numlines
                         * gp.quicksum(k * bend[w1, u1, w2, k] for k in range(4))
@@ -657,6 +646,7 @@ def compute_bends(graph, model, edge_direction, obj, linepaths, penalty_line_ben
             if idx == 0:
                 # this is a helpful cut but not necessary for the IP formulation
                 model.addConstr(linExpr0bend <= 1, name=f"bend_{v}")
+    return obj
 
 
 def planarity_callback(model, where):
@@ -882,18 +872,7 @@ def planarity_callback(model, where):
 
 
 # Define additional cuts to improve the LP relaxation
-
-
-# Parameters
-# ----------
-# graph : graph (networkx) - undirected networkx graph
-# model : Gurobi model object
-# d : tupledict (gurobi variables) edge_directions
-# x : tupledict (gurobi variables) - x position of node
-# y : tupledict (gurobi variables) - y position of node
-# mindist : Scalar - minimum distance between two nodes
-# bigM : scalar
-def add_coordinateConstr(graph, model, d, x, y, mindist, bigM):
+def _add_coordinateConstr(graph, model, d, x, y, mindist, bigM):
     for u, v in graph.edges:
         # one of the directions 0,1,2 then z1 increasing, y non-decreasing, x non-decreasing
         model.addConstr(
@@ -1047,7 +1026,7 @@ def plot_map(graph, directions, linepath_data):
     Parameters
     ----------
     graph : Graph
-        networkx graph with node attribute 'pos_oct' being a tuple of x- and y-coordinate
+        networkx graph with node attribute ``pos_oct`` being a tuple of x- and y-coordinate
     directions: dict()
         dictionary providing the assigned direction (0 to 7) for each edge
     linepath_data : DataFrame
@@ -1083,11 +1062,11 @@ def plot_map(graph, directions, linepath_data):
         )
     except:
         raise ValueError(f"linepath_data does not contain relevant information")
-    plot_lines(graph, linepaths, directions)
+    _plot_lines(graph, linepaths, directions)
 
 
 # plotting function #
-def plot_lines(graph, linepaths, directions):
+def _plot_lines(graph, linepaths, directions):
     num_nodes = graph.number_of_nodes()
     scale = 0.01
     if num_nodes > 30:
@@ -1122,7 +1101,7 @@ def plot_lines(graph, linepaths, directions):
             if (vt, ut) in covered_edges or (ut, vt) in covered_edges:
                 # handle edges of the last bunch
                 if len(combined_edges) > 0:
-                    add_coordinates(
+                    _add_coordinates(
                         graph,
                         combined_edges,
                         edge_shift,
@@ -1143,7 +1122,7 @@ def plot_lines(graph, linepaths, directions):
                 if last_direction == directions[(ut, vt)]:
                     combined_edges.append((ut, vt))
                 else:  # new direction, handle line for combined edges (=last bunch)
-                    add_coordinates(
+                    _add_coordinates(
                         graph,
                         combined_edges,
                         edge_shift,
@@ -1156,7 +1135,7 @@ def plot_lines(graph, linepaths, directions):
                     combined_edges = [(ut, vt)]
         # handle last bunch of edges
         if len(combined_edges) > 0:
-            add_coordinates(
+            _add_coordinates(
                 graph, combined_edges, edge_shift, directions, xcoord, ycoord, scale
             )
         # draw all edges for the line, make the whole line selectable
@@ -1190,7 +1169,7 @@ def plot_lines(graph, linepaths, directions):
 
 
 # helper function for plotting #
-def check_shift(combined_edges, edge_shift, shift_val):
+def _check_shift(combined_edges, edge_shift, shift_val):
     # check if this shift value was already selected for one of the edges
     for c in combined_edges:
         if shift_val in edge_shift[c]:
@@ -1199,22 +1178,22 @@ def check_shift(combined_edges, edge_shift, shift_val):
 
 
 # helper function for plotting #
-def shift_combined_edges(graph, combined_edges, edge_shift):
+def _shift_combined_edges(graph, combined_edges, edge_shift):
     # find the right shift, do not more than 10 shifts
     for i in [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5]:
-        check = check_shift(combined_edges, edge_shift, i)
+        check = _check_shift(combined_edges, edge_shift, i)
         if check == False:
             return i
     return i
 
 
 # helper function for plotting #
-def add_coordinates(
+def _add_coordinates(
     graph, combined_edges, edge_shift, directions, xcoord, ycoord, scale
 ):
     # compute x, and y coordinates for the edges in combined_edges
     # shift them if necessary
-    shift = shift_combined_edges(graph, combined_edges, edge_shift)
+    shift = _shift_combined_edges(graph, combined_edges, edge_shift)
     for u, v in combined_edges:
         (x1, y1) = graph.nodes[u]["pos_oct"]
         (x2, y2) = graph.nodes[v]["pos_oct"]

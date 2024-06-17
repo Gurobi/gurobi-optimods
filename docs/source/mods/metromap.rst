@@ -55,11 +55,11 @@ is considered
 
 * The original positions of the nodes are respected in the following way:
 
-  * Only directions that align with the original direction or are
-    directly neighbored are allowed. For example, if v is north-east (1) from u in the original
-    positions, it is allowed to place v north, north-east, or east in the
-    octilinear representation, i.e., for the edge :math:`(u,v)` the directions
-    2, 1, and 0 are allowed.
+  * Only directions that align with the original direction or are directly
+    neighbored are allowed. For example, if :math:`v` is north-east (1) from :math:`u`
+    in the original positions, it is allowed to place v north, north-east, or
+    east in the octilinear representation, i.e., for the edge :math:`(u,v)` the
+    directions 2, 1, and 0 are allowed.
   * The ordering of all adjacent nodes of a node :math:`v` is preserved.
 * The distance (difference in x- or y-coordinate) between each two nodes is at
   least one and as minimal as possible
@@ -86,7 +86,7 @@ but at a neighboring direction. The weight :math:`w_d` penalizes a distance of
 an edge greater than a minimum distance of one, and :math:`w_b` penalizes the
 line bends. These three weights have a default value of 1 but are parameterized
 and can be adapted. Additionally, the planarity violations are included in the
-objective. They are weighted with 1000. This should be considered when chosing
+objective. They are weighted with 1000. This should be considered when choosing
 weights for :math:`w_o`, :math:`w_d`, and :math:`w_b`; we restrict the values to
 be between 0 and 100.
 
@@ -103,16 +103,16 @@ is too bulky), the different aspects of the model are discussed below.
 
   We use the following variables:
 
-    - :math:`d(u,v,r)\in\{0,1\}` for :math:`(u,v)\in E` and :math:`r\in\{0,1,\ldots,7\}`
-      which indicates whether the direction from :math:`u` to :math:`v` is :math:`r`.
-    - :math:`x(v) \geq 0` the x-coordinate of node :math:`v` in an octilinear representation
-    - :math:`y(v) \geq 0` the y-coordinate of node :math:`v` in an octilinear representation
-    - :math:`\delta(u,v)\geq 0` the distance of :math:`u` and :math:`v` for each edge
-      :math:`(u,v)\in E` that is larger than the minimum required distance of 1
-    - :math:`b(u,v,w,i)\in\{0,1\}` the bend of category :math:`i` on two adjacent edges
-      :math:`(u,v), (v,w)\in E`. The category corresponds to the angle of the
-      bend. The angle can be equal to 180 (=category 0), 135 (=category 1), 90
-      (=category 2), and 45 degrees (=category 3).
+  - :math:`d(u,v,r)\in\{0,1\}` for :math:`(u,v)\in E` and :math:`r\in\{0,1,\ldots,7\}`
+    which indicates whether the direction from :math:`u` to :math:`v` is :math:`r`.
+  - :math:`x(v) \geq 0` the x-coordinate of node :math:`v` in an octilinear representation
+  - :math:`y(v) \geq 0` the y-coordinate of node :math:`v` in an octilinear representation
+  - :math:`\delta(u,v)\geq 0` the distance of :math:`u` and :math:`v` for each edge
+    :math:`(u,v)\in E` that is larger than the minimum required distance of 1
+  - :math:`b(u,v,w,i)\in\{0,1\}` the bend of category :math:`i` on two adjacent edges
+    :math:`(u,v), (v,w)\in E`. The category corresponds to the angle of the
+    bend. The angle can be equal to 180 (=category 0), 135 (=category 1), 90
+    (=category 2), and 45 degrees (=category 3).
 
 
 
@@ -128,13 +128,13 @@ is too bulky), the different aspects of the model are discussed below.
 
   The objective minimizes a weighted sum of
 
-    - the distances,
-    - the directions that do not correspond to the original directions
-      (here indicated by the set :math:`J_{uv}` for an edge :math:`(u,v)\in E`),
-    - and the bends for each line weighted by its bend category, i.e., the
-      cost increases with the acuteness of the angle. Here
-      :math:`|L_{u,v,w}|` amounts the number of lines traversing the
-      adjacent edges :math:`(u,v),(v,w)\in E`.
+  - the distances,
+  - the directions that do not correspond to the original directions
+    (here indicated by the set :math:`J_{uv}` for an edge :math:`(u,v)\in E`),
+  - and the bends for each line weighted by its bend category, i.e., the
+    cost increases with the acuteness of the angle. Here
+    :math:`|L_{u,v,w}|` amounts the number of lines traversing the
+    adjacent edges :math:`(u,v),(v,w)\in E`.
 
   These three parts are weighted by :math:`w_d`, :math:`w_o`, and :math:`w_b`.
   Note that the direction variables :math:`d(u,v,j)` for all directions :math:`j`
@@ -193,7 +193,7 @@ is too bulky), the different aspects of the model are discussed below.
   adjacent node :math:`i` of :math:`v`. Let the adjacent nodes of :math:`v` be
   ordered counter-clockwise and assume that :math:`w_0,\ldots, w_{\deg(v)}`
   fulfills this order. Then also in the octilinear representation the nodes need
-  to have the same counter-clockwise order, i.e., the direction from neigbhor
+  to have the same counter-clockwise order, i.e., the direction from neighbor
   node :math:`i` to :math:`i+1` increases with at most one exception (when
   switching from direction 7 to 0). For this exception we allow
   :math:`\beta_v^i` to be 1. The following constraints define the requirement.
@@ -229,7 +229,7 @@ is too bulky), the different aspects of the model are discussed below.
   representation. There are four possibilities reflected by the variables
   :math:`b(u,v,w,0)` (no bend, 180 degrees), :math:`b(u,v,w,1)` (a bend of 135
   degrees), :math:`b(u,v,w,2)` (a bend of 90 degrees), and :math:`b(u,v,w,3)` (a
-  bend of 45 degrees). The following constraints ensure that excatly one of
+  bend of 45 degrees). The following constraints ensure that exactly one of
   these variables is chosen and that the bend in direction :math:`u,v,w` is
   equal to the bend in direction :math:`w,v,u`.
 
@@ -262,7 +262,7 @@ is too bulky), the different aspects of the model are discussed below.
   which direction an edge :math:`e2` is relative to an edge :math:`e1`. For
   example, fixing the position of edge :math:`e1` the second edge :math:`e2`
   must be placed east, east-north, north, north-west, west, south-west,
-  south, or south-east of e1.
+  south, or south-east of :math:`e1`.
 
   We define variables that express this positional relation between each two
   edges. Let :math:`\gamma(u1,v1,u2,v2,i) \in\{0,1\}` be a binary variable
@@ -373,19 +373,34 @@ Solution
 
 The output of the optimization is the following:
 
-- A graph with the node attribute ``pos_oct`` containing the x- and y-coordinates
-  for the octilinear representation.
+- A graph with the node attribute ``pos_oct`` containing the x- and
+  y-coordinates for the octilinear representation. It also contains the original
+  node attribute ``pos`` with the original positions.
 - A Python dictionary providing the direction (0 to 7) for each edge. This
   information is needed for the plotting function provided in the OptiMod
 
 The OptiMod can be run as follows:
 
-.. testcode:: solve
+.. doctest:: solve
+    :options: +NORMALIZE_WHITESPACE
 
-    from gurobi_optimods import datasets
-    from gurobi_optimods.metromap import metromap
-    graph, linepath_data = datasets.load_sberlin_graph_data()
-    graph_out, edge_directions = metromap(graph, linepath_data, include_planarity=False, verbose=False, time_limit=2)
+    >>> from gurobi_optimods import datasets
+    >>> from gurobi_optimods.metromap import metromap
+    >>> graph, linepath_data = datasets.load_sberlin_graph_data()
+    >>> graph_out, edge_directions = metromap(
+    ...     graph, linepath_data, include_planarity=False, verbose=False, time_limit=2
+    ... )
+    >>> # Show that input and output graphs are isomorphic (structural equivalent)
+    >>> import networkx as nx
+    >>> print(nx.is_isomorphic(graph, graph_out))
+      True
+    >>> # Show the first 4 nodes with their attributes
+    >>> first_four_nodes_with_attrs = list(graph_out.nodes.data())[:4]
+    >>> print(first_four_nodes_with_attrs)
+      [(100, {'pos': (13.248432, 52.754362), 'pos_oct': (7.0, 33.0)}),
+       (78, {'pos': (13.263191, 52.741273), 'pos_oct': (8.0, 32.0)}),
+       (23, {'pos': (13.276771, 52.714491), 'pos_oct': (9.0, 31.0)}),
+       (20, {'pos': (13.288417, 52.687871), 'pos_oct': (10.0, 30.0)})]
 
 Note, for this demonstration the parameter ``include_planarity`` is set to
 False, and we chose a time limit of 2 seconds. This is done to see results
@@ -397,16 +412,30 @@ The ``time_limit`` parameter can also be omitted if no time limit shall be set.
 The graph can be plotted using the networkx plotting function, for example, as
 follows::
 
-    pos_oct=nx.get_node_attributes(graph_out, 'pos_oct')
-    nx.draw(graph_out, pos_oct, with_labels=False, node_size=12, edgecolors='black', node_color='white')
+    pos_oct=nx.get_node_attributes(graph_out, "pos_oct")
+    nx.draw(
+        graph_out,
+        pos_oct,
+        with_labels=False,
+        node_size=12,
+        edgecolors="black",
+        node_color="white",
+    )
 
 As a comparison the original node positions can be plotted as well::
 
-    pos_orig=nx.get_node_attributes(graph, 'pos')
-    nx.draw(graph, pos_orig, with_labels=False, node_size=12, edgecolors='black', node_color='white')
+    pos_orig=nx.get_node_attributes(graph, "pos")
+    nx.draw(
+        graph,
+        pos_orig,
+        with_labels=False,
+        node_size=12,
+        edgecolors="black",
+        node_color="white",
+    )
 
-Below is a ``networkx`` plot of the graph with the original positions (left) and the computed
-octilinear positions (right) for the S-Bahn Berlin network.
+Below is a ``networkx`` plot of the graph with the original positions (left) and
+the computed octilinear positions (right) for the S-Bahn Berlin network.
 
 .. image:: figures/sberlin_orig.png
    :width: 49%
@@ -454,7 +483,13 @@ Similar holds for the weights of the different parts in the objective. The
 default value for all weights is 1. If a different weighting is requested, this
 can be done as follows::
 
-  graph_out, edge_directions = metromap(graph, linepath_data, penalty_edge_directions = 2,  penalty_line_bends = 0, penalty_distance = 1)
+  graph_out, edge_directions = metromap(
+      graph,
+      linepath_data,
+      penalty_edge_directions=2,
+      penalty_line_bends=0,
+      penalty_distance=1,
+  )
 
 
 Combination with Line Optimization OptiMod
@@ -472,17 +507,33 @@ this OptiMod. Here is an example of how this could be done
   from gurobi_optimods.line_optimization import line_optimization
   from gurobi_optimods.metromap import metromap
   from gurobi_optimods.metromap import plot_map
+
   # load data for line optimization and compute line plan
-  node_data, edge_data, line_data, linepath_data, demand_data = datasets.load_siouxfalls_network_data()
-  frequencies = [1,3]
-  obj_cost, final_lines = line_optimization(node_data, edge_data, line_data, linepath_data, demand_data, frequencies, True, verbose=False)
+  node_data, edge_data, line_data, linepath_data, demand_data = (
+      datasets.load_siouxfalls_network_data()
+  )
+  frequencies = [1, 3]
+  obj_cost, final_lines = line_optimization(
+      node_data,
+      edge_data,
+      line_data,
+      linepath_data,
+      demand_data,
+      frequencies,
+      True,
+      verbose=False,
+  )
   # create a data frame containing only the linepaths of the solution
-  linepath_data_sol = linepath_data.loc[linepath_data['linename'].isin([tuple[0] for tuple in final_lines])]
+  linepath_data_sol = linepath_data.loc[
+      linepath_data["linename"].isin([tuple[0] for tuple in final_lines])
+  ]
   # create networkx graph
-  graph = nx.from_pandas_edgelist(edge_data.reset_index(), create_using=nx.Graph())
+  graph = nx.from_pandas_edgelist(
+      edge_data.reset_index(), create_using=nx.Graph()
+  )
   # add x-, y-coordinates as node attribute
   for number, row in node_data.set_index("number").iterrows():
-    graph.add_node(number, pos = (row['posx'], row['posy']))
+      graph.add_node(number, pos=(row["posx"], row["posy"]))
   # compute and plot metromap
   graph_out, edge_directions = metromap(graph, linepath_data_sol, verbose=False)
   plot_map(graph_out, edge_directions, linepath_data_sol)

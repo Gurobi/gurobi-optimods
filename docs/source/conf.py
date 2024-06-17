@@ -51,7 +51,6 @@ html_theme_options = {
     "construction_warning": False,
 }
 html_favicon = "https://www.gurobi.com/favicon.ico"
-html_static_path = ["_static"]
 
 autosectionlabel_prefix_document = True
 
