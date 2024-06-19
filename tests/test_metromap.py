@@ -10,6 +10,7 @@ except ImportError:
 
 import gurobi_optimods.metromap as map
 
+# to run only the unittests for the metromap optimod use this command
 # python -m unittest tests.test_metromap.Testmap
 
 small1_nodes = """
@@ -73,6 +74,29 @@ source,target
 
 @unittest.skipIf(nx is None, "networkx is not installed")
 class Testmap(unittest.TestCase):
+    def test_node_degree_to_high(self):
+        # create a graph one node in the middle and 9 adjacent nodes
+        # node degree is 9
+        G = nx.Graph()
+        G.add_edge(0, 1)
+        G.add_edge(0, 2)
+        G.add_edge(0, 3)
+        G.add_edge(0, 4)
+        G.add_edge(0, 5)
+        G.add_edge(0, 6)
+        G.add_edge(0, 7)
+        G.add_edge(0, 8)
+        G.add_edge(0, 9)
+
+        with self.assertRaises(ValueError) as error:
+            graph_out, edge_directions = map.metromap(G)
+
+        self.assertEqual(
+            str(error.exception),
+            "Node with number 0 has node degree 9. "
+            "Octilinear representation is not possible for node degree larger than 8",
+        )
+
     def test_small_no_geodata_no_lines(self):
         edge_data = pd.read_csv(io.StringIO(small1_edges))
         node_data = pd.read_csv(io.StringIO(small1_nodes))
