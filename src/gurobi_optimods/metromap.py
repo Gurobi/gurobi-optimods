@@ -557,26 +557,14 @@ def _compute_bends(graph, model, edge_direction, obj, linepaths, penalty_line_be
                     bend[w1, u1, w2, 0] = model.addVar(
                         vtype="B", name=f"bends[{w1},{u1},{w2},0]"
                     )
-                    bend[w2, u1, w1, 0] = model.addVar(
-                        vtype="B", name=f"bends[{w2},{u1},{w1},0]"
-                    )
                     bend[w1, u1, w2, 1] = model.addVar(
                         vtype="B", name=f"bends[{w1},{u1},{w2},1]"
-                    )
-                    bend[w2, u1, w1, 1] = model.addVar(
-                        vtype="B", name=f"bends[{w2},{u1},{w1},1]"
                     )
                     bend[w1, u1, w2, 2] = model.addVar(
                         vtype="B", name=f"bends[{w1},{u1},{w2},2]"
                     )
-                    bend[w2, u1, w1, 2] = model.addVar(
-                        vtype="B", name=f"bends[{w2},{u1},{w1},2]"
-                    )
                     bend[w1, u1, w2, 3] = model.addVar(
                         vtype="B", name=f"bends[{w1},{u1},{w2},3]"
-                    )
-                    bend[w2, u1, w1, 3] = model.addVar(
-                        vtype="B", name=f"bends[{w2},{u1},{w1},3]"
                     )
                     model.addConstr(
                         bend[w1, u1, w2, 0]
@@ -585,10 +573,6 @@ def _compute_bends(graph, model, edge_direction, obj, linepaths, penalty_line_be
                         + bend[w1, u1, w2, 3]
                         == 1
                     )
-                    model.addConstrs(
-                        bend[w1, u1, w2, k] == bend[w2, u1, w1, k] for k in range(4)
-                    )
-
                     model.addConstrs(
                         bend[w1, u1, w2, 0]
                         >= (edge_direction[w1, u1, k] + edge_direction[u2, w2, k] - 1)
