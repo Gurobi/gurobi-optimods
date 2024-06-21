@@ -111,9 +111,6 @@ def size_limited_license():
             result = True
 
     return result
-
-
-size_limited_license = size_limited_license()
 """
 
 

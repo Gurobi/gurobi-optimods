@@ -9,15 +9,7 @@ import gurobipy as gp
 from gurobi_optimods.datasets import load_opf_example
 from gurobi_optimods.opf import solve_opf
 
-
-def size_limited_license():
-    with gp.Env(params={"OutputFlag": 0}) as env, gp.Model(env=env) as model:
-        model.addVars(2001)
-        try:
-            model.optimize()
-            return False
-        except gp.GurobiError:
-            return True
+from ..utils import size_limited_license
 
 
 class TestInvalidData(unittest.TestCase):

@@ -16,21 +16,13 @@ from gurobi_optimods.opf import (
     violation_plot,
 )
 
+from ..utils import size_limited_license
+
 # If plotly is not installed, tests will be skipped
 try:
     import plotly
 except ImportError:
     plotly = None
-
-
-def size_limited_license():
-    with gp.Env(params={"OutputFlag": 0}) as env, gp.Model(env=env) as model:
-        model.addVars(2001)
-        try:
-            model.optimize()
-            return False
-        except gp.GurobiError:
-            return True
 
 
 @unittest.skipIf(plotly is None, "plotly is not installed")
