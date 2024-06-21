@@ -8,14 +8,14 @@ This problem is an example of a classical network design problem.
 There are different approaches and models to solve the line optimization problem.
 A general overview on models and methods is given by Schoebel :footcite:p:`schoebel2012`.
 
-For this optimod we assume we are given a public transportation network, being
+For this optimod we assume we are given a public transportation network:
 a set of stations and the direct links between them. We are given the
-origin-destination (OD) demand, i.e., it is known how many passengers want to
-travel from one station to another in the network within a considered time horizon.
-We are also given a set of possible *lines*. A line is a path a public
-transportation network. We call a subset of these lines where each line is
-associated with a frequency a line plan. The optimod computes a line plan with
-minimum cost such that the capacity of the chosen lines sufficient to transport
+origin-destination (OD) *demand*, i.e., it is known how many passengers want to
+travel from one station to another in the network within the considered time horizon.
+We are also given a set of possible *lines*. A line is a path in a public
+transportation network. We call *line plan* a subset of these lines where each line is
+associated with a frequency. The optimod computes a line plan with
+minimum cost such that the capacity of the chosen lines is sufficient to transport
 all passengers.
 
 We provide two different strategies to find a line plan with minimum cost:
@@ -39,9 +39,9 @@ vertices :math:`V` represent the stations and the set of edges
 :math:`E` represent all possibilities to travel from one station to another without
 an intermediate station.
 A directed edge :math:`(u,v)\in E` has the attribute time :math:`\tau_{uv}\geq 0` that
-represents the amount of time needed traveling from :math:`u` to :math:`v`.
-For each pair of nodes :math:`u,v\in V` a demand :math:`d_{uv}\geq 0` can be defined.
-The demand represents the number of passengers that want to travel from :math:`u`
+represents the amount of time needed to travel from :math:`u` to :math:`v`.
+For each pair of nodes :math:`u,v\in V` a demand :math:`d_{uv}\geq 0` is given.
+The demand represents the number of passengers who want to travel from :math:`u`
 to :math:`v` in the considered time horizon. Let :math:`D` be the set of all node pairs with
 positive demand. This set is also called OD pairs.
 Further given is a set of lines :math:`L`. A line :math:`l\in L` contains the stations it traverses
@@ -53,7 +53,7 @@ A line has the following additional attributes:
 - operating cost: :math:`c_{l}\geq 0` for operating the line once in the given time horizon
 - capacity: :math:`\kappa_{l}\geq 0` when operating the line :math:`l` once in the given time horizon
 
-Additionally, we have a given list of frequencies. The frequencies define the possible
+Additionally, we are given a list of frequencies. The frequencies define the possible
 number of operations for the lines in the given time horizon.
 If a line :math:`l` is operated with frequency :math:`f` the overall cost for the line is
 :math:`C_{lf}=C_l + c_{lf}\cdot f` and the total capacity provided by the line is
