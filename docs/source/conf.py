@@ -92,6 +92,31 @@ numpydoc_xref_aliases = {
 numpydoc_xref_ignore = {"optional", "or", "of"}
 
 
+# -- doctest configuration
+
+doctest_global_setup = """
+def size_limited_license():
+
+    result = False
+
+    try:
+        import gurobipy as gp
+        from gurobipy import GRB
+
+        with gp.Env(params={"OutputFlag": 0}) as env, gp.Model(env=env) as model:
+            x = model.addVars(2001)
+            model.optimize()
+    except gp.GurobiError as e:
+        if e.errno == GRB.Error.SIZE_LIMIT_EXCEEDED:
+            result = True
+
+    return result
+
+
+size_limited_license = size_limited_license()
+"""
+
+
 # -- Docstring preprocessing for autodoc
 
 autodoc_typehints = "none"
