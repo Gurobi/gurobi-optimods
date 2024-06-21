@@ -6,8 +6,6 @@ import json
 import pathlib
 import unittest
 
-import gurobipy as gp
-
 from gurobi_optimods.datasets import load_opf_example, load_opf_extra
 from gurobi_optimods.opf import (
     compute_violations,
