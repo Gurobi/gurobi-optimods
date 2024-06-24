@@ -280,9 +280,16 @@ def create_model(
         _create_direction_constraints(graph, model, edge_direction, x, y, mindist)
 
         # define the bend for each two consecutive edges
-        obj = _compute_bends(
-            graph, model, edge_direction, obj, linepaths, penalty_line_bends, improve_lp
-        )
+        if penalty_line_bends > 0:
+            obj = _compute_bends(
+                graph,
+                model,
+                edge_direction,
+                obj,
+                linepaths,
+                penalty_line_bends,
+                improve_lp,
+            )
 
         if improve_lp:
             # add some helpful constraints
@@ -642,7 +649,7 @@ def _compute_bends(
                     )
                     linExpr0bend += bend[w1, u1, w2, 0]
 
-            if idx == 0 and improve_lp and linExpr0bend != 0:
+            if idx == 0 and improve_lp:
                 # this is a helpful cut but not necessary for the IP formulation
                 model.addConstr(linExpr0bend <= 1, name=f"bend_{v}")
     return obj
@@ -1096,7 +1103,11 @@ def _plot_lines(graph, linepaths, directions):
         xcoord = []
         ycoord = []
         for ut, vt in linepaths[l]:
-            if ut not in G.nodes or vt not in G.nodes or (ut, vt) not in G.edges:
+            if (
+                ut not in graph.nodes
+                or vt not in graph.nodes
+                or (ut, vt) not in graph.edges
+            ):
                 raise ValueError(
                     f"linepath_data contain nodes or edges not contained in graph"
                 )

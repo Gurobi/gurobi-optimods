@@ -332,7 +332,7 @@ is too bulky), the different aspects of the model are discussed below.
   most one of its adjacent edges.
 
   All these improving constraints are added by default. However, a parameter
-  ``improve_lp`` that can be set to False and then these improving
+  ``improve_lp`` is provided that can be set to False and then these improving
   constraints are not added.
 
 Code and Inputs
@@ -352,20 +352,21 @@ An example of the inputs with the respective requirements is shown below.
 
     >>> import networkx as nx
     >>> from gurobi_optimods import datasets
-    >>> graph, linepath_data = datasets.load_sberlin_graph_data()
+    >>> graph, linepath_data = datasets.load_metro_berlin_reduced_graph_data()
     >>> print(graph)
-      Graph with 167 nodes and 175 edges
+      Graph with 29 nodes and 32 edges
     >>> pos_orig = nx.get_node_attributes(graph, 'pos')
     >>> len(pos_orig)
-      167
+      29
     >>> linepath_data.head(4)
       linename	edge_source	edge_target
-      0	S1	100	78
-      1	S1	78	23
-      2	S1	23	20
-      3	S1	20	60
+      0       U1         147          50
+      1       U1          50          82
+      2       U1          82         127
+      3       U1         127          53
 
-For the example, we used data from the S-Bahn Berlin network. The graph includes
+For the example, we used data from the Berlin metro network. For demonstration,
+we use only a small part of the whole network. The graph includes
 the node attribute ``pos`` that contains a tuple of x- and y-coordinates for
 the original position. The linepath_data must be consistent with
 the graph. For example, ``edge_source``, ``edge_target`` in the
@@ -390,9 +391,13 @@ The OptiMod can be run as follows:
 
     >>> from gurobi_optimods import datasets
     >>> from gurobi_optimods.metromap import metromap
-    >>> graph, linepath_data = datasets.load_sberlin_graph_data()
+    >>> graph, linepath_data = datasets.load_metro_berlin_reduced_graph_data()
     >>> graph_out, edge_directions = metromap(
-    ...     graph, linepath_data, include_planarity=False, verbose=False, time_limit=2
+    ...     graph,
+    ...     linepath_data,
+    ...     include_planarity=False,
+    ...     improve_lp=False,
+    ...     verbose=False
     ... )
     >>> # Show that input and output graphs are isomorphic (structural equivalent)
     >>> import networkx as nx
@@ -401,17 +406,18 @@ The OptiMod can be run as follows:
     >>> # Show the first 4 nodes with their attributes
     >>> first_four_nodes_with_attrs = list(graph_out.nodes.data())[:4]
     >>> print(first_four_nodes_with_attrs)
-      [(100, {'pos': (13.248432, 52.754362), 'pos_oct': (7.0, 33.0)}),
-       (78, {'pos': (13.263191, 52.741273), 'pos_oct': (8.0, 32.0)}),
-       (23, {'pos': (13.276771, 52.714491), 'pos_oct': (9.0, 31.0)}),
-       (20, {'pos': (13.288417, 52.687871), 'pos_oct': (10.0, 30.0)})]
+    [(50, {'pos': [13.428468, 52.499035], 'pos_oct': (5.0, 25.0)}),
+     (82, {'pos': [13.417748, 52.499047], 'pos_oct': (4.0, 25.0)}),
+     (127, {'pos': [13.406531, 52.498274], 'pos_oct': (2.0, 25.0)}),
+     (53, {'pos': [13.39176, 52.497774], 'pos_oct': (1.0, 25.0)})]
 
 Note, for this demonstration the parameter ``include_planarity`` is set to
-False, and we chose a time limit of 2 seconds. This is done to see results
-faster. For this example, the planarity constraints are usually satisfied. If
-the planarity constraints should be included in the computation, the parameter
-``include_planarity`` can be omitted or set to True.
-The ``time_limit`` parameter can also be omitted if no time limit shall be set.
+False, and we skip the improving constraints. This is done so that the test
+works with the Gurobi test license. For this example, the planarity constraints
+are usually satisfied. If the planarity constraints should be included in the
+computation, the parameter ``include_planarity`` can be omitted or set to True.
+If a full Gurobi license is available, test full Berlin metro network can be
+loaded and tested with ``datasets.load_metro_berlin_graph_data()``.
 
 The graph can be plotted using the networkx plotting function, for example, as
 follows::
@@ -439,13 +445,23 @@ As a comparison the original node positions can be plotted as well::
     )
 
 Below is a ``networkx`` plot of the graph with the original positions (left) and
-the computed octilinear positions (right) for the S-Bahn Berlin network.
+the computed octilinear positions (right) for the Berlin metro network. First
+the small part is shown and below the full network.
 
-.. image:: figures/sberlin_orig.png
+.. image:: figures/berlin_metro_reduced_orig.png
    :width: 49%
-.. image:: figures/sberlin_oct.png
+.. image:: figures/berlin_metro_reduced_oct.png
    :width: 49%
 
+
+.. image:: figures/berlin_metro_orig.png
+   :width: 49%
+.. image:: figures/berlin_metro_oct.png
+   :width: 49%
+
+Note that optimizing a subnetwork only includes fewer restrictions and hence
+most probably results in a different outcome than when considered within the
+complete network.
 
 We provide a method to plot the lines in the octilinear representation using ``plotly``.
 In order to use this functionality, the ``plotly`` package is needed.
@@ -459,11 +475,11 @@ The plot function can be called as follows::
 
 The following figure is an example of the above call, it shows the lines in the
 octilinear representation of the S-Bahn Berlin network.
-(Use `link <../_static/sbahn_berlin.html>`_ to open in full screen.)
+(Use `link <../_static/metro_berlin.html>`_ to open in full screen.)
 
 .. raw:: html
 
-    <iframe src="../_static/sbahn_berlin.html" width="100%" height="600"></iframe>
+    <iframe src="../_static/metro_berlin.html" width="100%" height="600"></iframe>
 
 
 Note that plotting the lines in the octilinear network is an art or a further
@@ -539,7 +555,8 @@ this OptiMod. Here is an example of how this could be done
   for number, row in node_data.set_index("number").iterrows():
       graph.add_node(number, pos=(row["posx"], row["posy"]))
   # compute and plot metromap
-  graph_out, edge_directions = metromap(graph, linepath_data_sol, verbose=False)
+  graph_out, edge_directions = metromap(
+    graph, linepath_data_sol, penalty_line_bends=False,verbose=False)
   plot_map(graph_out, edge_directions, linepath_data_sol)
 
 
