@@ -35,7 +35,7 @@ pip install gurobi-optimods
 
 ## Documentation
 
-Full documentation for `gurobi-optimods` is hosted on [readthedocs](https://gurobi-optimization-gurobi-optimods.readthedocs-hosted.com/en/stable).
+Full documentation for `gurobi-optimods` is hosted on [readthedocs](https://gurobi-optimods.readthedocs.io/en/stable).
 
 ## License
 

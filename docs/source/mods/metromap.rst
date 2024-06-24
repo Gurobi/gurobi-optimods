@@ -388,6 +388,7 @@ The OptiMod can be run as follows:
 
 .. doctest:: solve
     :options: +NORMALIZE_WHITESPACE
+    :skipif: size_limited_license()
 
     >>> from gurobi_optimods import datasets
     >>> from gurobi_optimods.metromap import metromap
@@ -520,6 +521,7 @@ this OptiMod. Here is an example of how this could be done
 
 
 .. testcode:: combine
+  :skipif: size_limited_license()
 
   # import all requirements
   import networkx as nx
