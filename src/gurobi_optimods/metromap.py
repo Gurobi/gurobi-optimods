@@ -41,6 +41,7 @@ def metromap(
     penalty_edge_directions=1,
     penalty_line_bends=1,
     penalty_distance=1,
+    improve_lp=True,
     *,
     create_env,
 ):
@@ -163,6 +164,7 @@ def metromap(
         penalty_edge_directions,
         penalty_line_bends,
         penalty_distance,
+        improve_lp,
         create_env,
     )
 
@@ -175,6 +177,7 @@ def create_model(
     penalty_edge_directions,
     penalty_line_bends,
     penalty_distance,
+    improve_lp,
     create_env,
 ):
     """Create the model
@@ -254,6 +257,15 @@ def create_model(
             )
             # ensure the same edge order
             _create_orig_edgeorder_constraints(graph, model, edge_direction, pos_orig)
+        elif not improve_lp:
+            # there are no ordering constraints for the edges adjacent to a node
+            # so, need to ensure that outgoing/incoming edges use different directions
+            model.addConstrs(
+                gp.quicksum(edge_direction[u, v, i] for (u, v) in graph.edges(w)) <= 1
+                for w in graph.nodes
+                if len(graph.edges(w)) > 1
+                for i in range(8)
+            )
 
         # one direction for each edge
         model.addConstrs(
@@ -269,19 +281,20 @@ def create_model(
 
         # define the bend for each two consecutive edges
         obj = _compute_bends(
-            graph, model, edge_direction, obj, linepaths, penalty_line_bends
+            graph, model, edge_direction, obj, linepaths, penalty_line_bends, improve_lp
         )
 
-        # add some helpful constraints (not needed for IP formulation)
-        model.addConstrs(
-            gp.quicksum(edge_direction[u, v, i] for (u, v) in graph.edges(w)) <= 1
-            for w in graph.nodes
-            if len(graph.edges(w)) > 1
-            for i in range(8)
-        )
-        _add_coordinateConstr(
-            graph, model, edge_direction, x, y, mindist, num_nodes + mindist
-        )
+        if improve_lp:
+            # add some helpful constraints
+            model.addConstrs(
+                gp.quicksum(edge_direction[u, v, i] for (u, v) in graph.edges(w)) <= 1
+                for w in graph.nodes
+                if len(graph.edges(w)) > 1
+                for i in range(8)
+            )
+            _add_coordinateConstr(
+                graph, model, edge_direction, x, y, mindist, num_nodes + mindist
+            )
 
         if include_planarity:
             # helper variables for ensuring planarity
@@ -532,7 +545,9 @@ def _create_direction_constraints(graph, model, edge_direction, x, y, mindist):
         )
 
 
-def _compute_bends(graph, model, edge_direction, obj, linepaths, penalty_line_bends):
+def _compute_bends(
+    graph, model, edge_direction, obj, linepaths, penalty_line_bends, improve_lp
+):
     # Compute bends for each two consecutive lines. If there are linepaths covering
     # both edges, add variables to model and objective that account for the "line bend".
 
@@ -627,7 +642,7 @@ def _compute_bends(graph, model, edge_direction, obj, linepaths, penalty_line_be
                     )
                     linExpr0bend += bend[w1, u1, w2, 0]
 
-            if idx == 0:
+            if idx == 0 and improve_lp and linExpr0bend != 0:
                 # this is a helpful cut but not necessary for the IP formulation
                 model.addConstr(linExpr0bend <= 1, name=f"bend_{v}")
     return obj
@@ -1081,6 +1096,10 @@ def _plot_lines(graph, linepaths, directions):
         xcoord = []
         ycoord = []
         for ut, vt in linepaths[l]:
+            if ut not in G.nodes or vt not in G.nodes or (ut, vt) not in G.edges:
+                raise ValueError(
+                    f"linepath_data contain nodes or edges not contained in graph"
+                )
             # we detect a an edge that was considered before for this line
             if (vt, ut) in covered_edges or (ut, vt) in covered_edges:
                 # handle edges of the last bunch

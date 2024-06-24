@@ -331,6 +331,10 @@ is too bulky), the different aspects of the model are discussed below.
   The constraint states that edge :math:`(u,v)` can have a bend of 0 with at
   most one of its adjacent edges.
 
+  All these improving constraints are added by default. However, a parameter
+  ``improve_lp`` that can be set to False and then these improving
+  constraints are not added.
+
 Code and Inputs
 ---------------
 
