@@ -460,9 +460,9 @@ the small part is shown and below the full network.
 .. image:: figures/berlin_metro_oct.png
    :width: 49%
 
-Note that optimizing a subnetwork only includes fewer restrictions and hence
-most probably results in a different outcome than when considered within the
-complete network.
+Note that optimizing the small subnetwork does not include restrictions coming
+from other parts of the network. Therefore, an optimal solution is often
+different for this subnetwork than when considered in the complete network.
 
 We provide a method to plot the lines in the octilinear representation using ``plotly``.
 In order to use this functionality, the ``plotly`` package is needed.
@@ -558,7 +558,7 @@ this OptiMod. Here is an example of how this could be done
       graph.add_node(number, pos=(row["posx"], row["posy"]))
   # compute and plot metromap
   graph_out, edge_directions = metromap(
-    graph, linepath_data_sol, penalty_line_bends=False,verbose=False)
+    graph, linepath_data_sol, penalty_line_bends=0, verbose=False)
   plot_map(graph_out, edge_directions, linepath_data_sol)
 
 
