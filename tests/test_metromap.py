@@ -8,7 +8,7 @@ try:
 except ImportError:
     nx = None
 
-import gurobi_optimods.metromap as map
+from gurobi_optimods.metromap import metromap
 
 # to run only the unittests for the metromap optimod use this command
 # python -m unittest tests.test_metromap.Testmap
@@ -89,7 +89,7 @@ class Testmap(unittest.TestCase):
         G.add_edge(0, 9)
 
         with self.assertRaises(ValueError) as error:
-            graph_out, edge_directions = map.metromap(G)
+            graph_out, edge_directions = metromap(G)
 
         self.assertEqual(
             str(error.exception),
@@ -104,7 +104,7 @@ class Testmap(unittest.TestCase):
         graph = nx.from_pandas_edgelist(
             edge_data.reset_index(), create_using=nx.Graph()
         )
-        graph_out, edge_directions = map.metromap(graph)
+        graph_out, edge_directions = metromap(graph)
         # a solution was computed, i.e., the graph is not empty
         self.assertEqual(graph_out.number_of_nodes(), 6)
         self.assertEqual(graph_out.number_of_edges(), 7)
@@ -120,7 +120,7 @@ class Testmap(unittest.TestCase):
             edge_data.reset_index(), create_using=nx.Graph()
         )
         linepath_data = pd.read_csv(io.StringIO(small1_linepath))
-        graph_out, edge_directions = map.metromap(graph, linepath_data)
+        graph_out, edge_directions = metromap(graph, linepath_data)
         # a solution was computed, i.e., the graph is not empty
         self.assertEqual(graph_out.number_of_nodes(), 6)
         self.assertEqual(graph_out.number_of_edges(), 7)
@@ -139,7 +139,7 @@ class Testmap(unittest.TestCase):
         for number, row in node_data.set_index("number").iterrows():
             graph.add_node(number, pos=(row["posx"], row["posy"]))
 
-        graph_out, edge_directions = map.metromap(graph)
+        graph_out, edge_directions = metromap(graph)
         # a solution was computed, i.e., the graph is not empty
         self.assertEqual(graph_out.number_of_nodes(), 5)
         self.assertEqual(graph_out.number_of_edges(), 5)
@@ -158,7 +158,7 @@ class Testmap(unittest.TestCase):
         for number, row in node_data.set_index("number").iterrows():
             graph.add_node(number, pos=(row["posx"], row["posy"]))
 
-        graph_out, edge_directions = map.metromap(
+        graph_out, edge_directions = metromap(
             graph, penalty_edge_directions=0, penalty_distance=1
         )
         # a solution was computed, i.e., the graph is not empty
@@ -178,7 +178,7 @@ class Testmap(unittest.TestCase):
         for number, row in node_data.set_index("number").iterrows():
             graph.add_node(number, pos=(row["posx"], row["posy"]))
 
-        graph_out, edge_directions = map.metromap(
+        graph_out, edge_directions = metromap(
             graph, penalty_edge_directions=1, penalty_distance=0
         )
         # a solution was computed, i.e., the graph is not empty
