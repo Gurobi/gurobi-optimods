@@ -63,7 +63,7 @@ def load_siouxfalls_network_data():
     return (node_data, edge_data, line_data, linepath_data, demand_data)
 
 
-def load_metro_berlin_reduced_graph_data():
+def load_berlin_metro_reduced_graph_data():
     # read graph
     with open(DATA_FILE_DIR / "graphs/uberlin_reduced_graph.json", "r") as f:
         data = json.load(f)
@@ -77,7 +77,7 @@ def load_metro_berlin_reduced_graph_data():
     return (graph, linepath_data)
 
 
-def load_metro_berlin_graph_data():
+def load_berlin_metro_graph_data():
     # read graph
     with open(DATA_FILE_DIR / "graphs/uberlin_graph.json", "r") as f:
         data = json.load(f)

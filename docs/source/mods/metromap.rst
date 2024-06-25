@@ -352,7 +352,7 @@ An example of the inputs with the respective requirements is shown below.
 
     >>> import networkx as nx
     >>> from gurobi_optimods import datasets
-    >>> graph, linepath_data = datasets.load_metro_berlin_reduced_graph_data()
+    >>> graph, linepath_data = datasets.load_berlin_metro_reduced_graph_data()
     >>> print(graph)
       Graph with 29 nodes and 32 edges
     >>> pos_orig = nx.get_node_attributes(graph, 'pos')
@@ -392,7 +392,7 @@ The OptiMod can be run as follows:
 
     >>> from gurobi_optimods import datasets
     >>> from gurobi_optimods.metromap import metromap
-    >>> graph, linepath_data = datasets.load_metro_berlin_reduced_graph_data()
+    >>> graph, linepath_data = datasets.load_berlin_metro_reduced_graph_data()
     >>> graph_out, edge_directions = metromap(
     ...     graph,
     ...     linepath_data,
@@ -417,8 +417,8 @@ False, and we skip the improving constraints. This is done so that the test
 works with the Gurobi test license. For this example, the planarity constraints
 are usually satisfied. If the planarity constraints should be included in the
 computation, the parameter ``include_planarity`` can be omitted or set to True.
-If a full Gurobi license is available, test full Berlin metro network can be
-loaded and tested with ``datasets.load_metro_berlin_graph_data()``.
+If a full Gurobi license is available, the full Berlin metro network can be
+loaded and tested with ``datasets.load_berlin_metro_graph_data()``.
 
 The graph can be plotted using the networkx plotting function, for example, as
 follows::
@@ -475,7 +475,7 @@ The plot function can be called as follows::
     plot_map(graph_out, edge_directions, linepath_data)
 
 The following figure is an example of the above call, it shows the lines in the
-octilinear representation of the S-Bahn Berlin network.
+octilinear representation of the Berlin metro network.
 (Use `link <../_static/metro_berlin.html>`_ to open in full screen.)
 
 .. raw:: html
