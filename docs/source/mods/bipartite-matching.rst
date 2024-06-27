@@ -182,10 +182,12 @@ Solution
         .. doctest:: bipartite_matching_sp
             :options: +NORMALIZE_WHITESPACE
 
-            >>> print(sp.triu(matching))
-              (0, 7)        1.0
-              (1, 6)        1.0
-              (3, 5)        1.0
+            >>> upper = sp.triu(matching)
+            >>> for edge, value in zip(zip(*upper.coords), upper.data):
+            ...     print(f"{edge}:  {value}")
+              (0, 7):  1.0
+              (1, 6):  1.0
+              (3, 5):  1.0
 
     .. group-tab:: networkx
 
