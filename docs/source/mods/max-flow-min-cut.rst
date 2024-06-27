@@ -126,17 +126,15 @@ An example of these inputs with their respective requirements is shown below.
           >>> from gurobi_optimods import datasets
           >>> G, capacities, _, _ = datasets.simple_graph_scipy()
           >>> G.data = capacities.data # Copy capacity data
-          >>> G
-          <5x6 sparse array of type '<class 'numpy.int64'>'
-                  with 7 stored elements in COOrdinate format>
-          >>> print(G)
-            (0, 1)    2
-            (0, 2)    2
-            (1, 3)    1
-            (2, 3)    1
-            (2, 4)    2
-            (3, 5)    2
-            (4, 5)    2
+          >>> for edge, value in zip(zip(*G.coords), G.data):
+          ...     print(f"{edge}:  {value}")
+            (0, 1):  2
+            (0, 2):  2
+            (1, 3):  1
+            (2, 3):  1
+            (2, 4):  2
+            (3, 5):  2
+            (4, 5):  2
 
       We only need the adjacency matrix for the graph (as a sparse array) where
       each each entry contains the capacity of the edge.
@@ -204,16 +202,14 @@ Let us use the data to solve the maximum flow problem.
           >>> obj, sol = max_flow(G, 0, 5, verbose=False)
           >>> obj
           3.0
-          >>> sol
-          <5x6 sparse array of type '<class 'numpy.float64'>'
-              with 6 stored elements in COOrdinate format>
-          >>> print(sol)
-            (0, 1)    1.0
-            (0, 2)    2.0
-            (1, 3)    1.0
-            (2, 4)    2.0
-            (3, 5)    1.0
-            (4, 5)    2.0
+          >>> for edge, value in zip(zip(*sol.coords), sol.data):
+          ...     print(f"{edge}:  {value}")
+            (0, 1):  1.0
+            (0, 2):  2.0
+            (1, 3):  1.0
+            (2, 4):  2.0
+            (3, 5):  1.0
+            (4, 5):  2.0
 
       The ``max_flow`` function returns the value of the maximum flow as well a
       sparse array with the amount of non-zero flow in each edge in the

@@ -205,10 +205,11 @@ def _min_cut_scipy(G, source, sink, create_env):
             return MinCutResult(0.0, (set(), set()), set())
 
         queue = [source]
+        G = G.tocsr()
         while len(queue) > 0:
             node = queue.pop()
             p1.add(node)
-            row = G.getrow(node)
+            row = G[[node]]
             # Add successors of `node` that are not in the cutset
             queue.extend(
                 [

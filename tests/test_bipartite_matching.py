@@ -34,7 +34,7 @@ class TestBipartiteMatchingScipySparse(unittest.TestCase):
         assert_allclose(matching.data, np.ones(matching.data.shape))
         adj = matching.todense()
         assert_allclose(adj, adj.T)
-        self.assertTrue(np.alltrue(adj.sum(axis=0) <= 1))
+        self.assertTrue(np.all(adj.sum(axis=0) <= 1))
 
     def test_empty(self):
         # Matching of an empty graph is empty

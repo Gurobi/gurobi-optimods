@@ -88,33 +88,33 @@ An example of these inputs with their respective requirements is shown below.
 
           >>> from gurobi_optimods import datasets
           >>> G, capacities, cost, demands = datasets.simple_graph_scipy()
-          >>> G
-          <5x6 sparse array of type '<class 'numpy.int64'>'
-                  with 7 stored elements in COOrdinate format>
-          >>> print(G)
-            (0, 1)        1
-            (0, 2)        1
-            (1, 3)        1
-            (2, 3)        1
-            (2, 4)        1
-            (3, 5)        1
-            (4, 5)        1
-          >>> print(capacities)
-            (0, 1)        2
-            (0, 2)        2
-            (1, 3)        1
-            (2, 3)        1
-            (2, 4)        2
-            (3, 5)        2
-            (4, 5)        2
-          >>> print(cost)
-            (0, 1)        9
-            (0, 2)        7
-            (1, 3)        1
-            (2, 3)        10
-            (2, 4)        6
-            (3, 5)        1
-            (4, 5)        1
+          >>> for edge, value in zip(zip(*G.coords), G.data):
+          ...     print(f"{edge}:  {value}")
+            (0, 1):  1
+            (0, 2):  1
+            (1, 3):  1
+            (2, 3):  1
+            (2, 4):  1
+            (3, 5):  1
+            (4, 5):  1
+          >>> for edge, value in zip(zip(*capacities.coords), capacities.data):
+          ...     print(f"{edge}:  {value}")
+            (0, 1):  2
+            (0, 2):  2
+            (1, 3):  1
+            (2, 3):  1
+            (2, 4):  2
+            (3, 5):  2
+            (4, 5):  2
+          >>> for edge, value in zip(zip(*cost.coords), cost.data):
+          ...     print(f"{edge}:  {value}")
+            (0, 1):  9
+            (0, 2):  7
+            (1, 3):  1
+            (2, 3):  10
+            (2, 4):  6
+            (3, 5):  1
+            (4, 5):  1
           >>> print(demands)
           [-2  0 -1  1  0  2]
 
@@ -206,15 +206,13 @@ formats.
           >>> obj, sol = min_cost_flow_scipy(G, capacities, cost, demands, verbose=False)
           >>> obj
           31.0
-          >>> sol
-          <5x6 sparse array of type '<class 'numpy.float64'>'
-                  with 5 stored elements in COOrdinate format>
-          >>> print(sol)
-            (0, 1)        1.0
-            (0, 2)        1.0
-            (1, 3)        1.0
-            (2, 4)        2.0
-            (4, 5)        2.0
+          >>> for edge, value in zip(zip(*sol.coords), sol.data):
+          ...     print(f"{edge}:  {value}")
+            (0, 1):  1.0
+            (0, 2):  1.0
+            (1, 3):  1.0
+            (2, 4):  2.0
+            (4, 5):  2.0
 
       The ``min_cost_flow_scipy`` function returns the cost of the solution as
       well as a ``sp.sparray`` that provides the amount of flow for each
