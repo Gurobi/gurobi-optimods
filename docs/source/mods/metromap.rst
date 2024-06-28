@@ -94,7 +94,7 @@ be between 0 and 100.
 Background: Mathematical Formulation
 ------------------------------------
 
-This OptiMod is implemented by formulating a Linear Program (LP) and solving it
+This OptiMod is implemented by formulating a mixed integer program and solving it
 using Gurobi. Instead of presenting the complete formulation as a whole (which
 is too bulky), the different aspects of the model are discussed below.
 
@@ -542,12 +542,11 @@ this OptiMod. Here is an example of how this could be done
       linepath_data,
       demand_data,
       frequencies,
-      True,
       verbose=False,
   )
   # create a data frame containing only the linepaths of the solution
-  linepath_data_sol = linepath_data.loc[
-      linepath_data["linename"].isin([tuple[0] for tuple in final_lines])
+  linepath_data_sol = linepath_data[
+      linepath_data["linename"].isin([line for line, freq in final_lines])
   ]
   # create networkx graph
   graph = nx.from_pandas_edgelist(
