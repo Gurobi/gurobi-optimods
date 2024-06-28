@@ -42,22 +42,29 @@ def line_optimization(
     Parameters
     ----------
     node_data : DataFrame
-        DataFrame with information on the nodes/stations. The frame must include "source".
+        DataFrame with information on the nodes/stations. The frame must include
+        "source".
     edge_data : DataFrame
-        DataFrame with edges / connections between stations and associated attributes.
-        The frame must include "source", "target", and "time"
+        DataFrame with edges / connections between stations and associated
+        attributes. The frame must include "source", "target", and "time"
     demand_data : DataFrame
-        DataFrame with node/station demand information.
-        It must include "source", "target", and "demand". The demand value must be non-negative.
+        DataFrame with node/station demand information. It must include
+        "source", "target", and "demand". The demand value must be non-negative.
     line_data : DataFrame
-        DataFrame with general line information.
-        It must include "linename", "capacity", "fix_cost", and "operating_cost".
+        DataFrame with general line information. It must include "linename",
+        "capacity", "fix_cost", and "operating_cost".
     linepath_data : DataFrame
-        DataFrame with information on the line routes/paths.
-        It must include "linename", "edge_source", and "edge_target".
+        DataFrame with information on the line routes/paths. It must include
+        "linename", "edge_source", and "edge_target".
     frequency: List
-        List with possible frequencies: How often the line can be operated in the considered
-        time horizon.
+        List with possible frequencies: How often the line can be operated in
+        the considered time horizon.
+    shortest_paths : bool
+        Parameter to choose the strategy. Default value is true and strategy 1
+        is used, i.e., passengers travel along shortest paths. Set to False if
+        all possible paths are allowed. In that case, a multi-objective approach
+        is used to first minimize line operating cost and then minimize
+        passengers travel time.
 
     Returns
     -------
