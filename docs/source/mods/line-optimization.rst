@@ -74,8 +74,8 @@ frequencies with minimal total cost such that all passengers can be transported.
     We have binary variables :math:`x_{l,f}` for each line frequency combination indicating if line :math:`l`
     is operated with frequency :math:`f`.
 
-    This Mod is implemented by formulating a Linear Program (LP) and solving it
-    using Gurobi. The formulation can be stated as follows:
+    This Mod is implemented by formulating a mixed integer linear program and
+    solving it using Gurobi. The formulation can be stated as follows:
 
     .. math::
 
