@@ -233,7 +233,6 @@ approach is also used if the parameter ``shortest_paths`` is set to False.
           ...     linepath_data,
           ...     demand_data,
           ...     frequencies,
-          ...     True,
           ...     verbose=False,
           ... )
           >>> obj_cost
