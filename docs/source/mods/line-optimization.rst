@@ -99,11 +99,12 @@ frequencies with minimal total cost such that all passengers can be transported.
 
 .. dropdown:: Background: Optimization Model with Approach 2
 
-    This Mod is implemented by formulating a Linear Program (LP) and solving it
-    using Gurobi. We have binary variables :math:`x_{l,f}` for each line frequency combination indicating if line :math:`l`
-    is operated with frequency :math:`f`.
-    We define continuous variables :math:`y_{suv}\geq 0` for the number of passengers starting their trip
-    in station :math:`s` and traveling on edge :math:`(u,v)`.
+    This Mod is implemented by formulating a mixed integer linear program and
+    solving it using Gurobi. We have binary variables :math:`x_{l,f}` for each
+    line frequency combination indicating if line :math:`l` is operated with
+    frequency :math:`f`. We define continuous variables :math:`y_{suv}\geq 0`
+    for the number of passengers starting their trip in station :math:`s` and
+    traveling on edge :math:`(u,v)`.
 
     The formulation can be stated as follows:
 
