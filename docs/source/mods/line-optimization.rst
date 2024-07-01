@@ -189,7 +189,7 @@ An example of the inputs with the respective requirements is shown below.
       information that is not required for computation, for example the property
       length in the edge data. Also, ``posx`` and ``posy`` in the ``node_data``
       is not used for computation. But it can be used to visualize the network
-      as done below. It is important that all data is consistant. For example,
+      as done below. It is important that all data is consistent. For example,
       ``edge_source``, ``edge_target`` in the ``linepath_data`` must correspond
       to a ``number`` in the node_data. The same holds for ``source`` and
       ``target`` in ``edge_data`` and ``demand_data``. In the code it is checked
