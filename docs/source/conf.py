@@ -5,7 +5,7 @@ import gurobi_optimods
 # -- Project information
 
 project = "Gurobi OptiMods"
-copyright = "2023, Gurobi Optimization"
+copyright = "Gurobi Optimization"
 author = "Gurobi Optimization"
 
 version = gurobi_optimods.__version__
