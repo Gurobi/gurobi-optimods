@@ -335,7 +335,7 @@ def create_model(
             model._x = x
             model._y = y
             model._gamma = gamma
-            model._bigM = num_nodes + num_nodes * mindist
+            model._bigM = num_nodes * mindist
             model._graph = graph
             model.setParam("LazyConstraints", 1)
             # optimize with callback for planarity constraints,
