@@ -14,6 +14,13 @@ try:
 except ImportError:
     nx = None
 
+try:
+    import json
+
+    from networkx.readwrite import json_graph
+except ImportError:
+    json = None
+
 DATA_FILE_DIR = pathlib.Path(__file__).parent / "data"
 
 
@@ -54,6 +61,34 @@ def load_siouxfalls_network_data():
     demand_data = pd.read_csv(DATA_FILE_DIR / "graphs/siouxfalls_demand.csv")
 
     return (node_data, edge_data, line_data, linepath_data, demand_data)
+
+
+def load_berlin_metro_reduced_graph_data():
+    # read graph
+    with open(DATA_FILE_DIR / "graphs/uberlin_reduced_graph.json", "r") as f:
+        data = json.load(f)
+
+    # Convert the JSON data to a NetworkX graph
+    graph = json_graph.node_link_graph(data)
+
+    # line path data
+    linepath_data = pd.read_csv(DATA_FILE_DIR / "graphs/uberlin_reduced_linepaths.csv")
+
+    return (graph, linepath_data)
+
+
+def load_berlin_metro_graph_data():
+    # read graph
+    with open(DATA_FILE_DIR / "graphs/uberlin_graph.json", "r") as f:
+        data = json.load(f)
+
+    # Convert the JSON data to a NetworkX graph
+    graph = json_graph.node_link_graph(data)
+
+    # line path data
+    linepath_data = pd.read_csv(DATA_FILE_DIR / "graphs/uberlin_linepaths.csv")
+
+    return (graph, linepath_data)
 
 
 def _load_simple_graph_pandas(drop_pos=True, capacity=True, cost=True, demand=True):
