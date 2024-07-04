@@ -24,7 +24,7 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/lop_siouxfalls.png
 
-    .. grid-item-card:: Maximum-Flow/Mininum-Cut
+    .. grid-item-card:: Maximum-Flow/Minimum-Cut
         :link: mods/max-flow-min-cut
         :link-type: doc
         :text-align: center
