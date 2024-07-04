@@ -799,14 +799,14 @@ def lpformulator_ac_create_constraints(alldata, model):
             expr.add(fvar[busf] * evar[bust] - evar[busf] * fvar[bust])
             model.addConstr(
                 expr
-                <= math.tan(branch.maxangle)
-                * (fvar[busf] * evar[bust] + fvar[busf] * fvar[bust]),
+                <= math.tan(branch.maxangle_rad)
+                * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust]),
                 name="AngleUb_%d_%d_%d" % (j, f, t),
             )
             model.addConstr(
                 expr
-                >= math.tan(branch.minangle)
-                * (fvar[busf] * evar[bust] + fvar[busf] * fvar[bust]),
+                >= math.tan(branch.minangle_rad)
+                * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust]),
                 name="AngleLb_%d_%d_%d" % (j, f, t),
             )
             count += 2
