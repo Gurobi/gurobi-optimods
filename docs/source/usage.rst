@@ -12,7 +12,7 @@ they use optional packages that are not direct dependencies of
 ``gurobi-optimods``. The quickest way to ensure you have a Python environment that
 can execute all the example snippets in the docs is to run the following::
 
-   python -m pip install gurobi-optimods[examples]
+   python -m pip install gurobi-optimods
 
 Each Mod is designed to be self-contained, with a clean data-in, data-out API.
 To solve a problem, munge your data into the appropriate format using Python
