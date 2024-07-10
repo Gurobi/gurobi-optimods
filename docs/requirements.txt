@@ -7,7 +7,7 @@ autodocsumm==0.2.12
 Babel==2.15.0
 beautifulsoup4==4.12.3
 CacheControl==0.14.0
-certifi==2024.2.2
+certifi==2024.7.4
 charset-normalizer==3.3.2
 cssutils==2.11.0
 dict2css==0.3.0.post1
