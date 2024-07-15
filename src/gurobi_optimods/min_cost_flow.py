@@ -67,8 +67,12 @@ def min_cost_flow_pandas(
         balance_df = (
             pd.DataFrame(
                 {
-                    "inflow": arc_df[["flow", target_label]].groupby(target_label).sum()["flow"],
-                    "outflow": arc_df[["flow", source_label]].groupby(source_label).sum()["flow"],
+                    "inflow": arc_df[["flow", target_label]]
+                    .groupby(target_label)
+                    .sum()["flow"],
+                    "outflow": arc_df[["flow", source_label]]
+                    .groupby(source_label)
+                    .sum()["flow"],
                     "demand": demand_data["demand"],
                 }
             )
