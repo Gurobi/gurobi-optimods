@@ -63,7 +63,7 @@ def min_cost_flow_pandas(
 
         arc_df = arc_data.gppd.add_vars(model, ub="capacity", obj="cost", name="flow")
 
-        source_label, target_label = ("from", "to")#.index.names
+        source_label, target_label = ("from", "to")
         balance_df = (
             pd.DataFrame(
                 {
