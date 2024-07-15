@@ -44,7 +44,7 @@ node_data2 = """
 
 def load_graph2_pandas():
     return (
-        pd.read_csv(io.StringIO(edge_data2)).set_index(["source", "target"]),
+        pd.read_csv(io.StringIO(edge_data2)).rename(columns={"source": "from", "target": "to"}),
         pd.read_csv(io.StringIO(node_data2), index_col=0),
     )
 
