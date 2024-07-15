@@ -63,12 +63,12 @@ def min_cost_flow_pandas(
 
         arc_df = arc_data.gppd.add_vars(model, ub="capacity", obj="cost", name="flow")
 
-        source_label, target_label = arc_data.index.names
+        source_label, target_label = ("from", "to")#.index.names
         balance_df = (
             pd.DataFrame(
                 {
-                    "inflow": arc_df["flow"].groupby(target_label).sum(),
-                    "outflow": arc_df["flow"].groupby(source_label).sum(),
+                    "inflow": arc_df[["flow", target_label]].groupby(target_label).sum()["flow"],
+                    "outflow": arc_df[["flow", source_label]].groupby(source_label).sum()["flow"],
                     "demand": demand_data["demand"],
                 }
             )
