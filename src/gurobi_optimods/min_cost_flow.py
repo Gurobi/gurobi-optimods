@@ -35,7 +35,7 @@ def min_cost_flow_pandas(
                 {"from": 0, "to": 1, "capacity": 16, "cost": 0}, {"from": 1,
                 "to": 2, "capacity": 10, "cost": 0},
             ]
-        ).set_index(["from", "to"])
+        )
 
         demand_data = pd.DataFrame(
             [{"node": 0, "demand": -1}, {"node": 2, "demand": 1}]
