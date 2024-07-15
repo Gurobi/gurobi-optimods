@@ -44,9 +44,7 @@ node_data2 = """
 
 def load_graph2_pandas():
     return (
-        pd.read_csv(io.StringIO(edge_data2)).rename(
-            columns={"source": "from", "target": "to"}
-        ),
+        pd.read_csv(io.StringIO(edge_data2)),
         pd.read_csv(io.StringIO(node_data2), index_col=0),
     )
 
@@ -65,10 +63,19 @@ class TestMinCostFlow(unittest.TestCase):
     def test_pandas(self):
         edge_data, node_data = datasets.simple_graph_pandas()
         cost, sol = mcf.min_cost_flow_pandas(edge_data, node_data)
-        sol = sol[sol > 0]
+        sol = sol[sol["flow"] > 0]
         self.assertEqual(cost, 31)
-        candidate = {(0, 1): 1.0, (0, 2): 1.0, (1, 3): 1.0, (2, 4): 2.0, (4, 5): 2.0}
-        self.assertIsInstance(sol, pd.Series)
+        candidate = pd.DataFrame(
+            {
+                "source": [0, 0, 1, 2, 4],
+                "target": [1, 2, 3, 4, 5],
+                "capacity": [2, 2, 1, 2, 2],
+                "cost": [9, 7, 1, 6, 1],
+                "flow": [1.0, 1.0, 1.0, 2.0, 2.0],
+            }
+        )
+
+        self.assertIsInstance(sol, pd.DataFrame)
         self.assertTrue(check_solution_pandas(sol, [candidate]))
 
     def test_infeasible(self):
@@ -130,27 +137,28 @@ class TestMinCostFlow2(unittest.TestCase):
     def test_pandas(self):
         edge_data, node_data = load_graph2_pandas()
         cost, sol = mcf.min_cost_flow_pandas(edge_data, node_data)
-        sol = sol[sol > 0]
+        sol = sol[sol["flow"] > 0]
         self.assertEqual(cost, 150)
-        candidate = {
-            (0, 1): 12.0,
-            (0, 2): 8.0,
-            (1, 3): 4.0,
-            (1, 2): 8.0,
-            (2, 3): 15.0,
-            (2, 4): 1.0,
-            (3, 4): 14.0,
-        }
-        candidate2 = {
-            (0, 1): 12.0,
-            (0, 2): 8.0,
-            (1, 3): 4.0,
-            (1, 2): 8.0,
-            (2, 3): 11.0,
-            (2, 4): 5.0,
-            (3, 4): 10.0,
-        }
-        self.assertTrue(check_solution_pandas(sol, [candidate, candidate2]))
+        candidate1 = pd.DataFrame(
+            {
+                "source": [0, 0, 1, 1, 2, 2, 3],
+                "target": [1, 2, 3, 2, 3, 4, 4],
+                "capacity": [15, 8, 4, 20, 15, 5, 20],
+                "cost": [4, 4, 2, 2, 1, 3, 2],
+                "flow": [12.0, 8.0, 4.0, 8.0, 15.0, 1.0, 14.0],
+            }
+        )
+        candidate2 = pd.DataFrame(
+            {
+                "source": [0, 0, 1, 1, 2, 2, 3],
+                "target": [1, 2, 3, 2, 3, 4, 4],
+                "capacity": [15, 8, 4, 20, 15, 5, 20],
+                "cost": [4, 4, 2, 2, 1, 3, 2],
+                "flow": [12.0, 8.0, 4.0, 8.0, 11.0, 5.0, 10.0],
+            }
+        )
+
+        self.assertTrue(check_solution_pandas(sol, [candidate1, candidate2]))
 
     def test_scipy(self):
         G, cap, cost, demands = load_graph2_scipy()

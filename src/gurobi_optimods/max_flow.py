@@ -60,30 +60,29 @@ def _remove_dummy_edge(graph, source, sink):
         graph = graph.tolil()
         graph = graph[:-1, :]
     elif isinstance(graph, pd.Series) or isinstance(graph, pd.DataFrame):
-        graph.drop((sink, source), inplace=True)
+        f, t = ("source", "target")
+        graph.drop(graph[(graph[f] == sink) & (graph[t] == source)].index, inplace=True)
     elif nx is not None and isinstance(graph, nx.Graph):
         graph.remove_edge(sink, source)
     return graph
 
 
 def _max_flow_pandas(arc_data, source, sink, **kwargs):
-    f, t = arc_data.index.names
+    f, t = ("source", "target")
     arc_data["cost"] = [0] * len(arc_data)
     # Find maximum flow through (minumum of sum of all outgoing/incoming
     # capacities at the source/sink)
     max_flow = min(
-        arc_data.loc[([source], slice(None)),]["capacity"].sum(),
-        arc_data.loc[(slice(None), [sink]),]["capacity"].sum(),
+        arc_data[arc_data[f] == source]["capacity"].sum(),
+        arc_data[arc_data[t] == sink]["capacity"].sum(),
     )
     # Add dummy edge
     arc_data = pd.concat(
         [
             arc_data,
-            pd.DataFrame(
-                [{f: sink, t: source, "capacity": max_flow, "cost": -1}]
-            ).set_index([f, t]),
+            pd.DataFrame([{f: sink, t: source, "capacity": max_flow, "cost": -1}]),
         ]
-    )
+    ).reset_index(drop=True)
     demand_data = pd.DataFrame([{"node": source, "demand": 0}]).set_index("node")
     # Solve
     obj, flow = min_cost_flow_pandas(arc_data, demand_data, **kwargs)

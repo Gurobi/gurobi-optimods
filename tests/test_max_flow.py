@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import pandas as pd
 
 try:
     import networkx as nx
@@ -31,23 +32,25 @@ class TestMaxFlow(unittest.TestCase):
         obj, sol = max_flow(edge_data, 0, 5)
         sol = sol[sol > 0]
         self.assertEqual(obj, self.expected_max_flow)
-        candidate = {
-            (0, 1): 1.0,
-            (0, 2): 2.0,
-            (1, 3): 1.0,
-            (2, 3): 1.0,
-            (2, 4): 1.0,
-            (3, 5): 2.0,
-            (4, 5): 1.0,
-        }
-        candidate2 = {
-            (0, 1): 1.0,
-            (0, 2): 2.0,
-            (1, 3): 1.0,
-            (2, 4): 2.0,
-            (3, 5): 1.0,
-            (4, 5): 2.0,
-        }
+
+        candidate = pd.DataFrame(
+            {
+                "source": [np.NaN, np.NaN, 1.0, 2.0, 2.0, 3.0, 4.0],
+                "target": [1, 2, 3, 3, 4, 5, 5],
+                "capacity": [2, 2, 1, 1, 2, 2, 2],
+                "cost": [np.NaN] * 7,
+                "flow": [1.0, 2.0, 1.0, 1.0, 1.0, 2.0, 1.0],
+            }
+        )
+        candidate2 = pd.DataFrame(
+            {
+                "source": [np.NaN, np.NaN, 1.0, 2.0, 3.0, 4.0],
+                "target": [1, 2, 3, 4, 5, 5],
+                "capacity": [2, 2, 1, 2, 2, 2],
+                "cost": [np.NaN] * 6,
+                "flow": [1.0, 2.0, 1.0, 2.0, 1.0, 2.0],
+            }
+        )
         self.assertTrue(check_solution_pandas(sol, [candidate, candidate2]))
 
     def test_empty_pandas(self):
@@ -118,18 +121,16 @@ class TestMaxFlow2(unittest.TestCase):
     def test_pandas(self):
         edge_data, _ = load_graph2_pandas()
         obj, sol = max_flow(edge_data, 0, 4)
-        sol = sol[sol > 0]
+        sol = sol[sol > 0].drop(columns=["cost"])
         self.assertEqual(obj, self.expected_max_flow)
-        candidate = {
-            (0, 1): 15.0,
-            (0, 2): 8.0,
-            (1, 3): 4.0,
-            (1, 2): 1.0,
-            (1, 4): 10.0,
-            (2, 3): 4.0,
-            (2, 4): 5.0,
-            (3, 4): 8.0,
-        }
+        candidate = pd.DataFrame(
+            {
+                "source": [np.NaN, np.NaN, 1.0, 1.0, 1.0, 2.0, 2.0, 3.0],
+                "target": [1, 2, 3, 2, 4, 3, 4, 4],
+                "capacity": [15, 8, 4, 20, 10, 15, 5, 20],
+                "flow": [15.0, 8.0, 4.0, 1.0, 10.0, 4.0, 5.0, 8.0],
+            }
+        )
         self.assertTrue(check_solution_pandas(sol, [candidate]))
 
     def test_scipy(self):

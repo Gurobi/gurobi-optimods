@@ -77,22 +77,20 @@ def min_cut(graph, source, sink, *, create_env):
 
 
 def _min_cut_pandas(arc_data, source, sink, create_env):
-    f, t = arc_data.index.names
+    f, t = ("source", "target")
     arc_data["cost"] = [0] * len(arc_data)
     # Create dummy edge to find maximum flow through (minimum of sum of all
     # outgoing/incoming capacities at the source/sink)
     max_flow = min(
-        arc_data.loc[([source], slice(None)),]["capacity"].sum(),
-        arc_data.loc[(slice(None), [sink]),]["capacity"].sum(),
+        arc_data[arc_data[f] == source]["capacity"].sum(),
+        arc_data[arc_data[t] == sink]["capacity"].sum(),
     )
     arc_data = pd.concat(
         [
             arc_data,
-            pd.DataFrame(
-                [{f: sink, t: source, "capacity": max_flow, "cost": 1}]
-            ).set_index([f, t]),
+            pd.DataFrame([{f: sink, t: source, "capacity": max_flow, "cost": 1}]),
         ]
-    )
+    ).reset_index(drop=True)
 
     with create_env() as env, gp.Model(env=env) as model:
         # Solve max-flow problem
@@ -100,8 +98,8 @@ def _min_cut_pandas(arc_data, source, sink, create_env):
         arc_df = arc_data.gppd.add_vars(model, obj="cost", name="flow")
         balance_df = pd.DataFrame(
             {
-                "inflow": arc_df["flow"].groupby(t).sum(),
-                "outflow": arc_df["flow"].groupby(f).sum(),
+                "inflow": arc_df.groupby(t)["flow"].sum(),
+                "outflow": arc_df.groupby(f)["flow"].sum(),
             }
         ).gppd.add_constrs(model, "inflow == outflow", name="balance")
         capacity_constrs = gppd.add_constrs(
@@ -125,7 +123,13 @@ def _min_cut_pandas(arc_data, source, sink, create_env):
         cap_pi = capacity_constrs.gppd.Pi
 
         # Find edges in the cutset (excluding the dummy (sink, source) edge.
-        cutset = set([a for a in arc_data.index if cap_pi[a] > 1e-3 if a[0] != sink])
+        cutset = set(
+            [
+                tuple(arc_data.loc[a, ["source", "target"]])
+                for a in arc_data.index
+                if cap_pi[a] > 1e-3
+            ]
+        )
 
         if len(cutset) == 0:  # No arc in the cutset
             return MinCutResult(0.0, (set(), set()), set())
@@ -138,9 +142,13 @@ def _min_cut_pandas(arc_data, source, sink, create_env):
             # Add successors of `node` that are not in the cutset
             queue.extend(
                 [
-                    a[1]
-                    for a in arc_data.loc[([node], slice(None)),].index
-                    if a not in cutset and a[1] not in p1 and a[1] not in queue
+                    a["target"]
+                    for _, a in arc_data.loc[arc_data["source"] == node][
+                        ["source", "target"]
+                    ].iterrows()
+                    if tuple(a) not in cutset
+                    and a["target"] not in p1
+                    and a["target"] not in queue
                 ]
             )
         p2 = set([n for n in balance_df.index if n not in p1])

@@ -4,7 +4,10 @@ import numpy as np
 def check_solution_pandas(solution, candidates):
     # Checks whether the solution (`pd.Series`) matches any of the list of
     # candidates (containing `dict`)
-    if any(solution.to_dict() == c for c in candidates):
+    if any(
+        solution.reset_index(drop=True).equals(c.reset_index(drop=True))
+        for c in candidates
+    ):
         return True
     return False
 

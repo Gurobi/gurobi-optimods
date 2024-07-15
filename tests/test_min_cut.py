@@ -138,7 +138,7 @@ class TestMinCut3(unittest.TestCase):
                 {"source": 3, "target": 6, "capacity": 2.0},
                 {"source": 5, "target": 6, "capacity": 3.0},
             ]
-        ).set_index(["source", "target"])
+        )
 
     def test_pandas(self):
         res = min_cut(self.arc_data, 0, 6)

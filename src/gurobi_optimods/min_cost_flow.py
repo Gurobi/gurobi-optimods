@@ -32,8 +32,8 @@ def min_cost_flow_pandas(
 
         arc_data = pd.DataFrame(
             [
-                {"from": 0, "to": 1, "capacity": 16, "cost": 0}, {"from": 1,
-                "to": 2, "capacity": 10, "cost": 0},
+                {"source": 0, "target": 1, "capacity": 16, "cost": 0}, {"source": 1,
+                "target": 2, "capacity": 10, "cost": 0},
             ]
         )
 
@@ -45,7 +45,7 @@ def min_cost_flow_pandas(
     ----------
     arc_data : DataFrame
         DataFrame with graph and respective attributes. These must include
-        ``"from"``, ``"to"`` nodes used as index as well as ``"capacity"``, and
+        ``"source"``, ``"target"``, ``"capacity"``, and
         ``"cost"`` columns.
     demand_data : DataFrame
         DataFrame with node demand information. These must include indexed by
@@ -60,10 +60,10 @@ def min_cost_flow_pandas(
     """
     with create_env() as env, gp.Model(env=env) as model:
         model.ModelSense = GRB.MINIMIZE
-
+        arc_data = arc_data.reset_index().drop(columns=["index"], errors="ignore")
         arc_df = arc_data.gppd.add_vars(model, ub="capacity", obj="cost", name="flow")
 
-        source_label, target_label = ("from", "to")
+        source_label, target_label = ("source", "target")
         balance_df = (
             pd.DataFrame(
                 {
@@ -88,7 +88,8 @@ def min_cost_flow_pandas(
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
 
-        return model.ObjVal, arc_df["flow"].gppd.X
+        arc_df["flow"] = arc_df["flow"].gppd.X
+        return model.ObjVal, arc_df
 
 
 @optimod()

@@ -92,9 +92,7 @@ def load_berlin_metro_graph_data():
 
 
 def _load_simple_graph_pandas(drop_pos=True, capacity=True, cost=True, demand=True):
-    edge_data = pd.read_csv(DATA_FILE_DIR / "graphs/simple_graph_edges.csv").set_index(
-        ["source", "target"]
-    )
+    edge_data = pd.read_csv(DATA_FILE_DIR / "graphs/simple_graph_edges.csv")
     node_data = pd.read_csv(
         DATA_FILE_DIR / "graphs/simple_graph_nodes.csv", index_col=0
     )
@@ -160,7 +158,7 @@ def _convert_pandas_to_scipy(
     the graph structure, the capacity and cost values per edge, and the demand
     values per node.
     """
-    coords = edge_data.index.to_numpy()
+    coords = edge_data[["source", "target"]].to_numpy()
 
     a0 = np.array([c[0] for c in coords])
     a1 = np.array([c[1] for c in coords])
