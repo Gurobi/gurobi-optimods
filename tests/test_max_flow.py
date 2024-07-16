@@ -7,8 +7,6 @@ try:
 except ImportError:
     nx = None
 
-import pandas as pd
-
 import gurobi_optimods.datasets as datasets
 from gurobi_optimods.max_flow import max_flow
 
