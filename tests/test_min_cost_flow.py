@@ -63,9 +63,9 @@ def load_graph2_pandas():
     )
 
 
-def load_graph2_networkx(digraph=nx.DiGraph):
+def load_graph2_networkx():
     edge_data, node_data = load_graph2_pandas()
-    return datasets._convert_pandas_to_digraph(edge_data, node_data, digraph=digraph)
+    return datasets._convert_pandas_to_digraph(edge_data, node_data)
 
 
 def load_graph2_scipy():
@@ -80,9 +80,11 @@ def load_graph3_pandas():
     )
 
 
-def load_graph3_networkx(digraph=nx.DiGraph):
+def load_graph3_networkx(use_multigraph):
     edge_data, node_data = load_graph3_pandas()
-    return datasets._convert_pandas_to_digraph(edge_data, node_data, digraph=digraph)
+    return datasets._convert_pandas_to_digraph(
+        edge_data, node_data, use_multigraph=use_multigraph
+    )
 
 
 class TestMinCostFlow(unittest.TestCase):
@@ -269,7 +271,7 @@ class TestMinCostFlow3(unittest.TestCase):
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_networkx(self):
-        G = load_graph3_networkx(digraph=nx.MultiDiGraph)
+        G = load_graph3_networkx(use_multigraph=True)
         cost, sol = mcf.min_cost_flow_networkx(G)
         self.assertEqual(cost, 49.0)
         candidate = [

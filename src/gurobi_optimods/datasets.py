@@ -142,14 +142,16 @@ def _convert_pandas_to_digraph(
     capacity=True,
     cost=True,
     demand=True,
-    digraph=nx.DiGraph,
+    use_multigraph=False,
 ):
     """
     Convert from a pandas DataFrame to a networkx.MultiDiGraph with the appropriate
     attributes. For edges: `capacity`, and `cost`. For nodes: `demand`.
     """
+    graph_type = nx.MultiDiGraph if use_multigraph else nx.DiGraph
+
     G = nx.from_pandas_edgelist(
-        edge_data.reset_index(), create_using=digraph(), edge_attr=True
+        edge_data.reset_index(), create_using=graph_type(), edge_attr=True
     )
     if demand:
         for i, d in node_data.iterrows():
