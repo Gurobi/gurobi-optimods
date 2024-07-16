@@ -3,8 +3,8 @@ import numpy as np
 
 def check_solution_pandas(solution, candidates):
     # Checks whether the solution (`pd.Series`) matches any of the list of
-    # candidates (containing `dict`)
-    if any(solution.to_dict() == c for c in candidates):
+    # candidates (containing `pd.Series`)
+    if any(solution.reset_index().equals(c.reset_index()) for c in candidates):
         return True
     return False
 
@@ -21,7 +21,13 @@ def check_solution_scipy(solution, candidates):
 def check_solution_networkx(solution, candidates):
     # Checks whether the solution (`nx.DiGraph`) matches any of the list of
     # candidates (containing tuples dict `{(i, j): data}`)
-    sol_dict = {(i, j): d for i, j, d in solution.edges(data=True)}
-    if any(sol_dict == c for c in candidates):
-        return True
+    for candidate in candidates:
+
+        def edge_sort(row):
+            return (str(row[0]), str(row[1]))
+
+        if sorted(candidate, key=edge_sort) == sorted(
+            list(solution.edges(data=True)), key=edge_sort
+        ):
+            return True
     return False

@@ -61,14 +61,18 @@ def min_cost_flow_pandas(
     with create_env() as env, gp.Model(env=env) as model:
         model.ModelSense = GRB.MINIMIZE
 
+        source_label, target_label = arc_data.index.names
+
+        arc_data = (
+            arc_data.reset_index()
+        )  # This is a workaround for duplicate entries being disallowed in gurobipy_pandas
         arc_df = arc_data.gppd.add_vars(model, ub="capacity", obj="cost", name="flow")
 
-        source_label, target_label = arc_data.index.names
         balance_df = (
             pd.DataFrame(
                 {
-                    "inflow": arc_df["flow"].groupby(target_label).sum(),
-                    "outflow": arc_df["flow"].groupby(source_label).sum(),
+                    "inflow": arc_df.groupby(target_label)["flow"].sum(),
+                    "outflow": arc_df.groupby(source_label)["flow"].sum(),
                     "demand": demand_data["demand"],
                 }
             )
@@ -84,6 +88,9 @@ def min_cost_flow_pandas(
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
 
+        arc_df = arc_df.set_index(
+            ["source", "target"]
+        )  # Repair index that was reset above
         return model.ObjVal, arc_df["flow"].gppd.X
 
 
