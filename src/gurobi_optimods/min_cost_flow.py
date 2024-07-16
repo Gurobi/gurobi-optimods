@@ -63,9 +63,12 @@ def min_cost_flow_pandas(
 
         source_label, target_label = arc_data.index.names
 
-        arc_data = (
-            arc_data.reset_index()
-        )  # This is a workaround for duplicate entries being disallowed in gurobipy_pandas
+        multigraph = False
+        # This is a workaround for duplicate entries being disallowed in gurobipy_pandas
+        if arc_data.index.has_duplicates:
+            arc_data = arc_data.reset_index()
+            multigraph = True
+
         arc_df = arc_data.gppd.add_vars(model, ub="capacity", obj="cost", name="flow")
 
         balance_df = (
@@ -88,9 +91,9 @@ def min_cost_flow_pandas(
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
 
-        arc_df = arc_df.set_index(
-            ["source", "target"]
-        )  # Repair index that was reset above
+        if multigraph:
+            # Repair index that was reset above
+            arc_df = arc_df.set_index([source_label, target_label])
         return model.ObjVal, arc_df["flow"].gppd.X
 
 
@@ -179,6 +182,8 @@ def min_cost_flow_networkx(G, *, create_env):
         f"Solving min-cost flow with {len(G.nodes)} nodes and {len(G.edges)} edges"
     )
     with create_env() as env, gp.Model(env=env) as model:
+        multigraph = isinstance(G, nx.MultiGraph)
+
         G = nx.MultiDiGraph(G)
 
         edges, capacities, costs = gp.multidict(
@@ -221,7 +226,7 @@ def min_cost_flow_networkx(G, *, create_env):
             raise ValueError("Unsatisfiable flows")
 
         # Create a new Graph with selected edges in the matching
-        resulting_flow = nx.MultiDiGraph()
+        resulting_flow = nx.MultiDiGraph() if multigraph else nx.DiGraph()
         resulting_flow.add_nodes_from(nodes)
         resulting_flow.add_edges_from(
             [(edge[0], edge[1], {"flow": v.X}) for edge, v in x.items() if v.X > 0.1]

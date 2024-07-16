@@ -1,10 +1,18 @@
 import numpy as np
 
 
+def _sort_key(x):
+    return str(x)
+
+
 def check_solution_pandas(solution, candidates):
     # Checks whether the solution (`pd.Series`) matches any of the list of
     # candidates (containing `dict`)
-    if any(solution.to_dict() == c for c in candidates):
+    if any(
+        sorted(list(zip(solution.index.to_list(), solution.to_list())), key=_sort_key)
+        == sorted(c, key=_sort_key)
+        for c in candidates
+    ):
         return True
     return False
 
@@ -21,30 +29,10 @@ def check_solution_scipy(solution, candidates):
 def check_solution_networkx(solution, candidates):
     # Checks whether the solution (`nx.DiGraph`) matches any of the list of
     # candidates (containing tuples dict `{(i, j): data}`)
-    sol_dict = {(i, j): d for i, j, d in solution.edges(data=True)}
-    if any(sol_dict == c for c in candidates):
+    sol_list = sorted(
+        [((i, j), data["flow"]) for i, j, data in solution.edges(data=True)],
+        key=_sort_key,
+    )
+    if any(sol_list == sorted(c, key=_sort_key) for c in candidates):
         return True
-    return False
-
-
-def check_solution_pandas_multi(solution, candidates):
-    # Checks whether the solution (`pd.Series`) matches any of the list of
-    # candidates (containing `pd.Series`)
-    if any(solution.reset_index().equals(c.reset_index()) for c in candidates):
-        return True
-    return False
-
-
-def check_solution_networkx_multi(solution, candidates):
-    # Checks whether the solution (`nx.DiGraph`) matches any of the list of
-    # candidates (containing tuples dict `{(i, j): data}`)
-    for candidate in candidates:
-
-        def edge_sort(row):
-            return (str(row[0]), str(row[1]))
-
-        if sorted(candidate, key=edge_sort) == sorted(
-            list(solution.edges(data=True)), key=edge_sort
-        ):
-            return True
     return False
