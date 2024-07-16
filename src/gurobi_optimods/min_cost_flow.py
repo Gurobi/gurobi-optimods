@@ -171,27 +171,38 @@ def min_cost_flow_networkx(G, *, create_env):
     logger.info(
         f"Solving min-cost flow with {len(G.nodes)} nodes and {len(G.edges)} edges"
     )
-
     with create_env() as env, gp.Model(env=env) as model:
+        G = nx.MultiDiGraph(G)
+
         edges, capacities, costs = gp.multidict(
-            {(i, j): [d["capacity"], d["cost"]] for i, j, d in G.edges(data=True)}
+            {
+                (i, j, idx): [d["capacity"], d["cost"]]
+                for i, j, idx, d in G.edges(data=True, keys=True)
+            }
         )
+
         nodes = list(G.nodes(data=True))
         x = {
-            (i, j): model.addVar(
-                name=f"flow[{i},{j}]",
-                ub=capacities[i, j],
-                obj=costs[i, j],
+            (i, j, idx): model.addVar(
+                name=f"flow[{i},{j},{idx}]",
+                ub=capacities[i, j, idx],
+                obj=costs[i, j, idx],
             )
-            for i, j in edges
+            for i, j, idx in edges
         }
 
         flow_constrs = {}
         for n, data in nodes:
+            predecessors = [
+                key for key in x.keys() if key[0] in G.predecessors(n) and key[1] == n
+            ]
+            successors = [
+                key for key in x.keys() if key[0] == n and key[1] in G.successors(n)
+            ]
             flow_constrs[n] = model.addConstr(
                 (
-                    gp.quicksum(x[j, n] for j in G.predecessors(n))
-                    - gp.quicksum(x[n, j] for j in G.successors(n))
+                    gp.quicksum(x[id] for id in predecessors)
+                    - gp.quicksum(x[id] for id in successors)
                     == data["demand"]
                 ),
                 name=f"flow_balance[{n}]",
@@ -203,7 +214,7 @@ def min_cost_flow_networkx(G, *, create_env):
             raise ValueError("Unsatisfiable flows")
 
         # Create a new Graph with selected edges in the matching
-        resulting_flow = nx.DiGraph()
+        resulting_flow = nx.MultiDiGraph()
         resulting_flow.add_nodes_from(nodes)
         resulting_flow.add_edges_from(
             [(edge[0], edge[1], {"flow": v.X}) for edge, v in x.items() if v.X > 0.1]
