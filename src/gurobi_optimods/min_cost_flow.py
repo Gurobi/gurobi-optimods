@@ -63,11 +63,7 @@ def min_cost_flow_pandas(
 
         source_label, target_label = arc_data.index.names
 
-        use_multigraph = False
-        # This is a workaround for duplicate entries being disallowed in gurobipy_pandas
-        if arc_data.index.has_duplicates:
-            arc_data = arc_data.reset_index()
-            use_multigraph = True
+        arc_data = arc_data.reset_index()
 
         arc_df = arc_data.gppd.add_vars(model, ub="capacity", obj="cost", name="flow")
 
@@ -91,9 +87,7 @@ def min_cost_flow_pandas(
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
 
-        if use_multigraph:
-            # Repair index that was reset above
-            arc_df = arc_df.set_index([source_label, target_label])
+        arc_df = arc_df.set_index([source_label, target_label])
         return model.ObjVal, arc_df["flow"].gppd.X
 
 
@@ -205,16 +199,10 @@ def min_cost_flow_networkx(G, *, create_env):
 
         flow_constrs = {}
         for n, data in nodes:
-            predecessors = [
-                key for key in x.keys() if key[0] in G.predecessors(n) and key[1] == n
-            ]
-            successors = [
-                key for key in x.keys() if key[0] == n and key[1] in G.successors(n)
-            ]
             flow_constrs[n] = model.addConstr(
                 (
-                    gp.quicksum(x[id] for id in predecessors)
-                    - gp.quicksum(x[id] for id in successors)
+                    gp.quicksum(x[ie] for ie in G.in_edges(n, keys=True))
+                    - gp.quicksum(x[oe] for oe in G.out_edges(n, keys=True))
                     == data["demand"]
                 ),
                 name=f"flow_balance[{n}]",
