@@ -21,5 +21,6 @@ def check_solution_networkx(solution, candidates):
     # candidates (containing tuples dict `{(i, j): data}`)
     solution_list = sorted(
         [((i, j), data["flow"]) for i, j, data in solution.edges(data=True)],
+        key=str,
     )
-    return any(solution_list == sorted(candidate) for candidate in candidates)
+    return any(solution_list == sorted(candidate, key=str) for candidate in candidates)
