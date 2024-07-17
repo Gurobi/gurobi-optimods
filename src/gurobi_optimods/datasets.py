@@ -137,14 +137,21 @@ def load_portfolio():
 
 
 def _convert_pandas_to_digraph(
-    edge_data, node_data, capacity=True, cost=True, demand=True
+    edge_data,
+    node_data,
+    capacity=True,
+    cost=True,
+    demand=True,
+    use_multigraph=False,
 ):
     """
-    Convert from a pandas DataFrame to a networkx.DiGraph with the appropriate
+    Convert from a pandas DataFrame to a networkx.MultiDiGraph with the appropriate
     attributes. For edges: `capacity`, and `cost`. For nodes: `demand`.
     """
+    graph_type = nx.MultiDiGraph if use_multigraph else nx.DiGraph
+
     G = nx.from_pandas_edgelist(
-        edge_data.reset_index(), create_using=nx.DiGraph(), edge_attr=True
+        edge_data.reset_index(), create_using=graph_type(), edge_attr=True
     )
     if demand:
         for i, d in node_data.iterrows():
