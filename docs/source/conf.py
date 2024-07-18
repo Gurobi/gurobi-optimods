@@ -43,7 +43,7 @@ intersphinx_mapping = {
 
 templates_path = ["_templates"]
 
-html_theme = "gurobi_sphinxtheme"
+html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "version_warning": False,
     "feedback_banner": False,
