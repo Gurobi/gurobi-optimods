@@ -49,6 +49,8 @@ html_theme_options = {
     "version_warning": False,
     "feedback_banner": False,
     "construction_warning": False,
+    # Disable search '/' hotkey so readthedocs addons can use it
+    "enable_search_shortcuts": False,
 }
 html_favicon = "https://www.gurobi.com/favicon.ico"
 html_static_path = ["_static"]
