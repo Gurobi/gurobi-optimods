@@ -15,7 +15,6 @@ release = version
 
 extensions = [
     "numpydoc",
-    "sphinx_copybutton",
     "sphinx_design",
     "sphinx_tabs.tabs",
     "sphinx_toolbox.code",
