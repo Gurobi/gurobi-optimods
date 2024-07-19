@@ -1,5 +1,5 @@
-Gurobi OptiMods
-===============
+Gurobi OptiMods Documentation
+=============================
 
 **Gurobi OptiMods**: data-driven APIs for common optimization tasks.
 
