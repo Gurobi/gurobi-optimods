@@ -179,14 +179,33 @@ def convert_case_to_internal_format(case_dict):
     # Note: some parts of the code still rely on these indexes being 1..n and
     # the keys being in ascending order in dictionary iterators. Be very careful
     # when trying to change this.
+    # Remove isolated buses and their connected branches
+    remove_buses = {bus["bus_i"] for bus in case_dict["bus"] if bus["type"] == 4}
+    if remove_buses:
+        logger.info(f"Removing buses {remove_buses} (bustype=4)")
+
+    # For each field we create a key value for use internally.
+    # Note: index != nodeID (bus_i) for buses.
+    # Note: some parts of the code still rely on these indexes being 1..n and
+    # the keys being in ascending order in dictionary iterators. Be very careful
+    # when trying to change this.
     case_dict = {
         "baseMVA": case_dict["baseMVA"],
-        "bus": {i + 1: dict(bus) for i, bus in enumerate(case_dict["bus"])},
-        "branch": {i + 1: dict(branch) for i, branch in enumerate(case_dict["branch"])},
+        "bus": {
+            i + 1: dict(bus)
+            for i, bus in enumerate(case_dict["bus"])
+            if bus["bus_i"] not in remove_buses
+        },
+        "branch": {
+            i + 1: dict(branch)
+            for i, branch in enumerate(case_dict["branch"])
+            if branch["fbus"] not in remove_buses and branch["tbus"] not in remove_buses
+        },
         "gen": {i + 1: dict(gen) for i, gen in enumerate(case_dict["gen"])},
         "gencost": {
             i + 1: dict(gencost) for i, gencost in enumerate(case_dict["gencost"])
         },
+        "casename": case_dict["casename"],
     }
 
     # Manual correction to ratios
@@ -195,7 +214,7 @@ def convert_case_to_internal_format(case_dict):
             branch["ratio"] = 1.0
 
     alldata = {"LP": {}, "MIP": {}}
-
+    alldata["casename"] = case_dict["casename"]
     logger.info("Building case data structures from dictionary.")
     baseMVA = alldata["baseMVA"] = case_dict["baseMVA"]
     # Buses

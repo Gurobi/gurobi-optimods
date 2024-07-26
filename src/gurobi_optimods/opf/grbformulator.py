@@ -1,5 +1,6 @@
 import logging
 import math
+import sys
 import time
 from enum import Enum
 
@@ -98,7 +99,17 @@ def lpformulator_optimize(alldata, model, opftype):
         for j in range(1, 1 + numbranches):
             branch = branches[j]
             zvar[branch].Start = 1.0
-
+    # Initialize evar to 1 for barrier to converge
+    if alldata["use_ef"]:
+        evar = alldata["LP"]["evar"]
+        buses = alldata["buses"]
+        numbuses = alldata["numbuses"]
+        for var in model.getVars():
+            var.PStart = 0.0
+        for j in range(1, 1 + numbuses):
+            bus = buses[j]
+            evar[bus].PStart = 1.0
+        model.update()
     model.optimize()
 
     # Check model status and re-optimize if numerical trouble or inconclusive results.
@@ -347,14 +358,13 @@ def fill_result_fields(alldata, model, opftype, result):
                 databus = alldata["buses"][busindex]
                 # Override old values
                 # Voltage magnitude is root of cvar because cvar = square of voltage magnitude given as e^2 + f^2
-                if alldata["doiv"]:  # doiv makes sure that e, f variables are present
-                    resbus["Vm"] = math.sqrt(
-                        alldata["LP"]["evar"][databus].X ** 2
-                        + alldata["LP"]["fvar"][databus].X ** 2
-                    )
-                else:
-                    resbus["Vm"] = math.sqrt(alldata["LP"]["cvar"][databus].X)
-
+                resbus["Vm"] = math.sqrt(
+                    alldata["LP"]["evar"][databus].X ** 2
+                    + alldata["LP"]["fvar"][databus].X ** 2
+                )
+                resbus["Va"] = math.atan(
+                    alldata["LP"]["fvar"][databus].X / alldata["LP"]["evar"][databus].X
+                )
             if alldata["doiv"]:
                 # Need to fill cvar[branch] dictionary to compute angles for IV
                 # Note that there is no cvar dictionary for IV!!!
@@ -369,7 +379,7 @@ def fill_result_fields(alldata, model, opftype, result):
 
                 alldata["LP"]["cvar"] = cvar
 
-            compute_voltage_angles(alldata, result)
+            # compute_voltage_angles(alldata, result)
 
         if alldata["dopolar"] and not alldata["doiv"]:
             for busindex in result["bus"]:

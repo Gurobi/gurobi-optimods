@@ -78,7 +78,7 @@ def solve_opf(
     if opftype.lower() == "ac":
         opftype = "ac"
         useef = True
-        usejabr = True
+        usejabr = False
         default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
     # AC relaxation using the JABR inequality
     elif opftype.lower() == "acrelax":
