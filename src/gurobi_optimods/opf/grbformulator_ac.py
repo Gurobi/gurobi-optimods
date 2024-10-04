@@ -473,8 +473,9 @@ def lpformulator_ac_create_constraints(alldata, model):
     IDtoCountmap = alldata["IDtoCountmap"]
     cvar = alldata["LP"]["cvar"]
     svar = alldata["LP"]["svar"]
-    evar = alldata["LP"]["evar"]
-    fvar = alldata["LP"]["fvar"]
+    if alldata["use_ef"]:
+        evar = alldata["LP"]["evar"]
+        fvar = alldata["LP"]["fvar"]
     Pvar_f = alldata["LP"]["Pvar_f"]
     Pvar_t = alldata["LP"]["Pvar_t"]
     Qvar_f = alldata["LP"]["Qvar_f"]
@@ -711,7 +712,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         if bus.Gs != 0:
             expr.add(bus.Gs * (evar[bus] * evar[bus] + fvar[bus] * fvar[bus]))
 
-        if alldata["branchswitching_comp"] is False:
+        if not alldata["branchswitching_comp"]:
             for branchid in bus.frombranchids.values():
                 expr.add(Pvar_f[branches[branchid]])
 
@@ -741,7 +742,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         if bus.Bs != 0:
             expr.add(-bus.Bs * (evar[bus] * evar[bus] + fvar[bus] * fvar[bus]))
 
-        if alldata["branchswitching_comp"] is False:
+        if not alldata["branchswitching_comp"]:
             for branchid in bus.frombranchids.values():
                 expr.add(Qvar_f[branches[branchid]])
 
@@ -766,7 +767,7 @@ def lpformulator_ac_create_constraints(alldata, model):
 
     logger.info(f"    {count} balance constraints added.")
 
-    if alldata["skipjabr"] is True and alldata["use_ef"]:
+    if alldata["skipjabr"] and alldata["use_ef"]:
         # voltage magnitude bounds
         logger.info("  Adding voltage magnitude constraints.")
         count = 0
@@ -786,7 +787,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         logger.info("  Adding phase angle bounds constraints.")
         count = 0
         for j, branch in branches.items():
-            if not branch.status or branch.unboundedlimit is True:
+            if not branch.status or branch.unboundedlimit:
                 continue
 
             f = branch.f
@@ -841,7 +842,7 @@ def lpformulator_ac_create_constraints(alldata, model):
     logger.info("  Adding branch limits.")
     count = 0
     for j, branch in branches.items():
-        if not branch.status or branch.unboundedlimit is True:
+        if not branch.status or branch.unboundedlimit:
             continue
 
         f = branch.f
@@ -865,7 +866,7 @@ def lpformulator_ac_create_constraints(alldata, model):
     logger.info(f"    {count} branch limits added.")
 
     # JABR.
-    if alldata["skipjabr"] is False:
+    if not alldata["skipjabr"]:
         logger.info("  Adding Jabr constraints.")
         count = 0
         for j, branch in branches.items():
@@ -888,7 +889,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         logger.info("  Skipping Jabr inequalities.")
 
     # Active loss constraints.
-    if alldata["useactivelossineqs"] is True:
+    if alldata["useactivelossineqs"]:
         logger.info("  Adding active loss constraints.")
         count = 0
         for j, branch in branches.items():
@@ -948,7 +949,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         lpformulator_ac_add_polarconstraints(alldata, model)
 
     # nonconvex e, f representation
-    if alldata["skipjabr"] is False and alldata["use_ef"]:
+    if not alldata["skipjabr"] and alldata["use_ef"]:
         lpformulator_ac_add_nonconvexconstraints(alldata, model)
 
     if alldata["branchswitching_mip"] or alldata["branchswitching_comp"]:

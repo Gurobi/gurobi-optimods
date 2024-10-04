@@ -155,7 +155,7 @@ def read_case_matpower(file_path):
         "gen": gen.to_dict("records"),
         "branch": branch.to_dict("records"),
         "gencost": gencost,
-        "casename": os.path.splitext(file_path)[0],
+        "casename": file_path.stem,
     }
 
 

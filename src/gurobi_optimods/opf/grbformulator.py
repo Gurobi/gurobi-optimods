@@ -378,8 +378,6 @@ def fill_result_fields(alldata, model, opftype, result):
 
                 alldata["LP"]["cvar"] = cvar
 
-            # compute_voltage_angles(alldata, result)
-
         if alldata["dopolar"] and not alldata["doiv"]:
             for busindex in result["bus"]:
                 resbus = result["bus"][busindex]
