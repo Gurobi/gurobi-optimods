@@ -5,7 +5,7 @@ import gurobi_optimods
 # -- Project information
 
 project = "Gurobi OptiMods"
-copyright = "2023, Gurobi Optimization"
+copyright = "Gurobi Optimization"
 author = "Gurobi Optimization"
 
 version = gurobi_optimods.__version__
@@ -44,7 +44,16 @@ intersphinx_mapping = {
 
 templates_path = ["_templates"]
 
-html_theme = "sphinx_rtd_theme"
+html_theme = "gurobi_sphinxtheme"
+html_theme_options = {
+    "version_warning": False,
+    "feedback_banner": False,
+    "construction_warning": False,
+    # Disable search '/' hotkey so readthedocs addons can use it
+    "enable_search_shortcuts": False,
+}
+html_favicon = "https://www.gurobi.com/favicon.ico"
+html_static_path = ["_static"]
 
 autosectionlabel_prefix_document = True
 
@@ -84,6 +93,28 @@ numpydoc_xref_aliases = {
     "sparray": "scipy.sparse.sparray",
 }
 numpydoc_xref_ignore = {"optional", "or", "of"}
+
+
+# -- doctest configuration
+
+doctest_global_setup = """
+def size_limited_license():
+
+    result = False
+
+    try:
+        import gurobipy as gp
+        from gurobipy import GRB
+
+        with gp.Env(params={"OutputFlag": 0}) as env, gp.Model(env=env) as model:
+            x = model.addVars(2001)
+            model.optimize()
+    except gp.GurobiError as e:
+        if e.errno == GRB.Error.SIZE_LIMIT_EXCEEDED:
+            result = True
+
+    return result
+"""
 
 
 # -- Docstring preprocessing for autodoc

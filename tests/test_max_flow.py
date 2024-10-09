@@ -31,23 +31,23 @@ class TestMaxFlow(unittest.TestCase):
         obj, sol = max_flow(edge_data, 0, 5)
         sol = sol[sol > 0]
         self.assertEqual(obj, self.expected_max_flow)
-        candidate = {
-            (0, 1): 1.0,
-            (0, 2): 2.0,
-            (1, 3): 1.0,
-            (2, 3): 1.0,
-            (2, 4): 1.0,
-            (3, 5): 2.0,
-            (4, 5): 1.0,
-        }
-        candidate2 = {
-            (0, 1): 1.0,
-            (0, 2): 2.0,
-            (1, 3): 1.0,
-            (2, 4): 2.0,
-            (3, 5): 1.0,
-            (4, 5): 2.0,
-        }
+        candidate = [
+            ((0, 1), 1.0),
+            ((0, 2), 2.0),
+            ((1, 3), 1.0),
+            ((2, 3), 1.0),
+            ((2, 4), 1.0),
+            ((3, 5), 2.0),
+            ((4, 5), 1.0),
+        ]
+        candidate2 = [
+            ((0, 1), 1.0),
+            ((0, 2), 2.0),
+            ((1, 3), 1.0),
+            ((2, 4), 2.0),
+            ((3, 5), 1.0),
+            ((4, 5), 2.0),
+        ]
         self.assertTrue(check_solution_pandas(sol, [candidate, candidate2]))
 
     def test_empty_pandas(self):
@@ -84,23 +84,23 @@ class TestMaxFlow(unittest.TestCase):
         G = datasets.simple_graph_networkx()
         obj, sol = max_flow(G, 0, 5)
         self.assertEqual(obj, self.expected_max_flow)
-        candidate = {
-            (0, 1): {"flow": 1},
-            (0, 2): {"flow": 2},
-            (1, 3): {"flow": 1},
-            (2, 4): {"flow": 2},
-            (3, 5): {"flow": 1},
-            (4, 5): {"flow": 2},
-        }
-        candidate2 = {
-            (0, 1): {"flow": 1.0},
-            (0, 2): {"flow": 2.0},
-            (1, 3): {"flow": 1.0},
-            (2, 3): {"flow": 1.0},
-            (2, 4): {"flow": 1.0},
-            (3, 5): {"flow": 2.0},
-            (4, 5): {"flow": 1.0},
-        }
+        candidate = [
+            ((0, 1), 1),
+            ((0, 2), 2),
+            ((1, 3), 1),
+            ((2, 4), 2),
+            ((3, 5), 1),
+            ((4, 5), 2),
+        ]
+        candidate2 = [
+            ((0, 1), 1.0),
+            ((0, 2), 2.0),
+            ((1, 3), 1.0),
+            ((2, 3), 1.0),
+            ((2, 4), 1.0),
+            ((3, 5), 2.0),
+            ((4, 5), 1.0),
+        ]
         self.assertTrue(check_solution_networkx(sol, [candidate, candidate2]))
 
     @unittest.skipIf(nx is None, "networkx is not installed")
@@ -120,16 +120,16 @@ class TestMaxFlow2(unittest.TestCase):
         obj, sol = max_flow(edge_data, 0, 4)
         sol = sol[sol > 0]
         self.assertEqual(obj, self.expected_max_flow)
-        candidate = {
-            (0, 1): 15.0,
-            (0, 2): 8.0,
-            (1, 3): 4.0,
-            (1, 2): 1.0,
-            (1, 4): 10.0,
-            (2, 3): 4.0,
-            (2, 4): 5.0,
-            (3, 4): 8.0,
-        }
+        candidate = [
+            ((0, 1), 15.0),
+            ((0, 2), 8.0),
+            ((1, 3), 4.0),
+            ((1, 2), 1.0),
+            ((1, 4), 10.0),
+            ((2, 3), 4.0),
+            ((2, 4), 5.0),
+            ((3, 4), 8.0),
+        ]
         self.assertTrue(check_solution_pandas(sol, [candidate]))
 
     def test_scipy(self):
@@ -152,23 +152,23 @@ class TestMaxFlow2(unittest.TestCase):
         G = load_graph2_networkx()
         obj, sol = max_flow(G, 0, 4)
         self.assertEqual(obj, self.expected_max_flow)
-        candidate = {
-            (0, 1): {"flow": 15.0},
-            (0, 2): {"flow": 8.0},
-            (1, 3): {"flow": 4.0},
-            (1, 2): {"flow": 1.0},
-            (1, 4): {"flow": 10.0},
-            (2, 3): {"flow": 4.0},
-            (2, 4): {"flow": 5.0},
-            (3, 4): {"flow": 8.0},
-        }
-        candidate2 = {
-            (0, 1): {"flow": 15},
-            (0, 2): {"flow": 8},
-            (1, 2): {"flow": 1},
-            (1, 3): {"flow": 4},
-            (1, 4): {"flow": 10},
-            (2, 3): {"flow": 9},
-            (3, 4): {"flow": 13},
-        }
+        candidate = [
+            ((0, 1), 15.0),
+            ((0, 2), 8.0),
+            ((1, 3), 4.0),
+            ((1, 2), 1.0),
+            ((1, 4), 10.0),
+            ((2, 3), 4.0),
+            ((2, 4), 5.0),
+            ((3, 4), 8.0),
+        ]
+        candidate2 = [
+            ((0, 1), 15),
+            ((0, 2), 8),
+            ((1, 2), 1),
+            ((1, 3), 4),
+            ((1, 4), 10),
+            ((2, 3), 9),
+            ((3, 4), 13),
+        ]
         self.assertTrue(check_solution_networkx(sol, [candidate, candidate2]))

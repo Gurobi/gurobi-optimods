@@ -14,6 +14,13 @@ try:
 except ImportError:
     nx = None
 
+try:
+    import json
+
+    from networkx.readwrite import json_graph
+except ImportError:
+    json = None
+
 DATA_FILE_DIR = pathlib.Path(__file__).parent / "data"
 
 
@@ -39,6 +46,49 @@ def load_workforce():
             DATA_FILE_DIR / "workforce/worker_limits.csv",
         ),
     )
+
+
+def load_siouxfalls_network_data():
+    # edge and node data to create a graph
+    edge_data = pd.read_csv(DATA_FILE_DIR / "graphs/siouxfalls_edges.csv")
+    node_data = pd.read_csv(DATA_FILE_DIR / "graphs/siouxfalls_nodes.csv")
+
+    # line data including, line-path, capacity, fixed cost, and operating cost
+    linepath_data = pd.read_csv(DATA_FILE_DIR / "graphs/siouxfalls_linepaths.csv")
+    line_data = pd.read_csv(DATA_FILE_DIR / "graphs/siouxfalls_lines.csv")
+
+    # demand data
+    demand_data = pd.read_csv(DATA_FILE_DIR / "graphs/siouxfalls_demand.csv")
+
+    return (node_data, edge_data, line_data, linepath_data, demand_data)
+
+
+def load_berlin_metro_reduced_graph_data():
+    # read graph
+    with open(DATA_FILE_DIR / "graphs/uberlin_reduced_graph.json", "r") as f:
+        data = json.load(f)
+
+    # Convert the JSON data to a NetworkX graph
+    graph = json_graph.node_link_graph(data)
+
+    # line path data
+    linepath_data = pd.read_csv(DATA_FILE_DIR / "graphs/uberlin_reduced_linepaths.csv")
+
+    return (graph, linepath_data)
+
+
+def load_berlin_metro_graph_data():
+    # read graph
+    with open(DATA_FILE_DIR / "graphs/uberlin_graph.json", "r") as f:
+        data = json.load(f)
+
+    # Convert the JSON data to a NetworkX graph
+    graph = json_graph.node_link_graph(data)
+
+    # line path data
+    linepath_data = pd.read_csv(DATA_FILE_DIR / "graphs/uberlin_linepaths.csv")
+
+    return (graph, linepath_data)
 
 
 def _load_simple_graph_pandas(drop_pos=True, capacity=True, cost=True, demand=True):
@@ -87,14 +137,21 @@ def load_portfolio():
 
 
 def _convert_pandas_to_digraph(
-    edge_data, node_data, capacity=True, cost=True, demand=True
+    edge_data,
+    node_data,
+    capacity=True,
+    cost=True,
+    demand=True,
+    use_multigraph=False,
 ):
     """
-    Convert from a pandas DataFrame to a networkx.DiGraph with the appropriate
+    Convert from a pandas DataFrame to a networkx.MultiDiGraph with the appropriate
     attributes. For edges: `capacity`, and `cost`. For nodes: `demand`.
     """
+    graph_type = nx.MultiDiGraph if use_multigraph else nx.DiGraph
+
     G = nx.from_pandas_edgelist(
-        edge_data.reset_index(), create_using=nx.DiGraph(), edge_attr=True
+        edge_data.reset_index(), create_using=graph_type(), edge_attr=True
     )
     if demand:
         for i, d in node_data.iterrows():

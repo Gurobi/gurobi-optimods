@@ -61,14 +61,17 @@ def min_cost_flow_pandas(
     with create_env() as env, gp.Model(env=env) as model:
         model.ModelSense = GRB.MINIMIZE
 
+        source_label, target_label = arc_data.index.names
+
+        arc_data = arc_data.reset_index()
+
         arc_df = arc_data.gppd.add_vars(model, ub="capacity", obj="cost", name="flow")
 
-        source_label, target_label = arc_data.index.names
         balance_df = (
             pd.DataFrame(
                 {
-                    "inflow": arc_df["flow"].groupby(target_label).sum(),
-                    "outflow": arc_df["flow"].groupby(source_label).sum(),
+                    "inflow": arc_df.groupby(target_label)["flow"].sum(),
+                    "outflow": arc_df.groupby(source_label)["flow"].sum(),
                     "demand": demand_data["demand"],
                 }
             )
@@ -84,6 +87,7 @@ def min_cost_flow_pandas(
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
 
+        arc_df = arc_df.set_index([source_label, target_label])
         return model.ObjVal, arc_df["flow"].gppd.X
 
 
@@ -171,27 +175,34 @@ def min_cost_flow_networkx(G, *, create_env):
     logger.info(
         f"Solving min-cost flow with {len(G.nodes)} nodes and {len(G.edges)} edges"
     )
-
     with create_env() as env, gp.Model(env=env) as model:
+        use_multigraph = isinstance(G, nx.MultiGraph)
+
+        G = nx.MultiDiGraph(G)
+
         edges, capacities, costs = gp.multidict(
-            {(i, j): [d["capacity"], d["cost"]] for i, j, d in G.edges(data=True)}
+            {
+                (i, j, idx): [d["capacity"], d["cost"]]
+                for i, j, idx, d in G.edges(data=True, keys=True)
+            }
         )
+
         nodes = list(G.nodes(data=True))
         x = {
-            (i, j): model.addVar(
-                name=f"flow[{i},{j}]",
-                ub=capacities[i, j],
-                obj=costs[i, j],
+            (i, j, idx): model.addVar(
+                name=f"flow[{i},{j},{idx}]",
+                ub=capacities[i, j, idx],
+                obj=costs[i, j, idx],
             )
-            for i, j in edges
+            for i, j, idx in edges
         }
 
         flow_constrs = {}
         for n, data in nodes:
             flow_constrs[n] = model.addConstr(
                 (
-                    gp.quicksum(x[j, n] for j in G.predecessors(n))
-                    - gp.quicksum(x[n, j] for j in G.successors(n))
+                    gp.quicksum(x[ie] for ie in G.in_edges(n, keys=True))
+                    - gp.quicksum(x[oe] for oe in G.out_edges(n, keys=True))
                     == data["demand"]
                 ),
                 name=f"flow_balance[{n}]",
@@ -203,7 +214,7 @@ def min_cost_flow_networkx(G, *, create_env):
             raise ValueError("Unsatisfiable flows")
 
         # Create a new Graph with selected edges in the matching
-        resulting_flow = nx.DiGraph()
+        resulting_flow = nx.MultiDiGraph() if use_multigraph else nx.DiGraph()
         resulting_flow.add_nodes_from(nodes)
         resulting_flow.add_edges_from(
             [(edge[0], edge[1], {"flow": v.X}) for edge, v in x.items() if v.X > 0.1]
