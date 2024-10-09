@@ -1,6 +1,5 @@
 # Tests that solve models using the public API
 
-import collections
 import random
 import unittest
 
