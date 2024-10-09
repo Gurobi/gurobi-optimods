@@ -6,6 +6,7 @@ import unittest
 from gurobi_optimods.datasets import load_opf_example
 from gurobi_optimods.opf import solve_opf
 
+
 class TestInvalidData(unittest.TestCase):
     def setUp(self):
         self.case = load_opf_example("pglib_opf_case5_pjm")
@@ -124,7 +125,6 @@ class TestAPICase5_PJM(unittest.TestCase):
 
         self.assert_approx_equal(solution["f"], 17551.89, tol=1e-1)
 
-    @unittest.skip("shaky")
     def test_ac_branchswitching(self):
         solution = solve_opf(
             self.case,
