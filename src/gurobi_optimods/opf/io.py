@@ -5,8 +5,6 @@ Contains file I/O methods for reading and writing MATPOWER format.
 - write_case_matpower: write case (or solution) to MATPOWER format .mat file
 """
 
-import os
-
 import numpy as np
 import pandas as pd
 import scipy
