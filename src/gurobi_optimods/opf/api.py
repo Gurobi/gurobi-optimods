@@ -74,11 +74,21 @@ def solve_opf(
         fields
     """
 
-    # Exact cartesian AC (force jabr for performance reasons)
-    if opftype.lower() == "ac":
+    # use ac-local to run Gurobi as a local solver (stops at the first feasible solution)
+    if opftype.lower() == "ac-local":
         opftype = "ac"
         useef = True
         usejabr = False
+        default_solver_params = {
+            "MIPGap": 1e-3,
+            "OptimalityTol": 1e-3,
+            "Presolve": 0,
+            "SolutionLimit": 1,
+        }
+    elif opftype.lower() == "ac":
+        opftype = "ac"
+        useef = True
+        usejabr = True
         default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
     # AC relaxation using the JABR inequality
     elif opftype.lower() == "acrelax":
