@@ -515,18 +515,28 @@ def lpformulator_ac_create_constraints(alldata, model):
                 Pvar_t[branch] == 0, name=branch.Ptcname
             )
             continue
+        if alldata["use_ef"]:
+            # Gff cff + Gft cft + Bft sft
+            expP = Pvar_f[branch]
+            if alldata["branchswitching_mip"]:
+                expP += twinPvar_f[branch]
+            branch.Pdeffconstr = model.addConstr(
+                branch.Gff * (evar[busf] * evar[busf] + fvar[busf] * fvar[busf])
+                + branch.Gft * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
+                + branch.Bft * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
+                == expP,
+                name=branch.Pfcname,
+            )
+        else:
+            expr = gp.LinExpr(
+                [branch.Gff, branch.Gft, branch.Bft],
+                [cvar[busf], cvar[branch], svar[branch]],
+            )
+            expP = Pvar_f[branch]
+            if alldata["branchswitching_mip"]:
+                expP += twinPvar_f[branch]
+            branch.Pdeffconstr = model.addConstr(expr == expP, name=branch.Pfcname)
 
-        # Gff cff + Gft cft + Bft sft
-        expP = Pvar_f[branch]
-        if alldata["branchswitching_mip"]:
-            expP += twinPvar_f[branch]
-        branch.Pdeffconstr = model.addConstr(
-            branch.Gff * (evar[busf] * evar[busf] + fvar[busf] * fvar[busf])
-            + branch.Gft * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
-            + branch.Bft * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
-            == expP,
-            name=branch.Pfcname,
-        )
         if alldata["branchswitching_mip"]:
             if branch.constrainedflow:
                 coeff = branch.limit
@@ -555,16 +565,32 @@ def lpformulator_ac_create_constraints(alldata, model):
             count += 4
 
         # Gtt ctt + Gtf cft + Btf stf = Gtt ctt + Gtf cft - Btf sft
-        expP = Pvar_t[branch]
-        if alldata["branchswitching_mip"]:
-            expP += twinPvar_t[branch]
-        branch.Pdeftconstr = model.addConstr(
-            branch.Gtt * (evar[bust] * evar[bust] + fvar[bust] * fvar[bust])
-            + branch.Gtf * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
-            - branch.Btf * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
-            == expP,
-            name=branch.Ptcname,
-        )
+        if alldata["use_ef"]:
+            expP = Pvar_t[branch]
+            if alldata["branchswitching_mip"]:
+                expP += twinPvar_t[branch]
+            branch.Pdeftconstr = model.addConstr(
+                branch.Gtt * (evar[bust] * evar[bust] + fvar[bust] * fvar[bust])
+                + branch.Gtf * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
+                - branch.Btf * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
+                == expP,
+                name=branch.Ptcname,
+            )
+        else:
+            expr = gp.LinExpr(
+                [
+                    branch.Gtt,
+                    branch.Gtf,
+                    -branch.Btf,
+                ],  # minus because svarft = -svartf
+                [cvar[bust], cvar[branch], svar[branch]],
+            )
+
+            expP = Pvar_t[branch]
+            if alldata["branchswitching_mip"]:
+                expP += twinPvar_t[branch]
+
+            branch.Pdeftconstr = model.addConstr(expr == expP, name=branch.Ptcname)
 
         if alldata["branchswitching_mip"]:
             if branch.constrainedflow:
@@ -620,16 +646,28 @@ def lpformulator_ac_create_constraints(alldata, model):
             continue
 
         # -Bff cff - Bft cft + Gft sft
-        expQ = Qvar_f[branch]
-        if alldata["branchswitching_mip"]:
-            expQ += twinQvar_f[branch]
-        branch.Qdeffconstr = model.addConstr(
-            -branch.Bff * (evar[busf] * evar[busf] + fvar[busf] * fvar[busf])
-            - branch.Bft * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
-            + branch.Gft * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
-            == expQ,
-            name=branch.Qfcname,
-        )
+        if alldata["use_ef"]:
+            expQ = Qvar_f[branch]
+            if alldata["branchswitching_mip"]:
+                expQ += twinQvar_f[branch]
+            branch.Qdeffconstr = model.addConstr(
+                -branch.Bff * (evar[busf] * evar[busf] + fvar[busf] * fvar[busf])
+                - branch.Bft * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
+                + branch.Gft * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
+                == expQ,
+                name=branch.Qfcname,
+            )
+        else:
+            expr = gp.LinExpr(
+                [-branch.Bff, -branch.Bft, branch.Gft],
+                [cvar[busf], cvar[branch], svar[branch]],
+            )
+
+            expQ = Qvar_f[branch]
+            if alldata["branchswitching_mip"]:
+                expQ += twinQvar_f[branch]
+            branch.Qdeffconstr = model.addConstr(expr == expQ, name=branch.Qfcname)
+
         if alldata["branchswitching_mip"]:
             if branch.constrainedflow:
                 coeff = branch.limit
@@ -658,16 +696,27 @@ def lpformulator_ac_create_constraints(alldata, model):
             count += 4
 
         # -Btt ctt - Btf cft + Gtf stf = -Btt ctt - Btf cft - Gtf sft
-        expQ = Qvar_t[branch]
-        if alldata["branchswitching_mip"]:
-            expQ += twinQvar_t[branch]
-        branch.Qdeftconstr = model.addConstr(
-            -branch.Btt * (evar[bust] * evar[bust] + fvar[bust] * fvar[bust])
-            - branch.Btf * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
-            - branch.Gtf * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
-            == expQ,
-            name=branch.Qtcname,
-        )
+        if alldata["use_ef"]:
+            expQ = Qvar_t[branch]
+            if alldata["branchswitching_mip"]:
+                expQ += twinQvar_t[branch]
+            branch.Qdeftconstr = model.addConstr(
+                -branch.Btt * (evar[bust] * evar[bust] + fvar[bust] * fvar[bust])
+                - branch.Btf * (evar[busf] * evar[bust] + fvar[busf] * fvar[bust])
+                - branch.Gtf * (-evar[busf] * fvar[bust] + fvar[busf] * evar[bust])
+                == expQ,
+                name=branch.Qtcname,
+            )
+        else:
+            expr = gp.LinExpr(
+                [-branch.Btt, -branch.Btf, -branch.Gtf],  # again, same minus
+                [cvar[bust], cvar[branch], svar[branch]],
+            )
+
+            expQ = Qvar_t[branch]
+            if alldata["branchswitching_mip"]:
+                expQ += twinQvar_t[branch]
+            branch.Qdeftconstr = model.addConstr(expr == expQ, name=branch.Qtcname)
 
         if alldata["branchswitching_mip"]:
             if branch.constrainedflow:

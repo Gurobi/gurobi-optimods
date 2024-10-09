@@ -155,7 +155,7 @@ def read_case_matpower(file_path):
         "gen": gen.to_dict("records"),
         "branch": branch.to_dict("records"),
         "gencost": gencost,
-        "casename": file_path.stem,
+        "casename": mpc["casename"] if "casename" in mpc.dtype.names else "case",
     }
 
 
@@ -188,6 +188,7 @@ def write_case_matpower(case, file_path):
                 "gen": gen[gen_field_names].values,
                 "branch": branch[branch_field_names].values,
                 "gencost": gencost_values,
+                "casename": case.get("casename", "Undefined"),
             }
         },
     )

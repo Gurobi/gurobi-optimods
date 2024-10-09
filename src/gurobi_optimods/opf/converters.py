@@ -78,6 +78,10 @@ def build_internal_settings(
     else:
         raise ValueError(f"Unknown OPF type {opftype}")
 
+    if opftype == "dc":
+        settings["use_ef"] = False
+        settings["skipjabr"] = True
+
     # Sub-type for IV models
     ivtype = ivtype.lower()
     if ivtype in ["plain", "aggressive"]:

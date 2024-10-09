@@ -171,6 +171,7 @@ def turn_solution_into_result_dict(alldata, model, opftype, type):
     # Reconstruct case data from our data
     result = {}
     result["baseMVA"] = alldata["baseMVA"]
+    result["casename"] = alldata["casename"]
     baseMVA = result["baseMVA"]
     result["bus"] = {}
     result["gen"] = {}

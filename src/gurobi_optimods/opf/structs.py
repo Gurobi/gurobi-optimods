@@ -212,11 +212,12 @@ class Branch:
         self.minangle = minangle
         self.minangle_rad = math.pi * minangle / 180.0
 
+        # We need to have -pi/2 < maxangle_rad < pi/2 since we use tan(angle) in the rectangular formulation
         if maxangle == 360 or maxangle == 0:
-            self.maxangle_rad = 2 * math.pi
+            self.maxangle_rad = math.pi / 2 - 1e-6
 
         if minangle == -360 or minangle == 0:
-            self.minangle_rad = -2 * math.pi
+            self.minangle_rad = -math.pi / 2 + 1e-6
 
         self.invratio2 = invratio2 = 1 / ratio**2
         self.multtf = multtf = 1 / (ratio * cmath.exp(1j * self.angle_rad))
