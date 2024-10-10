@@ -139,20 +139,34 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
         ]:
             constr = item[0]
             var = item[1]
-
-            row = model.getRow(constr)
-            if type(constr) is gp.Constr:
-                sum = -constr.RHS
-            else:
-                sum = -constr.QCRHS
             leadcoeff = 0
-            for i in range(row.size()):
-                v = row.getVar(i)
-                coeff = row.getCoeff(i)
-                if v.Varname != var.Varname:
-                    sum += coeff * xbuffer[v]
-                else:
-                    leadcoeff = coeff
+            # linear constraint
+            if type(constr) is gp.Constr:
+                row = model.getRow(constr)
+                sum = -constr.RHS
+                for i in range(row.size()):
+                    v = row.getVar(i)
+                    coeff = row.getCoeff(i)
+                    if v.Varname != var.Varname:
+                        sum += coeff * xbuffer[v]
+                    else:
+                        leadcoeff = coeff
+            else:
+                row = model.getQCRow(constr)
+                sum = -constr.QCRHS
+                for i in range(row.size()):
+                    v1 = row.getVar1(i)
+                    v2 = row.getVar2(i)
+                    coeff = row.getCoeff(i)
+                    sum += coeff * xbuffer[v1] * xbuffer[v2]
+                lterms = row.getLinExpr()
+                for i in range(lterms.size()):
+                    v = lterms.getVar(i)
+                    coeff = lterms.getCoeff(i)
+                    if v.Varname != var.Varname:
+                        sum += coeff * xbuffer[v]
+                    else:
+                        leadcoeff = coeff
 
             xbuffer[var] = -sum / leadcoeff
             # leadcoeff should be +1 or -1
