@@ -141,7 +141,7 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
             var = item[1]
 
             row = model.getRow(constr)
-            if constr.getAttr("QCRHS") is None:
+            if type(constr) is gp.Constr:
                 sum = -constr.RHS
             else:
                 sum = -constr.QCRHS
