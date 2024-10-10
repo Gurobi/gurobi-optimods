@@ -84,6 +84,9 @@ def solve_opf(
             "OptimalityTol": 1e-3,
             "Presolve": 0,
             "SolutionLimit": 1,
+            "NodeLimit": 0,
+            "GURO_PAR_NLBARSLOPPYLIMIT": 2000,
+            "GURO_PAR_NLPNOISE": 2,
         }
     elif opftype.lower() == "ac":
         opftype = "ac"

@@ -483,9 +483,9 @@ data:
 .. doctest:: opf
 
     >>> print(violations['branch'][6]['limitviol'])
-    66.33435016796234
+    66.33435...
     >>> print(violations['bus'][3]['Pviol'])
-    -318.8997836192236
+    -318.8997...
 
 In this case, the limit at branch 6 and the real power injection at bus 3 are
 violated by the given input voltages.
