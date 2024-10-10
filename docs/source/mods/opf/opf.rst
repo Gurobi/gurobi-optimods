@@ -276,7 +276,7 @@ solution information, as specified below.
             :options: +NORMALIZE_WHITESPACE
 
             >>> result['bus'][0]
-            {... 'Vm': 1.09..., 'Va': 0, ...}
+            {... 'Vm': 1.09..., 'Va': 0.0, ...}
 
     .. tab:: Branches
 
