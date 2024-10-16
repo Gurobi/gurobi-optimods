@@ -61,7 +61,11 @@ class TestDatasets(unittest.TestCase):
         for case in [
             "pglib_opf_case3_lmbd",
             "pglib_opf_case5_pjm",
-            "pglib_opf_case14_ieee",
+            "case9",
+            "case14",
+            "case57",
+            "case118",
+            "case300",
             "caseNY",
         ]:
             case_data = load_opf_example(case)

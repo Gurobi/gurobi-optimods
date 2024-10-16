@@ -130,6 +130,7 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
     Qvar_f = alldata["LP"]["Qvar_f"]
     Qvar_t = alldata["LP"]["Qvar_t"]
 
+    # Recomputing the active and reactive power flows using the voltage variables
     for j, branch in branches.items():
         for item in [
             (branch.Pdeffconstr, Pvar_f[branch]),
@@ -140,7 +141,7 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
             constr = item[0]
             var = item[1]
             leadcoeff = 0
-            # linear constraint
+            # If the constraint is linear, e.g., Pvar_f = f(cosvar,sinvar), f linear
             if type(constr) is gp.Constr:
                 row = model.getRow(constr)
                 sum = -constr.RHS
@@ -151,7 +152,7 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
                         sum += coeff * xbuffer[v]
                     else:
                         leadcoeff = coeff
-            else:
+            else:  # Rectangular formulation with Pvar_f = f(evar,fvar), f quadratic
                 row = model.getQCRow(constr)
                 sum = -constr.QCRHS
                 for i in range(row.size()):

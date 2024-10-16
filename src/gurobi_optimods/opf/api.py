@@ -74,8 +74,8 @@ def solve_opf(
         fields
     """
 
-    # use ac-local to run Gurobi as a local solver (stops at the first feasible solution)
-    if opftype.lower() == "ac-local":
+    # use aclocal to run Gurobi as a local solver (stops at the first feasible solution)
+    if opftype.lower() == "aclocal":
         opftype = "ac"
         useef = True
         usejabr = False

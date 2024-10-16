@@ -759,7 +759,10 @@ def lpformulator_ac_create_constraints(alldata, model):
         qexpr = gp.QuadExpr()
         doquad = False
         if bus.Gs != 0:
-            expr.add(bus.Gs * (evar[bus] * evar[bus] + fvar[bus] * fvar[bus]))
+            if alldata["use_ef"]:
+                expr.add(bus.Gs * (evar[bus] * evar[bus] + fvar[bus] * fvar[bus]))
+            else:
+                expr.add(bus.Gs * cvar[bus])
 
         if not alldata["branchswitching_comp"]:
             for branchid in bus.frombranchids.values():
@@ -787,9 +790,11 @@ def lpformulator_ac_create_constraints(alldata, model):
 
     for j, bus in buses.items():
         expr = gp.QuadExpr()
-
         if bus.Bs != 0:
-            expr.add(-bus.Bs * (evar[bus] * evar[bus] + fvar[bus] * fvar[bus]))
+            if alldata["use_ef"]:
+                expr.add(-bus.Bs * (evar[bus] * evar[bus] + fvar[bus] * fvar[bus]))
+            else:
+                expr.add(-bus.Bs * cvar[bus])
 
         if not alldata["branchswitching_comp"]:
             for branchid in bus.frombranchids.values():
@@ -821,8 +826,7 @@ def lpformulator_ac_create_constraints(alldata, model):
         logger.info("  Adding voltage magnitude constraints.")
         count = 0
         for j, bus in buses.items():
-            expr = gp.QuadExpr()
-            expr.add(evar[bus] * evar[bus] + fvar[bus] * fvar[bus])
+            expr = evar[bus] * evar[bus] + fvar[bus] * fvar[bus]
             model.addConstr(
                 expr <= bus.Vmax * bus.Vmax, name="VUb%d_%d" % (j, bus.nodeID)
             )
