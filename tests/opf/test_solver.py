@@ -261,8 +261,8 @@ class TestComputeVoltageAnglesBug(unittest.TestCase):
     # structure) causes compute_voltage_angles to fail.
 
     def setUp(self):
-        self.case = load_opf_example("pglib_opf_case5_pjm")
-        reorder = [2, 1, 3, 4, 0]
+        self.case = load_opf_example("case9")
+        reorder = [8, 2, 5, 7, 6, 1, 3, 4, 0]
         self.case["bus"] = [self.case["bus"][ind] for ind in reorder]
 
     def assert_approx_equal(self, value, expected, tol):

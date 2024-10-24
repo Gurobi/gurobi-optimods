@@ -136,13 +136,12 @@ class TestIO(unittest.TestCase):
 
         return (original, reread)
 
-    @unittest.skip("bad test due to nan on missing entries")
     def test_read_case_matpower(self):
         # Check that all example cases are read without errors
 
         case_mat_files = [
-            self.dataset_dir.joinpath(f"pglib_opf_case{case}.mat")
-            for case in ["3_lmbd", "5_pjm", "14_ieee"]
+            self.dataset_dir.joinpath(f"case{case}.mat")
+            for case in ["9", "14", "57", "118", "300", "NY"]
         ]
 
         for file_path in case_mat_files:
