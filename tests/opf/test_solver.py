@@ -5,6 +5,8 @@ import math
 import random
 import unittest
 
+from gurobipy import GRB
+
 from gurobi_optimods.datasets import load_opf_example
 from gurobi_optimods.opf import solve_opf
 
@@ -161,6 +163,7 @@ class TestAPICase9(unittest.TestCase):
         self.assert_approx_equal(solution["gen"][0]["Pg"], 89.803524, tol=1e-1)
         self.assert_approx_equal(solution["branch"][1]["Pt"], -34.1774, tol=1e-1)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_aclocal(self):
         solution = solve_opf(self.case, opftype="aclocal")
         self.assertEqual(solution["success"], 1)
@@ -371,6 +374,7 @@ class TestAPICase5_PJMReordered(unittest.TestCase):
             solution_original["f"], solution_reordered["f"], tol=1e1
         )
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_aclocal(self):
         # Test AC local option, should arrive at a similar result
         kwargs = dict(opftype="aclocal")
