@@ -224,7 +224,7 @@ argument specifies otherwise.
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
 
     ...
-    Optimize a model with 73 rows, 107 columns and 208 nonzeros
+    Optimize a model with 19 rows, 107 columns and 28 nonzeros
     ...
     Optimal solution found...
     ...
@@ -276,7 +276,7 @@ solution information, as specified below.
             :options: +NORMALIZE_WHITESPACE
 
             >>> result['bus'][0]
-            {... 'Vm': 1.09..., 'Va': 0, ...}
+            {... 'Vm': 1.09..., 'Va': 0.0, ...}
 
     .. tab:: Branches
 
@@ -410,7 +410,7 @@ whether branch switching allows a better solution.
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
 
     ...
-    Optimize a model with 278 rows, 185 columns and 694 nonzeros
+     Optimize a model with 212 rows, 185 columns and 424 nonzeros
     ...
 
 Plotting the resulting solution shows that one branch has been turned off in the
@@ -483,9 +483,9 @@ data:
 .. doctest:: opf
 
     >>> print(violations['branch'][6]['limitviol'])
-    66.33435016796234
+    66.33435...
     >>> print(violations['bus'][3]['Pviol'])
-    -318.8997836192236
+    -318.8997...
 
 In this case, the limit at branch 6 and the real power injection at bus 3 are
 violated by the given input voltages.

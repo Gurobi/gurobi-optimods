@@ -130,6 +130,7 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
     Qvar_f = alldata["LP"]["Qvar_f"]
     Qvar_t = alldata["LP"]["Qvar_t"]
 
+    # Recomputing the active and reactive power flows using the voltage variables
     for j, branch in branches.items():
         for item in [
             (branch.Pdeffconstr, Pvar_f[branch]),
@@ -139,17 +140,34 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
         ]:
             constr = item[0]
             var = item[1]
-
-            row = model.getRow(constr)
-            sum = -constr.RHS
             leadcoeff = 0
-            for i in range(row.size()):
-                v = row.getVar(i)
-                coeff = row.getCoeff(i)
-                if v.Varname != var.Varname:
-                    sum += coeff * xbuffer[v]
-                else:
-                    leadcoeff = coeff
+            # If the constraint is linear, e.g., Pvar_f = f(cosvar,sinvar), f linear
+            if type(constr) is gp.Constr:
+                row = model.getRow(constr)
+                sum = -constr.RHS
+                for i in range(row.size()):
+                    v = row.getVar(i)
+                    coeff = row.getCoeff(i)
+                    if v.Varname != var.Varname:
+                        sum += coeff * xbuffer[v]
+                    else:
+                        leadcoeff = coeff
+            else:  # Rectangular formulation with Pvar_f = f(evar,fvar), f quadratic
+                row = model.getQCRow(constr)
+                sum = -constr.QCRHS
+                for i in range(row.size()):
+                    v1 = row.getVar1(i)
+                    v2 = row.getVar2(i)
+                    coeff = row.getCoeff(i)
+                    sum += coeff * xbuffer[v1] * xbuffer[v2]
+                lterms = row.getLinExpr()
+                for i in range(lterms.size()):
+                    v = lterms.getVar(i)
+                    coeff = lterms.getCoeff(i)
+                    if v.Varname != var.Varname:
+                        sum += coeff * xbuffer[v]
+                    else:
+                        leadcoeff = coeff
 
             xbuffer[var] = -sum / leadcoeff
             # leadcoeff should be +1 or -1

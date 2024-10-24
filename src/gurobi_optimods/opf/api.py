@@ -74,8 +74,18 @@ def solve_opf(
         fields
     """
 
-    # Exact cartesian AC (force jabr for performance reasons)
-    if opftype.lower() == "ac":
+    # use aclocal to run Gurobi as a local solver (stops at the first feasible solution)
+    if opftype.lower() == "aclocal":
+        opftype = "ac"
+        useef = True
+        usejabr = False
+        default_solver_params = {
+            "Presolve": 0,
+            "SolutionLimit": 1,
+            "NodeLimit": 0,
+            "GURO_PAR_NLBARSLOPPYLIMIT": 2000,
+        }
+    elif opftype.lower() == "ac":
         opftype = "ac"
         useef = True
         usejabr = True

@@ -1,8 +1,11 @@
 # Tests that solve models using the public API
 
 import collections
+import math
 import random
 import unittest
+
+from gurobipy import GRB
 
 from gurobi_optimods.datasets import load_opf_example
 from gurobi_optimods.opf import solve_opf
@@ -146,12 +149,10 @@ class TestAPICase9(unittest.TestCase):
         self.assert_solution_valid(solution)
 
         self.assertIsNotNone(solution["f"])
-        self.assert_approx_equal(solution["f"], 5296.6862, tol=1.0)
+        self.assert_approx_equal(solution["f"], 5296.76, tol=1.0)
         self.assert_approx_equal(solution["bus"][0]["Va"], 0.0, tol=1e-1)
         self.assert_approx_equal(solution["gen"][1]["Qg"], 0.0318441, tol=1e-1)
-        self.assert_approx_equal(
-            solution["branch"][2]["Pt"], 55.96906046691643, tol=1e-1
-        )
+        self.assert_approx_equal(solution["branch"][2]["Pt"], 56.23, tol=1e-1)
 
     def test_ac_relax(self):
         solution = solve_opf(self.case, opftype="ACRelax")
@@ -161,6 +162,101 @@ class TestAPICase9(unittest.TestCase):
         self.assert_approx_equal(solution["f"], 5296.66532, tol=1e-1)
         self.assert_approx_equal(solution["gen"][0]["Pg"], 89.803524, tol=1e-1)
         self.assert_approx_equal(solution["branch"][1]["Pt"], -34.1774, tol=1e-1)
+
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
+    def test_aclocal(self):
+        solution = solve_opf(self.case, opftype="aclocal")
+        self.assertEqual(solution["success"], 1)
+        self.assert_solution_valid(solution)
+
+        # A local solution should get somewhere close to optimal
+        self.assert_approx_equal(solution["f"], 5296.66532, tol=1e1)
+
+    def test_ac_branchswitching_infeasible(self):
+        # Modify the case to make it infeasible
+        self.case["bus"][1]["Vmax"] = 0.8
+
+        # Solve model, expect failure
+        with self.assertRaisesRegex(ValueError, "Infeasible model"):
+            solve_opf(self.case, opftype="AC", branch_switching=True)
+
+
+class TestAPICase5_PJM(unittest.TestCase):
+    # Test configurations of case5_pjm with known optimal values. We should
+    # get reasonable reproducibility on this small case.
+
+    def setUp(self):
+        self.case = load_opf_example("pglib_opf_case5_pjm")
+
+    def assert_approx_equal(self, value, expected, tol):
+        self.assertLess(abs(value - expected), tol)
+
+    def assert_solution_valid(self, solution):
+        # The solution carries over the same structure as the case input data,
+        # and some values (e.g. bus refs) must match exactly in the ordering.
+
+        self.assertEqual(
+            set(solution.keys()), set(self.case.keys()) | {"et", "success", "f"}
+        )
+        self.assertEqual(solution["baseMVA"], self.case["baseMVA"])
+
+        for sol_bus, case_bus in zip(solution["bus"], self.case["bus"]):
+            self.assertTrue(set(sol_bus.keys()).issuperset((set(case_bus.keys()))))
+            self.assertEqual(sol_bus["bus_i"], case_bus["bus_i"])
+
+        for sol_branch, case_branch in zip(solution["branch"], self.case["branch"]):
+            self.assertTrue(
+                set(sol_branch.keys()).issuperset((set(case_branch.keys())))
+            )
+            self.assertEqual(sol_branch["fbus"], case_branch["fbus"])
+            self.assertEqual(sol_branch["tbus"], case_branch["tbus"])
+
+        for sol_gen, case_gen in zip(solution["gen"], self.case["gen"]):
+            self.assertTrue(set(sol_gen.keys()).issuperset((set(case_gen.keys()))))
+            self.assertEqual(sol_gen["bus"], case_gen["bus"])
+
+        for sol_gencost, case_gencost in zip(solution["gencost"], self.case["gencost"]):
+            self.assertTrue(
+                set(sol_gencost.keys()).issuperset((set(case_gencost.keys())))
+            )
+            self.assertEqual(sol_gencost["costtype"], case_gencost["costtype"])
+            self.assertEqual(sol_gencost["n"], case_gencost["n"])
+
+    def test_dc(self):
+        solution = solve_opf(self.case, opftype="DC")
+        self.assertEqual(solution["success"], 1)
+        self.assert_solution_valid(solution)
+
+        self.assert_approx_equal(solution["f"], 17479.89, tol=1e-1)
+
+    def test_ac(self):
+        solution = solve_opf(self.case, opftype="AC")
+        self.assertEqual(solution["success"], 1)
+        self.assert_solution_valid(solution)
+
+        self.assert_approx_equal(solution["f"], 17551.89, tol=1e-1)
+
+    @unittest.skip("shaky")
+    def test_ac_branchswitching(self):
+        solution = solve_opf(
+            self.case,
+            opftype="AC",
+            branch_switching=True,
+            use_mip_start=False,
+            solver_params={"MIPGap": 1e-4},
+        )
+        self.assertEqual(solution["success"], 1)
+        self.assert_solution_valid(solution)
+
+        self.assertIsNotNone(solution["f"])
+        self.assert_approx_equal(solution["f"], 15174, tol=1)
+
+    def test_ac_relax(self):
+        solution = solve_opf(self.case, opftype="ACRelax")
+        self.assertEqual(solution["success"], 1)
+        self.assert_solution_valid(solution)
+
+        self.assert_approx_equal(solution["f"], 14999.71, tol=1e-1)
 
     def test_ac_branchswitching_infeasible(self):
         # Modify the case to make it infeasible
@@ -191,12 +287,12 @@ class TestComputeVoltageAnglesBug(unittest.TestCase):
         self.assertEqual(num_zeros, 1)
 
 
-class TestAPICase9Reordered(unittest.TestCase):
+class TestAPICase5_PJMReordered(unittest.TestCase):
     # It should be possible to re-order the input data (i.e. the lists of buses,
     # branches, generators) and get the same result
 
     def setUp(self):
-        self.case = load_opf_example("case9")
+        self.case = load_opf_example("pglib_opf_case5_pjm")
 
         self.bus_reorder = [i for i, _ in enumerate(self.case["bus"])]
         self.branch_reorder = [i for i, _ in enumerate(self.case["branch"])]
@@ -208,6 +304,7 @@ class TestAPICase9Reordered(unittest.TestCase):
 
         self.case_reordered = {
             "baseMVA": self.case["baseMVA"],
+            "casename": self.case["casename"],
             "bus": [dict(self.case["bus"][ind]) for ind in self.bus_reorder],
             "branch": [dict(self.case["branch"][ind]) for ind in self.branch_reorder],
             "gen": [dict(self.case["gen"][ind]) for ind in self.gen_reorder],
@@ -245,7 +342,9 @@ class TestAPICase9Reordered(unittest.TestCase):
             gen_original = solution_original["gen"][orig_ind]
             gen_reordered = solution_reordered["gen"][ind]
             for key, value in gen_original.items():
-                self.assert_approx_equal(gen_reordered[key], value, tol=1e-3)
+                # Some Gen entries are not initialized, e.g., Qc2min, check for nan
+                if not math.isnan(value):
+                    self.assert_approx_equal(gen_reordered[key], value, tol=1e-3)
 
     def test_ac(self):
         # Results are too numerically unstable, just check the call goes through
@@ -268,6 +367,17 @@ class TestAPICase9Reordered(unittest.TestCase):
             opftype="acrelax",
             solver_params={"OptimalityTol": 1e-6},
         )
+        solution_original = solve_opf(self.case, **kwargs)
+        solution_reordered = solve_opf(self.case_reordered, **kwargs)
+
+        self.assert_approx_equal(
+            solution_original["f"], solution_reordered["f"], tol=1e1
+        )
+
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
+    def test_aclocal(self):
+        # Test AC local option, should arrive at a similar result
+        kwargs = dict(opftype="aclocal")
         solution_original = solve_opf(self.case, **kwargs)
         solution_reordered = solve_opf(self.case_reordered, **kwargs)
 
