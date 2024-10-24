@@ -23,6 +23,8 @@ jobs:
         exclude:
           - python: "3.12"
             gurobipy: "~=10.0"
+          - os: macos-latest
+            gurobipy: "==12.0.0b3"
 
     steps:
       - uses: actions/checkout@v4
