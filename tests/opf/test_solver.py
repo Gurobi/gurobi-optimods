@@ -161,6 +161,14 @@ class TestAPICase9(unittest.TestCase):
         self.assert_approx_equal(solution["gen"][0]["Pg"], 89.803524, tol=1e-1)
         self.assert_approx_equal(solution["branch"][1]["Pt"], -34.1774, tol=1e-1)
 
+    def test_aclocal(self):
+        solution = solve_opf(self.case, opftype="aclocal")
+        self.assertEqual(solution["success"], 1)
+        self.assert_solution_valid(solution)
+
+        # A local solution should get somewhere close to optimal
+        self.assert_approx_equal(solution["f"], 5296.66532, tol=1e1)
+
     def test_ac_branchswitching_infeasible(self):
         # Modify the case to make it infeasible
         self.case["bus"][1]["Vmax"] = 0.8
@@ -356,6 +364,16 @@ class TestAPICase5_PJMReordered(unittest.TestCase):
             opftype="acrelax",
             solver_params={"OptimalityTol": 1e-6},
         )
+        solution_original = solve_opf(self.case, **kwargs)
+        solution_reordered = solve_opf(self.case_reordered, **kwargs)
+
+        self.assert_approx_equal(
+            solution_original["f"], solution_reordered["f"], tol=1e1
+        )
+
+    def test_aclocal(self):
+        # Test AC local option, should arrive at a similar result
+        kwargs = dict(opftype="aclocal")
         solution_original = solve_opf(self.case, **kwargs)
         solution_reordered = solve_opf(self.case_reordered, **kwargs)
 
