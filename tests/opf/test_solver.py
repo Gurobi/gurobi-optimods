@@ -2,7 +2,9 @@
 
 import collections
 import math
+import os
 import random
+import sys
 import unittest
 
 from gurobipy import GRB
@@ -154,6 +156,12 @@ class TestAPICase9(unittest.TestCase):
         self.assert_approx_equal(solution["gen"][1]["Qg"], 0.0318441, tol=1e-1)
         self.assert_approx_equal(solution["branch"][2]["Pt"], 56.23, tol=1e-1)
 
+    @unittest.skipIf(
+        os.environ.get("CI", "false") == "true"
+        and sys.platform == "darwin"
+        and GRB.VERSION_MAJOR == 12,
+        "Numerical trouble on github macos runners",
+    )
     def test_ac_relax(self):
         solution = solve_opf(self.case, opftype="ACRelax")
         self.assertEqual(solution["success"], 1)
