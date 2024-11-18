@@ -16,7 +16,8 @@ jobs:
     strategy:
       matrix:
         python: ["3.9", "3.12"]
-        gurobipy: ["~=10.0", "~=11.0", "==12.0.0b3"]
+        gurobipy: ["~=11.0", "~=12.0"]
+        #gurobipy: ["~=10.0", "~=11.0", "~=12.0"]
         exclude:
           - python: "3.12"
             gurobipy: "~=10.0"
