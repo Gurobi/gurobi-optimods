@@ -195,6 +195,10 @@ argument when calling the function. Currently, the available options are ``AC``,
   it is also the most difficult problem to solve and thus usually leads to the
   longer runtimes.
 
+- The ``AClocal`` setting solves the ``AC`` problem using adjusted settings to
+  quickly find a good quality local solution, without attempting to solve to
+  global optimality.
+
 - The ``ACrelax`` setting solves a Second Order Cone (SOC) relaxation of the
   nonconvex bilinear ACOPF problem formulation defined by the given network
   data. The relaxation is constructed by dropping nonconvex bilinear terms but
@@ -402,7 +406,10 @@ whether branch switching allows a better solution.
 
     case = datasets.load_opf_example("case9-switching")
     result = opf.solve_opf(
-        case, opftype="AC", branch_switching=True, min_active_branches=0.1
+        case, opftype="AC",
+        branch_switching=True,
+        min_active_branches=0.1,
+        time_limit=60,
     )
 
 .. testoutput:: opf
