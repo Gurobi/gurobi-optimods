@@ -14,7 +14,7 @@ dict2css==0.3.0.post1
 docutils==0.21.2
 domdf-python-tools==3.8.0.post2
 filelock==3.14.0
-furo==2024.04.27
+furo==2024.08.06
 html5lib==1.1
 idna==3.7
 imagesize==1.4.1
