@@ -42,7 +42,27 @@ out.
 
 ## Release process
 
-We use github releases and actions to publish to PyPI. Currently, all releases are built from the main branch. To release version `X.Y.Z`:
+We use github releases and actions to publish to PyPI. Currently, all releases
+are built from the main branch.
+
+Release using Github CLI:
+
+```
+# Update version and push
+hatch version <new version>
+git commit -a -m "Bump version to $(hatch version)"
+git push origin main
+
+# Create the release
+gh release create --generate-notes --target=main v$(hatch version)
+
+# Update to next dev version
+hatch version <next bugfix version>.dev0
+git commit -a -m "Bump version to $(hatch version)"
+git push origin main
+```
+
+Manual release of version `X.Y.Z` using Github web UI:
 
 1. Ensure `src/gurobi_optimods/__init__.py` on branch `main` contains `__version__ = "X.Y.Z"`
 2. Go to Releases -> [Draft a new release](https://github.com/Gurobi/gurobi-optimods/releases/new) in GitHub
