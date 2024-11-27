@@ -109,12 +109,8 @@ def lpformulator_optimize(alldata, model, opftype):
             bus = buses[j]
             evar[bus].PStart = 1.0
         if alldata["branchswitching_mip"]:
-            zvar = alldata["MIP"]["zvar"]
-            branches = alldata["branches"]
-            numbranches = alldata["numbranches"]
-            for j in range(1, 1 + numbranches):
-                branch = branches[j]
-                zvar[branch].PStart = 1.0
+            for zvar in alldata["MIP"]["zvar"].values():
+                zvar.PStart = 1.0
         model.update()
     model.optimize()
 
