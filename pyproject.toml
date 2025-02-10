@@ -36,7 +36,7 @@ dynamic = ["version"]
 examples = [
     "matplotlib",
     "networkx",
-    "plotly",
+    "plotly<6",
     "scikit-learn"
 ]
 
