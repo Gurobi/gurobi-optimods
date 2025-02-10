@@ -18,7 +18,7 @@ furo==2024.08.06
 html5lib==1.1
 idna==3.7
 imagesize==1.4.1
-Jinja2==3.1.4
+Jinja2==3.1.5
 latexcodec==3.0.0
 MarkupSafe==2.1.5
 msgpack==1.0.8
