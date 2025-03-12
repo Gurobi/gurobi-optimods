@@ -382,14 +382,21 @@ def fill_result_fields(alldata, model, opftype, result):
 
                 alldata["LP"]["cvar"] = cvar
 
-        if alldata["dopolar"] and not alldata["doiv"]:
+        elif alldata["dopolar"] and not alldata["doiv"]:
             for busindex in result["bus"]:
                 resbus = result["bus"][busindex]
                 databus = alldata["buses"][busindex]
                 # Override old values
                 resbus["Vm"] = alldata["LP"]["vvar"][databus].X  # Voltage magnitude
                 resbus["Va"] = alldata["LP"]["thetavar"][databus].X  # Voltage angle
-
+        else:  # ACrelax
+            for busindex in result["bus"]:
+                resbus = result["bus"][busindex]
+                databus = alldata["buses"][busindex]
+                # in ACrelax, cvar[bus] prepresents the square of the voltage magnitude
+                resbus["Vm"] = math.sqrt(
+                    alldata["LP"]["cvar"][databus].X
+                )  # Voltage magnitude
         # Generator solution data
         for genindex in result["gen"]:
             resgen = result["gen"][genindex]
