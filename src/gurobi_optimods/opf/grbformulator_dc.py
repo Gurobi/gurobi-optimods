@@ -105,8 +105,8 @@ def _add_dc_branch_variables(alldata, model):
 
         if branchswitching:
             twinPvar_f[branch] = model.addVar(
-                lb=-bound,
-                ub=bound,
+                lb=-alldata["sumPd"],
+                ub=alldata["sumPd"],
                 name=f"twinP_{j}_{branch.f}_{branch.t}",
             )
 
@@ -171,11 +171,11 @@ def _add_dc_branch_activepower_constraints(alldata, model):
                 name=f"dnmip_{j}_{branch.f}_{branch.t}",
             )
             model.addConstr(
-                twinPvar_f[branch] <= coeff * (1 - zvar[branch]),
+                twinPvar_f[branch] <= alldata["sumPd"] * (1 - zvar[branch]),
                 name=f"upmip_twin_{j}_{branch.f}_{branch.t}",
             )
             model.addConstr(
-                twinPvar_f[branch] >= -coeff * (1 - zvar[branch]),
+                twinPvar_f[branch] >= -alldata["sumPd"] * (1 - zvar[branch]),
                 name=f"dnmip_twin__{j}_{branch.f}_{branch.t}",
             )
 
