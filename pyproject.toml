@@ -25,7 +25,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "gurobipy[matrixapi]>=10.0.3",
+    "gurobipy[matrixapi]>=11.0.0",
     "gurobipy-pandas>=1.0.0",
     "numpy",
     "pandas",
