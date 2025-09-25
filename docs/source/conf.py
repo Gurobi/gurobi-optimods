@@ -95,9 +95,6 @@ numpydoc_xref_ignore = {"optional", "or", "of"}
 doctest_global_setup = """
 def size_limited_license():
 
-    import numpy as np
-    np.set_printoptions(legacy='1.25')
-
     result = False
 
     try:
@@ -112,6 +109,9 @@ def size_limited_license():
             result = True
 
     return result
+
+import numpy as np
+np.set_printoptions(legacy='1.25')
 """
 
 
