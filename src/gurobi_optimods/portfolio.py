@@ -172,7 +172,8 @@ class MeanVariancePortfolio:
         initial_holdings = self._homogenize_input(initial_holdings)
 
         if initial_holdings is not None:
-            if initial_holdings.sum() > 1.0:
+            # Need a slight tolerance for accumulated sum error
+            if initial_holdings.sum() > 1.0 + 1e-10:
                 raise ValueError("Initial holding's sum must not exceed 1.0")
         else:
             initial_holdings = np.zeros(self._mu.shape)
