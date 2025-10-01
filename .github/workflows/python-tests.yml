@@ -1,4 +1,4 @@
-# Run the unit tests against oldest and newest supported python versions, and
+# Run the unit tests against older and newer supported python versions, and
 # major gurobipy versions.
 
 name: Unit tests
@@ -17,10 +17,6 @@ jobs:
       matrix:
         python: ["3.9", "3.12"]
         gurobipy: ["~=11.0", "~=12.0"]
-        #gurobipy: ["~=10.0", "~=11.0", "~=12.0"]
-        exclude:
-          - python: "3.12"
-            gurobipy: "~=10.0"
 
     steps:
       - uses: actions/checkout@v4
