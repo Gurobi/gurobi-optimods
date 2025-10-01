@@ -30,7 +30,7 @@ pybtex==0.24.0
 pybtex-docutils==1.0.3
 Pygments==2.18.0
 PyYAML==6.0.1
-requests==2.32.2
+requests==2.32.5
 ruamel.yaml==0.18.6
 ruamel.yaml.clib==0.2.8
 six==1.16.0
@@ -54,5 +54,5 @@ sphinxcontrib-qthelp==1.0.7
 sphinxcontrib-serializinghtml==1.1.10
 tabulate==0.9.0
 typing_extensions==4.11.0
-urllib3==2.2.2
+urllib3==2.5.0
 webencodings==0.5.1
