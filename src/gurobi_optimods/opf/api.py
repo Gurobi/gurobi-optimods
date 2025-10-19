@@ -79,6 +79,7 @@ def solve_opf(
         opftype = "ac"
         useef = True
         usejabr = False
+        polar = False
         default_solver_params = {
             "Presolve": 0,
             "SolutionLimit": 1,
@@ -89,18 +90,28 @@ def solve_opf(
         opftype = "ac"
         useef = True
         usejabr = True
+        polar = False
+        default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
+    # Exact polar AC
+    elif opftype.lower() == "acpolar":
+        opftype = "ac"
+        useef = False
+        usejabr = False
+        polar = True
         default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
     # AC relaxation using the JABR inequality
     elif opftype.lower() == "acrelax":
         opftype = "ac"
         useef = False
         usejabr = True
+        polar = False
         default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
     # DC linear approximation (ef & jabr are irrelevant)
     elif opftype.lower() == "dc":
         opftype = "dc"
         useef = False
         usejabr = False
+        polar = False
         default_solver_params = {"MIPGap": 1e-4, "OptimalityTol": 1e-4}
     else:
         raise ValueError(f"Unknown opftype '{opftype}'")
@@ -115,8 +126,8 @@ def solve_opf(
             branchswitching=branch_switching,
             usemipstart=use_mip_start,
             minactivebranches=min_active_branches,
-            polar=False,
-            ivtype="aggressive",
+            polar=polar,
+            ivtype="aggressive",  # ignored, no IV formulation used
             useactivelossineqs=False,
         )
 
