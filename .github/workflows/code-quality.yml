@@ -1,5 +1,5 @@
-# Run some flake8 checks against min python version (3.8).
-# Verify that commit authors ran pre-commit hooks.
+# Run some linting checks.
+# Verifies that commit authors ran pre-commit hooks.
 
 name: Basic code quality checks
 

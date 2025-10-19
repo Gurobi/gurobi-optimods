@@ -1,4 +1,4 @@
-# Run the doctests against python 3.8 + gurobipy 10.
+# Run the doctests against multiple gurobipy versions.
 # Doctests should pass with the 'examples' extra deps installed.
 
 name: Doc tests
@@ -17,7 +17,6 @@ jobs:
       matrix:
         python: ["3.11"]
         gurobipy: ["~=11.0", "~=12.0"]
-        #gurobipy: ["~=10.0", "~=11.0", "~=12.0"]
 
     steps:
       - uses: actions/checkout@v4
