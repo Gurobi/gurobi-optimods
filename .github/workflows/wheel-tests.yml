@@ -41,7 +41,6 @@ jobs:
       - name: Fetch dependencies for offline install
         run: |
           pip wheel --wheel-dir=dist gurobipy${{ matrix.gurobipy }} pandas numpy scipy gurobipy-pandas
-          pip wheel --wheel-dir=dist "numpy<2"
       - name: Install from built wheel
         run: |
           python -m pip install --find-links dist --no-index --only-binary=:all: gurobi-optimods gurobipy${{ matrix.gurobipy }}
