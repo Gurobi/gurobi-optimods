@@ -274,6 +274,14 @@ class TestAPICase5_PJM(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Infeasible model"):
             solve_opf(self.case, opftype="AC", branch_switching=True)
 
+    def test_ac_polar(self):
+        kwargs = dict(
+            opftype="acpolar",
+            solver_params={"MIPGap": 2e-2, "TimeLimit": 60},
+        )
+        solution = solve_opf(self.case, **kwargs)
+        self.assertLess(solution["f"], 18000)
+
 
 class TestComputeVoltageAnglesBug(unittest.TestCase):
     # Reordering the buses on input (which does not change the network
