@@ -46,7 +46,7 @@ class TestComputeVoltages(unittest.TestCase):
             self.assertEqual(sol_gencost["n"], case_gencost["n"])
 
     def test_volts(self):
-        violations = compute_violations(self.case, self.volts_data, polar=True)
+        violations = compute_violations(self.case, self.volts_data, polar=False)
         self.assert_solution_valid(violations)
 
         # Known values, should be stable

@@ -7,6 +7,8 @@ Contains the actual mods / public API.
 
 import logging
 
+import gurobipy as gp
+
 from gurobi_optimods.opf import converters, grbformulator, violations
 from gurobi_optimods.utils import optimod
 
@@ -74,18 +76,42 @@ def solve_opf(
         fields
     """
 
-    # use aclocal to run Gurobi as a local solver (stops at the first feasible solution)
-    if opftype.lower() == "aclocal":
+    # use acrlocal to run Gurobi as a local solver with the rectangular formulation (QCQP)
+    if opftype.lower() == "acrlocal":
         opftype = "ac"
         useef = True
         usejabr = False
         polar = False
-        default_solver_params = {
-            "Presolve": 0,
-            "SolutionLimit": 1,
-            "NodeLimit": 0,
-            "GURO_PAR_NLBARSLOPPYLIMIT": 2000,
-        }
+        version = gp.gurobi.version()
+        if version >= (13, 0, 0):
+            default_solver_params = {
+                "OptimalityTarget": 1,
+            }
+        else:
+            default_solver_params = {
+                "Presolve": 0,
+                "SolutionLimit": 1,
+                "NodeLimit": 0,
+                "GURO_PAR_NLBARSLOPPYLIMIT": 2000,
+            }
+    # use acplocal to run Gurobi as a local solver with the polar formulation (trigonometric functions)
+    elif opftype.lower() == "acplocal":
+        opftype = "ac"
+        useef = False
+        usejabr = False
+        polar = True
+        version = gp.gurobi.version()
+        if version >= (13, 0, 0):
+            default_solver_params = {
+                "OptimalityTarget": 1,
+            }
+        else:
+            default_solver_params = {
+                "Presolve": 0,
+                "SolutionLimit": 1,
+                "NodeLimit": 0,
+                "GURO_PAR_NLBARSLOPPYLIMIT": 2000,
+            }
     elif opftype.lower() == "ac":
         opftype = "ac"
         useef = True
@@ -234,5 +260,6 @@ def compute_violations(case, voltages, polar=False, *, create_env):
     converters.grbmap_volts_from_dict(alldata, voltages)
 
     # Compute model violations based on user input voltages
-    with create_env() as env:
-        return violations.compute_violations_from_voltages(env, alldata)
+    if not polar:
+        with create_env() as env:
+            return violations.compute_violations_from_voltages(env, alldata)

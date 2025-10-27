@@ -152,7 +152,9 @@ def grbderive_xtra_sol_values_from_voltages(alldata, model):
                         sum += coeff * xbuffer[v]
                     else:
                         leadcoeff = coeff
-            else:  # Rectangular formulation with Pvar_f = f(evar,fvar), f quadratic
+            elif (
+                type(constr) is gp.QConstr
+            ):  # Rectangular formulation with Pvar_f = f(evar,fvar), f quadratic
                 row = model.getQCRow(constr)
                 sum = -constr.QCRHS
                 for i in range(row.size()):

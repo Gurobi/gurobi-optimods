@@ -407,10 +407,10 @@ The OptiMod can be run as follows:
     >>> # Show the first 4 nodes with their attributes
     >>> first_four_nodes_with_attrs = list(graph_out.nodes.data())[:4]
     >>> print(first_four_nodes_with_attrs)
-    [(50, {'pos': [13.428468, 52.499035], 'pos_oct': (5.0, 25.0)}),
-     (82, {'pos': [13.417748, 52.499047], 'pos_oct': (4.0, 25.0)}),
-     (127, {'pos': [13.406531, 52.498274], 'pos_oct': (2.0, 25.0)}),
-     (53, {'pos': [13.39176, 52.497774], 'pos_oct': (1.0, 25.0)})]
+    [(50, {'pos': [13.428468, 52.499035], 'pos_oct': (5.0, 3.0)}),
+     (82, {'pos': [13.417748, 52.499047], 'pos_oct': (4.0, 3.0)}),
+     (127, {'pos': [13.406531, 52.498274], 'pos_oct': (3.0, 3.0)}),
+     (53, {'pos': [13.39176, 52.497774], 'pos_oct': (1.0, 3.0)})]
 
 Note, for this demonstration the parameter ``include_planarity`` is set to
 False, and we skip the improving constraints. This is done so that the test
