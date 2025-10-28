@@ -173,7 +173,7 @@ class TestAPICase9(unittest.TestCase):
 
     @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_aclocal(self):
-        solution = solve_opf(self.case, opftype="aclocal")
+        solution = solve_opf(self.case, opftype="acrlocal")
         self.assertEqual(solution["success"], 1)
         self.assert_solution_valid(solution)
 
@@ -273,6 +273,28 @@ class TestAPICase5_PJM(unittest.TestCase):
         # Solve model, expect failure
         with self.assertRaisesRegex(ValueError, "Infeasible model"):
             solve_opf(self.case, opftype="AC", branch_switching=True)
+
+    def test_ac_polar(self):
+        kwargs = dict(
+            opftype="acpolar",
+            solver_params={"MIPGap": 2e-2, "TimeLimit": 60},
+        )
+        solution = solve_opf(self.case, **kwargs)
+        self.assert_approx_equal(solution["f"], 17551.89, tol=1e-1)
+
+    def test_acp_local(self):
+        kwargs = dict(
+            opftype="acplocal",
+        )
+        solution = solve_opf(self.case, **kwargs)
+        self.assert_approx_equal(solution["f"], 17551.89, tol=1e-1)
+
+    def test_acr_local(self):
+        kwargs = dict(
+            opftype="acrlocal",
+        )
+        solution = solve_opf(self.case, **kwargs)
+        self.assert_approx_equal(solution["f"], 17551.89, tol=1e-1)
 
 
 class TestComputeVoltageAnglesBug(unittest.TestCase):
@@ -385,7 +407,7 @@ class TestAPICase5_PJMReordered(unittest.TestCase):
     @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_aclocal(self):
         # Test AC local option, should arrive at a similar result
-        kwargs = dict(opftype="aclocal")
+        kwargs = dict(opftype="acrlocal")
         solution_original = solve_opf(self.case, **kwargs)
         solution_reordered = solve_opf(self.case_reordered, **kwargs)
 

@@ -57,7 +57,7 @@ class TestGraphicsCase9(unittest.TestCase):
         self.case9_coords = load_opf_extra("case9-coordinates")
         volts_data = load_opf_extra("case9-voltages")
         self.case9_violations = compute_violations(
-            self.case9, volts_data, polar=True, verbose=False
+            self.case9, volts_data, polar=False, verbose=False
         )
 
         # Load manually created solution with some branches switched off

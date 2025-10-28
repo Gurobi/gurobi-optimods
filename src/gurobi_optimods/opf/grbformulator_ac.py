@@ -2,7 +2,7 @@ import logging
 import math
 
 import gurobipy as gp
-from gurobipy import GRB
+from gurobipy import GRB, nlfunc
 
 from gurobi_optimods.opf.grbformulator_common import set_gencost_objective
 
@@ -62,16 +62,18 @@ def lpformulator_ac_create_vars(alldata, model):
 
     for j, bus in buses.items():
         # Injection variables
-        if alldata["fixcs"] and bus.inputvoltage:
-            # We have a input voltage solution: fix variables within tolerance
-            lbound = bus.inputV * bus.inputV - fixtolerance
-            ubound = bus.inputV * bus.inputV + fixtolerance
-        else:
-            ubound = bus.Vmax * bus.Vmax
-            lbound = bus.Vmin * bus.Vmin
-        cvar[bus] = model.addVar(
-            lb=lbound, ub=ubound, name=f"c_{bus.nodeID}_{bus.nodeID}"
-        )
+
+        if not alldata["dopolar"]:
+            if alldata["fixcs"] and bus.inputvoltage:
+                # We have a input voltage solution: fix variables within tolerance
+                lbound = bus.inputV * bus.inputV - fixtolerance
+                ubound = bus.inputV * bus.inputV + fixtolerance
+            else:
+                ubound = bus.Vmax * bus.Vmax
+                lbound = bus.Vmin * bus.Vmin
+            cvar[bus] = model.addVar(
+                lb=lbound, ub=ubound, name=f"c_{bus.nodeID}_{bus.nodeID}"
+            )
 
         # TODO csdefslacks?
         Pubound, Plbound, Qubound, Qlbound = computebalbounds(alldata, bus)
@@ -106,110 +108,111 @@ def lpformulator_ac_create_vars(alldata, model):
 
     # Branch related variables
     branches = alldata["branches"]
-    for j, branch in branches.items():
-        busf = buses[IDtoCountmap[branch.f]]
-        bust = buses[IDtoCountmap[branch.t]]
-        maxprod = busf.Vmax * bust.Vmax
-        minprod = busf.Vmin * bust.Vmin
+    if not alldata["dopolar"]:
+        for j, branch in branches.items():
+            busf = buses[IDtoCountmap[branch.f]]
+            bust = buses[IDtoCountmap[branch.t]]
+            maxprod = busf.Vmax * bust.Vmax
+            minprod = busf.Vmin * bust.Vmin
 
-        # Assumption 1.  zero angle difference is always allowed!
-        # More precisely minangle_rad <= 0 and maxaxangle_rad >= 0
-        if branch.maxangle_rad < 0 or branch.minangle_rad > 0:
-            raise ValueError(
-                f"Broken assumption 1: branch j {j} f {branch.f} t {branch.t} "
-                f"minanglerad {branch.minangle_rad} maxanglerad {branch.maxangle_rad}."
-            )
+            # Assumption 1.  zero angle difference is always allowed!
+            # More precisely minangle_rad <= 0 and maxaxangle_rad >= 0
+            if branch.maxangle_rad < 0 or branch.minangle_rad > 0:
+                raise ValueError(
+                    f"Broken assumption 1: branch j {j} f {branch.f} t {branch.t} "
+                    f"minanglerad {branch.minangle_rad} maxanglerad {branch.maxangle_rad}."
+                )
 
-        ubound = maxprod
-        lbound = -maxprod
-        maxanglerad = branch.maxangle_rad
-        minanglerad = branch.minangle_rad
-
-        # Cosine
-        if maxanglerad <= 0.5 * math.pi:
-            # In this case minangle <= 0
-            if minanglerad >= -0.5 * math.pi:
-                lbound = minprod * min(math.cos(maxanglerad), math.cos(minanglerad))
-            elif minanglerad >= -math.pi:
-                lbound = maxprod * math.cos(minanglerad)  # Which is negative
-            elif minanglerad >= -1.5 * math.pi:
-                lbound = -maxprod
-            else:
-                lbound = -maxprod
-
-        elif maxanglerad <= math.pi:
-            if minanglerad >= -0.5 * math.pi:
-                lbound = maxprod * math.cos(maxanglerad)
-            elif minanglerad >= -math.pi:
-                lbound = maxprod * min(math.cos(maxanglerad), math.cos(minanglerad))
-            elif minanglerad >= -1.5 * math.pi:
-                lbound = -maxprod
-            else:
-                lbound = -maxprod
-
-        elif maxanglerad <= 1.5 * math.pi:
-            lbound = -maxprod
-
-        elif maxanglerad <= 2 * math.pi:
-            lbound = -maxprod
-
-        else:
             ubound = maxprod
             lbound = -maxprod
+            maxanglerad = branch.maxangle_rad
+            minanglerad = branch.minangle_rad
 
-        if branch.inputcs:
-            ubound = branch.inputc + fixtolerance
-            lbound = branch.inputc - fixtolerance
+            # Cosine
+            if maxanglerad <= 0.5 * math.pi:
+                # In this case minangle <= 0
+                if minanglerad >= -0.5 * math.pi:
+                    lbound = minprod * min(math.cos(maxanglerad), math.cos(minanglerad))
+                elif minanglerad >= -math.pi:
+                    lbound = maxprod * math.cos(minanglerad)  # Which is negative
+                elif minanglerad >= -1.5 * math.pi:
+                    lbound = -maxprod
+                else:
+                    lbound = -maxprod
 
-        cvar[branch] = model.addVar(
-            lb=lbound, ub=ubound, name=f"c_{j}_{branch.f}_{branch.t}"
-        )
+            elif maxanglerad <= math.pi:
+                if minanglerad >= -0.5 * math.pi:
+                    lbound = maxprod * math.cos(maxanglerad)
+                elif minanglerad >= -math.pi:
+                    lbound = maxprod * min(math.cos(maxanglerad), math.cos(minanglerad))
+                elif minanglerad >= -1.5 * math.pi:
+                    lbound = -maxprod
+                else:
+                    lbound = -maxprod
 
-        # Sine
-        if maxanglerad <= math.pi / 2:
-            ubound = maxprod * math.sin(maxanglerad)
-
-            if minanglerad >= -0.5 * math.pi:
-                lbound = maxprod * math.sin(minanglerad)
-            elif minanglerad >= -math.pi:
+            elif maxanglerad <= 1.5 * math.pi:
                 lbound = -maxprod
-            elif minanglerad >= -1.5 * math.pi:
-                ubound = maxprod * max(math.sin(maxanglerad), math.sin(minanglerad))
+
+            elif maxanglerad <= 2 * math.pi:
                 lbound = -maxprod
+
             else:
                 ubound = maxprod
                 lbound = -maxprod
 
-        elif maxanglerad <= math.pi:
-            ubound = maxprod
+            if branch.inputcs:
+                ubound = branch.inputc + fixtolerance
+                lbound = branch.inputc - fixtolerance
 
-            if minanglerad >= -0.5 * math.pi:
-                lbound = maxprod * math.sin(minanglerad)
-            elif minanglerad >= -math.pi:
-                lbound = -maxprod
-            elif minanglerad >= -1.5 * math.pi:
-                lbound = -maxprod
+            cvar[branch] = model.addVar(
+                lb=lbound, ub=ubound, name=f"c_{j}_{branch.f}_{branch.t}"
+            )
+
+            # Sine
+            if maxanglerad <= math.pi / 2:
+                ubound = maxprod * math.sin(maxanglerad)
+
+                if minanglerad >= -0.5 * math.pi:
+                    lbound = maxprod * math.sin(minanglerad)
+                elif minanglerad >= -math.pi:
+                    lbound = -maxprod
+                elif minanglerad >= -1.5 * math.pi:
+                    ubound = maxprod * max(math.sin(maxanglerad), math.sin(minanglerad))
+                    lbound = -maxprod
+                else:
+                    ubound = maxprod
+                    lbound = -maxprod
+
+            elif maxanglerad <= math.pi:
+                ubound = maxprod
+
+                if minanglerad >= -0.5 * math.pi:
+                    lbound = maxprod * math.sin(minanglerad)
+                elif minanglerad >= -math.pi:
+                    lbound = -maxprod
+                elif minanglerad >= -1.5 * math.pi:
+                    lbound = -maxprod
+                else:
+                    lbound = -maxprod
+
+            elif maxanglerad <= 1.5 * math.pi:
+                ubound = maxprod
+
+                if minanglerad >= -0.5 * math.pi:
+                    lbound = maxprod * min(math.sin(maxanglerad), math.sin(minanglerad))
+                elif minanglerad >= -math.pi:
+                    lbound = -maxprod
+                elif minanglerad >= -1.5 * math.pi:
+                    lbound = -maxprod
+                else:
+                    lbound = -maxprod
             else:
+                ubound = maxprod
                 lbound = -maxprod
 
-        elif maxanglerad <= 1.5 * math.pi:
-            ubound = maxprod
-
-            if minanglerad >= -0.5 * math.pi:
-                lbound = maxprod * min(math.sin(maxanglerad), math.sin(minanglerad))
-            elif minanglerad >= -math.pi:
-                lbound = -maxprod
-            elif minanglerad >= -1.5 * math.pi:
-                lbound = -maxprod
-            else:
-                lbound = -maxprod
-        else:
-            ubound = maxprod
-            lbound = -maxprod
-
-        svar[branch] = model.addVar(
-            lb=lbound, ub=ubound, name=f"s_{j}_{branch.f}_{branch.t}"
-        )
+            svar[branch] = model.addVar(
+                lb=lbound, ub=ubound, name=f"s_{j}_{branch.f}_{branch.t}"
+            )
 
     Pvar_f = {}
     Qvar_f = {}
@@ -342,9 +345,7 @@ def lpformulator_ac_create_polar_vars(alldata, model):
             lbound = max(lbound, candidatelbound)
             ubound = min(ubound, candidateubound)
 
-        vvar[bus] = model.addVar(
-            obj=0.0, lb=lbound, ub=ubound, name="v_" + str(bus.nodeID)
-        )
+        vvar[bus] = model.addVar(lb=lbound, ub=ubound, name="v_" + str(bus.nodeID))
 
         ubound = 2 * math.pi
         lbound = -ubound
@@ -356,16 +357,11 @@ def lpformulator_ac_create_polar_vars(alldata, model):
             ubound = min(ubound, candidateubound)
 
         thetavar[bus] = model.addVar(
-            obj=0.0, lb=lbound, ub=ubound, name="theta_" + str(bus.nodeID)
+            lb=lbound, ub=ubound, name="theta_" + str(bus.nodeID)
         )
         newvarcount += 2
 
-    cosvar = {}
-    sinvar = {}
     thetaftvar = {}
-    vfvtvar = {}
-
-    logger.info("    Assumption. Phase angle diffs between -pi and pi.")
 
     for j, branch in branches.items():
         f = branch.f
@@ -375,45 +371,18 @@ def lpformulator_ac_create_polar_vars(alldata, model):
         busf = buses[count_of_f]
         bust = buses[count_of_t]
 
-        cosvar[branch] = model.addVar(
-            obj=0.0,
-            lb=-1.0,
-            ub=1.0,
-            name="cos_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
-        )
-        sinvar[branch] = model.addVar(
-            obj=0.0,
-            lb=-1.0,
-            ub=1.0,
-            name="sin_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
-        )
-
         # Major assumption! Heuristic: angle diffs between -pi and pi.
         thetaftvar[branch] = model.addVar(
-            obj=0.0,
-            lb=-math.pi,
-            ub=math.pi,
+            lb=branch.minangle_rad,
+            ub=branch.maxangle_rad,
             name="thetaft_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
         )
-
-        ubound = busf.Vmax * bust.Vmax
-        lbound = busf.Vmin * bust.Vmin
-
-        vfvtvar[branch] = model.addVar(
-            obj=0.0,
-            lb=lbound,
-            ub=ubound,
-            name="vfvt_%d_%d_%d" % (j, busf.nodeID, bust.nodeID),
-        )
-        newvarcount += 4
+        newvarcount += 1
 
     # Save polar variables data
     alldata["LP"]["vvar"] = vvar  # voltage magnitude of bus for polar case
     alldata["LP"]["thetavar"] = thetavar  # voltage angle of bus for polar case
-    alldata["LP"]["cosvar"] = cosvar
-    alldata["LP"]["sinvar"] = sinvar
     alldata["LP"]["thetaftvar"] = thetaftvar
-    alldata["LP"]["vfvtvar"] = vfvtvar
 
     logger.info(f"    Added {newvarcount} new variables to handle polar formulation.")
 
@@ -476,6 +445,10 @@ def lpformulator_ac_create_constraints(alldata, model):
     if alldata["use_ef"]:
         evar = alldata["LP"]["evar"]
         fvar = alldata["LP"]["fvar"]
+    elif alldata["dopolar"]:
+        vvar = alldata["LP"]["vvar"]
+        thetavar = alldata["LP"]["thetavar"]
+        thetaftvar = alldata["LP"]["thetaftvar"]
     Pvar_f = alldata["LP"]["Pvar_f"]
     Pvar_t = alldata["LP"]["Pvar_t"]
     Qvar_f = alldata["LP"]["Qvar_f"]
@@ -527,6 +500,20 @@ def lpformulator_ac_create_constraints(alldata, model):
                 == expP,
                 name=branch.Pfcname,
             )
+        elif alldata["dopolar"]:
+            branch.Pdeffconstr = model.addGenConstrNL(
+                Pvar_f[branch],
+                branch.Gff * (vvar[busf] ** 2)
+                + vvar[busf]
+                * vvar[bust]
+                * (
+                    +branch.Gft * nlfunc.cos(thetaftvar[branch])
+                    + branch.Bft * nlfunc.sin(thetaftvar[branch])
+                ),
+                name=branch.Pfcname,
+            )
+            if alldata["branchswitching_mip"]:
+                branch.Pdeffconstr += twinPvar_f[branch]
         else:
             expr = gp.LinExpr(
                 [branch.Gff, branch.Gft, branch.Bft],
@@ -576,6 +563,20 @@ def lpformulator_ac_create_constraints(alldata, model):
                 == expP,
                 name=branch.Ptcname,
             )
+        elif alldata["dopolar"]:
+            branch.Pdeftconstr = model.addGenConstrNL(
+                Pvar_t[branch],
+                branch.Gtt * (vvar[bust] ** 2)
+                + vvar[busf]
+                * vvar[bust]
+                * (
+                    +branch.Gtf * nlfunc.cos(thetaftvar[branch])
+                    - branch.Btf * nlfunc.sin(thetaftvar[branch])
+                ),
+                name=branch.Ptcname,
+            )
+            if alldata["branchswitching_mip"]:
+                branch.Pdeftconstr -= twinPvar_t[branch]
         else:
             expr = gp.LinExpr(
                 [
@@ -645,6 +646,12 @@ def lpformulator_ac_create_constraints(alldata, model):
             )
             continue
 
+        if alldata["dopolar"]:
+            model.addConstr(
+                thetavar[busf] - thetavar[bust] == thetaftvar[branch],
+                name="thetaft_def_%d" % j,
+            )
+
         # -Bff cff - Bft cft + Gft sft
         if alldata["use_ef"]:
             expQ = Qvar_f[branch]
@@ -657,6 +664,20 @@ def lpformulator_ac_create_constraints(alldata, model):
                 == expQ,
                 name=branch.Qfcname,
             )
+        elif alldata["dopolar"]:
+            branch.Qdeffconstr = model.addGenConstrNL(
+                Qvar_f[branch],
+                -branch.Bff * (vvar[busf] ** 2)
+                + vvar[busf]
+                * vvar[bust]
+                * (
+                    -branch.Bft * nlfunc.cos(thetaftvar[branch])
+                    + branch.Gft * nlfunc.sin(thetaftvar[branch])
+                ),
+                name=branch.Qfcname,
+            )
+            if alldata["branchswitching_mip"]:
+                branch.Qdeffconstr -= twinQvar_f[branch]
         else:
             expr = gp.LinExpr(
                 [-branch.Bff, -branch.Bft, branch.Gft],
@@ -707,6 +728,20 @@ def lpformulator_ac_create_constraints(alldata, model):
                 == expQ,
                 name=branch.Qtcname,
             )
+        elif alldata["dopolar"]:
+            branch.Qdeftconstr = model.addGenConstrNL(
+                Qvar_t[branch],
+                -branch.Btt * (vvar[bust] ** 2)
+                + vvar[busf]
+                * vvar[bust]
+                * (
+                    -branch.Btf * nlfunc.cos(thetaftvar[branch])
+                    - branch.Gtf * nlfunc.sin(thetaftvar[branch])
+                ),
+                name=branch.Qtcname,
+            )
+            if alldata["branchswitching_mip"]:
+                branch.Qdeftconstr -= twinQvar_t[branch]
         else:
             expr = gp.LinExpr(
                 [-branch.Btt, -branch.Btf, -branch.Gtf],  # again, same minus
@@ -997,10 +1032,6 @@ def lpformulator_ac_create_constraints(alldata, model):
     else:
         logger.info("  Skipping active loss inequalities.")
 
-    # Polar representation
-    if alldata["dopolar"]:
-        lpformulator_ac_add_polarconstraints(alldata, model)
-
     # nonconvex e, f representation
     if not alldata["skipjabr"] and alldata["use_ef"]:
         lpformulator_ac_add_nonconvexconstraints(alldata, model)
@@ -1014,70 +1045,6 @@ def lpformulator_ac_create_constraints(alldata, model):
         for j, branch in branches.items():
             expr.add(zvar[branch])
         model.addConstr(expr >= N, name="sumz_lower_heuristic_bound")
-
-
-def lpformulator_ac_add_polarconstraints(alldata, model):
-    """
-    Creates and adds constraints for polar represenation of AC formulation
-    to a given Gurobi model
-
-    :param alldata: Main dictionary holding all necessary data
-    :type alldata: dict
-    :param model: Gurobi model to be constructed
-    :type model: :class: `gurobipy.Model`
-    """
-
-    buses = alldata["buses"]
-    branches = alldata["branches"]
-    vvar = alldata["LP"]["vvar"]
-    thetavar = alldata["LP"]["thetavar"]
-    thetaftvar = alldata["LP"]["thetaftvar"]
-    vfvtvar = alldata["LP"]["vfvtvar"]
-    cosvar = alldata["LP"]["cosvar"]
-    sinvar = alldata["LP"]["sinvar"]
-    IDtoCountmap = alldata["IDtoCountmap"]
-    cvar = alldata["LP"]["cvar"]
-    svar = alldata["LP"]["svar"]
-    count = 0
-
-    logger.info("  Adding polar constraints.")
-
-    for j, bus in buses.items():
-        model.addConstr(cvar[bus] == vvar[bus] ** 2, name="cffdef_%d" % j)
-        count += 1
-
-    for j, branch in branches.items():
-        f = branch.f
-        t = branch.t
-        count_of_f = IDtoCountmap[f]
-        count_of_t = IDtoCountmap[t]
-        busf = buses[count_of_f]
-        bust = buses[count_of_t]
-        model.addConstr(
-            thetaftvar[branch] == thetavar[busf] - thetavar[bust],
-            name="thetaftdef_%d" % j,
-        )
-
-        model.addGenConstrCos(
-            thetaftvar[branch], cosvar[branch], name="cosdef_%d_%d_%d" % (j, f, t)
-        )
-        model.addGenConstrSin(
-            thetaftvar[branch], sinvar[branch], name="sindef_%d_%d_%d" % (j, f, t)
-        )
-        model.addConstr(
-            vfvtvar[branch] == vvar[busf] * vvar[bust],
-            name="vfvtdef_%d_%d_%d" % (j, f, t),
-        )
-
-        model.addConstr(
-            cvar[branch] == vfvtvar[branch] * cosvar[branch], name="cftdef_%d" % j
-        )
-        model.addConstr(
-            svar[branch] == vfvtvar[branch] * sinvar[branch], name="sftdef_%d" % j
-        )
-        count += 6  # Count general constraints as well
-
-    logger.info(f"    {count} polar constraints added.")
 
 
 def lpformulator_ac_add_nonconvexconstraints(alldata, model):
