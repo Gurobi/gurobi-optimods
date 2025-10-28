@@ -20,6 +20,7 @@ def lpformulator_dc_body(alldata, model):
 
     _add_dc_gen_bus_variables(alldata, model)
     _add_dc_branch_variables(alldata, model)
+    model.update()  # needed to access the variable bounds
     set_gencost_objective(alldata, model)
     _add_dc_branch_activepower_constraints(alldata, model)
     _add_dc_bus_balance_constraints(alldata, model)
@@ -105,8 +106,8 @@ def _add_dc_branch_variables(alldata, model):
 
         if branchswitching:
             twinPvar_f[branch] = model.addVar(
-                lb=-bound,
-                ub=bound,
+                lb=-GRB.INFINITY,
+                ub=GRB.INFINITY,
                 name=f"twinP_{j}_{branch.f}_{branch.t}",
             )
 
@@ -169,12 +170,18 @@ def _add_dc_branch_activepower_constraints(alldata, model):
                 Pvar_f[branch] >= -coeff * zvar[branch],
                 name=f"dnmip_{j}_{branch.f}_{branch.t}",
             )
+
+            coeff = 1 / (branch.x * branch.ratio)
+            bigM = coeff * max(
+                thetavar[busf].UB - thetavar[bust].LB,
+                thetavar[bust].UB - thetavar[busf].LB,
+            )
             model.addConstr(
-                twinPvar_f[branch] <= coeff * (1 - zvar[branch]),
+                twinPvar_f[branch] <= bigM * (1 - zvar[branch]),
                 name=f"upmip_twin_{j}_{branch.f}_{branch.t}",
             )
             model.addConstr(
-                twinPvar_f[branch] >= -coeff * (1 - zvar[branch]),
+                twinPvar_f[branch] >= -bigM * (1 - zvar[branch]),
                 name=f"dnmip_twin__{j}_{branch.f}_{branch.t}",
             )
 
