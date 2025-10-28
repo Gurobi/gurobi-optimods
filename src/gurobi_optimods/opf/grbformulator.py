@@ -59,7 +59,6 @@ def construct_and_solve_model(env, alldata):
         logger.info(f"{opftype.value}OPF model constructed ({toc - tic:.2f}s).")
         model.update()
         model.printStats()
-        model.write("model.lp")
 
         # Solve the OPF model, return a dictionary following MATPOWER notation
         lpformulator_optimize(alldata, model, opftype)
