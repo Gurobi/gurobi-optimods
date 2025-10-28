@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import List
 
 import gurobipy as gp
-from gurobipy import GRB
 
 from gurobi_optimods.opf import grbformulator_common
 
