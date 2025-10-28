@@ -22,17 +22,14 @@ def set_gencost_objective(alldata, model):
         if len(gen.costvector) >= 3
     )
 
-    # Linear parts are added via an equality constraint
-    lincostvar = model.addVar(lb=-GRB.INFINITY, ub=GRB.INFINITY, name="lincost")
     objective_linear = gp.quicksum(
         GenPvar[gen] * gen.costvector[-2] for gen in gens.values()
     )
-    model.addConstr(objective_linear == lincostvar, name="lincostdef")
 
     # The constant is added via a fixed variable
     constvar = model.addVar(lb=1.0, ub=1.0, name="constant")
     objective_constant = constvar * sum(gen.costvector[-1] for gen in gens.values())
 
     model.setObjective(
-        objective_constant + lincostvar + objective_quadratic, sense=GRB.MINIMIZE
+        objective_constant + objective_linear + objective_quadratic, sense=GRB.MINIMIZE
     )

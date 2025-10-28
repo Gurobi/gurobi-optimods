@@ -37,10 +37,8 @@ class TestGenCostObjective(unittest.TestCase):
 
         with gp.Model(env=self.env) as refmodel:
             x1, x2 = refmodel.addVars([1, 2], name="x").values()
-            lincostvar = refmodel.addVar(lb=-GRB.INFINITY, name="lincost")
             constvar = refmodel.addVar(lb=1.0, ub=1.0, name="constant")
-            refmodel.addConstr(2.0 * x1 + 5.0 * x2 == lincostvar, name="lincostdef")
-            refmodel.setObjective(9.0 * constvar + lincostvar)
+            refmodel.setObjective(9.0 * constvar + 2.0 * x1 + 5.0 * x2)
             refmodel.update()
             ref_fingerprint = refmodel.Fingerprint
 
@@ -63,11 +61,9 @@ class TestGenCostObjective(unittest.TestCase):
 
         with gp.Model(env=self.env) as refmodel:
             x1, x2 = refmodel.addVars([1, 2], name="x").values()
-            lincostvar = refmodel.addVar(lb=-GRB.INFINITY, name="lincost")
             constvar = refmodel.addVar(lb=1.0, ub=1.0, name="constant")
-            refmodel.addConstr(3.0 * x1 + 6.0 * x2 == lincostvar, name="lincostdef")
             refmodel.setObjective(
-                11.0 * constvar + lincostvar + 2.0 * x1 * x1 + 5.0 * x2 * x2
+                11.0 * constvar + 3.0 * x1 + 6.0 * x2 + 2.0 * x1 * x1 + 5.0 * x2 * x2
             )
             refmodel.update()
             ref_fingerprint = refmodel.Fingerprint
@@ -91,11 +87,9 @@ class TestGenCostObjective(unittest.TestCase):
 
         with gp.Model(env=self.env) as refmodel:
             x1, x2 = refmodel.addVars([1, 2], name="x").values()
-            lincostvar = refmodel.addVar(lb=-GRB.INFINITY, name="lincost")
             constvar = refmodel.addVar(lb=1.0, ub=1.0, name="constant")
-            refmodel.addConstr(3.0 * x1 + 6.0 * x2 == lincostvar, name="lincostdef")
             refmodel.setObjective(
-                11.0 * constvar + lincostvar + 2.0 * x1 * x1 + 5.0 * x2 * x2
+                11.0 * constvar + 3.0 * x1 + 6.0 * x2 + 2.0 * x1 * x1 + 5.0 * x2 * x2
             )
             refmodel.update()
             ref_fingerprint = refmodel.Fingerprint
