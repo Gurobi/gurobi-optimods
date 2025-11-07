@@ -95,7 +95,7 @@ def solve_opf(
                 "GURO_PAR_NLBARSLOPPYLIMIT": 2000,
             }
     # use acplocal to run Gurobi as a local solver with the polar formulation (trigonometric functions)
-    elif opftype.lower() == "acplocal":
+    elif opftype.lower() == "acplocal" or opftype.lower() == "ac":
         opftype = "ac"
         useef = False
         usejabr = False
@@ -112,14 +112,14 @@ def solve_opf(
                 "NodeLimit": 0,
                 "GURO_PAR_NLBARSLOPPYLIMIT": 2000,
             }
-    elif opftype.lower() == "ac":
+    elif opftype.lower() == "acrglobal":
         opftype = "ac"
         useef = True
         usejabr = True
         polar = False
         default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
     # Exact polar AC
-    elif opftype.lower() == "acpolar":
+    elif opftype.lower() == "acpglobal":
         opftype = "ac"
         useef = False
         usejabr = False
