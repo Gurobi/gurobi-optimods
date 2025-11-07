@@ -25,7 +25,7 @@ class TestInvalidData(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "only generator costtype=2 is supported"
         ):
-            solve_opf(self.case, opftype="AC")
+            solve_opf(self.case, opftype="ACRGLOBAL")
 
     def test_gencost_costvector_length(self):
         # Error out if gencost.n is wrong
@@ -186,7 +186,7 @@ class TestAPICase9(unittest.TestCase):
 
         # Solve model, expect failure
         with self.assertRaisesRegex(ValueError, "Infeasible model"):
-            solve_opf(self.case, opftype="AC", branch_switching=True)
+            solve_opf(self.case, opftype="ACRGLOBAL", branch_switching=True)
 
 
 class TestAPICase5_PJM(unittest.TestCase):
@@ -272,11 +272,11 @@ class TestAPICase5_PJM(unittest.TestCase):
 
         # Solve model, expect failure
         with self.assertRaisesRegex(ValueError, "Infeasible model"):
-            solve_opf(self.case, opftype="AC", branch_switching=True)
+            solve_opf(self.case, opftype="ACRLOCAL", branch_switching=True)
 
     def test_ac_polar(self):
         kwargs = dict(
-            opftype="acpolar",
+            opftype="acpglobal",
             solver_params={"MIPGap": 2e-2, "TimeLimit": 60},
         )
         solution = solve_opf(self.case, **kwargs)
@@ -311,7 +311,7 @@ class TestComputeVoltageAnglesBug(unittest.TestCase):
 
     def test_bug(self):
         # Should run without errors
-        solution = solve_opf(self.case, opftype="ac", verbose=False)
+        solution = solve_opf(self.case, opftype="acrglobal", verbose=False)
         # Only one bus should have zero voltage angle (the reference bus)
         num_zeros = sum(bus["Va"] == 0 for bus in solution["bus"])
         self.assertEqual(num_zeros, 1)
