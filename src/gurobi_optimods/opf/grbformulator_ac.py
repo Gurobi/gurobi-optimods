@@ -796,6 +796,8 @@ def lpformulator_ac_create_constraints(alldata, model):
         if bus.Gs != 0:
             if alldata["use_ef"]:
                 expr.add(bus.Gs * (evar[bus] * evar[bus] + fvar[bus] * fvar[bus]))
+            elif alldata["dopolar"]:
+                expr.add(bus.Gs * vvar[bus] * vvar[bus])
             else:
                 expr.add(bus.Gs * cvar[bus])
 
@@ -828,6 +830,8 @@ def lpformulator_ac_create_constraints(alldata, model):
         if bus.Bs != 0:
             if alldata["use_ef"]:
                 expr.add(-bus.Bs * (evar[bus] * evar[bus] + fvar[bus] * fvar[bus]))
+            elif alldata["dopolar"]:
+                expr.add(-bus.Bs * vvar[bus] * vvar[bus])
             else:
                 expr.add(-bus.Bs * cvar[bus])
 
