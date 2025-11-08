@@ -272,7 +272,7 @@ class TestAPICase5_PJM(unittest.TestCase):
 
         # Solve model, expect failure
         with self.assertRaisesRegex(ValueError, "Infeasible model"):
-            solve_opf(self.case, opftype="ACRLOCAL", branch_switching=True)
+            solve_opf(self.case, opftype="ACRGLOBAL", branch_switching=True)
 
     def test_ac_polar(self):
         kwargs = dict(
