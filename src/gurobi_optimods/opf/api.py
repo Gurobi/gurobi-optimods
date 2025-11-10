@@ -56,7 +56,8 @@ def solve_opf(
     case : dict
         Dictionary holding case data
     opftype : str
-        Desired OPF model type. One of ``AC``, ``ACRlocal``, ``ACPlocal``, ``ACrelax``, or ``DC``
+        Desired OPF model type. One of ``AC``, ``ACRlocal``, ``ACPlocal``, ``ACRglobal``,
+        ``ACPglobal``, ``ACrelax``, or ``DC``. Default ``AC`` will run ``ACPlocal``.
     branch_switching : bool, optional
         If set to True, enables branch switching.
     min_active_branches : float, optional
