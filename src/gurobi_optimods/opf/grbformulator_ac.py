@@ -2,7 +2,12 @@ import logging
 import math
 
 import gurobipy as gp
-from gurobipy import GRB, nlfunc
+from gurobipy import GRB
+
+try:
+    from gurobipy import nlfunc
+except ImportError:
+    nlfunc = None
 
 from gurobi_optimods.opf.grbformulator_common import set_gencost_objective
 
@@ -434,6 +439,9 @@ def lpformulator_ac_create_constraints(alldata, model):
     :param: Gurobi model to be constructed
     :type model: :class: `gurobipy.Model`
     """
+
+    if nlfunc is None:
+        raise RuntimeError("AC formulations require gurobipy >= 12.0")
 
     buses = alldata["buses"]
     numbranches = alldata["numbranches"]
