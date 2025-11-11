@@ -14,9 +14,10 @@ jobs:
 
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python: ["3.11"]
-        gurobipy: ["~=12.0"]
+        gurobipy: ["~=11.0", "~=12.0", "~=13.0"]
 
     steps:
       - uses: actions/checkout@v4
