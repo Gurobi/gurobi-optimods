@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 @optimod()
 def solve_opf(
     case,
-    opftype="AC",
+    opftype="ACPLOCAL",
     branch_switching=False,
     min_active_branches=0.9,
     use_mip_start=False,
@@ -96,7 +96,7 @@ def solve_opf(
                 "GURO_PAR_NLBARSLOPPYLIMIT": 2000,
             }
     # use acplocal to run Gurobi as a local solver with the polar formulation (trigonometric functions)
-    elif opftype.lower() == "acplocal" or opftype.lower() == "ac":
+    elif opftype.lower() == "acplocal":
         opftype = "ac"
         useef = False
         usejabr = False
