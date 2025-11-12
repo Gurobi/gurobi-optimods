@@ -469,6 +469,7 @@ class TestAPILargeModels(unittest.TestCase):
                 self.assertLess(abs(solution["gen"][1]["Pg"] - self.Pg_dc[i]), 1e1)
                 self.assertLess(abs(solution["branch"][2]["Pt"] - self.Pt_dc[i]), 1e1)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac(self):
         # Exact AC is expensive, so only solve the first two cases.
         for i in range(2):
@@ -485,6 +486,7 @@ class TestAPILargeModels(unittest.TestCase):
                 self.assertLess(abs(solution["gen"][1]["Qg"] - self.Qg_ac[i]), 1e1)
                 self.assertLess(abs(solution["branch"][0]["Qf"] - self.Qf_ac[i]), 1e1)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_relax(self):
         # Case 5 is numerically unstable
         for i in range(4):
