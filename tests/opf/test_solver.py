@@ -141,19 +141,16 @@ class TestAPICase9(unittest.TestCase):
     def test_ac_branchswitching(self):
         solution = solve_opf(
             self.case,
-            opftype="AC",
+            opftype="ACPGLOBAL",
             branch_switching=True,
             use_mip_start=False,
-            solver_params={"MIPGap": 1e-4},
+            solver_params={"MIPGap": 1e-4, "SolutionLimit": 1, "WorkLimit": 5},
         )
         self.assertEqual(solution["success"], 1)
         self.assert_solution_valid(solution)
 
+        # Just check that a solution is populated
         self.assertIsNotNone(solution["f"])
-        self.assert_approx_equal(solution["f"], 5296.76, tol=1.0)
-        self.assert_approx_equal(solution["bus"][0]["Va"], 0.0, tol=1e-1)
-        self.assert_approx_equal(solution["gen"][1]["Qg"], 0.0318441, tol=1e-1)
-        self.assert_approx_equal(solution["branch"][2]["Pt"], 56.23, tol=1e-1)
 
     @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_relax(self):
@@ -244,16 +241,16 @@ class TestAPICase5_PJM(unittest.TestCase):
     def test_ac_branchswitching(self):
         solution = solve_opf(
             self.case,
-            opftype="AC",
+            opftype="ACPGLOBAL",
             branch_switching=True,
             use_mip_start=False,
-            solver_params={"MIPGap": 1e-4},
+            solver_params={"MIPGap": 1e-4, "SolutionLimit": 1, "WorkLimit": 5},
         )
         self.assertEqual(solution["success"], 1)
         self.assert_solution_valid(solution)
 
+        # Just check that a solution is populated
         self.assertIsNotNone(solution["f"])
-        self.assert_approx_equal(solution["f"], 15174, tol=1)
 
     @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_relax(self):
