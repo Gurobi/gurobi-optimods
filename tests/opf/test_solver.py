@@ -2,9 +2,7 @@
 
 import collections
 import math
-import os
 import random
-import sys
 import unittest
 
 from gurobipy import GRB
