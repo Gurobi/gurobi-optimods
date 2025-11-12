@@ -56,7 +56,7 @@ class TestGraphicsCase9(unittest.TestCase):
 
         # Info related to case9
         self.case9 = load_opf_example("case9")
-        self.case9_solution = solve_opf(self.case9, opftype="AC", verbose=False)
+        self.case9_solution = solve_opf(self.case9, opftype="ACPLOCAL", verbose=False)
         self.case9_coords = load_opf_extra("case9-coordinates")
         volts_data = load_opf_extra("case9-voltages")
         self.case9_violations = compute_violations(

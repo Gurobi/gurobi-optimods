@@ -23,7 +23,7 @@ class TestInvalidData(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "only generator costtype=2 is supported"
         ):
-            solve_opf(self.case, opftype="ACRGLOBAL")
+            solve_opf(self.case)
 
     def test_gencost_costvector_length(self):
         # Error out if gencost.n is wrong
@@ -31,7 +31,7 @@ class TestInvalidData(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "mismatch between gencost.n and costvector length"
         ):
-            solve_opf(self.case, opftype="AC")
+            solve_opf(self.case)
 
     def test_nonquadratic_cost(self):
         # Error out on any cubic terms or higher
@@ -40,7 +40,7 @@ class TestInvalidData(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "only quadratic and linear cost functions"
         ):
-            solve_opf(self.case, opftype="AC")
+            solve_opf(self.case)
 
     def test_gencost_matches_gen(self):
         # Error out if not 1:1 between gen and gencost (we don't handle the
@@ -49,7 +49,7 @@ class TestInvalidData(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "mismatch between gen and gencost records"
         ):
-            solve_opf(self.case, opftype="AC")
+            solve_opf(self.case)
 
     def test_bad_branch_fbus(self):
         # All branches must point to valid bus ids
@@ -57,7 +57,7 @@ class TestInvalidData(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "Unknown bus ID referenced in branch fbus"
         ):
-            solve_opf(self.case, opftype="AC")
+            solve_opf(self.case)
 
     def test_bad_branch_tbus(self):
         # All branches must point to valid bus ids
@@ -65,7 +65,7 @@ class TestInvalidData(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "Unknown bus ID referenced in branch tbus"
         ):
-            solve_opf(self.case, opftype="AC")
+            solve_opf(self.case)
 
     def test_bad_gen_bus(self):
         # All generators must point to valid bus ids
@@ -73,7 +73,7 @@ class TestInvalidData(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "Unknown bus ID referenced in generator bus"
         ):
-            solve_opf(self.case, opftype="AC")
+            solve_opf(self.case)
 
 
 class TestAPICase9(unittest.TestCase):
@@ -128,7 +128,8 @@ class TestAPICase9(unittest.TestCase):
 
     @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac(self):
-        solution = solve_opf(self.case, opftype="AC")
+        # default setting: ACPLOCAL
+        solution = solve_opf(self.case)
         self.assertEqual(solution["success"], 1)
         self.assert_solution_valid(solution)
 
@@ -231,7 +232,8 @@ class TestAPICase5_PJM(unittest.TestCase):
 
     @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac(self):
-        solution = solve_opf(self.case, opftype="AC")
+        # default setting: ACPLOCAL
+        solution = solve_opf(self.case)
         self.assertEqual(solution["success"], 1)
         self.assert_solution_valid(solution)
 
@@ -380,7 +382,6 @@ class TestAPICase5_PJMReordered(unittest.TestCase):
         # Results are too numerically unstable, just check the call goes through
         # without errors and objective function value is in the ballpark.
         kwargs = dict(
-            opftype="ac",
             solver_params={"MIPGap": 1e-4},
         )
         solution_original = solve_opf(self.case, **kwargs)
@@ -472,7 +473,7 @@ class TestAPILargeModels(unittest.TestCase):
         for i in range(2):
             with self.subTest(case=self.cases[i]):
                 case = self.casedata[i]
-                solution = solve_opf(case, opftype="AC")
+                solution = solve_opf(case)
                 # Check whether the solution point looks correct. Differences can
                 # be quite big because we solve only to 0.1% optimality.
                 self.assertIsNotNone(solution)
