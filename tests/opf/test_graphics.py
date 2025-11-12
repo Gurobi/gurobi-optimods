@@ -6,6 +6,8 @@ import json
 import pathlib
 import unittest
 
+from gurobipy import GRB
+
 from gurobi_optimods.datasets import load_opf_example, load_opf_extra
 from gurobi_optimods.opf import (
     compute_violations,
@@ -23,6 +25,7 @@ except ImportError:
     plotly = None
 
 
+@unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
 @unittest.skipIf(plotly is None, "plotly is not installed")
 class TestGraphicsCase9(unittest.TestCase):
     def setUp(self):

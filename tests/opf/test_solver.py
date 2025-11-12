@@ -128,6 +128,7 @@ class TestAPICase9(unittest.TestCase):
         self.assert_approx_equal(solution["gen"][1]["Pg"], 134.377585, tol=1e-1)
         self.assert_approx_equal(solution["branch"][2]["Pt"], -56.2622, tol=1e-1)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac(self):
         solution = solve_opf(self.case, opftype="AC")
         self.assertEqual(solution["success"], 1)
@@ -138,7 +139,7 @@ class TestAPICase9(unittest.TestCase):
         self.assert_approx_equal(solution["gen"][1]["Qg"], 0.031844, tol=1e-1)
         self.assert_approx_equal(solution["branch"][0]["Qf"], 12.9656, tol=1e-1)
 
-    @unittest.skip("shaky")
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_branchswitching(self):
         solution = solve_opf(
             self.case,
@@ -156,12 +157,7 @@ class TestAPICase9(unittest.TestCase):
         self.assert_approx_equal(solution["gen"][1]["Qg"], 0.0318441, tol=1e-1)
         self.assert_approx_equal(solution["branch"][2]["Pt"], 56.23, tol=1e-1)
 
-    @unittest.skipIf(
-        os.environ.get("CI", "false") == "true"
-        and sys.platform == "darwin"
-        and GRB.VERSION_MAJOR == 12,
-        "Numerical trouble on github macos runners",
-    )
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_relax(self):
         solution = solve_opf(self.case, opftype="ACRelax")
         self.assertEqual(solution["success"], 1)
@@ -180,6 +176,7 @@ class TestAPICase9(unittest.TestCase):
         # A local solution should get somewhere close to optimal
         self.assert_approx_equal(solution["f"], 5296.66532, tol=1e1)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_branchswitching_infeasible(self):
         # Modify the case to make it infeasible
         self.case["bus"][1]["Vmax"] = 0.8
@@ -237,6 +234,7 @@ class TestAPICase5_PJM(unittest.TestCase):
 
         self.assert_approx_equal(solution["f"], 17479.89, tol=1e-1)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac(self):
         solution = solve_opf(self.case, opftype="AC")
         self.assertEqual(solution["success"], 1)
@@ -244,7 +242,7 @@ class TestAPICase5_PJM(unittest.TestCase):
 
         self.assert_approx_equal(solution["f"], 17551.89, tol=1e-1)
 
-    @unittest.skip("shaky")
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_branchswitching(self):
         solution = solve_opf(
             self.case,
@@ -259,6 +257,7 @@ class TestAPICase5_PJM(unittest.TestCase):
         self.assertIsNotNone(solution["f"])
         self.assert_approx_equal(solution["f"], 15174, tol=1)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_relax(self):
         solution = solve_opf(self.case, opftype="ACRelax")
         self.assertEqual(solution["success"], 1)
@@ -266,6 +265,7 @@ class TestAPICase5_PJM(unittest.TestCase):
 
         self.assert_approx_equal(solution["f"], 14999.71, tol=1e-1)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_branchswitching_infeasible(self):
         # Modify the case to make it infeasible
         self.case["bus"][1]["Vmax"] = 0.8
@@ -274,6 +274,7 @@ class TestAPICase5_PJM(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Infeasible model"):
             solve_opf(self.case, opftype="ACRGLOBAL", branch_switching=True)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_polar(self):
         kwargs = dict(
             opftype="acpglobal",
@@ -282,6 +283,7 @@ class TestAPICase5_PJM(unittest.TestCase):
         solution = solve_opf(self.case, **kwargs)
         self.assert_approx_equal(solution["f"], 17551.89, tol=1e-1)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_acp_local(self):
         kwargs = dict(
             opftype="acplocal",
@@ -289,6 +291,7 @@ class TestAPICase5_PJM(unittest.TestCase):
         solution = solve_opf(self.case, **kwargs)
         self.assert_approx_equal(solution["f"], 17551.89, tol=1e-1)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_acr_local(self):
         kwargs = dict(
             opftype="acrlocal",
@@ -309,6 +312,7 @@ class TestComputeVoltageAnglesBug(unittest.TestCase):
     def assert_approx_equal(self, value, expected, tol):
         self.assertLess(abs(value - expected), tol)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_bug(self):
         # Should run without errors
         solution = solve_opf(self.case, opftype="acrglobal", verbose=False)
@@ -376,6 +380,7 @@ class TestAPICase5_PJMReordered(unittest.TestCase):
                 if not math.isnan(value):
                     self.assert_approx_equal(gen_reordered[key], value, tol=1e-3)
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac(self):
         # Results are too numerically unstable, just check the call goes through
         # without errors and objective function value is in the ballpark.
@@ -390,6 +395,7 @@ class TestAPICase5_PJMReordered(unittest.TestCase):
             solution_original["f"], solution_reordered["f"], tol=1e1
         )
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_relax(self):
         # Results are too numerically unstable, just check the call goes through
         # without errors and objective function value is in the ballpark.
