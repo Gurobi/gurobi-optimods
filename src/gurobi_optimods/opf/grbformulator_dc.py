@@ -114,7 +114,6 @@ def _add_dc_branch_variables(alldata, model):
     if branchswitching:
         for j, branch in branches.items():
             zvar[branch] = model.addVar(
-                obj=0.0,
                 vtype=GRB.BINARY,
                 name=f"z_{j}_{branch.f}_{branch.t}",
             )

@@ -2,6 +2,8 @@
 
 import unittest
 
+from gurobipy import GRB
+
 from gurobi_optimods.datasets import load_opf_example, load_opf_extra
 from gurobi_optimods.opf import compute_violations
 
@@ -45,8 +47,9 @@ class TestComputeVoltages(unittest.TestCase):
             self.assertEqual(sol_gencost["costtype"], case_gencost["costtype"])
             self.assertEqual(sol_gencost["n"], case_gencost["n"])
 
+    @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_volts(self):
-        violations = compute_violations(self.case, self.volts_data, polar=True)
+        violations = compute_violations(self.case, self.volts_data, polar=False)
         self.assert_solution_valid(violations)
 
         # Known values, should be stable

@@ -7,6 +7,8 @@ Contains the actual mods / public API.
 
 import logging
 
+import gurobipy as gp
+
 from gurobi_optimods.opf import converters, grbformulator, violations
 from gurobi_optimods.utils import optimod
 
@@ -16,7 +18,7 @@ logger = logging.getLogger(__name__)
 @optimod()
 def solve_opf(
     case,
-    opftype="AC",
+    opftype="ACPLOCAL",
     branch_switching=False,
     min_active_branches=0.9,
     use_mip_start=False,
@@ -54,7 +56,8 @@ def solve_opf(
     case : dict
         Dictionary holding case data
     opftype : str
-        Desired OPF model type. One of ``AC``, ``AClocal``, ``ACrelax``, or ``DC``
+        Desired OPF model type. One of ``ACRlocal``, ``ACPlocal``, ``ACRglobal``,
+        ``ACPglobal``, ``ACrelax``, or ``DC``. Defaults to ``ACPlocal``.
     branch_switching : bool, optional
         If set to True, enables branch switching.
     min_active_branches : float, optional
@@ -74,33 +77,68 @@ def solve_opf(
         fields
     """
 
-    # use aclocal to run Gurobi as a local solver (stops at the first feasible solution)
-    if opftype.lower() == "aclocal":
+    # use acrlocal to run Gurobi as a local solver with the rectangular formulation (QCQP)
+    if opftype.lower() == "acrlocal":
         opftype = "ac"
         useef = True
         usejabr = False
-        default_solver_params = {
-            "Presolve": 0,
-            "SolutionLimit": 1,
-            "NodeLimit": 0,
-            "GURO_PAR_NLBARSLOPPYLIMIT": 2000,
-        }
-    elif opftype.lower() == "ac":
+        polar = False
+        version = gp.gurobi.version()
+        if version >= (13, 0, 0):
+            default_solver_params = {
+                "OptimalityTarget": 1,
+            }
+        else:
+            default_solver_params = {
+                "Presolve": 0,
+                "SolutionLimit": 1,
+                "NodeLimit": 0,
+                "GURO_PAR_NLBARSLOPPYLIMIT": 2000,
+            }
+    # use acplocal to run Gurobi as a local solver with the polar formulation (trigonometric functions)
+    elif opftype.lower() == "acplocal":
+        opftype = "ac"
+        useef = False
+        usejabr = False
+        polar = True
+        version = gp.gurobi.version()
+        if version >= (13, 0, 0):
+            default_solver_params = {
+                "OptimalityTarget": 1,
+            }
+        else:
+            default_solver_params = {
+                "Presolve": 0,
+                "SolutionLimit": 1,
+                "NodeLimit": 0,
+                "GURO_PAR_NLBARSLOPPYLIMIT": 2000,
+            }
+    elif opftype.lower() == "acrglobal":
         opftype = "ac"
         useef = True
         usejabr = True
+        polar = False
+        default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
+    # Exact polar AC
+    elif opftype.lower() == "acpglobal":
+        opftype = "ac"
+        useef = False
+        usejabr = False
+        polar = True
         default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
     # AC relaxation using the JABR inequality
     elif opftype.lower() == "acrelax":
         opftype = "ac"
         useef = False
         usejabr = True
+        polar = False
         default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
     # DC linear approximation (ef & jabr are irrelevant)
     elif opftype.lower() == "dc":
         opftype = "dc"
         useef = False
         usejabr = False
+        polar = False
         default_solver_params = {"MIPGap": 1e-4, "OptimalityTol": 1e-4}
     else:
         raise ValueError(f"Unknown opftype '{opftype}'")
@@ -115,8 +153,8 @@ def solve_opf(
             branchswitching=branch_switching,
             usemipstart=use_mip_start,
             minactivebranches=min_active_branches,
-            polar=False,
-            ivtype="aggressive",
+            polar=polar,
+            ivtype="aggressive",  # ignored, no IV formulation used
             useactivelossineqs=False,
         )
 
@@ -223,5 +261,6 @@ def compute_violations(case, voltages, polar=False, *, create_env):
     converters.grbmap_volts_from_dict(alldata, voltages)
 
     # Compute model violations based on user input voltages
-    with create_env() as env:
-        return violations.compute_violations_from_voltages(env, alldata)
+    if not polar:
+        with create_env() as env:
+            return violations.compute_violations_from_voltages(env, alldata)

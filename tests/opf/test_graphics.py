@@ -6,6 +6,8 @@ import json
 import pathlib
 import unittest
 
+from gurobipy import GRB
+
 from gurobi_optimods.datasets import load_opf_example, load_opf_extra
 from gurobi_optimods.opf import (
     compute_violations,
@@ -23,6 +25,7 @@ except ImportError:
     plotly = None
 
 
+@unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
 @unittest.skipIf(plotly is None, "plotly is not installed")
 class TestGraphicsCase9(unittest.TestCase):
     def setUp(self):
@@ -53,11 +56,11 @@ class TestGraphicsCase9(unittest.TestCase):
 
         # Info related to case9
         self.case9 = load_opf_example("case9")
-        self.case9_solution = solve_opf(self.case9, opftype="AC", verbose=False)
+        self.case9_solution = solve_opf(self.case9, opftype="ACPLOCAL", verbose=False)
         self.case9_coords = load_opf_extra("case9-coordinates")
         volts_data = load_opf_extra("case9-voltages")
         self.case9_violations = compute_violations(
-            self.case9, volts_data, polar=True, verbose=False
+            self.case9, volts_data, polar=False, verbose=False
         )
 
         # Load manually created solution with some branches switched off

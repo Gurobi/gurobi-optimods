@@ -222,13 +222,13 @@ argument specifies otherwise.
     from gurobi_optimods import datasets
 
     case = datasets.load_opf_example("case9")
-    result = opf.solve_opf(case, opftype="AC")
+    result = opf.solve_opf(case, opftype="ACRGLOBAL")
 
 .. testoutput:: opf
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
 
     ...
-    Optimize a model with 19 rows, 107 columns and 28 nonzeros
+    Optimize a model with 18 rows, 106 columns and 24 nonzeros...
     ...
     Optimal solution found...
     ...
@@ -242,7 +242,7 @@ optimality within the time limit, the best known solution will be returned.
 
 .. testcode:: opf
 
-    result = opf.solve_opf(case, opftype="AC", time_limit=60)
+    result = opf.solve_opf(case, opftype="ACRGLOBAL", time_limit=60)
 
 .. testoutput:: opf
     :hide:
@@ -406,7 +406,7 @@ whether branch switching allows a better solution.
 
     case = datasets.load_opf_example("case9-switching")
     result = opf.solve_opf(
-        case, opftype="AC",
+        case, opftype="ACRGLOBAL",
         branch_switching=True,
         min_active_branches=0.1,
         time_limit=60,
@@ -417,7 +417,7 @@ whether branch switching allows a better solution.
     :options: +NORMALIZE_WHITESPACE +ELLIPSIS
 
     ...
-     Optimize a model with 212 rows, 185 columns and 424 nonzeros
+     Optimize a model with 211 rows, 184 columns and 420 nonzeros...
     ...
 
 Plotting the resulting solution shows that one branch has been turned off in the
