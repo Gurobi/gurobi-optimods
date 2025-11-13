@@ -185,19 +185,28 @@ After reading in or otherwise generating a MATPOWER case in the format described
 above, we can solve an OPF problem defined by the given network data. For this
 task, we use the :func:`~gurobi_optimods.opf.solve_opf` function. We can define
 the type of the OPF problem that we want to solve by defining the ``opftype``
-argument when calling the function. Currently, the available options are ``AC``,
-``ACrelax``, and ``DC``.
+argument when calling the function. Currently, the available options are
+``ACPlocal``, ``ACRlocal``, ``ACPglobal``, ``ACRglobal``, ``ACrelax``, and ``DC``.
 
-- The ``AC`` setting solves an ACOPF problem defined by the given network data.
-  The ACOPF problem is formulated as a nonconvex bilinear model as described in
-  the :ref:`ACOPF <acopf-label>` section of the :doc:`opf_specification`. This
-  setting yields the most accurate model of the physical power system. However,
-  it is also the most difficult problem to solve and thus usually leads to the
-  longer runtimes.
 
-- The ``AClocal`` setting solves the ``AC`` problem using adjusted settings to
-  quickly find a good quality local solution, without attempting to solve to
-  global optimality.
+- The ``ACPlocal`` setting solves the :ref:`polar ACOPF <polar-label>` problem
+  formulation using adjusted  settings to quickly find a good quality local
+  solution, without attempting to solve to global optimality. This is the
+  default setting when solving ACOPF problems.
+
+- The ``ACRlocal`` setting solves the  :ref:`rectangular ACOPF<qcqp-label>`
+  problem formulation using adjusted settings to quickly find a good quality
+  local solution, without attempting to solve to global optimality.
+
+- The ``ACPglobal`` setting solves the :ref:`polar ACOPF <polar-label>`
+  to global optimality. In addition to a feasible point, this setting also
+  tries to prove global optimality. It is one of the most difficult problems to solve
+  and thus usually leads to very long runtimes.
+
+- The ``ACRglobal`` setting solves the  :ref:`rectangular ACOPF<qcqp-label>
+  to global optimality. In addition to a feasible point, this setting also
+  tries to prove global optimality. It is one of the most difficult problems to solve
+  and thus usually leads to very long runtimes.
 
 - The ``ACrelax`` setting solves a Second Order Cone (SOC) relaxation of the
   nonconvex bilinear ACOPF problem formulation defined by the given network
@@ -213,7 +222,7 @@ argument when calling the function. Currently, the available options are ``AC``,
   system, but is usually an easy problem that can be solved very quickly even
   for large networks.
 
-The ``solve_opf`` function solves an ``AC`` problem unless the ``opftype``
+The ``solve_opf`` function solves an ``ACPlocal`` problem unless the ``opftype``
 argument specifies otherwise.
 
 .. testcode:: opf
