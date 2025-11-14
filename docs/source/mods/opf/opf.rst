@@ -203,7 +203,7 @@ argument when calling the function. Currently, the available options are
   tries to prove global optimality. This problem is harder to solve
   and thus usually leads to very long runtimes.
 
-- The ``ACRglobal`` setting solves the  :ref:`rectangular ACOPF<qcqp-label>
+- The ``ACRglobal`` setting solves the  :ref:`rectangular ACOPF<qcqp-label>`
   to global optimality. In addition to a feasible point, this setting also
   tries to prove global optimality. This problem is harder to solve
   and thus usually leads to very long runtimes.
