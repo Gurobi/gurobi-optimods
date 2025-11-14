@@ -200,7 +200,7 @@ by introducing auxiliary variables :math:`v^{(2)}_k, \ c_{km} \ \text{and} \ s_{
     c_{km}^2 \ + \ s_{km}^2 \ \le \ v_k^{(2)} v_m^{(2)} \ \text{for every branch} \, km.
 
 
-The resulting relaxation can prove very tight, though, despite its convexity, challenging in large cases.
+The resulting relaxation can prove tight, though, despite its convexity, challenging in large cases.
 
 .. _dcopf-label:
 

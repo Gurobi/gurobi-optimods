@@ -190,7 +190,7 @@ argument when calling the function. Currently, the available options are
 
 
 - The ``ACPlocal`` setting solves the :ref:`polar ACOPF <polar-label>` problem
-  formulation using adjusted  settings to quickly find a good quality local
+  formulation using adjusted settings to quickly find a good quality local
   solution, without attempting to solve to global optimality. This is the
   default setting when solving ACOPF problems.
 
@@ -200,12 +200,12 @@ argument when calling the function. Currently, the available options are
 
 - The ``ACPglobal`` setting solves the :ref:`polar ACOPF <polar-label>`
   to global optimality. In addition to a feasible point, this setting also
-  tries to prove global optimality. It is one of the most difficult problems to solve
+  tries to prove global optimality. This problem is harder to solve
   and thus usually leads to very long runtimes.
 
 - The ``ACRglobal`` setting solves the  :ref:`rectangular ACOPF<qcqp-label>
   to global optimality. In addition to a feasible point, this setting also
-  tries to prove global optimality. It is one of the most difficult problems to solve
+  tries to prove global optimality. This problem is harder to solve
   and thus usually leads to very long runtimes.
 
 - The ``ACrelax`` setting solves a Second Order Cone (SOC) relaxation of the
