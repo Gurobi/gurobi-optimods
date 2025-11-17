@@ -601,5 +601,361 @@ class TestFacilityLocationDataValidation(unittest.TestCase):
             solve_facility_location(customer_data, facility_data, transportation_cost)
 
 
+class TestFacilityLocationFairnessConstraints(unittest.TestCase):
+    """Test fairness constraint feature (Twist 2)."""
+
+    def test_fairness_basic(self):
+        """Test that fairness constraints limit facilities per region."""
+        # 3 customers with equal demand
+        customer_data = pd.DataFrame(
+            {"customer": [0, 1, 2], "demand": [10.0, 10.0, 10.0]}
+        )
+
+        # 6 facilities in 2 regions (3 per region), all equally good
+        facility_data = pd.DataFrame(
+            {
+                "facility": ["A1", "A2", "A3", "B1", "B2", "B3"],
+                "capacity": [15.0] * 6,
+                "fixed_cost": [10.0] * 6,
+                "region": ["A", "A", "A", "B", "B", "B"],
+            }
+        )
+
+        # All transportation costs are equal
+        transportation_cost = pd.DataFrame(
+            {
+                "customer": [i for i in range(3) for _ in range(6)],
+                "facility": ["A1", "A2", "A3", "B1", "B2", "B3"] * 3,
+                "cost": [1.0] * 18,
+            }
+        )
+
+        # Solve with max 1 facility per region
+        result = solve_facility_location(
+            customer_data,
+            facility_data,
+            transportation_cost,
+            max_facilities_per_region=1,
+        )
+
+        # Check that at most 1 facility per region is opened
+        opened = result["facilities_opened"]
+        facilities_by_region = facility_data.set_index("facility")["region"]
+
+        for region in ["A", "B"]:
+            region_facilities = facilities_by_region[
+                facilities_by_region == region
+            ].index
+            opened_in_region = opened.loc[region_facilities].sum()
+            self.assertLessEqual(opened_in_region, 1.0)
+
+    def test_fairness_landfill_scenario(self):
+        """Test fairness constraints in a landfill allocation scenario."""
+        # Scenario: 4 communities, 6 potential landfill sites
+        # Communities have different waste amounts
+        customer_data = pd.DataFrame(
+            {"customer": [1, 2, 3, 4], "demand": [50.0, 30.0, 40.0, 35.0]}
+        )
+
+        # Sites in 3 regions (2 per region)
+        # Region "Low-income" has cheaper fixed costs (might be preferred without fairness)
+        facility_data = pd.DataFrame(
+            {
+                "facility": ["L1", "L2", "M1", "M2", "H1", "H2"],
+                "capacity": [60.0, 60.0, 60.0, 60.0, 60.0, 60.0],
+                "fixed_cost": [80.0, 80.0, 100.0, 100.0, 120.0, 120.0],
+                "region": [
+                    "Low-income",
+                    "Low-income",
+                    "Middle",
+                    "Middle",
+                    "High",
+                    "High",
+                ],
+            }
+        )
+
+        # Transportation costs (closer to low-income region)
+        transportation_cost = pd.DataFrame(
+            {
+                "customer": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    2,
+                    2,
+                    2,
+                    2,
+                    2,
+                    2,
+                    3,
+                    3,
+                    3,
+                    3,
+                    3,
+                    3,
+                    4,
+                    4,
+                    4,
+                    4,
+                    4,
+                    4,
+                ],
+                "facility": ["L1", "L2", "M1", "M2", "H1", "H2"] * 4,
+                "cost": [
+                    2.0,
+                    2.0,
+                    4.0,
+                    4.0,
+                    6.0,
+                    6.0,
+                    3.0,
+                    3.0,
+                    2.0,
+                    2.0,
+                    5.0,
+                    5.0,
+                    2.5,
+                    2.5,
+                    3.0,
+                    3.0,
+                    4.0,
+                    4.0,
+                    3.0,
+                    3.0,
+                    2.5,
+                    2.5,
+                    4.5,
+                    4.5,
+                ],
+            }
+        )
+
+        # Without fairness: might concentrate in low-income region
+        result_no_fairness = solve_facility_location(
+            customer_data, facility_data, transportation_cost
+        )
+
+        # With fairness: at most 1 per region
+        result_with_fairness = solve_facility_location(
+            customer_data,
+            facility_data,
+            transportation_cost,
+            max_facilities_per_region=1,
+        )
+
+        # Verify fairness constraint is satisfied
+        opened_fair = result_with_fairness["facilities_opened"]
+        facilities_by_region = facility_data.set_index("facility")["region"]
+
+        for region in ["Low-income", "Middle", "High"]:
+            region_facilities = facilities_by_region[
+                facilities_by_region == region
+            ].index
+            opened_in_region = opened_fair.loc[region_facilities].sum()
+            self.assertLessEqual(opened_in_region, 1.0)
+
+        # Fairness solution should have valid cost (possibly higher)
+        self.assertGreater(result_with_fairness["solution_value"], 0)
+
+    def test_fairness_with_fixed_count(self):
+        """Test that fairness constraints work with fixed facility count."""
+        customer_data = pd.DataFrame(
+            {"customer": [0, 1, 2], "demand": [15.0, 15.0, 15.0]}
+        )
+
+        facility_data = pd.DataFrame(
+            {
+                "facility": [0, 1, 2, 3, 4, 5],
+                "capacity": [20.0] * 6,
+                "fixed_cost": [10.0] * 6,
+                "region": ["R1", "R1", "R2", "R2", "R3", "R3"],
+            }
+        )
+
+        transportation_cost = pd.DataFrame(
+            {
+                "customer": [i for i in range(3) for _ in range(6)],
+                "facility": [0, 1, 2, 3, 4, 5] * 3,
+                "cost": [1.0] * 18,
+            }
+        )
+
+        # Open exactly 3 facilities with max 1 per region
+        result = solve_facility_location(
+            customer_data,
+            facility_data,
+            transportation_cost,
+            fixed_facility_count=3,
+            max_facilities_per_region=1,
+        )
+
+        # Verify exactly 3 facilities opened
+        opened = result["facilities_opened"]
+        self.assertEqual(opened.sum(), 3.0)
+
+        # Verify at most 1 per region
+        facilities_by_region = facility_data.set_index("facility")["region"]
+        for region in ["R1", "R2", "R3"]:
+            region_facilities = facilities_by_region[
+                facilities_by_region == region
+            ].index
+            opened_in_region = opened.loc[region_facilities].sum()
+            self.assertLessEqual(opened_in_region, 1.0)
+
+    def test_fairness_allows_zero_in_region(self):
+        """Test that fairness constraints allow zero facilities in a region."""
+        customer_data = pd.DataFrame({"customer": [0], "demand": [10.0]})
+
+        # 3 regions, but one is very expensive
+        facility_data = pd.DataFrame(
+            {
+                "facility": ["A", "B", "C"],
+                "capacity": [20.0, 20.0, 20.0],
+                "fixed_cost": [10.0, 10.0, 500.0],  # C is very expensive
+                "region": ["R1", "R2", "R3"],
+            }
+        )
+
+        transportation_cost = pd.DataFrame(
+            {
+                "customer": [0, 0, 0],
+                "facility": ["A", "B", "C"],
+                "cost": [1.0, 1.0, 1.0],
+            }
+        )
+
+        result = solve_facility_location(
+            customer_data,
+            facility_data,
+            transportation_cost,
+            max_facilities_per_region=1,
+        )
+
+        # Should still be able to solve (don't need to open in all regions)
+        self.assertIn("solution_value", result)
+        # Expensive facility should not be opened
+        self.assertLess(result["facilities_opened"].loc["C"], 0.5)
+
+    def test_fairness_validation_missing_region_column(self):
+        """Test error when region column is missing."""
+        customer_data = pd.DataFrame({"customer": [0], "demand": [10.0]})
+
+        facility_data = pd.DataFrame(
+            {
+                "facility": [0, 1],
+                "capacity": [20.0, 20.0],
+                "fixed_cost": [10.0, 10.0],
+                # Missing "region" column
+            }
+        )
+
+        transportation_cost = pd.DataFrame(
+            {
+                "customer": [0, 0],
+                "facility": [0, 1],
+                "cost": [1.0, 1.0],
+            }
+        )
+
+        with self.assertRaises(ValueError) as ctx:
+            solve_facility_location(
+                customer_data,
+                facility_data,
+                transportation_cost,
+                max_facilities_per_region=1,
+            )
+        self.assertIn("region", str(ctx.exception))
+
+    def test_fairness_validation_invalid_type(self):
+        """Test error when max_facilities_per_region is not an integer."""
+        customer_data = pd.DataFrame({"customer": [0], "demand": [10.0]})
+
+        facility_data = pd.DataFrame(
+            {
+                "facility": [0],
+                "capacity": [20.0],
+                "fixed_cost": [10.0],
+                "region": ["R1"],
+            }
+        )
+
+        transportation_cost = pd.DataFrame(
+            {"customer": [0], "facility": [0], "cost": [1.0]}
+        )
+
+        with self.assertRaises(ValueError) as ctx:
+            solve_facility_location(
+                customer_data,
+                facility_data,
+                transportation_cost,
+                max_facilities_per_region="one",
+            )
+        self.assertIn("must be an integer", str(ctx.exception))
+
+    def test_fairness_validation_negative_value(self):
+        """Test error when max_facilities_per_region is negative."""
+        customer_data = pd.DataFrame({"customer": [0], "demand": [10.0]})
+
+        facility_data = pd.DataFrame(
+            {
+                "facility": [0],
+                "capacity": [20.0],
+                "fixed_cost": [10.0],
+                "region": ["R1"],
+            }
+        )
+
+        transportation_cost = pd.DataFrame(
+            {"customer": [0], "facility": [0], "cost": [1.0]}
+        )
+
+        with self.assertRaises(ValueError) as ctx:
+            solve_facility_location(
+                customer_data,
+                facility_data,
+                transportation_cost,
+                max_facilities_per_region=-1,
+            )
+        self.assertIn("must be a positive integer", str(ctx.exception))
+
+    def test_fairness_infeasible_too_restrictive(self):
+        """Test infeasibility when fairness constraints are too restrictive."""
+        # Single customer needing 30 units
+        customer_data = pd.DataFrame({"customer": [0], "demand": [30.0]})
+
+        # Two facilities with 20 capacity each, in different regions
+        # Need both to satisfy demand, but fairness allows only 1 per region
+        facility_data = pd.DataFrame(
+            {
+                "facility": [0, 1],
+                "capacity": [20.0, 20.0],
+                "fixed_cost": [10.0, 10.0],
+                "region": ["R1", "R1"],  # Both in same region
+            }
+        )
+
+        transportation_cost = pd.DataFrame(
+            {
+                "customer": [0, 0],
+                "facility": [0, 1],
+                "cost": [1.0, 1.0],
+            }
+        )
+
+        # This should be infeasible: need 2 facilities but max 1 per region
+        with self.assertRaises(ValueError) as ctx:
+            solve_facility_location(
+                customer_data,
+                facility_data,
+                transportation_cost,
+                max_facilities_per_region=1,
+            )
+        self.assertIn("infeasible", str(ctx.exception).lower())
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -21,6 +21,7 @@ def solve_facility_location(
     transportation_cost,
     *,
     fixed_facility_count=None,
+    max_facilities_per_region=None,
     create_env,
 ):
     """Solve a capacitated facility location problem with multiple allocations.
@@ -44,6 +45,7 @@ def solve_facility_location(
         - ``facility``: Facility identifier
         - ``capacity``: Maximum capacity of this facility (must be non-negative)
         - ``fixed_cost``: Fixed cost to open this facility (must be non-negative)
+        - ``region`` (optional): Region or category identifier for fairness constraints
 
     transportation_cost : DataFrame
         Transportation cost data with columns:
@@ -56,6 +58,12 @@ def solve_facility_location(
         If specified, exactly this many facilities must be opened. If not specified,
         the number of facilities to open is determined by the optimization to minimize
         total cost. Must be a positive integer not exceeding the total number of facilities.
+
+    max_facilities_per_region : int, optional
+        If specified, limits the maximum number of facilities that can be opened in
+        any single region. Requires the ``region`` column in ``facility_data``.
+        Use case: Prevent concentration of undesirable facilities (e.g., landfills)
+        in specific regions or demographics to ensure equitable distribution.
 
     Returns
     -------
@@ -70,13 +78,17 @@ def solve_facility_location(
     ------
     ValueError
         If input data is missing required columns, contains negative values where
-        not allowed, is empty, if the problem is infeasible, or if fixed_facility_count
-        is invalid.
+        not allowed, is empty, if the problem is infeasible, if fixed_facility_count
+        is invalid, or if max_facilities_per_region is improperly specified.
     """
 
     # Validate inputs
     _validate_inputs(
-        customer_data, facility_data, transportation_cost, fixed_facility_count
+        customer_data,
+        facility_data,
+        transportation_cost,
+        fixed_facility_count,
+        max_facilities_per_region,
     )
 
     # Build and solve the model
@@ -141,6 +153,20 @@ def solve_facility_location(
                 name="fixed_facility_count",
             )
 
+        # Constraint: fairness limits per region (if specified)
+        if max_facilities_per_region is not None:
+            facility_regions = facility_data.set_index("facility")["region"]
+
+            for region in facility_regions.unique():
+                facilities_in_region = facility_regions[
+                    facility_regions == region
+                ].index
+                model.addConstr(
+                    facility_open.loc[facilities_in_region].sum()
+                    <= max_facilities_per_region,
+                    name=f"fairness_region_{region}",
+                )
+
         # Solve the model
         model.optimize()
 
@@ -180,7 +206,11 @@ def solve_facility_location(
 
 
 def _validate_inputs(
-    customer_data, facility_data, transportation_cost, fixed_facility_count=None
+    customer_data,
+    facility_data,
+    transportation_cost,
+    fixed_facility_count=None,
+    max_facilities_per_region=None,
 ):
     """Validate input dataframes for facility location problem.
 
@@ -194,6 +224,8 @@ def _validate_inputs(
         Transportation cost data
     fixed_facility_count : int, optional
         Fixed number of facilities to open
+    max_facilities_per_region : int, optional
+        Maximum facilities allowed per region
 
     Raises
     ------
@@ -256,4 +288,18 @@ def _validate_inputs(
             raise ValueError(
                 f"fixed_facility_count ({fixed_facility_count}) exceeds "
                 f"the number of available facilities ({num_facilities})"
+            )
+
+    # Validate max_facilities_per_region if provided
+    if max_facilities_per_region is not None:
+        if not isinstance(max_facilities_per_region, int):
+            raise ValueError("max_facilities_per_region must be an integer")
+        if max_facilities_per_region <= 0:
+            raise ValueError("max_facilities_per_region must be a positive integer")
+
+        # Check that facility_data has region column
+        if "region" not in facility_data.columns:
+            raise ValueError(
+                "facility_data must contain 'region' column when "
+                "max_facilities_per_region is specified"
             )

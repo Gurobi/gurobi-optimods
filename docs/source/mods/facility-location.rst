@@ -384,6 +384,162 @@ cost of $865, while constraining to exactly 2 facilities yields a slightly
 higher cost of $885. This demonstrates how forcing a specific facility count
 can lead to suboptimal (but still valid) solutions.
 
+Fairness Constraints
+--------------------
+
+The ``max_facilities_per_region`` parameter allows you to limit the concentration
+of facilities in specific regions or categories. This is particularly useful
+for preventing the unfair distribution of undesirable facilities (such as
+landfills, waste treatment plants, or industrial sites) in certain demographic
+areas.
+
+**Use Case: Equitable Landfill Distribution**
+
+Consider a scenario where a city needs to locate waste processing facilities.
+Without fairness constraints, the optimization might concentrate multiple
+facilities in lower-income neighborhoods due to lower land costs. Fairness
+constraints ensure a more equitable distribution:
+
+.. testcode:: facility_location_fairness
+
+    import pandas as pd
+    from gurobi_optimods.facility_location import solve_facility_location
+
+    # Communities with waste processing needs
+    customer_data = pd.DataFrame({
+        "customer": ["North", "South", "East", "West"],
+        "demand": [45.0, 35.0, 40.0, 30.0]
+    })
+
+    # Potential landfill sites in different socioeconomic regions
+    facility_data = pd.DataFrame({
+        "facility": ["L1", "L2", "M1", "M2", "H1", "H2"],
+        "capacity": [60.0, 60.0, 60.0, 60.0, 60.0, 60.0],
+        "fixed_cost": [80.0, 85.0, 100.0, 105.0, 120.0, 125.0],
+        "region": ["Low-income", "Low-income", "Middle", "Middle", "High-income", "High-income"]
+    })
+
+    # Transportation costs ($/ton)
+    transportation_cost = pd.DataFrame({
+        "customer": ["North"] * 6 + ["South"] * 6 + ["East"] * 6 + ["West"] * 6,
+        "facility": ["L1", "L2", "M1", "M2", "H1", "H2"] * 4,
+        "cost": [2.0, 2.5, 4.0, 4.5, 6.0, 6.5,
+                3.0, 3.5, 2.0, 2.5, 5.0, 5.5,
+                2.5, 3.0, 3.0, 3.5, 4.0, 4.5,
+                3.0, 3.5, 2.5, 3.0, 4.5, 5.0]
+    })
+
+    # Solve without fairness constraints
+    result_no_fairness = solve_facility_location(
+        customer_data, facility_data, transportation_cost, verbose=False
+    )
+
+    # Solve with fairness: at most 1 facility per region
+    result_with_fairness = solve_facility_location(
+        customer_data, facility_data, transportation_cost,
+        max_facilities_per_region=1,
+        verbose=False
+    )
+
+    # Compare solutions
+    print("Without fairness constraints:")
+    opened_no_fair = result_no_fairness['facilities_opened']
+    for region in ["Low-income", "Middle", "High-income"]:
+        region_facilities = facility_data[facility_data['region'] == region]['facility']
+        count = opened_no_fair.loc[region_facilities].sum()
+        print(f"  {region}: {count:.0f} facilities")
+    print(f"  Total cost: ${result_no_fairness['solution_value']:.2f}")
+
+    print("\nWith fairness constraints (max 1 per region):")
+    opened_with_fair = result_with_fairness['facilities_opened']
+    for region in ["Low-income", "Middle", "High-income"]:
+        region_facilities = facility_data[facility_data['region'] == region]['facility']
+        count = opened_with_fair.loc[region_facilities].sum()
+        opened_list = opened_with_fair.loc[region_facilities]
+        opened_list = opened_list[opened_list > 0.5].index.tolist()
+        if opened_list:
+            print(f"  {region}: {len(opened_list)} facility ({', '.join(opened_list)})")
+        else:
+            print(f"  {region}: 0 facilities")
+    print(f"  Total cost: ${result_with_fairness['solution_value']:.2f}")
+
+.. testoutput:: facility_location_fairness
+    :options: +NORMALIZE_WHITESPACE
+
+    Without fairness constraints:
+      Low-income: 2 facilities
+      Middle: 1 facilities
+      High-income: 0 facilities
+      Total cost: $617.50
+
+    With fairness constraints (max 1 per region):
+      Low-income: 1 facility (L1)
+      Middle: 1 facility (M1)
+      High-income: 1 facility (H1)
+      Total cost: $682.50
+
+In this example, without fairness constraints, the optimizer concentrates
+facilities in low-income areas due to lower costs. With fairness constraints
+limiting each region to at most 1 facility, the solution distributes facilities
+more equitably across all socioeconomic regions. The fairness constraint
+increases the total cost by $65 (about 10.5%), which represents the price of
+achieving equitable distribution.
+
+**Combining Fairness with Fixed Counts**
+
+Fairness constraints can be combined with ``fixed_facility_count`` to achieve
+both an exact number of facilities and equitable distribution:
+
+.. testcode:: facility_location_fairness_combined
+
+    import pandas as pd
+    from gurobi_optimods.facility_location import solve_facility_location
+
+    customer_data = pd.DataFrame({
+        "customer": [1, 2, 3],
+        "demand": [15.0, 15.0, 15.0]
+    })
+
+    facility_data = pd.DataFrame({
+        "facility": ["A1", "A2", "B1", "B2", "C1", "C2"],
+        "capacity": [20.0] * 6,
+        "fixed_cost": [10.0, 12.0, 11.0, 13.0, 15.0, 14.0],
+        "region": ["R1", "R1", "R2", "R2", "R3", "R3"]
+    })
+
+    transportation_cost = pd.DataFrame({
+        "customer": [i for i in [1, 2, 3] for _ in range(6)],
+        "facility": ["A1", "A2", "B1", "B2", "C1", "C2"] * 3,
+        "cost": [1.0] * 18
+    })
+
+    result = solve_facility_location(
+        customer_data, facility_data, transportation_cost,
+        fixed_facility_count=3,
+        max_facilities_per_region=1,
+        verbose=False
+    )
+
+    print(f"Opened exactly {result['facilities_opened'].sum():.0f} facilities")
+    print("Distribution:")
+    for region in ["R1", "R2", "R3"]:
+        region_facilities = facility_data[facility_data['region'] == region]['facility']
+        opened = result['facilities_opened'].loc[region_facilities]
+        opened_list = opened[opened > 0.5].index.tolist()
+        print(f"  {region}: {', '.join(opened_list)}")
+
+.. testoutput:: facility_location_fairness_combined
+    :options: +NORMALIZE_WHITESPACE
+
+    Opened exactly 3 facilities
+    Distribution:
+      R1: A1
+      R2: B1
+      R3: C2
+
+This ensures exactly 3 facilities are opened with no more than 1 per region,
+achieving both the desired count and equitable distribution.
+
 Notes
 -----
 
