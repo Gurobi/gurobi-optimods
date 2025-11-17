@@ -310,6 +310,80 @@ Both facilities must be opened because the total demand (170 units) exceeds any
 single facility's capacity (100 units). In this case, each customer is served
 entirely by one facility since the costs are similar.
 
+Example: Fixed Number of Facilities
+------------------------------------
+
+In some scenarios, you may want to open exactly a specific number of facilities,
+rather than letting the optimizer decide. This is useful when:
+
+- Budget constraints limit the number of facilities that can be built
+- Strategic planning requires a specific number of locations
+- You want to compare solutions with different numbers of facilities
+
+The ``fixed_facility_count`` parameter enforces this constraint:
+
+.. testcode:: facility_location_fixed_count
+
+    import pandas as pd
+    from gurobi_optimods.facility_location import solve_facility_location
+
+    # Define customers and facilities
+    customer_data = pd.DataFrame({
+        "customer": [1, 2, 3],
+        "demand": [40.0, 50.0, 45.0]
+    })
+
+    facility_data = pd.DataFrame({
+        "facility": ["A", "B", "C"],
+        "capacity": [80.0, 90.0, 85.0],
+        "fixed_cost": [100.0, 120.0, 110.0]
+    })
+
+    transportation_cost = pd.DataFrame({
+        "customer": [1, 1, 1, 2, 2, 2, 3, 3, 3],
+        "facility": ["A", "B", "C"] * 3,
+        "cost": [5.0, 8.0, 12.0,
+                 10.0, 4.0, 9.0,
+                 12.0, 10.0, 3.0]
+    })
+
+    # Solve without constraint (let optimizer decide)
+    result_unconstrained = solve_facility_location(
+        customer_data, facility_data, transportation_cost, verbose=False
+    )
+
+    # Solve with exactly 2 facilities required
+    result_constrained = solve_facility_location(
+        customer_data, facility_data, transportation_cost,
+        fixed_facility_count=2, verbose=False
+    )
+
+    # Compare solutions
+    print("Unconstrained solution:")
+    print(f"  Facilities opened: {result_unconstrained['facilities_opened'].sum():.0f}")
+    print(f"  Total cost: ${result_unconstrained['solution_value']:.2f}")
+
+    print("\nConstrained solution (exactly 2 facilities):")
+    opened = result_constrained['facilities_opened']
+    print(f"  Facilities opened: {opened[opened > 0.5].index.tolist()}")
+    print(f"  Total cost: ${result_constrained['solution_value']:.2f}")
+
+.. testoutput:: facility_location_fixed_count
+    :options: +NORMALIZE_WHITESPACE
+
+    Unconstrained solution:
+      Facilities opened: 3
+      Total cost: $865.00
+
+    Constrained solution (exactly 2 facilities):
+      Facilities opened: ['B', 'C']
+      Total cost: $885.00
+
+In this example, the unconstrained solution opens all 3 facilities for a total
+cost of $865, while constraining to exactly 2 facilities yields a slightly
+higher cost of $885. This demonstrates how forcing a specific facility count
+can lead to suboptimal (but still valid) solutions.
+
 Notes
 -----
 

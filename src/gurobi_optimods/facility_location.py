@@ -16,7 +16,12 @@ logger = logging.getLogger(__name__)
 
 @optimod()
 def solve_facility_location(
-    customer_data, facility_data, transportation_cost, *, create_env
+    customer_data,
+    facility_data,
+    transportation_cost,
+    *,
+    fixed_facility_count=None,
+    create_env,
 ):
     """Solve a capacitated facility location problem with multiple allocations.
 
@@ -47,6 +52,11 @@ def solve_facility_location(
         - ``facility``: Facility identifier
         - ``cost``: Cost per unit to transport from facility to customer (must be non-negative)
 
+    fixed_facility_count : int, optional
+        If specified, exactly this many facilities must be opened. If not specified,
+        the number of facilities to open is determined by the optimization to minimize
+        total cost. Must be a positive integer not exceeding the total number of facilities.
+
     Returns
     -------
     dict
@@ -60,11 +70,14 @@ def solve_facility_location(
     ------
     ValueError
         If input data is missing required columns, contains negative values where
-        not allowed, is empty, or if the problem is infeasible.
+        not allowed, is empty, if the problem is infeasible, or if fixed_facility_count
+        is invalid.
     """
 
     # Validate inputs
-    _validate_inputs(customer_data, facility_data, transportation_cost)
+    _validate_inputs(
+        customer_data, facility_data, transportation_cost, fixed_facility_count
+    )
 
     # Build and solve the model
     with create_env() as env, gp.Model(env=env) as model:
@@ -121,6 +134,13 @@ def solve_facility_location(
                 name=f"open_facility_{customer}_{facility}",
             )
 
+        # Constraint: fixed number of facilities (if specified)
+        if fixed_facility_count is not None:
+            model.addConstr(
+                facility_open.sum() == fixed_facility_count,
+                name="fixed_facility_count",
+            )
+
         # Solve the model
         model.optimize()
 
@@ -159,7 +179,9 @@ def solve_facility_location(
         }
 
 
-def _validate_inputs(customer_data, facility_data, transportation_cost):
+def _validate_inputs(
+    customer_data, facility_data, transportation_cost, fixed_facility_count=None
+):
     """Validate input dataframes for facility location problem.
 
     Parameters
@@ -170,6 +192,8 @@ def _validate_inputs(customer_data, facility_data, transportation_cost):
         Facility information
     transportation_cost : DataFrame
         Transportation cost data
+    fixed_facility_count : int, optional
+        Fixed number of facilities to open
 
     Raises
     ------
@@ -220,3 +244,16 @@ def _validate_inputs(customer_data, facility_data, transportation_cost):
     # Check for negative transportation costs
     if (transportation_cost["cost"] < 0).any():
         raise ValueError("All transportation cost values must be non-negative")
+
+    # Validate fixed_facility_count if provided
+    if fixed_facility_count is not None:
+        if not isinstance(fixed_facility_count, int):
+            raise ValueError("fixed_facility_count must be an integer")
+        if fixed_facility_count <= 0:
+            raise ValueError("fixed_facility_count must be a positive integer")
+        num_facilities = len(facility_data)
+        if fixed_facility_count > num_facilities:
+            raise ValueError(
+                f"fixed_facility_count ({fixed_facility_count}) exceeds "
+                f"the number of available facilities ({num_facilities})"
+            )
