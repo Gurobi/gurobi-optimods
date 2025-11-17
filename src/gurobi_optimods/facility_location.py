@@ -7,7 +7,6 @@ import logging
 
 import gurobipy as gp
 import gurobipy_pandas as gppd
-import pandas as pd
 from gurobipy import GRB
 
 from gurobi_optimods.utils import optimod
