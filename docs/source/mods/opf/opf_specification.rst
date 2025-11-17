@@ -161,19 +161,12 @@ and
 
 respectively.
 
-.. _jabr-label:
+.. _polar-label:
 
-Jabr Relaxation
-~~~~~~~~~~~~~~~
+Polar Formulation
+~~~~~~~~~~~~~~~~~
 
-We can obtain a Second-Order Cone (SOC) relaxation of the ACOPF formulation
-by introducing auxiliary variables :math:`v^{(2)}_k, \ c_{km} \ \text{and} \ s_{km}`, removing the nonconvex definitions of such variables (which involve cosines and sines) and adding the rotated cone constraints
-
-.. math::
-    c_{km}^2 \ + \ s_{km}^2 \ \le \ v_k^{(2)} v_m^{(2)} \ \text{for every branch} \, km.
-
-
-The resulting relaxation can prove very tight, though, despite its convexity, challenging in large cases.
+The :ref:`ACOPF formulation<acopf-label>` described above using :math:`\cos(\theta_{km})` and :math:`\sin(\theta_{km})` terms is called the *polar* formulation. Despite its high nonlinearity, it is the most widely used formulation for solving ACOPF models. This is the default formulation that Gurobi solves in this mod.
 
 .. _qcqp-label:
 
@@ -193,8 +186,21 @@ These constraints render an exact reformulation rendering the problem as a QCQP,
 
 (and similarly with :math:`Q_{km}, \, P_{mk}, \,\text{and} \,Q_{mk}`).
 
-This is the so-called *cartesian* (or *rectangular*) formulation for ACOPF. This is the formulation that Gurobi currently solves in this mod.
+This is the so-called *cartesian* (or *rectangular*) formulation for ACOPF.
 
+.. _jabr-label:
+
+Jabr Relaxation
+~~~~~~~~~~~~~~~
+
+We can obtain a Second-Order Cone (SOC) relaxation of the ACOPF formulation
+by introducing auxiliary variables :math:`v^{(2)}_k, \ c_{km} \ \text{and} \ s_{km}`, removing the nonconvex definitions of such variables (which involve cosines and sines) and adding the rotated cone constraints
+
+.. math::
+    c_{km}^2 \ + \ s_{km}^2 \ \le \ v_k^{(2)} v_m^{(2)} \ \text{for every branch} \, km.
+
+
+The resulting relaxation can prove tight, though, despite its convexity, challenging in large cases.
 
 .. _dcopf-label:
 
