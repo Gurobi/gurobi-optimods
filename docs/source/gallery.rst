@@ -89,6 +89,7 @@ The OptiMods Gallery
    :hidden:
 
    mods/bipartite-matching
+   mods/facility-location
    mods/lad-regression
    mods/line-optimization
    mods/metromap
