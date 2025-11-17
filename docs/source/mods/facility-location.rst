@@ -540,6 +540,241 @@ both an exact number of facilities and equitable distribution:
 This ensures exactly 3 facilities are opened with no more than 1 per region,
 achieving both the desired count and equitable distribution.
 
+Computing Service Costs from Locations
+---------------------------------------
+
+In many real-world applications, you have geographic coordinates for customers
+and facilities rather than pre-computed transportation costs. This section shows
+how to compute the ``cost`` column in ``transportation_cost`` from coordinate data
+using different distance metrics.
+
+**Distance Metrics Overview:**
+
+- **Euclidean (L2 norm)**: Straight-line distance, suitable for air travel or open terrain
+- **Manhattan (L1 norm)**: Grid-based distance, suitable for urban street networks
+- **Haversine**: Great-circle distance on Earth's surface, for geographic coordinates (lat/lon)
+
+Euclidean Distance Example
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For facility and customer locations in a planar coordinate system (e.g., within
+a city or region), Euclidean distance is often appropriate:
+
+.. testcode:: facility_location_euclidean
+
+    import pandas as pd
+    import numpy as np
+    from gurobi_optimods.facility_location import solve_facility_location
+
+    # Customer locations (x, y coordinates in km)
+    customer_coords = pd.DataFrame({
+        "customer": ["C1", "C2", "C3"],
+        "x": [10.0, 25.0, 40.0],
+        "y": [15.0, 30.0, 10.0],
+        "demand": [20.0, 30.0, 25.0]
+    })
+
+    # Facility locations (x, y coordinates in km)
+    facility_coords = pd.DataFrame({
+        "facility": ["F1", "F2"],
+        "x": [15.0, 35.0],
+        "y": [20.0, 15.0],
+        "capacity": [50.0, 50.0],
+        "fixed_cost": [100.0, 120.0]
+    })
+
+    # Compute Euclidean distances
+    transportation_cost = []
+    for _, customer in customer_coords.iterrows():
+        for _, facility in facility_coords.iterrows():
+            distance = np.sqrt(
+                (customer['x'] - facility['x'])**2 +
+                (customer['y'] - facility['y'])**2
+            )
+            # Cost is distance times per-km rate (e.g., $2/km)
+            cost_per_km = 2.0
+            transportation_cost.append({
+                "customer": customer['customer'],
+                "facility": facility['facility'],
+                "cost": distance * cost_per_km
+            })
+
+    transportation_cost = pd.DataFrame(transportation_cost)
+
+    # Prepare customer and facility data (without coordinates)
+    customer_data = customer_coords[['customer', 'demand']]
+    facility_data = facility_coords[['facility', 'capacity', 'fixed_cost']]
+
+    # Solve
+    result = solve_facility_location(
+        customer_data, facility_data, transportation_cost, verbose=False
+    )
+
+    print(f"Total cost: ${result['solution_value']:.2f}")
+    print(f"Facilities opened: {result['facilities_opened'][result['facilities_opened'] > 0.5].index.tolist()}")
+
+.. testoutput:: facility_location_euclidean
+    :options: +NORMALIZE_WHITESPACE
+
+    Total cost: $1704.92
+    Facilities opened: ['F1', 'F2']
+
+Manhattan Distance Example
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For urban areas with a grid street network, Manhattan distance (L1 norm) better
+represents actual travel:
+
+.. testcode:: facility_location_manhattan
+
+    import pandas as pd
+    import numpy as np
+    from gurobi_optimods.facility_location import solve_facility_location
+
+    # Same locations as before
+    customer_coords = pd.DataFrame({
+        "customer": ["C1", "C2", "C3"],
+        "x": [10.0, 25.0, 40.0],
+        "y": [15.0, 30.0, 10.0],
+        "demand": [20.0, 30.0, 25.0]
+    })
+
+    facility_coords = pd.DataFrame({
+        "facility": ["F1", "F2"],
+        "x": [15.0, 35.0],
+        "y": [20.0, 15.0],
+        "capacity": [50.0, 50.0],
+        "fixed_cost": [100.0, 120.0]
+    })
+
+    # Compute Manhattan distances (L1 norm)
+    transportation_cost = []
+    for _, customer in customer_coords.iterrows():
+        for _, facility in facility_coords.iterrows():
+            distance = (
+                abs(customer['x'] - facility['x']) +
+                abs(customer['y'] - facility['y'])
+            )
+            cost_per_km = 2.0
+            transportation_cost.append({
+                "customer": customer['customer'],
+                "facility": facility['facility'],
+                "cost": distance * cost_per_km
+            })
+
+    transportation_cost = pd.DataFrame(transportation_cost)
+
+    customer_data = customer_coords[['customer', 'demand']]
+    facility_data = facility_coords[['facility', 'capacity', 'fixed_cost']]
+
+    result = solve_facility_location(
+        customer_data, facility_data, transportation_cost, verbose=False
+    )
+
+    print(f"Total cost: ${result['solution_value']:.2f}")
+    print(f"Facilities opened: {result['facilities_opened'][result['facilities_opened'] > 0.5].index.tolist()}")
+
+.. testoutput:: facility_location_manhattan
+    :options: +NORMALIZE_WHITESPACE
+
+    Total cost: $2320.00
+    Facilities opened: ['F1', 'F2']
+
+Note that Manhattan distance yields higher transportation costs (2320 vs 1704.92)
+since paths must follow the grid rather than straight lines.
+
+Geographic Distance (Haversine) Example
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For problems spanning large geographic areas, use the Haversine formula to
+compute great-circle distances from latitude/longitude coordinates:
+
+.. testcode:: facility_location_haversine
+
+    import pandas as pd
+    import numpy as np
+    from gurobi_optimods.facility_location import solve_facility_location
+
+    def haversine_distance(lat1, lon1, lat2, lon2):
+        """
+        Calculate great-circle distance between two points on Earth.
+        Returns distance in kilometers.
+        """
+        # Convert to radians
+        lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+
+        # Haversine formula
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
+        c = 2 * np.arcsin(np.sqrt(a))
+
+        # Earth's radius in kilometers
+        r = 6371.0
+        return c * r
+
+    # Customer locations (latitude, longitude)
+    customer_coords = pd.DataFrame({
+        "customer": ["New York", "Chicago", "Houston"],
+        "lat": [40.7128, 41.8781, 29.7604],
+        "lon": [-74.0060, -87.6298, -95.3698],
+        "demand": [100.0, 80.0, 90.0]
+    })
+
+    # Facility locations (latitude, longitude)
+    facility_coords = pd.DataFrame({
+        "facility": ["Memphis", "Dallas"],
+        "lat": [35.1495, 32.7767],
+        "lon": [-90.0490, -96.7970],
+        "capacity": [150.0, 150.0],
+        "fixed_cost": [5000.0, 5500.0]
+    })
+
+    # Compute Haversine distances
+    transportation_cost = []
+    for _, customer in customer_coords.iterrows():
+        for _, facility in facility_coords.iterrows():
+            distance_km = haversine_distance(
+                customer['lat'], customer['lon'],
+                facility['lat'], facility['lon']
+            )
+            # Cost per km for long-haul trucking
+            cost_per_km = 0.5
+            transportation_cost.append({
+                "customer": customer['customer'],
+                "facility": facility['facility'],
+                "cost": distance_km * cost_per_km
+            })
+
+    transportation_cost = pd.DataFrame(transportation_cost)
+
+    customer_data = customer_coords[['customer', 'demand']]
+    facility_data = facility_coords[['facility', 'capacity', 'fixed_cost']]
+
+    result = solve_facility_location(
+        customer_data, facility_data, transportation_cost, verbose=False
+    )
+
+    print(f"Total cost: ${result['solution_value']:.2f}")
+    opened = result['facilities_opened'][result['facilities_opened'] > 0.5].index.tolist()
+    print(f"Facilities opened: {opened}")
+
+.. testoutput:: facility_location_haversine
+    :options: +NORMALIZE_WHITESPACE
+
+    Total cost: $142332.82
+    Facilities opened: ['Memphis', 'Dallas']
+
+This example shows facility location for distribution centers serving major US
+cities, with costs reflecting the actual geographic distances.
+
+**Choosing the Right Metric:**
+
+- Use **Euclidean** for: Small regions, air travel, line-of-sight problems
+- Use **Manhattan** for: Urban areas with grid street layouts
+- Use **Haversine** for: Large geographic areas, latitude/longitude coordinates
+- For real-world accuracy, consider using routing APIs (Google Maps, OSRM) to get actual driving distances
+
 Notes
 -----
 
