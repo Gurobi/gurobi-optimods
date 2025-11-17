@@ -957,5 +957,100 @@ class TestFacilityLocationFairnessConstraints(unittest.TestCase):
         self.assertIn("infeasible", str(ctx.exception).lower())
 
 
+class TestFacilityLocationDataset(unittest.TestCase):
+    """Test facility location with example dataset."""
+
+    def test_load_dataset(self):
+        """Test that the dataset loads correctly."""
+        from gurobi_optimods import datasets
+
+        data = datasets.load_facility_location()
+
+        # Check that all required keys exist
+        self.assertIn("customer_data", data)
+        self.assertIn("facility_data", data)
+        self.assertIn("transportation_cost", data)
+
+        # Check customer_data structure
+        self.assertEqual(len(data.customer_data), 15)
+        self.assertIn("customer", data.customer_data.columns)
+        self.assertIn("demand", data.customer_data.columns)
+
+        # Check facility_data structure
+        self.assertEqual(len(data.facility_data), 8)
+        self.assertIn("facility", data.facility_data.columns)
+        self.assertIn("capacity", data.facility_data.columns)
+        self.assertIn("fixed_cost", data.facility_data.columns)
+        self.assertIn("region", data.facility_data.columns)
+
+        # Check transportation_cost structure
+        self.assertEqual(len(data.transportation_cost), 15 * 8)  # 120 rows
+        self.assertIn("customer", data.transportation_cost.columns)
+        self.assertIn("facility", data.transportation_cost.columns)
+        self.assertIn("cost", data.transportation_cost.columns)
+
+        # Check regions exist
+        self.assertEqual(len(data.facility_data["region"].unique()), 4)
+
+    def test_solve_with_dataset(self):
+        """Test solving facility location with the dataset."""
+        from gurobi_optimods import datasets
+
+        data = datasets.load_facility_location()
+
+        # Solve without constraints
+        result = solve_facility_location(
+            data.customer_data, data.facility_data, data.transportation_cost
+        )
+
+        # Check solution structure
+        self.assertIn("solution_value", result)
+        self.assertIn("facilities_opened", result)
+        self.assertIn("assignments", result)
+
+        # Check that solution is valid
+        self.assertGreater(result["solution_value"], 0)
+        self.assertGreater(result["facilities_opened"].sum(), 0)
+        self.assertGreater(len(result["assignments"]), 0)
+
+        # Verify demand is satisfied
+        total_assigned = result["assignments"]["assignment"].sum()
+        total_demand = data.customer_data["demand"].sum()
+        self.assertAlmostEqual(total_assigned, total_demand, places=2)
+
+    def test_solve_with_dataset_and_fairness(self):
+        """Test solving with fairness constraints on the dataset."""
+        from gurobi_optimods import datasets
+
+        data = datasets.load_facility_location()
+
+        # Solve with fairness constraint: max 2 facilities per region
+        result = solve_facility_location(
+            data.customer_data,
+            data.facility_data,
+            data.transportation_cost,
+            max_facilities_per_region=2,
+        )
+
+        # Check that fairness constraint is satisfied
+        opened = result["facilities_opened"]
+        facilities_by_region = data.facility_data.set_index("facility")["region"]
+
+        for region in data.facility_data["region"].unique():
+            region_facilities = facilities_by_region[
+                facilities_by_region == region
+            ].index
+            opened_in_region = opened.loc[region_facilities].sum()
+            self.assertLessEqual(
+                opened_in_region,
+                2,
+                f"Region {region} has {opened_in_region} facilities, expected <= 2",
+            )
+
+        # Check solution is valid
+        self.assertGreater(result["solution_value"], 0)
+        self.assertGreater(result["facilities_opened"].sum(), 0)
+
+
 if __name__ == "__main__":
     unittest.main()

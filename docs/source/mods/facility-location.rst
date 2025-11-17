@@ -384,6 +384,95 @@ cost of $865, while constraining to exactly 2 facilities yields a slightly
 higher cost of $885. This demonstrates how forcing a specific facility count
 can lead to suboptimal (but still valid) solutions.
 
+Larger Example with Real Data
+------------------------------
+
+For more realistic problems, you can use the included dataset with 15 US cities
+as customers and 8 potential distribution centers across 4 regions. This example
+demonstrates solving a larger problem with fairness constraints:
+
+.. testcode:: facility_location_dataset
+
+    from gurobi_optimods import datasets
+    from gurobi_optimods.facility_location import solve_facility_location
+
+    # Load the example dataset
+    data = datasets.load_facility_location()
+
+    print(f"Dataset: {len(data.customer_data)} customers, {len(data.facility_data)} facilities")
+    print(f"Regions: {sorted(data.facility_data['region'].unique())}")
+    print(f"Total demand: {data.customer_data['demand'].sum():.0f} units")
+    print()
+
+    # Solve without fairness constraints
+    result_no_fairness = solve_facility_location(
+        data.customer_data,
+        data.facility_data,
+        data.transportation_cost,
+        verbose=False
+    )
+
+    # Solve with fairness: at most 2 facilities per region
+    result_with_fairness = solve_facility_location(
+        data.customer_data,
+        data.facility_data,
+        data.transportation_cost,
+        max_facilities_per_region=2,
+        verbose=False
+    )
+
+    # Compare solutions
+    print("Solution without fairness constraints:")
+    opened_no_fair = result_no_fairness['facilities_opened']
+    opened_list = opened_no_fair[opened_no_fair > 0.5].index.tolist()
+    print(f"  Facilities opened: {len(opened_list)}")
+    print(f"  Locations: {', '.join(opened_list)}")
+    print(f"  Total cost: ${result_no_fairness['solution_value']:,.2f}")
+    print()
+
+    print("Solution with fairness (max 2 per region):")
+    opened_with_fair = result_with_fairness['facilities_opened']
+    opened_list_fair = opened_with_fair[opened_with_fair > 0.5].index.tolist()
+    print(f"  Facilities opened: {len(opened_list_fair)}")
+    print(f"  Locations: {', '.join(opened_list_fair)}")
+    print(f"  Total cost: ${result_with_fairness['solution_value']:,.2f}")
+
+    # Show distribution by region
+    print("\n  Distribution by region:")
+    facilities_by_region = data.facility_data.set_index("facility")["region"]
+    for region in sorted(data.facility_data["region"].unique()):
+        region_facilities = facilities_by_region[facilities_by_region == region].index
+        count = opened_with_fair.loc[region_facilities].sum()
+        print(f"    {region}: {int(count)} facilities")
+
+.. testoutput:: facility_location_dataset
+    :options: +NORMALIZE_WHITESPACE
+
+    Dataset: 15 customers, 8 facilities
+    Regions: ['Midwest', 'South-Central', 'Southeast', 'Southwest']
+    Total demand: 1193 units
+
+    Solution without fairness constraints:
+      Facilities opened: 7
+      Locations: Atlanta, Dallas, Columbus, Phoenix, Memphis, Minneapolis, Tampa
+      Total cost: $625,903.86
+
+    Solution with fairness (max 2 per region):
+      Facilities opened: 7
+      Locations: Atlanta, Dallas, Columbus, Phoenix, Memphis, Minneapolis, Tampa
+      Total cost: $625,903.86
+
+      Distribution by region:
+        Midwest: 2 facilities
+        South-Central: 2 facilities
+        Southeast: 2 facilities
+        Southwest: 1 facilities
+
+This example shows a realistic national distribution problem. In this case, the
+unconstrained solution naturally distributes facilities across regions, so the
+fairness constraint doesn't change the solution. This demonstrates that fairness
+constraints provide a guarantee without always forcing suboptimality.
+
 Fairness Constraints
 --------------------
 
