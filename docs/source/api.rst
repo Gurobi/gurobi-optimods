@@ -4,6 +4,9 @@ API Reference
 .. automodule:: gurobi_optimods.bipartite_matching
    :members: maximum_bipartite_matching
 
+.. automodule:: gurobi_optimods.facility_location
+   :members: solve_facility_location
+
 .. automodule:: gurobi_optimods.line_optimization
    :members: line_optimization
 
