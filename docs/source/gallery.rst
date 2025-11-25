@@ -12,6 +12,12 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/bipartite-matching-example.png
 
+    .. grid-item-card:: Facility Location
+        :link: mods/facility-location
+        :link-type: doc
+        :text-align: center
+        :img-top: mods/icons/facility-location.png
+
     .. grid-item-card:: Least Absolute Deviation Regression
         :link: mods/lad-regression
         :link-type: doc
@@ -83,6 +89,7 @@ The OptiMods Gallery
    :hidden:
 
    mods/bipartite-matching
+   mods/facility-location
    mods/lad-regression
    mods/line-optimization
    mods/metromap

@@ -1,0 +1,9 @@
+facility,capacity,fixed_cost,region
+Atlanta,200,8000,Southeast
+Dallas,250,9000,South-Central
+Columbus,180,7500,Midwest
+Phoenix,220,8500,Southwest
+Memphis,200,7800,South-Central
+Minneapolis,190,8200,Midwest
+Tampa,170,7200,Southeast
+Las Vegas,160,7000,Southwest
