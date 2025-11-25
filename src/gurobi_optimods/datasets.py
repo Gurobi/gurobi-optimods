@@ -3,23 +3,12 @@ Module for loading datasets for use in optimods examples, in the same vein
 as sklearn.datasets.
 """
 
+import json
 import pathlib
 
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-
-try:
-    import networkx as nx
-except ImportError:
-    nx = None
-
-try:
-    import json
-
-    from networkx.readwrite import json_graph
-except ImportError:
-    json = None
 
 DATA_FILE_DIR = pathlib.Path(__file__).parent / "data"
 
@@ -64,6 +53,8 @@ def load_siouxfalls_network_data():
 
 
 def load_berlin_metro_reduced_graph_data():
+    from networkx.readwrite import json_graph
+
     # read graph
     with open(DATA_FILE_DIR / "graphs/uberlin_reduced_graph.json", "r") as f:
         data = json.load(f)
@@ -78,6 +69,8 @@ def load_berlin_metro_reduced_graph_data():
 
 
 def load_berlin_metro_graph_data():
+    from networkx.readwrite import json_graph
+
     # read graph
     with open(DATA_FILE_DIR / "graphs/uberlin_graph.json", "r") as f:
         data = json.load(f)
@@ -148,6 +141,8 @@ def _convert_pandas_to_digraph(
     Convert from a pandas DataFrame to a networkx.MultiDiGraph with the appropriate
     attributes. For edges: `capacity`, and `cost`. For nodes: `demand`.
     """
+    import networkx as nx
+
     graph_type = nx.MultiDiGraph if use_multigraph else nx.DiGraph
 
     G = nx.from_pandas_edgelist(
