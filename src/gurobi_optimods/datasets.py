@@ -60,7 +60,7 @@ def load_berlin_metro_reduced_graph_data():
         data = json.load(f)
 
     # Convert the JSON data to a NetworkX graph
-    graph = json_graph.node_link_graph(data)
+    graph = json_graph.node_link_graph(data, edges="links")
 
     # line path data
     linepath_data = pd.read_csv(DATA_FILE_DIR / "graphs/uberlin_reduced_linepaths.csv")
@@ -76,7 +76,7 @@ def load_berlin_metro_graph_data():
         data = json.load(f)
 
     # Convert the JSON data to a NetworkX graph
-    graph = json_graph.node_link_graph(data)
+    graph = json_graph.node_link_graph(data, edges="links")
 
     # line path data
     linepath_data = pd.read_csv(DATA_FILE_DIR / "graphs/uberlin_linepaths.csv")
