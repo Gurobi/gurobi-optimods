@@ -106,7 +106,7 @@ class TestMinCostFlow(unittest.TestCase):
     def test_infeasible(self):
         edge_data, node_data = datasets.simple_graph_pandas()
         # Add a node requesting more flow than is available.
-        node_data["demand"].values[-1] = 10.0
+        node_data.loc[5, "demand"] = 10.0
         with self.assertRaisesRegex(ValueError, "Unsatisfiable flows"):
             obj, sol = mcf.min_cost_flow_pandas(edge_data, node_data)
 

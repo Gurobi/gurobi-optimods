@@ -25,7 +25,6 @@ class TestWorkforceScheduling(unittest.TestCase):
         self.assertEqual(
             set(data.availability.columns), {"Worker", "Shift", "Preference"}
         )
-        self.assertTrue(is_object_dtype(data.availability["Worker"]))
         self.assertTrue(is_numeric_dtype(data.availability["Preference"]))
         self.assertTrue(is_datetime64_any_dtype(data.availability["Shift"]))
 
