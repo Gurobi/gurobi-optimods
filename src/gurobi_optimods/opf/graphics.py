@@ -6,7 +6,6 @@ Contains the plotting API for OPF.
 
 """
 
-
 from gurobi_optimods.opf import converters, grbgraphical
 
 

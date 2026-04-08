@@ -3,7 +3,6 @@ Bipartite Matching
 ------------------
 """
 
-
 import logging
 
 import gurobipy as gp

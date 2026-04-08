@@ -245,9 +245,7 @@ class TestMISPandas(unittest.TestCase):
             (6, 7),
         ]
         frame = pd.DataFrame(edges, columns=["node1", "node2"])
-        weights = pd.DataFrame(
-            np.array([2**i for i in range(8)]), columns=["weights"]
-        )
+        weights = pd.DataFrame(np.array([2**i for i in range(8)]), columns=["weights"])
         mwis = maximum_weighted_independent_set(frame, weights)
         assert_array_equal(mwis.x, np.array([0, 2, 5, 7]))
         self.assertEqual(mwis.f, 165)
@@ -327,9 +325,7 @@ class TestMWCPandas(unittest.TestCase):
             (6, 7),
         ]
         frame = pd.DataFrame(edges, columns=["node1", "node2"])
-        weights = pd.DataFrame(
-            np.array([2**i for i in range(8)]), columns=["weights"]
-        )
+        weights = pd.DataFrame(np.array([2**i for i in range(8)]), columns=["weights"])
         mwc = maximum_weighted_clique(frame, weights)
         assert_array_equal(mwc.x, np.array([6, 7]))
         self.assertEqual(mwc.f, 192)

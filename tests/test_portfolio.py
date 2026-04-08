@@ -746,9 +746,7 @@ class TestMVPFeatures(unittest.TestCase):
 
         # Two equivalent setups: Sigma itself, and its Cholesky factor
         gamma = 20
-        mvp_factors = MeanVariancePortfolio(
-            mu, None, cov_factors=(s, np.eye(1), d**2)
-        )
+        mvp_factors = MeanVariancePortfolio(mu, None, cov_factors=(s, np.eye(1), d**2))
         mvp_Sigma = MeanVariancePortfolio(mu, cov_matrix)
 
         x_factors = mvp_factors.efficient_portfolio(gamma).x

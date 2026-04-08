@@ -30,9 +30,10 @@ class TestOptimodDecorator(unittest.TestCase):
     def test_basic(self):
         # By default, logs are written to standard output
 
-        with redirect_stdout(io.StringIO()) as buffer_stdout, redirect_stderr(
-            io.StringIO()
-        ) as buffer_stderr:
+        with (
+            redirect_stdout(io.StringIO()) as buffer_stdout,
+            redirect_stderr(io.StringIO()) as buffer_stderr,
+        ):
             self.mod()
 
         self.assertIn("Gurobi Optimizer", buffer_stdout.getvalue())
@@ -41,9 +42,10 @@ class TestOptimodDecorator(unittest.TestCase):
     def test_not_verbose(self):
         # verbose=False disables all output
 
-        with redirect_stdout(io.StringIO()) as buffer_stdout, redirect_stderr(
-            io.StringIO()
-        ) as buffer_stderr:
+        with (
+            redirect_stdout(io.StringIO()) as buffer_stdout,
+            redirect_stderr(io.StringIO()) as buffer_stderr,
+        ):
             self.mod(verbose=False)
 
         self.assertEqual(buffer_stdout.getvalue(), "")
@@ -52,9 +54,11 @@ class TestOptimodDecorator(unittest.TestCase):
     def test_logfile(self):
         # Write to a target log file
 
-        with tempfile.TemporaryDirectory() as tempdir, redirect_stdout(
-            io.StringIO()
-        ) as buffer_stdout, redirect_stderr(io.StringIO()) as buffer_stderr:
+        with (
+            tempfile.TemporaryDirectory() as tempdir,
+            redirect_stdout(io.StringIO()) as buffer_stdout,
+            redirect_stderr(io.StringIO()) as buffer_stderr,
+        ):
             logfile = os.path.join(tempdir, "tmp.log")
             self.mod(logfile=logfile)
             logfile_text = Path(logfile).read_text()
@@ -66,9 +70,10 @@ class TestOptimodDecorator(unittest.TestCase):
     def test_logfile_closed(self):
         # Ensure no resource warnings due to files left open
 
-        with warnings.catch_warnings(
-            record=True
-        ) as w, tempfile.TemporaryDirectory() as tempdir:
+        with (
+            warnings.catch_warnings(record=True) as w,
+            tempfile.TemporaryDirectory() as tempdir,
+        ):
             logfile = os.path.join(tempdir, "tmp.log")
             self.mod(logfile=logfile)
             assert not w
@@ -120,9 +125,10 @@ class TestOptimodDecorator(unittest.TestCase):
     def test_time_limit(self):
         # Make time limit is a first class parameter for all mods
 
-        with redirect_stdout(io.StringIO()) as buffer_stdout, redirect_stderr(
-            io.StringIO()
-        ) as buffer_stderr:
+        with (
+            redirect_stdout(io.StringIO()) as buffer_stdout,
+            redirect_stderr(io.StringIO()) as buffer_stderr,
+        ):
             self.mod(time_limit=10)
 
         self.assertIn("Set parameter TimeLimit to value 10", buffer_stdout.getvalue())
@@ -140,9 +146,10 @@ class TestOverrideParams(unittest.TestCase):
             with create_env(params=p) as env, gp.Model(env=env) as model:
                 model.optimize()
 
-        with redirect_stdout(io.StringIO()) as buffer_stdout, redirect_stderr(
-            io.StringIO()
-        ) as buffer_stderr:
+        with (
+            redirect_stdout(io.StringIO()) as buffer_stdout,
+            redirect_stderr(io.StringIO()) as buffer_stderr,
+        ):
             # Normally, output would be produced, but the mod sets
             # outputflag=0, disabling all gurobi logging
             mod(verbose=True)

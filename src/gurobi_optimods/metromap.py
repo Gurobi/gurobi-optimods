@@ -1159,7 +1159,7 @@ def _plot_lines(graph, linepaths, directions):
 
     # plot all nodes, nodes are not selectable
     for n in graph.nodes:
-        (x, y) = graph.nodes[n]["pos_oct"]
+        x, y = graph.nodes[n]["pos_oct"]
         fig.add_trace(
             go.Scatter(
                 x=[x],
@@ -1209,8 +1209,8 @@ def _add_coordinates(
     # shift them if necessary
     shift = _shift_combined_edges(graph, combined_edges, edge_shift)
     for u, v in combined_edges:
-        (x1, y1) = graph.nodes[u]["pos_oct"]
-        (x2, y2) = graph.nodes[v]["pos_oct"]
+        x1, y1 = graph.nodes[u]["pos_oct"]
+        x2, y2 = graph.nodes[v]["pos_oct"]
         cnt = shift * scale
         if directions[(u, v)] == 0 or directions[(u, v)] == 4:
             y1 += 1.5 * cnt

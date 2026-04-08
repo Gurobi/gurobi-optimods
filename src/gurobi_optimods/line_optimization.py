@@ -509,8 +509,8 @@ def plot_lineplan(
             if lastU == v:
                 break  # line path back
             lastU = u
-            (x1, y1) = G.nodes[u]["pos"]
-            (x2, y2) = G.nodes[v]["pos"]
+            x1, y1 = G.nodes[u]["pos"]
+            x2, y2 = G.nodes[v]["pos"]
             cnt = pathList.count((u, v)) + pathList.count((v, u))
             if abs(x1 - x2) < abs(y1 - y2):
                 x1 += cnt * xmean
@@ -527,7 +527,7 @@ def plot_lineplan(
 
     # plot again all nodes
     for n in G.nodes:
-        (x, y) = G.nodes[n]["pos"]
+        x, y = G.nodes[n]["pos"]
         plt.plot(
             x,
             y,
