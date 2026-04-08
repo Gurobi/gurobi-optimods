@@ -3,7 +3,7 @@ from io import StringIO
 from textwrap import dedent
 
 import pandas as pd
-from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype, is_object_dtype
+from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype
 from pandas.testing import assert_frame_equal
 
 from gurobi_optimods.datasets import load_workforce
