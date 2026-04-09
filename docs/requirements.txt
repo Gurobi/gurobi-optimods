@@ -1,4 +1,4 @@
-gurobi_sphinxtheme @ git+https://github.com/Gurobi/gurobi-sphinxtheme.git@no-logo
+gurobi_sphinxtheme @ git+https://github.com/Gurobi/gurobi-sphinxtheme.git@v2.0.0
 
 alabaster==0.7.16
 apeye==1.4.1

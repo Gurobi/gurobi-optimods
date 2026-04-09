@@ -1,4 +1,4 @@
-gurobi-sphinxtheme @ git+https://github.com/Gurobi/gurobi-sphinxtheme.git@main
+gurobi-sphinxtheme @ git+https://github.com/Gurobi/gurobi-sphinxtheme.git@v2.0.0
 
 numpydoc
 sphinx-copybutton
