@@ -32,7 +32,7 @@ API Reference
    :members: solve_qubo, QuboResult
 
 .. automodule:: gurobi_optimods.regression
-   :members: LADRegression
+   :members: LADRegression, CardinalityConstrainedRegression
 
 .. automodule:: gurobi_optimods.sharpe_ratio
    :members: max_sharpe_ratio, SharpeRatioResult
