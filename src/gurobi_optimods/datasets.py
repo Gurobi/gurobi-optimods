@@ -222,3 +222,46 @@ def load_opf_extra(extra):
             return row["bus_i"], (row["Vm"], row["Va"])
 
     return dict(mapper(record) for record in data.to_dict("records"))
+
+
+def load_facility_location():
+    """
+    Load facility location example dataset.
+
+    This dataset contains a realistic example with 15 customers and 8 potential
+    facility locations across 4 US regions. The data is based on real US city
+    coordinates with transportation costs computed using great-circle distances.
+
+    Returns
+    -------
+    AttrDict
+        Dictionary-like object with the following keys:
+
+        - ``customer_data``: DataFrame with columns ``customer`` and ``demand``
+        - ``facility_data``: DataFrame with columns ``facility``, ``capacity``,
+          ``fixed_cost``, and ``region`` (for fairness constraints)
+        - ``transportation_cost``: DataFrame with columns ``customer``, ``facility``,
+          and ``cost`` (computed from geographic distances)
+
+    Examples
+    --------
+    >>> from gurobi_optimods import datasets
+    >>> data = datasets.load_facility_location()
+    >>> data.customer_data.shape
+    (15, 2)
+    >>> data.facility_data.shape
+    (8, 4)
+    >>> 'region' in data.facility_data.columns
+    True
+    """
+    return AttrDict(
+        customer_data=pd.read_csv(
+            DATA_FILE_DIR / "facility_location/customer_data.csv"
+        ),
+        facility_data=pd.read_csv(
+            DATA_FILE_DIR / "facility_location/facility_data.csv"
+        ),
+        transportation_cost=pd.read_csv(
+            DATA_FILE_DIR / "facility_location/transportation_cost.csv"
+        ),
+    )

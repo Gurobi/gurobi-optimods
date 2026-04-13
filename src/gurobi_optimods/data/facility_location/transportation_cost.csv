@@ -1,0 +1,121 @@
+customer,facility,cost
+Austin,Atlanta,1052.572395417699
+Austin,Dallas,234.37665463535288
+Austin,Columbus,1372.7661539051041
+Austin,Phoenix,1117.9770819725134
+Austin,Memphis,720.5246686663637
+Austin,Minneapolis,1345.3345691282495
+Austin,Tampa,1204.3763482391466
+Austin,Las Vegas,1394.5886133185036
+Boston,Atlanta,1205.1007010551573
+Boston,Dallas,1994.4389474879572
+Boston,Columbus,826.8697524137735
+Boston,Phoenix,2954.5687062224283
+Boston,Memphis,1460.7443409778225
+Boston,Minneapolis,1443.2693802329716
+Boston,Tampa,1523.415225261595
+Boston,Las Vegas,3050.508131386474
+Charlotte,Atlanta,291.65939747106245
+Charlotte,Dallas,1195.5694856530852
+Charlotte,Columbus,447.41605791163175
+Charlotte,Phoenix,2289.9321826596024
+Charlotte,Memphis,669.3542393775081
+Charlotte,Minneapolis,1208.6876168273154
+Charlotte,Tampa,659.0977495532303
+Charlotte,Las Vegas,2466.2840591114636
+Denver,Atlanta,1557.7099104368708
+Denver,Dallas,852.7123364928935
+Denver,Columbus,1498.0879825068998
+Denver,Phoenix,753.6344370677234
+Denver,Memphis,1129.6283153925642
+Denver,Minneapolis,899.0942224572595
+Denver,Tampa,1958.6980421258654
+Denver,Las Vegas,778.9326338143474
+Detroit,Atlanta,768.9635282639185
+Detroit,Dallas,1286.168609704473
+Detroit,Columbus,210.8521728208893
+Detroit,Phoenix,2171.913419307996
+Detroit,Memphis,801.7616584255171
+Detroit,Minneapolis,698.1322513462833
+Detroit,Tampa,1279.8968011798343
+Detroit,Las Vegas,2262.936390422483
+Indianapolis,Atlanta,550.1348875097823
+Indianapolis,Dallas,983.0578208073359
+Indianapolis,Columbus,216.4102992630365
+Indianapolis,Phoenix,1925.8381482807106
+Indianapolis,Memphis,494.19220309599524
+Indianapolis,Minneapolis,657.6145620668017
+Indianapolis,Tampa,1086.1103769896533
+Indianapolis,Las Vegas,2048.1952860173146
+Jacksonville,Atlanta,367.29213011787647
+Jacksonville,Dallas,1167.0781564697156
+Jacksonville,Columbus,862.1406519821363
+Jacksonville,Phoenix,2305.3233520710787
+Jacksonville,Memphis,759.7446005489996
+Jacksonville,Minneapolis,1534.8793463649247
+Jacksonville,Tampa,220.64854458585774
+Jacksonville,Las Vegas,2531.1603345436706
+Kansas City,Atlanta,870.035166027902
+Kansas City,Dallas,584.4371574590522
+Kansas City,Columbus,797.6203559322362
+Kansas City,Phoenix,1348.4179398414808
+Kansas City,Memphis,475.9892791437352
+Kansas City,Minneapolis,530.1510785815367
+Kansas City,Tampa,1335.951237746025
+Kansas City,Las Vegas,1468.3219600501895
+Louisville,Atlanta,412.2490777017057
+Louisville,Dallas,934.8090247604634
+Louisville,Columbus,243.7744290981615
+Louisville,Phoenix,1937.456672995846
+Louisville,Memphis,411.81216708749565
+Louisville,Minneapolis,778.9372186302963
+Louisville,Tampa,948.4754694194376
+Louisville,Las Vegas,2080.9336423261107
+Milwaukee,Atlanta,861.8446433495149
+Milwaukee,Dallas,1104.1118388572584
+Milwaukee,Columbus,426.5706755642178
+Milwaukee,Phoenix,1881.8479800258385
+Milwaukee,Memphis,717.171443359211
+Milwaukee,Minneapolis,383.7918987926252
+Milwaukee,Tampa,1398.3445764435537
+Milwaukee,Las Vegas,1953.6404465891046
+Nashville,Atlanta,276.2452711041923
+Nashville,Dallas,793.4561125965217
+Nashville,Columbus,429.2764672157365
+Nashville,Phoenix,1857.5628294726228
+Nashville,Memphis,252.83981376167264
+Nashville,Minneapolis,898.1086426549408
+Nashville,Tampa,799.4063708871792
+Nashville,Las Vegas,2029.3524188342817
+Omaha,Atlanta,1052.2215113671816
+Omaha,Dallas,756.8030802705199
+Omaha,Columbus,880.6356325055635
+Omaha,Phoenix,1332.2249267696404
+Omaha,Memphis,681.4785917519375
+Omaha,Minneapolis,373.5241883264664
+Omaha,Tampa,1537.4894274690728
+Omaha,Las Vegas,1403.9365483824974
+Pittsburgh,Atlanta,671.7979867841491
+Pittsburgh,Dallas,1376.8502420372179
+Pittsburgh,Columbus,208.91046884209365
+Pittsburgh,Phoenix,2349.6742619621978
+Pittsburgh,Memphis,848.5462576808658
+Pittsburgh,Minneapolis,955.8449278651002
+Pittsburgh,Tampa,1125.6855406747206
+Pittsburgh,Las Vegas,2466.3470698514307
+Richmond,Atlanta,605.3670094915582
+Richmond,Dallas,1467.8440501517866
+Richmond,Columbus,442.2130943896539
+Richmond,Phoenix,2520.6581356715874
+Richmond,Memphis,928.0954977992128
+Richmond,Minneapolis,1245.6499225474063
+Richmond,Tampa,931.9996347843285
+Richmond,Las Vegas,2668.869811773867
+Tucson,Atlanta,1979.5730081595889
+Tucson,Dallas,1060.4812800842615
+Tucson,Columbus,2112.123741731211
+Tucson,Phoenix,138.6778310922423
+Tucson,Memphis,1564.359059617149
+Tucson,Minneapolis,1665.195594626441
+Tucson,Tampa,2217.3779156160754
+Tucson,Las Vegas,468.310107824552
