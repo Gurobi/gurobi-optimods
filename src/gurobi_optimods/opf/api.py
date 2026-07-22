@@ -118,21 +118,21 @@ def solve_opf(
         useef = True
         usejabr = True
         polar = False
-        default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
+        default_solver_params = {}
     # Exact polar AC
     elif opftype.lower() == "acpglobal":
         opftype = "ac"
         useef = False
         usejabr = False
         polar = True
-        default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
+        default_solver_params = {}
     # AC relaxation using the JABR inequality
     elif opftype.lower() == "acrelax":
         opftype = "ac"
         useef = False
         usejabr = True
         polar = False
-        default_solver_params = {"MIPGap": 1e-3, "OptimalityTol": 1e-3}
+        default_solver_params = {}
     # DC linear approximation (ef & jabr are irrelevant)
     elif opftype.lower() == "dc":
         opftype = "dc"
