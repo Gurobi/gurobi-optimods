@@ -4,6 +4,8 @@ import collections
 import math
 import random
 import unittest
+from contextlib import nullcontext
+from unittest.mock import patch
 
 from gurobipy import GRB
 
@@ -11,6 +13,21 @@ from gurobi_optimods.datasets import load_opf_example
 from gurobi_optimods.opf import solve_opf
 
 from ..utils import size_limited_license
+
+
+class TestDefaultSolverParameters(unittest.TestCase):
+    def test_global_ac_models_use_gurobi_defaults(self):
+        captured_params = []
+
+        def capture_params(params=None):
+            captured_params.append(params)
+            return nullcontext()
+
+        with patch("gurobi_optimods.opf.api._solve_opf_model_internal"):
+            for opftype in ("ACRGLOBAL", "ACPGLOBAL", "ACRELAX"):
+                solve_opf.__wrapped__({}, opftype=opftype, create_env=capture_params)
+
+        self.assertEqual(captured_params, [{}, {}, {}])
 
 
 class TestInvalidData(unittest.TestCase):
