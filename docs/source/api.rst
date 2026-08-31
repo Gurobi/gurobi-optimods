@@ -4,6 +4,9 @@ API Reference
 .. automodule:: gurobi_optimods.bipartite_matching
    :members: maximum_bipartite_matching
 
+.. automodule:: gurobi_optimods.hamiltonian_cycle
+   :members: min_bottleneck_hamiltonian_cycle, HamiltonianCycleResult
+
 .. automodule:: gurobi_optimods.line_optimization
    :members: line_optimization
 

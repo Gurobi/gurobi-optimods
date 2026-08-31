@@ -51,8 +51,9 @@ html_static_path = ["_static"]
 
 autosectionlabel_prefix_document = True
 
-# -- Include only prompts
-copybutton_prompt_text = ">>> "
+# -- Include only prompt lines, continuation lines included
+copybutton_prompt_text = r">>> |\.\.\. "
+copybutton_prompt_is_regexp = True
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
@@ -66,6 +67,7 @@ extlinks = {
 # -- Bibfiles
 bibtex_bibfiles = [
     "refs/graphs.bib",
+    "refs/hamiltonian-cycle.bib",
     "refs/mwis.bib",
     "refs/opf.bib",
     "refs/portfolio.bib",
