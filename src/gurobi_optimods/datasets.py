@@ -129,6 +129,18 @@ def load_portfolio():
     return pd.read_csv(fn, index_col=0)
 
 
+def load_afl_season():
+    """Results of the 2026 AFL season, one row per game.
+
+    Columns are ``round``, ``date``, ``home``, ``away`` and ``winner``. The
+    winner is the code of the winning team, or ``"draw"`` if the game was
+    drawn.
+    """
+    return pd.read_csv(
+        DATA_FILE_DIR / "hamiltonian-cycle/afl2026.csv", parse_dates=["date"]
+    )
+
+
 def _convert_pandas_to_digraph(
     edge_data,
     node_data,

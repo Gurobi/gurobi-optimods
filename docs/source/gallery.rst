@@ -12,6 +12,12 @@ The OptiMods Gallery
         :text-align: center
         :img-top: mods/figures/bipartite-matching-example.png
 
+    .. grid-item-card:: Bottleneck Hamiltonian Cycle
+        :link: mods/hamiltonian-cycle
+        :link-type: doc
+        :text-align: center
+        :img-top: mods/figures/hamiltonian-cycle.png
+
     .. grid-item-card:: Least Absolute Deviation Regression
         :link: mods/lad-regression
         :link-type: doc
@@ -83,6 +89,7 @@ The OptiMods Gallery
    :hidden:
 
    mods/bipartite-matching
+   mods/hamiltonian-cycle
    mods/lad-regression
    mods/line-optimization
    mods/metromap
