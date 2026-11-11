@@ -2,6 +2,7 @@ import contextlib
 import io
 import pathlib
 import unittest
+from dataclasses import dataclass
 
 import pandas as pd
 
@@ -12,7 +13,7 @@ except ImportError:
 
 import gurobi_optimods.datasets as datasets
 import gurobi_optimods.line_optimization as lop
-from tests.utils import assert_tuple_bunch_attributes
+from tests.utils import assert_tuple_compatibility
 
 DATA_FILE_DIR = pathlib.Path(__file__).parent / "data"
 
@@ -237,7 +238,7 @@ class Testlop(unittest.TestCase):
         obj_cost, final_lines = result
         self.assertEqual(obj_cost, 21)
         self.assertEqual(final_lines, [("L1", 3)])
-        assert_tuple_bunch_attributes(self, result)
+        assert_tuple_compatibility(self, result)
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_shortestPath(self):

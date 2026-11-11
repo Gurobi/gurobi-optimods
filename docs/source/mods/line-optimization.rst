@@ -204,11 +204,11 @@ Solution
 
 The solution consists of two pieces of information packed into
 a single object, an instance of
-:class:`~gurobi_optimods.line_optimization.LineOptimizationResult` instance
+:class:`~gurobi_optimods.line_optimization.LineOptimizationResult`
 with the following attributes:
 
-* ``cost``: the total cost of the line plan.
-* ``line_plan``: the line plan as a list of linename-frequency tuples.
+* ``cost``: the total cost of the optimal line plan.
+* ``line_plan``: the optimal line plan as a list of linename-frequency tuples.
 
 The strategy can be defined via a Boolean parameter ``shortest_paths``. This
 parameter has a default value (True) which uses approach 1, i.e., routing

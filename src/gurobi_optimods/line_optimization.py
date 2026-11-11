@@ -3,11 +3,12 @@ Line Optimization in Public Transportation Networks
 ---------------------------------------------------
 """
 
+from dataclasses import dataclass
 import logging
+from typing import ClassVar
 
 import gurobipy as gp
 import pandas as pd
-from scipy._lib._bunch import _make_tuple_bunch
 
 try:
     import networkx as nx
@@ -21,22 +22,28 @@ except ImportError:
     mpl = None
 
 
-from gurobi_optimods.utils import optimod
+from gurobi_optimods.utils import optimod, _LimitedTuple
 
 logger = logging.getLogger(__name__)
 
-LineOptimizationResult = _make_tuple_bunch(
-    "LineOptimizationResult", ["cost", "line_plan"]
-)
-LineOptimizationResult.__doc__ = """Result of line optimization.
 
-Attributes
-----------
-cost : float
-    Cost of the optimal line plan.
-line_plan : list of tuple
-    Selected (line name, frequency) pairs in the optimal line plan.
-"""
+@dataclass
+class LineOptimizationResult(_LimitedTuple):
+    """
+    Data class representing the result of line optimization.
+
+
+    Attributes
+    ----------
+    cost : float
+        Cost of the optimal line plan.
+    line_plan : list of tuple
+        Selected (line name, frequency) pairs in the optimal line plan.
+    """
+
+    cost: float
+    line_plan: list[tuple[str, int]]
+    _len: ClassVar[int] = 2
 
 
 @optimod()

@@ -546,9 +546,7 @@ this OptiMod. Here is an example of how this could be done
   )
   # create a data frame containing only the linepaths of the solution
   linepath_data_sol = linepath_data[
-      linepath_data["linename"].isin(
-          [line for line, freq in line_result.line_plan]
-      )
+      linepath_data["linename"].isin([line for line, freq in line_result.line_plan])
   ]
   # create networkx graph
   graph = nx.from_pandas_edgelist(
