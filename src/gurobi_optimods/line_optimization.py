@@ -7,6 +7,7 @@ import logging
 
 import gurobipy as gp
 import pandas as pd
+from scipy._lib._bunch import _make_tuple_bunch
 
 try:
     import networkx as nx
@@ -24,6 +25,19 @@ from gurobi_optimods.utils import optimod
 
 logger = logging.getLogger(__name__)
 
+LineOptimizationResult = _make_tuple_bunch(
+    "LineOptimizationResult", ["cost", "line_plan"]
+)
+LineOptimizationResult.__doc__ = """Result of line optimization.
+
+Attributes
+----------
+cost : float
+    Cost of the optimal line plan.
+line_plan : list of tuple
+    Selected (line name, frequency) pairs in the optimal line plan.
+"""
+
 
 @optimod()
 def line_optimization(
@@ -36,7 +50,7 @@ def line_optimization(
     shortest_paths: bool = True,
     *,
     create_env,
-):
+) -> LineOptimizationResult:
     """Solve the line planning problem.
 
     Parameters
@@ -68,9 +82,11 @@ def line_optimization(
 
     Returns
     -------
-    tuple
-        - Cost of the optimal line concept (line frequency)
-        - list of line-frequency tuples (optimal line concept)
+    result : LineOptimizationResult
+        The computed line plan:
+
+        * ``result.cost``: The total cost of the line plan.
+        * ``result.line_plan``: The selected (line name, frequency) pairs.
     """
     # check for missing or wrong data
     missing_data = False
@@ -286,7 +302,7 @@ def all_shortest_paths(
                     if x[i, j].X > 0.5:
                         lines_out.append((i, j))
 
-        return obj_cost, lines_out
+        return LineOptimizationResult(obj_cost, lines_out)
 
 
 def allow_all_paths(
@@ -430,7 +446,7 @@ def allow_all_paths(
                 for j in frequencies:
                     if x[i, j].X > 0.5:
                         lines_out.append((i, j))
-        return obj_cost, lines_out
+        return LineOptimizationResult(obj_cost, lines_out)
 
 
 def plot_lineplan(

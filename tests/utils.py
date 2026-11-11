@@ -29,6 +29,13 @@ def large_model(test_item):
     return skip_wrapper
 
 
+def assert_tuple_bunch_attributes(test_case, result):
+    """Check that each tuple-bunch field is accessible by both name and position."""
+    for index, field_name in enumerate(result._fields):
+        with test_case.subTest(field=field_name):
+            test_case.assertIs(getattr(result, field_name), result[index])
+
+
 def size_limited_license():
     result = False
 
