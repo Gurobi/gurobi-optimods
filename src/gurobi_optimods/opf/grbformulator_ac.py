@@ -515,9 +515,8 @@ def lpformulator_ac_create_constraints(alldata, model):
             )
             if alldata["branchswitching_mip"]:
                 expr -= twinPvar_f[branch]
-            branch.Pdeffconstr = model.addGenConstrNL(
-                Pvar_f[branch],
-                expr,
+            branch.Pdeffconstr = model.addConstr(
+                Pvar_f[branch] == expr,
                 name=branch.Pfcname,
             )
         else:
@@ -576,9 +575,8 @@ def lpformulator_ac_create_constraints(alldata, model):
             )
             if alldata["branchswitching_mip"]:
                 expr -= twinPvar_t[branch]
-            branch.Pdeftconstr = model.addGenConstrNL(
-                Pvar_t[branch],
-                expr,
+            branch.Pdeftconstr = model.addConstr(
+                Pvar_t[branch] == expr,
                 name=branch.Ptcname,
             )
         else:
@@ -675,9 +673,8 @@ def lpformulator_ac_create_constraints(alldata, model):
             )
             if alldata["branchswitching_mip"]:
                 expr -= twinQvar_f[branch]
-            branch.Qdeffconstr = model.addGenConstrNL(
-                Qvar_f[branch],
-                expr,
+            branch.Qdeffconstr = model.addConstr(
+                Qvar_f[branch] == expr,
                 name=branch.Qfcname,
             )
         else:
@@ -737,9 +734,8 @@ def lpformulator_ac_create_constraints(alldata, model):
             )
             if alldata["branchswitching_mip"]:
                 expr -= twinQvar_t[branch]
-            branch.Qdeftconstr = model.addGenConstrNL(
-                Qvar_t[branch],
-                expr,
+            branch.Qdeftconstr = model.addConstr(
+                Qvar_t[branch] == expr,
                 name=branch.Qtcname,
             )
         else:
