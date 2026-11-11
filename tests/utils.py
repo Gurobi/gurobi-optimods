@@ -3,6 +3,7 @@ Testing utilities, not to be confused with unit tests of gurobi_optimods.utils
 found in tests/test_utils.py
 """
 
+from dataclasses import fields
 import functools
 import unittest
 
@@ -27,6 +28,23 @@ def large_model(test_item):
             raise
 
     return skip_wrapper
+
+
+def assert_tuple_compatibility(test_case, result):
+    """Check that a _LimitedTuple dataclass is (mostly) backward compatible w/ tuple."""
+    length = len(result)
+    # check length / iterability
+    test_case.assertEqual(len(result), len(tuple(result)))
+    # check that original attributes can be accessed by name and index
+    for index, field in enumerate(fields(result)[:length]):
+        with test_case.subTest(field=field.name):
+            test_case.assertIs(getattr(result, field.name), result[index])
+    # check that additional attributes can only be accessed by name
+    for index, field in enumerate(fields(result)[length:], start=length):
+        with test_case.subTest(field=field.name):
+            test_case.assertTrue(hasattr(result, field.name))
+            with test_case.assertRaises(IndexError):
+                result[index]
 
 
 def size_limited_license():

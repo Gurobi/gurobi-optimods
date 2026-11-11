@@ -8,7 +8,7 @@ API Reference
    :members: min_bottleneck_hamiltonian_cycle, HamiltonianCycleResult
 
 .. automodule:: gurobi_optimods.line_optimization
-   :members: line_optimization
+   :members: line_optimization, LineOptimizationResult
 
 .. automodule:: gurobi_optimods.max_flow
    :members: max_flow

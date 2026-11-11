@@ -2,6 +2,7 @@ import contextlib
 import io
 import pathlib
 import unittest
+from dataclasses import dataclass
 
 import pandas as pd
 
@@ -12,6 +13,7 @@ except ImportError:
 
 import gurobi_optimods.datasets as datasets
 import gurobi_optimods.line_optimization as lop
+from tests.utils import assert_tuple_compatibility
 
 DATA_FILE_DIR = pathlib.Path(__file__).parent / "data"
 
@@ -224,7 +226,7 @@ class Testlop(unittest.TestCase):
         line_data = pd.read_csv(io.StringIO(lines))
         demand_data = pd.read_csv(io.StringIO(demand))
         frequencies = [1, 2, 3]
-        obj_cost, final_lines = lop.line_optimization(
+        result = lop.line_optimization(
             node_data,
             edge_data,
             line_data,
@@ -233,8 +235,10 @@ class Testlop(unittest.TestCase):
             frequencies,
             False,
         )
+        obj_cost, final_lines = result
         self.assertEqual(obj_cost, 21)
         self.assertEqual(final_lines, [("L1", 3)])
+        assert_tuple_compatibility(self, result)
 
     @unittest.skipIf(nx is None, "networkx is not installed")
     def test_shortestPath(self):
