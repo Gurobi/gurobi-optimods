@@ -2,7 +2,6 @@ import contextlib
 import io
 import pathlib
 import unittest
-from dataclasses import dataclass
 
 import pandas as pd
 
@@ -11,8 +10,8 @@ try:
 except ImportError:
     nx = None
 
-import gurobi_optimods.datasets as datasets
 import gurobi_optimods.line_optimization as lop
+from gurobi_optimods import datasets
 from tests.utils import assert_tuple_compatibility
 
 DATA_FILE_DIR = pathlib.Path(__file__).parent / "data"
