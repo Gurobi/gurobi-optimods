@@ -202,10 +202,13 @@ An example of the inputs with the respective requirements is shown below.
 Solution
 --------
 
-The solution consists of two information
+The solution consists of two pieces of information packed into
+a single object, an instance of
+:class:`~gurobi_optimods.line_optimization.LineOptimizationResult`
+with the following attributes:
 
-- the total cost of the optimal line plan
-- the optimal line plan as a list of linename-frequency tuples.
+* ``cost``: the total cost of the optimal line plan.
+* ``line_plan``: the optimal line plan as a list of linename-frequency tuples.
 
 The strategy can be defined via a Boolean parameter ``shortest_paths``. This
 parameter has a default value (True) which uses approach 1, i.e., routing
@@ -226,7 +229,7 @@ approach is also used if the parameter ``shortest_paths`` is set to False.
           ...     datasets.load_siouxfalls_network_data()
           ... )
           >>> frequencies = [1,3]
-          >>> obj_cost, final_lines = line_optimization(
+          >>> result = line_optimization(
           ...     node_data,
           ...     edge_data,
           ...     line_data,
@@ -235,9 +238,9 @@ approach is also used if the parameter ``shortest_paths`` is set to False.
           ...     frequencies,
           ...     verbose=False,
           ... )
-          >>> obj_cost
+          >>> result.cost
           211.0
-          >>> final_lines
+          >>> result.line_plan
           [('new271_B', 1),
            ('new31_B', 1),
            ('new407_B', 1),
@@ -259,7 +262,7 @@ i.e., the columns  ``posx`` and ``posy`` must be available. The plot function
 generates a matplot that is opened in a browser::
 
     from gurobi_optimods.line_optimization import plot_lineplan
-    plot_lineplan(node_data, edge_data, linepath_data, final_lines)
+    plot_lineplan(node_data, edge_data, linepath_data, result.line_plan)
 
 The Sioux-Falls transportation network (left) and the optimal line plan (right)
 for this example is shown in the figure below. The lines are shown as different

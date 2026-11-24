@@ -20,6 +20,7 @@ Note that this captures output via the gurobipy and optimod python loggers. It
 may not work as expected when multithreading in Python.
 """
 
+from dataclasses import fields
 import functools
 import logging
 import re
@@ -156,3 +157,15 @@ def optimod(mod_logger=None):
         return optimod_decorated
 
     return optimod_decorator
+
+
+class _LimitedTuple:
+    # dataclasses can inherit (limited) tuple-compatible behavior from this class
+    def __len__(self):
+        return self._len
+
+    def __iter__(self):
+        return (getattr(self, field.name) for field in fields(self)[:self._len])
+
+    def __getitem__(self, index):
+        return tuple(self)[index]
