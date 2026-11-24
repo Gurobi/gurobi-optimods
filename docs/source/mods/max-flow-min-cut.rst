@@ -61,7 +61,7 @@ can be stated as follows:
     and extracting the constraint dual values. Specifically, the edges in the
     cutset are those whose capacity constraints have non-zero dual values. The
     graph partitions formed by removing the edges in the cutset can then be
-    round by following the predecessor and successor vertices of these edges.
+    found by following the predecessor and successor vertices of these edges.
 
 |
 
