@@ -9,7 +9,7 @@ from contextlib import contextmanager
 
 import scipy
 
-from gurobi_optimods.datasets import load_opf_example, load_opf_extra
+from gurobi_optimods.datasets import DATA_FILE_DIR, load_opf_example, load_opf_extra
 from gurobi_optimods.opf import read_case_matpower, write_case_matpower
 
 
@@ -95,7 +95,7 @@ class TestIO(unittest.TestCase):
     def setUp(self):
         here = pathlib.Path(__file__).parent.resolve()
         self.testdata_dir = here.joinpath("data")
-        self.dataset_dir = here.parent.parent.joinpath("src/gurobi_optimods/data/opf")
+        self.dataset_dir = DATA_FILE_DIR / "opf"
 
     def test_matfile_roundtrip(self):
         # round trip test of dictionary format

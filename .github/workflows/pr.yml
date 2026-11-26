@@ -1,0 +1,65 @@
+# QA workflow for pull requests
+#
+# Tests the wheel against min and max supported python versions with
+# Gurobi 13 and 14 only (no license file needed, no secrets used).
+# Linting and testing run independently (tests do not wait on code-quality).
+
+name: Pull request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  code-quality:
+    uses: ./.github/workflows/code-quality.yml
+  build-wheel:
+    uses: ./.github/workflows/build-wheel.yml
+  test-wheel:
+    needs: [build-wheel]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.11", "3.15"]
+        gurobipy: ["~=13.0", "~=14.0"]
+        exclude:
+          - python: "3.15"
+            gurobipy: "~=13.0"
+    steps:
+      - name: Checkout tests
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            tests
+            docs
+            .github/actions
+      - uses: ./.github/actions/test-wheel
+        with:
+          python: ${{ matrix.python }}
+          gurobipy: ${{ matrix.gurobipy }}
+  # Tests which need the optional example dependencies (one configuration)
+  test-wheel-examples:
+    needs: [build-wheel]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tests
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            tests
+            docs
+            .github/actions
+      - uses: ./.github/actions/test-wheel
+        with:
+          python: "3.14"
+          gurobipy: "~=14.0"
+          extras: "[examples]"
+  doc-tests:
+    uses: ./.github/workflows/doc-tests.yml
+    needs: [build-wheel]
+  doc-build:
+    uses: ./.github/workflows/doc-build.yml
+    needs: [build-wheel]

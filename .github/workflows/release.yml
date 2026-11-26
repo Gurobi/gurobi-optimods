@@ -1,5 +1,7 @@
-# Release workflow. Run basic QA, build and test the universal wheel
-# on many platforms, then publish to pypi
+# Release workflow. Run basic QA, build the universal wheel and test it on many
+# platforms, then publish to pypi (only if everything passed).
+# Gurobi 11 and 12 tests run in a separate job that is given the GUROBI_LICENSE
+# secret.
 
 name: Release
 
@@ -7,23 +9,95 @@ on:
   push:
     tags:
       - v*
+  # Manual runs are a dry run: everything except publishing
+  workflow_dispatch:
 
 jobs:
   code-quality:
     uses: ./.github/workflows/code-quality.yml
-  python-tests:
-    uses: ./.github/workflows/python-tests.yml
-    needs: [code-quality]
-  wheel-tests:
-    uses: ./.github/workflows/wheel-tests.yml
-    needs: [python-tests]
+  build-wheel:
+    uses: ./.github/workflows/build-wheel.yml
+  test-wheel:
+    needs: [code-quality, build-wheel]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+        gurobipy: ["~=13.0", "~=14.0"]
+        exclude:
+          - python: "3.15"
+            gurobipy: "~=13.0"
+    steps:
+      - name: Checkout tests
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            tests
+            docs
+            .github/actions
+      - uses: ./.github/actions/test-wheel
+        with:
+          python: ${{ matrix.python }}
+          gurobipy: ${{ matrix.gurobipy }}
+  # Backward-compatibility tests for old Gurobi versions (expired pip license)
+  test-wheel-licensed:
+    needs: [code-quality, build-wheel]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.12"]
+        gurobipy: ["~=11.0", "~=12.0"]
+    steps:
+      - name: Checkout tests
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            tests
+            docs
+            .github/actions
+      - uses: ./.github/actions/test-wheel
+        with:
+          python: ${{ matrix.python }}
+          gurobipy: ${{ matrix.gurobipy }}
+          license: ${{ secrets.GUROBI_LICENSE }}
+  # Tests which need the optional example dependencies (one configuration).
+  # Licensed: some of these tests exceed the size-limited license.
+  test-wheel-examples:
+    needs: [code-quality, build-wheel]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tests
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            tests
+            docs
+            .github/actions
+      - uses: ./.github/actions/test-wheel
+        with:
+          python: "3.14"
+          gurobipy: "~=14.0"
+          extras: "[examples]"
+          license: ${{ secrets.GUROBI_LICENSE }}
   doc-tests:
     uses: ./.github/workflows/doc-tests.yml
-    needs: [python-tests]
+    needs: [code-quality, build-wheel]
   doc-build:
     uses: ./.github/workflows/doc-build.yml
-    needs: [python-tests]
+    needs: [code-quality, build-wheel]
   publish-pypi:
+    # Only publish when running on a tag (manual runs on a branch are dry runs)
+    if: github.ref_type == 'tag'
     uses: ./.github/workflows/publish-pypi.yml
-    needs: [code-quality,python-tests,wheel-tests,doc-tests]
+    needs:
+      - code-quality
+      - test-wheel
+      - test-wheel-licensed
+      - test-wheel-examples
+      - doc-tests
+      - doc-build
     secrets: inherit
