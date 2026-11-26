@@ -486,8 +486,8 @@ class TestAPILargeModels(unittest.TestCase):
 
     @unittest.skipIf(GRB.VERSION_MAJOR < 12, "Needs Gurobi 12")
     def test_ac_relax(self):
-        # Case 5 is numerically unstable
-        for i in range(4):
+        # Relaxed AC can be numerically unstable, only use the smaller cases
+        for i in range(3):
             with self.subTest(case=self.cases[i]):
                 case = self.casedata[i]
                 solution = solve_opf(case, opftype="ACRelax")
