@@ -201,13 +201,19 @@ def _min_cut_scipy(G, source, sink, create_env):
 
 
 def _min_cut_networkx(G, source, sink, create_env):
+    # Parallel edges are not supported (they would be silently collapsed)
+    if G.is_multigraph():
+        raise ValueError("Multigraphs are not supported")
     logger.info(
         f"Solving min-cut problem with {len(G.nodes)} nodes and "
         f"{len(G.edges)} edges"
     )
+    # Work on a copy so the user's graph is not modified.
+    G = G.copy()
     nx.set_edge_attributes(G, 0, "cost")
     # Dummy edge (sink, source) to carry the flow. Its flow variable has no
     # upper bound (hence no bound dual), so it can never be part of the min cut.
+    # This replaces the attributes of any existing (sink, source) edge.
     G.add_edge(sink, source, cost=1, capacity=float("inf"))
     with create_env() as env, gp.Model(env=env) as model:
         model.ModelSense = GRB.MAXIMIZE
@@ -233,7 +239,6 @@ def _min_cut_networkx(G, source, sink, create_env):
             for n, data in nodes
         }
         model.optimize()
-        G.remove_edge(sink, source)
 
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
