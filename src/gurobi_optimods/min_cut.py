@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass
 
 import gurobipy as gp
-import gurobipy_pandas as gppd
+import gurobipy_pandas as gppd  # noqa
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -18,7 +18,6 @@ try:
 except ImportError:
     nx = None
 
-from gurobi_optimods.max_flow import _remove_dummy_edge
 from gurobi_optimods.utils import optimod
 
 logger = logging.getLogger(__name__)
@@ -77,59 +76,42 @@ def min_cut(graph, source, sink, *, create_env):
 
 
 def _min_cut_pandas(arc_data, source, sink, create_env):
-    f, t = arc_data.index.names
-    arc_data["cost"] = [0] * len(arc_data)
-    # Create dummy edge to find maximum flow through (minimum of sum of all
-    # outgoing/incoming capacities at the source/sink)
-    max_flow = min(
-        arc_data.loc[([source], slice(None)),]["capacity"].sum(),
-        arc_data.loc[(slice(None), [sink]),]["capacity"].sum(),
-    )
-    arc_data = pd.concat(
-        [
-            arc_data,
-            pd.DataFrame(
-                [{f: sink, t: source, "capacity": max_flow, "cost": 1}]
-            ).set_index([f, t]),
-        ]
-    )
+    # Create an augmented graph with an uncapacitated dummy arc (sink, source)
+    # to carry the flow. Any existing edge is replaced to avoid duplicates.
+    arc_data = arc_data.astype({"capacity": float}).assign(cost=0.0)
+    arc_data.loc[(sink, source), ["capacity", "cost"]] = [np.inf, 1]
 
+    f, t = arc_data.index.names
     with create_env() as env, gp.Model(env=env) as model:
         # Solve max-flow problem
         model.ModelSense = GRB.MAXIMIZE
-        arc_df = arc_data.gppd.add_vars(model, obj="cost", name="flow")
+        arc_df = arc_data.gppd.add_vars(model, obj="cost", name="flow", ub="capacity")
         balance_df = pd.DataFrame(
             {
                 "inflow": arc_df["flow"].groupby(t).sum(),
                 "outflow": arc_df["flow"].groupby(f).sum(),
             }
         ).gppd.add_constrs(model, "inflow == outflow", name="balance")
-        capacity_constrs = gppd.add_constrs(
-            model,
-            arc_df["flow"],
-            GRB.LESS_EQUAL,
-            arc_df["capacity"],
-            name="capacity",
-        )
         logger.info(
             f"Solving min-cut problem with {len(balance_df)} nodes and "
             f"{len(arc_data)-1} edges"
         )
         model.optimize()
-        _remove_dummy_edge(arc_data, source, sink)
 
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
 
-        # Construct partition and cutset
-        cap_pi = capacity_constrs.gppd.Pi
+        # Cutset: arcs whose capacity bound is binding (positive reduced cost).
+        # The unbounded dummy (sink, source) arc always has a reduced cost <= 0.
+        reduced_costs = arc_df["flow"].gppd.RC
+        cutset = set(reduced_costs.index[reduced_costs > 1e-3])
+        assert (sink, source) not in cutset
 
-        # Find edges in the cutset (excluding the dummy (sink, source) edge.
-        cutset = set([a for a in arc_data.index if cap_pi[a] > 1e-3 if a[0] != sink])
-
-        if len(cutset) == 0:  # No arc in the cutset
+        if len(cutset) == 0 or model.ObjVal < 1e-6:  # No flow, no cut
             return MinCutResult(0.0, (set(), set()), set())
 
+        # Construct partition. The dummy arc is still in arc_data, but the BFS
+        # cannot reach the sink, so it is never traversed.
         p1 = set()
         queue = [source]
         while len(queue) > 0:
@@ -143,16 +125,15 @@ def _min_cut_pandas(arc_data, source, sink, create_env):
                     if a not in cutset and a[1] not in p1 and a[1] not in queue
                 ]
             )
-        p2 = set([n for n in balance_df.index if n not in p1])
+        p2 = {n for n in balance_df.index if n not in p1}
         return MinCutResult(model.ObjVal, (p1, p2), cutset)
 
 
 def _min_cut_scipy(G, source, sink, create_env):
-    # Create new matrix with dummy edge (sink, source)
-    original_shape = G.shape
-    max_flow = G.tolil()[[0], :].sum()
-
-    data = np.append(G.data, max_flow)
+    # Create new matrix with dummy edge (sink, source) to carry the flow. Its
+    # flow variable has no upper bound (hence no bound dual), so it can never be
+    # part of the min cut.
+    data = np.append(G.data, np.inf)
 
     from_arc = np.append(G.row, sink)
     to_arc = np.append(G.col, source)
@@ -181,29 +162,26 @@ def _min_cut_scipy(G, source, sink, create_env):
     with create_env() as env, gp.Model(env=env) as model:
         # Solve max-flow problem
         model.ModelSense = GRB.MAXIMIZE
-        x = model.addMVar(A.shape[1], lb=0, obj=costs, name="x")
-        cap = model.addConstr(x <= capacities, name="capacity")
+        x = model.addMVar(A.shape[1], lb=0, ub=capacities, obj=costs, name="x")
         model.addMConstr(A, x, GRB.EQUAL, demands, name="flow")
         model.optimize()
-        _remove_dummy_edge(G, source, sink)
 
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
 
-        # Construct partition and cutset
-        cap_pi = cap.Pi
+        # Cutset: arcs whose capacity bound is binding (positive reduced cost).
+        # The unbounded dummy (sink, source) arc (last entry) always has a
+        # reduced cost <= 0.
+        in_cutset = x.RC > 1e-3
+        assert not in_cutset[-1]
+        cutset = set(zip(from_arc[in_cutset], to_arc[in_cutset]))
 
-        p1 = set()
-        cutset = set(
-            [
-                (i, j)
-                for n, (i, j) in enumerate(zip(G.row, G.col))
-                if cap_pi[n] > 1e-3 and i != sink
-            ]
-        )
-        if len(cutset) == 0:  # No arc in the cutset
+        if len(cutset) == 0 or model.ObjVal < 1e-6:  # No flow, no cut
             return MinCutResult(0.0, (set(), set()), set())
 
+        # Construct partition. The dummy arc is still in G, but the BFS cannot
+        # reach the sink, so it is never traversed.
+        p1 = set()
         queue = [source]
         G = G.tocsr()
         while len(queue) > 0:
@@ -223,15 +201,20 @@ def _min_cut_scipy(G, source, sink, create_env):
 
 
 def _min_cut_networkx(G, source, sink, create_env):
+    # Parallel edges are not supported (they would be silently collapsed)
+    if G.is_multigraph():
+        raise ValueError("Multigraphs are not supported")
     logger.info(
         f"Solving min-cut problem with {len(G.nodes)} nodes and "
         f"{len(G.edges)} edges"
     )
+    # Work on a copy so the user's graph is not modified.
+    G = G.copy()
     nx.set_edge_attributes(G, 0, "cost")
-    max_flow = 0
-    for j in G.successors(source):
-        max_flow += G.edges[source, j]["capacity"]
-    G.add_edge(sink, source, cost=1, capacity=max_flow)
+    # Dummy edge (sink, source) to carry the flow. Its flow variable has no
+    # upper bound (hence no bound dual), so it can never be part of the min cut.
+    # This replaces the attributes of any existing (sink, source) edge.
+    G.add_edge(sink, source, cost=1, capacity=float("inf"))
     with create_env() as env, gp.Model(env=env) as model:
         model.ModelSense = GRB.MAXIMIZE
         edges, capacities, costs = gp.multidict(
@@ -239,7 +222,9 @@ def _min_cut_networkx(G, source, sink, create_env):
         )
         nodes = list(G.nodes(data=True))
         x = {
-            (i, j): model.addVar(obj=costs[i, j], name=f"flow[{i},{j}]")
+            (i, j): model.addVar(
+                ub=capacities[i, j], obj=costs[i, j], name=f"flow[{i},{j}]"
+            )
             for i, j in edges
         }
 
@@ -253,29 +238,16 @@ def _min_cut_networkx(G, source, sink, create_env):
             )
             for n, data in nodes
         }
-        model.update()
-        capacity_constrs = {
-            (i, j): model.addConstr(
-                x[i, j] <= capacities[i, j], name=f"capacity[{i},{j}]"
-            )
-            for i, j in edges
-        }
-
         model.optimize()
-        _remove_dummy_edge(G, source, sink)
 
         if model.Status in [GRB.INFEASIBLE, GRB.INF_OR_UNBD]:
             raise ValueError("Unsatisfiable flows")
 
-        # Construct partition and cutset
-        cutset = set(
-            [
-                (i, j)
-                for (i, j) in edges
-                if capacity_constrs[i, j].Pi > 1e-3 and i != sink
-            ]
-        )
-        if len(cutset) == 0:
+        # Cutset: arcs whose capacity bound is binding (positive reduced cost).
+        # The unbounded dummy (sink, source) arc always has a reduced cost <= 0.
+        cutset = set([(i, j) for (i, j) in edges if x[i, j].RC > 1e-3])
+        assert (sink, source) not in cutset
+        if len(cutset) == 0 or model.ObjVal < 1e-6:  # No flow, no cut
             return MinCutResult(0.0, (set(), set()), set())
 
         p1 = set()

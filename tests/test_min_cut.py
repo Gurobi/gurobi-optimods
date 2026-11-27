@@ -171,3 +171,168 @@ class TestMinCut3(unittest.TestCase):
         self.assertEqual(partition[0], self.expected_partition[0])
         self.assertEqual(partition[1], self.expected_partition[1])
         self.assertEqual(cutset, self.expected_cut_set)
+
+
+class TestMinCutBindingDummyEdge(unittest.TestCase):
+    """Single edge 0 -> 1 with capacity 10: the dummy edge capacity (the
+    max flow bound) is binding and must not be reported as the cut."""
+
+    def check(self, res):
+        self.assertEqual(res.cut_value, 10.0)
+        self.assertEqual(res.partition, ({0}, {1}))
+        self.assertEqual(res.cutset, {(0, 1)})
+
+    def test_scipy(self):
+        from scipy import sparse
+
+        G = sparse.lil_array((2, 2))
+        G[0, 1] = 10
+        self.check(min_cut(G.tocoo(), 0, 1))
+
+    @unittest.skipIf(nx is None, "networkx is not installed")
+    def test_networkx(self):
+        G = nx.DiGraph()
+        G.add_edge(0, 1, capacity=10)
+        self.check(min_cut(G, 0, 1))
+
+    def test_pandas(self):
+        arc_data = pd.DataFrame(
+            [{"source": 0, "target": 1, "capacity": 10.0}]
+        ).set_index(["source", "target"])
+        self.check(min_cut(arc_data, 0, 1))
+
+
+class TestMinCutBottleneckAtTerminal(unittest.TestCase):
+    """Non-trivial graphs where the min cut is exactly the set of edges at the
+    source or sink, so the dummy edge capacity is binding."""
+
+    # Min cut is the single source edge (0, 1), value 7. Source is node 0,
+    # sink is node 4.
+    source_cut_edges = [
+        (0, 1, 7.0),
+        (1, 2, 5.0),
+        (1, 3, 2.0),
+        (1, 4, 5.0),
+        (2, 3, 2.0),
+        (2, 4, 3.0),
+        (3, 4, 5.0),
+    ]
+
+    # Min cut is the single sink edge (4, 5), value 5. Source is node 0, sink
+    # is node 5. The source capacity (13) is larger than the sink capacity (5),
+    # so only the pandas bound (min of the two) is binding.
+    sink_cut_edges = [
+        (0, 1, 6.0),
+        (0, 2, 5.0),
+        (0, 3, 1.0),
+        (0, 4, 1.0),
+        (1, 3, 9.0),
+        (1, 4, 9.0),
+        (2, 3, 2.0),
+        (3, 4, 7.0),
+        (4, 5, 5.0),
+    ]
+
+    def check_source_cut(self, res):
+        self.assertEqual(res.cut_value, 7.0)
+        self.assertEqual(res.partition, ({0}, {1, 2, 3, 4}))
+        self.assertEqual(res.cutset, {(0, 1)})
+
+    def check_sink_cut(self, res):
+        self.assertEqual(res.cut_value, 5.0)
+        self.assertEqual(res.partition, ({0, 1, 2, 3, 4}, {5}))
+        self.assertEqual(res.cutset, {(4, 5)})
+
+    def test_scipy_source_cut(self):
+        from scipy import sparse
+
+        rows, cols, capacities = zip(*self.source_cut_edges)
+        G = sparse.coo_array((capacities, (rows, cols)), shape=(5, 5))
+        self.check_source_cut(min_cut(G, 0, 4))
+
+    @unittest.skipIf(nx is None, "networkx is not installed")
+    def test_networkx_source_cut(self):
+        G = nx.DiGraph()
+        for i, j, capacity in self.source_cut_edges:
+            G.add_edge(i, j, capacity=capacity)
+        self.check_source_cut(min_cut(G, 0, 4))
+
+    def test_pandas_source_cut(self):
+        arc_data = pd.DataFrame(
+            self.source_cut_edges, columns=["source", "target", "capacity"]
+        ).set_index(["source", "target"])
+        self.check_source_cut(min_cut(arc_data, 0, 4))
+
+    def test_pandas_sink_cut(self):
+        arc_data = pd.DataFrame(
+            self.sink_cut_edges, columns=["source", "target", "capacity"]
+        ).set_index(["source", "target"])
+        self.check_sink_cut(min_cut(arc_data, 0, 5))
+
+
+class TestMinCutScipyNonzeroSource(unittest.TestCase):
+    """Source is node 1, and node 0 has no outgoing edges. The max flow bound
+    must be computed from the source row, not row 0. The min cut (4) is below
+    the bound (10), so the dummy edge is not binding."""
+
+    def test_scipy(self):
+        from scipy import sparse
+
+        G = sparse.lil_array((4, 4))
+        G[1, 2] = 10
+        G[2, 3] = 4
+        res = min_cut(G.tocoo(), 1, 3)
+        self.assertEqual(res.cut_value, 4.0)
+        self.assertEqual(res.partition, ({1, 2}, {0, 3}))
+        self.assertEqual(res.cutset, {(2, 3)})
+
+
+class TestMinCutReverseSinkSourceEdge(unittest.TestCase):
+    """Graph has an edge sink -> source (2 -> 0). It does not contribute to the
+    cut, and the user's input must not be modified."""
+
+    edges = [(0, 1, 5.0), (1, 2, 3.0), (2, 0, 4.0)]
+
+    def check(self, res):
+        self.assertEqual(res.cut_value, 3.0)
+        self.assertEqual(res.partition, ({0, 1}, {2}))
+        self.assertEqual(res.cutset, {(1, 2)})
+
+    def test_scipy(self):
+        from scipy import sparse
+
+        rows, cols, capacities = zip(*self.edges)
+        G = sparse.coo_array((capacities, (rows, cols)), shape=(3, 3))
+        row_before, col_before, data_before = G.row.copy(), G.col.copy(), G.data.copy()
+        self.check(min_cut(G, 0, 2))
+        self.assertEqual(G.shape, (3, 3))
+        np.testing.assert_array_equal(G.row, row_before)
+        np.testing.assert_array_equal(G.col, col_before)
+        np.testing.assert_array_equal(G.data, data_before)
+
+    @unittest.skipIf(nx is None, "networkx is not installed")
+    def test_networkx(self):
+        G = nx.DiGraph()
+        for i, j, capacity in self.edges:
+            G.add_edge(i, j, capacity=capacity)
+        edges_before = sorted(G.edges(data=True))
+        self.check(min_cut(G, 0, 2))
+        self.assertEqual(sorted(G.edges(data=True)), edges_before)
+
+    def test_pandas(self):
+        arc_data = pd.DataFrame(
+            self.edges, columns=["source", "target", "capacity"]
+        ).set_index(["source", "target"])
+        arc_before = arc_data.copy()
+        self.check(min_cut(arc_data, 0, 2))
+        pd.testing.assert_frame_equal(arc_data, arc_before)
+
+
+@unittest.skipIf(nx is None, "networkx is not installed")
+class TestMinCutNetworkxMultigraph(unittest.TestCase):
+    def test_multigraph_rejected(self):
+        G = nx.MultiDiGraph()
+        G.add_edge(0, 1, capacity=5)
+        G.add_edge(0, 1, capacity=5)
+        with self.assertRaisesRegex(ValueError, "Multigraphs"):
+            min_cut(G, 0, 1)
