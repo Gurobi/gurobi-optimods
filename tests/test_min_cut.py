@@ -285,3 +285,54 @@ class TestMinCutScipyNonzeroSource(unittest.TestCase):
         self.assertEqual(res.cut_value, 4.0)
         self.assertEqual(res.partition, ({1, 2}, {0, 3}))
         self.assertEqual(res.cutset, {(2, 3)})
+
+
+class TestMinCutReverseSinkSourceEdge(unittest.TestCase):
+    """Graph has an edge sink -> source (2 -> 0). It does not contribute to the
+    cut, and the user's input must not be modified."""
+
+    edges = [(0, 1, 5.0), (1, 2, 3.0), (2, 0, 4.0)]
+
+    def check(self, res):
+        self.assertEqual(res.cut_value, 3.0)
+        self.assertEqual(res.partition, ({0, 1}, {2}))
+        self.assertEqual(res.cutset, {(1, 2)})
+
+    def test_scipy(self):
+        from scipy import sparse
+
+        rows, cols, capacities = zip(*self.edges)
+        G = sparse.coo_array((capacities, (rows, cols)), shape=(3, 3))
+        row_before, col_before, data_before = G.row.copy(), G.col.copy(), G.data.copy()
+        self.check(min_cut(G, 0, 2))
+        self.assertEqual(G.shape, (3, 3))
+        np.testing.assert_array_equal(G.row, row_before)
+        np.testing.assert_array_equal(G.col, col_before)
+        np.testing.assert_array_equal(G.data, data_before)
+
+    @unittest.skipIf(nx is None, "networkx is not installed")
+    def test_networkx(self):
+        G = nx.DiGraph()
+        for i, j, capacity in self.edges:
+            G.add_edge(i, j, capacity=capacity)
+        edges_before = sorted(G.edges(data=True))
+        self.check(min_cut(G, 0, 2))
+        self.assertEqual(sorted(G.edges(data=True)), edges_before)
+
+    def test_pandas(self):
+        arc_data = pd.DataFrame(
+            self.edges, columns=["source", "target", "capacity"]
+        ).set_index(["source", "target"])
+        arc_before = arc_data.copy()
+        self.check(min_cut(arc_data, 0, 2))
+        pd.testing.assert_frame_equal(arc_data, arc_before)
+
+
+@unittest.skipIf(nx is None, "networkx is not installed")
+class TestMinCutNetworkxMultigraph(unittest.TestCase):
+    def test_multigraph_rejected(self):
+        G = nx.MultiDiGraph()
+        G.add_edge(0, 1, capacity=5)
+        G.add_edge(0, 1, capacity=5)
+        with self.assertRaisesRegex(ValueError, "Multigraphs"):
+            min_cut(G, 0, 1)
