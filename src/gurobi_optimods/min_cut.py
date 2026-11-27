@@ -76,18 +76,12 @@ def min_cut(graph, source, sink, *, create_env):
 
 
 def _min_cut_pandas(arc_data, source, sink, create_env):
-    # Create dummy edge (sink, source) to carry the flow. Its flow variable has
-    # no upper bound (hence no bound dual), so it can never be part of the min cut.
-    f, t = arc_data.index.names
-    arc_data = pd.concat(
-        [
-            arc_data.assign(cost=0),
-            pd.DataFrame(
-                [{f: sink, t: source, "capacity": np.inf, "cost": 1}]
-            ).set_index([f, t]),
-        ]
-    )
+    # Create an augmented graph with an uncapacitated dummy arc (sink, source)
+    # to carry the flow. Any existing edge is replaced to avoid duplicates.
+    arc_data = arc_data.astype({"capacity": float}).assign(cost=0.0)
+    arc_data.loc[(sink, source), ["capacity", "cost"]] = [np.inf, 1]
 
+    f, t = arc_data.index.names
     with create_env() as env, gp.Model(env=env) as model:
         # Solve max-flow problem
         model.ModelSense = GRB.MAXIMIZE
